@@ -1,8 +1,8 @@
+from app import app
 from flask import Flask, render_template
+from forms import LoginForm
 
-app = Flask(__name__)
-
-@app.route('/hello')
+@app.route('/hello', methods=['GET'])
 def hello_world():
     return 'Hello World!'
 
@@ -11,3 +11,8 @@ def hello_world():
 def index():
     user = {'nickname': 'sonny'}
     return render_template("index.html", title='home', user=user)
+
+@app.route('/login')
+def login():
+    form = LoginForm()
+    return render_template('login.html', title='login', form=form)
