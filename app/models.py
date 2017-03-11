@@ -1,54 +1,47 @@
 from app import app
-from neomodel import config, db, \
-StructuredNode, RelationshipTo, RelationshipFrom, \
-StringProperty, IntegerProperty, UniqueIdProperty, DateProperty
+from neomodel import (config, StructuredNode, RelationshipTo, RelationshipFrom, Relationship,
+                    StringProperty, DateProperty, IntegerProperty)
+from .relations import *
 
-config.DATABASE_URL = app.config['NEO4J_DATABASE_URI']
-
-from relations import *
+config.DATABASE_URL = 'bolt://neo4j:022010144blue@192.168.101.152:7687'
 
 class User(StructuredNode):
-    SEXES = (
+    SEX = (
         ('M', 'Male'),
-        ('F', 'Female'),
-        ('Mid', 'Middle')
+        ('F', 'Female')
     )
-    uid = UniqueIdProperty()
-    name = StringProperty()
-    login_name = StringProperty(unique_index=True)
+    name = StringProperty(required=True)
+    login = StringProperty(required=True, unique_index=True)
+    password = StringProperty(required=True)
+    sex = StringProperty(choices=SEX)
     age = IntegerProperty()
-    sex = StringProperty(required=True, choices=SEXES)
-    password = StringProperty()
-    created_time = DateTimeProperty(default_now=True)
-    title = StringProperty()
-    manage_device = RelationshipTo('Device', 'MANAGE', model=Authorized)
+    devices = RelationshipFrom('Device', 'MANAGED', model=Authorized)
 
 class Device(StructuredNode):
     STATUS = (
         ('PRD', 'In Production Environment.'),
         ('SIM', 'In Simulation Environment.'),
         ('TST', 'In Testing Environment.'),
-        ('')
+        ('STO', 'Stored in warehouse.'),
+        ('JUK', 'Scrapped on overworking')
     )
-    uid = UniqueIdProperty()
     name = StringProperty(required=True, unique_index=True)
     model = StringProperty()
     serial_num = StringProperty()
-    vender = RelationshipFrom('Vender', 'SUPPLY', model=ConnWithDatetime)
-    manufactory = RelationshipFrom('Manufactory', 'PRODUCE', model=ConnWithDatetime)
+    vender = RelationshipTo('Vender', 'SUPPLIED')
+    manufactory = RelationshipTo('Manufactory', 'PRODUCED')
     purchase_date = DateProperty()
-    warranty = IntegerProperty(default=1)
+    warranty = IntegerProperty(default=12)
     status = StringProperty(required=True, choices=STATUS)
-    administrator = RelationshipFrom('User', 'MANAGE', model=Authorized)
+    administrator = RelationshipTo('User', 'MANAGED', model=Authorized)
 
 class Manufactory(StructuredNode):
-    uid = UniqueIdProperty()
     name = StringProperty(required=True, unique_index=True)
     description = StringProperty()
-    productions = RelationshipTo('Device', 'PRODUCE', model=ConnWithDatetime)
+    productions = RelationshipFrom('Device', 'PRODUCED')
 
 class Vender(StructuredNode):
-    uid = UniqueIdProperty()
     name = StringProperty(required=True, unique_index=True)
     description = StringProperty()
-    supplies = RelationshipTo('Device', 'SUPPLY', model=ConnWithDatetime)
+    supplies = RelationshipFrom('Device', 'SUPPLIED')
+

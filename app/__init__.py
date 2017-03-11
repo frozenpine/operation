@@ -1,9 +1,7 @@
 from flask import Flask
-#from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-app.config.from_object('app.settings')
-#db = SQLAlchemy(app)
+app.config.from_object('settings')
 
 from app import views, models
 from restful import uri

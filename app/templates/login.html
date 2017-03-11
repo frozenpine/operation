@@ -2,10 +2,22 @@
 <h1>Sing In</h1>
 <form action="" method="POST" name="login">
     {{ form.hidden_tag() }}
-    <p>
-        Please enter your OpenID:<br/> {{ form.openid(size=80) }}
-    </p>
-    <p>{{ form.remember_me }} Remeber Me</p>
-    <p><input type="submit" value="Sign In"></p>
+    <table>
+        <tr>
+            <td>Username:</td>
+            <td>{{ form.username(size=50) }}</td>
+        </tr>
+        <tr>
+            <td>Password:</td>
+            <td>{{ form.password(size=50) }}</td>
+        </tr>
+        <tr>
+            <td>Remeber Me:</td>
+            <td>{{ form.remember_me }}</td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="Sign In" /></td>
+        </tr>
+    </table>
 </form>
 {% endblock %}

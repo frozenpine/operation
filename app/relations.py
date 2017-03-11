@@ -1,9 +1,7 @@
-from neomodel import StructuredRel, RelationshipFrom, \
-StringProperty, IntegerProperty, DateProperty, DateTimeProperty
+from neomodel import (StructuredRel,
+                      StringProperty, IntegerProperty, DateTimeProperty)
 
 class Authorized(StructuredRel):
-    authorized_time = DateTimeProperty(default_now=True)
-    authorized_by = StringProperty(required=True)
-
-class ConnWithDatetime(StructuredRel):
-    since = DateTimeProperty(default_now=True)
+    authorizer = StringProperty(required=True)
+    auth_time = DateTimeProperty(default_now=True)
+    auth_level = IntegerProperty(required=True)
