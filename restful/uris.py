@@ -5,8 +5,8 @@ from restful.resources.DeviceHandler import DeviceApi, DeviceListApi
 
 uri = Api(app)
 
-uri.add_resource(UserApi, '/api/users/<string:login>', endpoint='user')
-uri.add_resource(UserListApi, '/api/users', '/api/users/', endpoint='users')
+uri.add_resource(UserApi, '/apis/users/<string:login>', endpoint='user')
+uri.add_resource(UserListApi, '/apis/users', '/api/users/', endpoint='users')
 
-uri.add_resource(DeviceApi, '/api/devices/<string:dev_name>', endpoint='device')
-uri.add_resource(DeviceListApi, '/api/devices', '/api/devices/', endpoint='devices')
+uri.add_resource(DeviceApi, '/apis/devices/<string:dev_name>', endpoint='device')
+uri.add_resource(DeviceListApi, '/apis/devices', '/api/devices/', endpoint='devices')

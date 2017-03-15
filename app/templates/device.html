@@ -1,0 +1,27 @@
+{% extends "framework.html" %} {% block content %}
+<h1>Sing In</h1>
+<form action="" method="POST" name="device">
+    {{ form.hidden_tag() }}
+    <table>
+        <tr>
+            <td>Device Name:</td>
+            <td>{{ form.name(size=50) }}</td>
+        </tr>
+        <tr>
+            <td>Model Name:</td>
+            <td>{{ form.model(size=50) }}</td>
+        </tr>
+        <tr>
+            <td>Password:</td>
+            <td>{{ form.password(size=50) }}</td>
+        </tr>
+        <tr>
+            <td>Sex:</td>
+            <td>{{ form.sex }}</td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="Register" /></td>
+        </tr>
+    </table>
+</form>
+{% endblock %}

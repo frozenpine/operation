@@ -7,7 +7,7 @@ class DeviceApi(Resource):
     def get(self, dev_name):
         try:
             dev = Device.nodes.get(name=dev_name)
-            return {"name": dev.name, "administrator": [u.name for u in dev.administrator]}
+            return {"name": dev.name, "status": dev.status}
         except Device.DoesNotExist:
             return {'error': 'device not found'}, 404
     def put(self, dev_name):
@@ -15,16 +15,15 @@ class DeviceApi(Resource):
             dev = Device.nodes.get(name=dev_name)
             dev.name = request.form['dev_name']
             dev.save()
-            return {"name": dev.name, "administrator": [u.name for u in dev.administrator]}
+            return {"name": dev.name, "status": dev.status}
         except Device.DoesNotExist:
             return {'error': 'device not found'}, 404
 
 class DeviceListApi(Resource):
     def get(self):
-        devices = []
+        devices = {"records": []}
         for dev in Device.nodes.filter():
-            devices.append({"name": dev.name, "administrator": [u.name for u in dev.administrator]})
+            devices['records'].append({"uuid": dev.uuid, "name": dev.name, "status": dev.status})
         return devices
     def post(self):
-        args = parser.parse_args()
         pass

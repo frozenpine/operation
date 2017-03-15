@@ -12,6 +12,7 @@ class Connection(StructuredRel):
 
 class Place(StructuredNode):
     __abstract_node__ = True
+    uuid = UniqueIdProperty()
     input = RelationshipFrom('Transition', 'FIRED', model=Connection)
     tokens = Relationship('Token', 'TOKEN')
     output = RelationshipTo('Transition', 'ENABLED', model=Connection)
@@ -20,13 +21,14 @@ class Place(StructuredNode):
 
 class Transition(StructuredNode):
     __abstract_node__ = True
+    uuid = UniqueIdProperty()
     input = RelationshipFrom('Place', 'ENABLED', model=Connection)
     output = RelationshipTo('Place', 'FIRED', model=Connection)
     name = StringProperty(required=True)
 
 class Token(StructuredNode):
     __abstract_node__ = True
-    uuid = UniqueIdProperty(requied=True)
+    uuid = UniqueIdProperty()
     name = StringProperty(required=True, index=True)
     description = StringProperty()
     created_time = DateTimeProperty(default_now=True)
