@@ -1,24 +1,20 @@
-from flask_httpauth import HTTPBasicAuth
 from flask_restful import Resource, reqparse, request
 from app.models import User
-import json
-
-auth = HTTPBasicAuth()
 
 class UserApi(Resource):
     def get(self, login):
-        try:
-            user = User.find_user(login=login)
+        user = User.find(login=login)
+        if user:
             return {"login": user.login, "name": user.name}
-        except User.DoesNotExist:
+        else:
             return {'error': 'user not found'}, 404
     def put(self, login):
-        try:
-            user = User.find_user(login=login)
+        user = User.find(login=login)
+        if user:
             user.name = request.form['username']
             user.save()
             return {"login": user.login, "name": user.name}
-        except User.DoesNotExist:
+        else:
             return {'error': 'user not found'}, 404
 
 class UserListApi(Resource):

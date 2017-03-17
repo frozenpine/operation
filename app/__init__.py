@@ -1,13 +1,23 @@
-from flask import Flask
+from .models import User
+from flask import Flask, Blueprint
 from flask_login import LoginManager
+from settings import config
+from auth import auth as auth_blueprint, login_manager
+from restful import restapi as restapi_blueprint
 
-app = Flask(__name__)
-app.config.from_object('settings')
+main = Blueprint('main', __name__)
 
-login_manager = LoginManager()
-login_manager.session_protection = 'Strong'
-login_manager.login_view = 'login'
-login_manager.init_app(app)
+def create_app(config_name):
+    app = Flask(__name__)
+    app.config.from_object(config[config_name])
+    config[config_name].init_app(app)
 
-from app import views, models
-from restful import uris
+    login_manager.init_app(app)
+
+    app.register_blueprint(main)
+    app.register_blueprint(auth_blueprint, url_prefix='/auth')
+    app.register_blueprint(restapi_blueprint, url_prefix='/api')
+
+    return app
+
+from . import views, errors

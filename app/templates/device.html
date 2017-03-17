@@ -1,5 +1,5 @@
 {% extends "framework.html" %} {% block content %}
-<h1>Sing In</h1>
+<h1>Add Device</h1>
 <form action="" method="POST" name="device">
     {{ form.hidden_tag() }}
     <table>
@@ -12,12 +12,16 @@
             <td>{{ form.model(size=50) }}</td>
         </tr>
         <tr>
-            <td>Password:</td>
-            <td>{{ form.password(size=50) }}</td>
+            <td>Serial Number:</td>
+            <td>{{ form.serial_num(size=50) }}</td>
         </tr>
         <tr>
-            <td>Sex:</td>
-            <td>{{ form.sex }}</td>
+            <td>Status:</td>
+            <td>{{ form.status }}</td>
+        </tr>
+        <tr>
+            <td>Warranty:</td>
+            <td>{{ form.warranty }}<span>Months</span></td>
         </tr>
         <tr>
             <td colspan="2"><input type="submit" value="Register" /></td>

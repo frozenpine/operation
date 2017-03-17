@@ -1,12 +1,9 @@
-from app import app
-from flask_restful import Api
-from restful.resources.UserHandler import UserApi, UserListApi
-from restful.resources.DeviceHandler import DeviceApi, DeviceListApi
+from . import resources
+from .handlers.UserHandler import UserApi, UserListApi
+from .handlers.DeviceHandler import DeviceApi, DeviceListApi
 
-uri = Api(app)
+resources.add_resource(UserApi, '/users/<string:login>', methods=['GET', 'PUT'])
+resources.add_resource(UserListApi, '/users', '/users/', methods=['GET', 'POST'])
 
-uri.add_resource(UserApi, '/apis/users/<string:login>', endpoint='user')
-uri.add_resource(UserListApi, '/apis/users', '/api/users/', endpoint='users')
-
-uri.add_resource(DeviceApi, '/apis/devices/<string:dev_name>', endpoint='device')
-uri.add_resource(DeviceListApi, '/apis/devices', '/api/devices/', endpoint='devices')
+resources.add_resource(DeviceApi, '/devices/<string:dev_name>', methods=['GET', 'PUT'])
+resources.add_resource(DeviceListApi, '/devices', '/devices/', methods=['GET', 'POST'])

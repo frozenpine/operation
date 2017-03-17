@@ -1,7 +1,5 @@
-from flask_httpauth import HTTPBasicAuth
 from flask_restful import Resource, reqparse, request
 from app.models import Device
-import json
 
 class DeviceApi(Resource):
     def get(self, dev_name):

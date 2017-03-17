@@ -1,34 +1,41 @@
-from . import app, login_manager
+from flask_login import UserMixin
 from neomodel import (db, config, 
                       StructuredNode, RelationshipTo, RelationshipFrom, Relationship,
                       StringProperty, DateProperty, IntegerProperty, UniqueIdProperty, BooleanProperty,
                       ZeroOrOne, One)
 from .relations import *
-from workflow.models import Token
-from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
-config.DATABASE_URL = 'bolt://neo4j:022010144blue@192.168.101.152:7687'
-config.FORCE_TIMEZONE = True
+class NodeMixin(StructuredNode):
+    __abstract_node__ = True
+    uuid = UniqueIdProperty()
+    name = StringProperty(required=True, index=True)
+    description = StringProperty()
+    created_time = DateTimeProperty(default_now=True)
+    disabled = BooleanProperty(default=False)
+    
+    @classmethod
+    def find(cls, **kwargs):
+        try:
+            return cls.nodes.get(**kwargs)
+        except cls.DoesNotExist:
+            pass
 
-class User(Token, UserMixin):
+class User(NodeMixin, UserMixin):
     SEX = (
         ('M', 'Male'),
         ('F', 'Female')
     )
     login = StringProperty(required=True, unique_index=True)
-    @classmethod
-    def find_user(cls, **kwargs):
-        try:
-            if "login" in kwargs:
-                return User.nodes.get(login=kwargs['login'], disabled=False)
-        except User.DoesNotExist:
-            return None
 
     password_hash = StringProperty(required=True)
+    
     @property
     def password(self):
         raise AttributeError('password is not a readable attribute')
+    def get_id(self):
+        return self.uuid
+
     @password.setter
     def password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -38,13 +45,12 @@ class User(Token, UserMixin):
     sex = StringProperty(choices=SEX)
     age = IntegerProperty()
     birth = DateProperty()
-    disabled = BooleanProperty(default=False)
     groups = RelationshipTo('UserGroup', 'CONTAINED')
     roles = RelationshipTo('Role', 'CONTAINED')
     managed_devices = RelationshipTo('Device', 'MANAGED', model=Authorization)
     managed_systems = RelationshipTo('System', 'MANAGED', model=Authorization)
 
-class Device(Token):
+class Device(NodeMixin):
     STATUS = (
         ('PRD', 'In Production Environment.'),
         ('SIM', 'In Simulation Environment.'),
@@ -63,7 +69,7 @@ class Device(Token):
     interfaces = RelationshipFrom('Interface', 'CONTAINED')
     administrations = RelationshipFrom('User', 'MANAGED', model=Authorization)
 
-class Interface(Token):
+class Interface(NodeMixin):
     STATUS = (
         ('UP', 'Interface UP'),
         ('DOWN', 'Interface Down'),
@@ -75,31 +81,31 @@ class Interface(Token):
     model = StringProperty()
     speed = IntegerProperty(default=1000)
 
-class System(Token):
+class System(NodeMixin):
     device = RelationshipTo('Device', 'DEPENDED', cardinality="One")
     depend_systems = RelationshipTo('System', 'DEPENDED')
     version = StringProperty()
     administrations = RelationshipFrom('User', 'MANAGED', model=Authorization)
 
-class Manufactory(Token):
+class Manufactory(NodeMixin):
     productions = RelationshipFrom('Device', 'PRODUCED')
 
-class Vender(Token):
+class Vender(NodeMixin):
     supplies = RelationshipFrom('Device', 'SUPPLIED')
 
-class UserGroup(Token):
+class UserGroup(NodeMixin):
     users = RelationshipFrom('User', 'CONTAINED')
     roles = RelationshipTo('Role', 'CONTAINED')
     parents = RelationshipTo('UserGroup', 'CONTAINED')
     children = RelationshipFrom('UserGroup', 'CONTAINED')
 
-class Role(Token):
+class Role(NodeMixin):
     users = RelationshipFrom('User', 'CONTAINED')
     groups = RelationshipFrom('UserGroup', 'CONTAINED')
     parents = RelationshipTo('Role', 'CONTAINED')
     children = RelationshipFrom('Role', 'CONTAINED')
     privileges = RelationshipTo('Privilege', 'AUTHORIZED', model=Authorization)
 
-class Privilege(Token):
+class Privilege(NodeMixin):
     level = IntegerProperty(default=1)
 
