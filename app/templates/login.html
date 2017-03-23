@@ -1,19 +1,19 @@
 {% extends "framework.html" %} {% block content %}
 <h1>Sign In</h1>
 <form action="" method="POST" name="login">
-    {{ form.hidden_tag() }}
+    [[ form.hidden_tag() ]]
     <table>
         <tr>
             <td>Login Name:</td>
-            <td>{{ form.login(size=50) }}</td>
+            <td>[[ form.login(size=50) ]]</td>
         </tr>
         <tr>
             <td>Password:</td>
-            <td>{{ form.password(size=50) }}</td>
+            <td>[[ form.password(size=50) ]]</td>
         </tr>
         <tr>
             <td>Remeber Me:</td>
-            <td>{{ form.remember_me }}</td>
+            <td>[[ form.remember_me ]]</td>
         </tr>
         <tr>
             <td colspan="2"><input type="submit" value="Sign In" /></td>

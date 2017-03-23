@@ -6,7 +6,7 @@ from .models import User, Device
 
 @main.route('/hello')
 def hello_world():
-    return 'Hello World!'
+    return render_template('hello.html')
 
 @main.route('/')
 @main.route('/index')
@@ -15,7 +15,7 @@ def index():
         user = {'name': current_user.name}
     else:
         user = {'name': 'guest'}
-    return render_template("index.html", title='home', user=user)
+    return render_template("index.html", title='ITIL Test', user=user)
 
 @main.route('/adddevice', methods=['GET', 'POST'])
 @login_required

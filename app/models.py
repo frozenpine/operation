@@ -19,7 +19,7 @@ class NodeMixin(StructuredNode):
         try:
             return cls.nodes.get(**kwargs)
         except cls.DoesNotExist:
-            pass
+            return None
 
 class User(NodeMixin, UserMixin):
     SEX = (

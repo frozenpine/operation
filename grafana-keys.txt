@@ -1,0 +1,3 @@
+{
+	'zabbix-viewer': 'eyJrIjoibTRkOThQY3ZLTGY2TnlaaDZUSFo4a2dIV2dLVmxGdVYiLCJuIjoiemFiYml4LXZpZXdlciIsImlkIjoxfQ==',
+}
