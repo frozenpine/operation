@@ -1,18 +1,23 @@
 from flask_restful import Resource, reqparse, request
-from app.models import User
+from app import db
+from app.models import User, Operator
 
 class UserApi(Resource):
     def get(self, login):
-        user = User.find(login=login)
+        #user = User.find(login=login)
+        user = Operator.find(login=login)
         if user:
             return {"login": user.login, "name": user.name}
         else:
             return {'error': 'user not found'}, 404
     def put(self, login):
-        user = User.find(login=login)
+        #user = User.find(login=login)
+        user = Operator.find(login=login)
         if user:
             user.name = request.form['username']
-            user.save()
+            #user.save()
+            db.session.add(user)
+            db.session.commit()
             return {"login": user.login, "name": user.name}
         else:
             return {'error': 'user not found'}, 404
@@ -26,7 +31,8 @@ class UserListApi(Resource):
 
     def get(self):
         users = {"records": []}
-        for user in User.nodes.filter():
+        #for user in User.nodes.filter():
+        for user in Operator.query.all():
             users['records'].append({"login": user.login, "name": user.name})
         return users
     def post(self):

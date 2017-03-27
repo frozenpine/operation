@@ -1,6 +1,6 @@
+from . import db
 from flask_login import UserMixin
-from neomodel import (db, config, 
-                      StructuredNode, RelationshipTo, RelationshipFrom, Relationship,
+from neomodel import (StructuredNode, RelationshipTo, RelationshipFrom, Relationship,
                       StringProperty, DateProperty, IntegerProperty, UniqueIdProperty, BooleanProperty,
                       ZeroOrOne, One)
 from .relations import *
@@ -29,7 +29,7 @@ class User(NodeMixin, UserMixin):
     login = StringProperty(required=True, unique_index=True)
 
     password_hash = StringProperty(required=True)
-    
+
     @property
     def password(self):
         raise AttributeError('password is not a readable attribute')
@@ -108,4 +108,70 @@ class Role(NodeMixin):
 
 class Privilege(NodeMixin):
     level = IntegerProperty(default=1)
+
+class SQLModelMixin(object):
+    @classmethod
+    def find(cls, **kwargs):
+        return cls.query.filter_by(**kwargs).first()
+
+class Operator(UserMixin, SQLModelMixin, db.Model):
+    __tablename__ = 'operators'
+    id = db.Column(db.Integer, primary_key=True)
+    login = db.Column(db.String, unique=True, index=True)
+    name = db.Column(db.String, index=True)
+    password_hash = db.Column(db.String, nullable=False)
+
+    def __init__(self, login, password, name=None):
+        self.login = login
+        self.password = password
+        if name:
+            self.name = name
+        else:
+            self.name = login
+
+    @property
+    def password(self):
+        raise AttributeError('password is not a readable attribute')
+
+    @password.setter
+    def password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def verify_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    role_id = db.Column(db.Integer, db.ForeignKey('op_roles.id'))
+
+    def __repr__(self):
+        return '<Operator %r>' % self.login
+
+class OpRole(SQLModelMixin, db.Model):
+    __tablename__ = 'op_roles'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, unique=True, index=True)
+    users = db.relationship('Operator', backref='role')
+
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+        return '<OpRole %r>' % self.name
+
+class TradeSystem(SQLModelMixin, db.Model):
+    __tablename__ = 'trade_systems'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, unique=True, index=True)
+    description = db.Column(db.String)
+    version = db.Column(db.String)
+    manage_ip = db.Column(db.String, nullable=False)
+    login_user = db.Column(db.String, nullable=False)
+    login_pwd = db.Column(db.String, nullable=False)
+    process = db.relationship('TradeProcess', backref='system')
+
+class TradeProcess(SQLModelMixin, db.Model):
+    __tablename__ = 'trade_processes'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=False)
+    description = db.Column(db.String)
+    sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'))
 

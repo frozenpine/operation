@@ -5,8 +5,7 @@ base_dir = os.path.abspath(os.path.dirname(__file__))
 class Config:
     WTF_CSRF_ENABLED = True
     SECRET_KEY = os.environ.get('FLASK_SECRET_KEY') or 'SOMEthing-you-WILL-never-Guess'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('FLASK_SQLALCHEMY_DATABASE_URI') or \
-         'sqlite:///' + os.path.join(base_dir, 'database/flask.db')
+    SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     NEO4J_DATABASE_URI = 'bolt://{0}:{1}@{2}:{3}'
     NEO4J_HOST = os.environ.get('NEO4J_HOST')
     NEO4J_PORT = os.environ.get('NEO4J_PORT') or '7687'
@@ -27,6 +26,8 @@ class Config:
 class DevelopmentConfig(Config):
     DEBUG = True
     NEO4J_HOST = '192.168.101.152'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('FLASK_SQLALCHEMY_DATABASE_URI') or \
+         'sqlite:///' + os.path.join(base_dir, 'database/flask.db')
 
 class ProductionConfig(Config):
     DEBUG = False
