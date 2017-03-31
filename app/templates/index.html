@@ -27,9 +27,8 @@
                 <img src="[[ url_for('static', filename='assets/img/logo.png', _external=True) ]]" alt="">
             </a>
         </div>
-        <div class="am-icon-list tpl-header-nav-hover-ico am-fl am-margin-right">
-
-        </div>
+        <!--<div class="am-icon-list tpl-header-nav-hover-ico am-fl am-margin-right">
+        </div>-->
 
         <button class="am-topbar-btn am-topbar-toggle am-btn am-btn-sm am-btn-success am-show-sm-only" data-am-collapse="{target: '#topbar-collapse'}">
 			<span class="am-sr-only">导航切换</span> <span class="am-icon-bars"></span>
@@ -39,7 +38,7 @@
             <ul class="am-nav am-nav-pills am-topbar-nav am-topbar-left admin-header-list tpl-header-list">
                 <li class="am-dropdown" data-am-dropdown data-am-dropdown-toggle>
                     <a class="am-dropdown-toggle tpl-header-list-link" href="javascript:;">
-                        <span class="am-icon-bell-o">页面选择</span>
+                        <span class="am-icon-bell-o"> 页面选择</span>
                     </a>
                     <ul class="am-dropdown-content tpl-dropdown-content">
                         <li class="tpl-dropdown-list-bdbc" ng-repeat="list in listName">
@@ -60,7 +59,7 @@
                 </li>
                 <li class="am-dropdown" data-am-dropdown data-am-dropdown-toggle>
                     <a class="am-dropdown-toggle tpl-header-list-link" href="javascript:;">
-                        <span class="am-icon-calendar">任务列表</span>
+                        <span class="am-icon-calendar"> 任务列表</span>
                         <span class="am-badge tpl-badge-primary am-round">4</span>
                     </a>
                     <ul class="am-dropdown-content tpl-dropdown-content">
@@ -134,20 +133,20 @@
     </header>
 
     <div class="tpl-page-container tpl-page-header-fixed" ng-controller="sideBarCtrl">
-        <div></div>
-        <div class="tpl-left-nav tpl-left-nav-hover" style="display: none;width: 55px;">
+        <div class="tpl-left-nav tpl-left-nav-hover" style="display: none;width: 55px;padding-left: 3px">
+            <div class="am-icon-list tpl-header-nav-hover-ico am-margin-right tpl-left-nav-title"></div>
             <div class="tpl-left-nav-list" style="width: 55px;">
                 <ul class="tpl-left-nav-menu">
                     <li class="tpl-left-nav-item am-dropdown" data-am-dropdown ng-repeat="data in listName">
                         <a href="{{data.Url}}" class="nav-link am-dropdown-toggle" data-am-dropdown-toggle ng-click="openBottom2(data.id)">
-                            <i class="{{data.icon}}" style="height: 20;width: 18px;">
-                                <span class="am-icon-caret-down" style="margin-left: 3px;" ng-if="data.isSecond">
-                                </span>
+                            <i class="{{data.icon}}" style="height: 20;width: 15px;" ng-if="data.isSecond">
+                                <!--<span class="am-icon-caret-down" style="margin-left: 3px;" ng-if="data.isSecond">
+                                </span>-->
                             </i>
                         </a>
                         <ul class="am-dropdown-content" id="second{{data.id}}" ng-if="data.isSecond">
                             <li ng-repeat="children in data.secondName">
-                                <a href="#">{{children.name}}</a>
+                                <a href="{{children.url}}">{{children.name}}</a>
                             </li>
                         </ul>
                     </li>
@@ -155,8 +154,8 @@
             </div>
         </div>
 
-        <div class="tpl-left-nav tpl-left-nav-hover">
-            <div class="tpl-left-nav-title">功能菜单</div>
+        <div class="tpl-left-nav tpl-left-nav-hover" style="padding-left: 3px">
+            <div class="am-icon-list tpl-header-nav-hover-ico am-margin-right tpl-left-nav-title"></div>
             <div class="tpl-left-nav-list">
                 <ul class="tpl-left-nav-menu">
                     <li class="tpl-left-nav-item" ng-repeat="data in listName">
@@ -167,7 +166,7 @@
                         </a>
                         <ul class="tpl-left-nav-sub-menu" id="{{data.id}}" ng-if="data.isSecond">
                             <li ng-repeat="children in data.secondName">
-                                <a href="#">
+                                <a href="{{children.url}}">
                                     <i class="am-icon-angle-right"></i>
                                     <span>{{children.name}}</span>
                                     <i class="am-icon-star tpl-left-nav-content-ico am-fr am-margin-right"></i>

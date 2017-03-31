@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 from app.models import Server, TradeSystem
+from flask import url_for
 from flask_restful import Resource
 
 class SideBar(Resource):
@@ -17,7 +18,7 @@ class SideBar(Resource):
                 "secondName": [
                     {
                         "name": dev.name,
-                        "url": "#temp{0}".format(dev.id)
+                        "url": url_for('api.deviceapi', dev_name=dev.name)
                     } for dev in devices]
             })
         list.append(
