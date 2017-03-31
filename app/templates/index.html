@@ -139,13 +139,10 @@
                 <ul class="tpl-left-nav-menu">
                     <li class="tpl-left-nav-item am-dropdown" data-am-dropdown ng-repeat="data in listName">
                         <a href="{{data.Url}}" class="nav-link am-dropdown-toggle" data-am-dropdown-toggle ng-click="openBottom2(data.id)">
-                            <i class="{{data.icon}}" style="height: 20;width: 15px;" ng-if="data.isSecond">
-                                <!--<span class="am-icon-caret-down" style="margin-left: 3px;" ng-if="data.isSecond">
-                                </span>-->
-                            </i>
+                            <i class="{{data.icon}}" style="height: 20;width: 15px;" ng-if="data.isSecond"></i>
                         </a>
                         <ul class="am-dropdown-content" id="second{{data.id}}" ng-if="data.isSecond">
-                            <li ng-repeat="children in data.secondName">
+                            <li ng-repeat="children in data.secondName" ng-if="data.isSecond">
                                 <a href="{{children.url}}">{{children.name}}</a>
                             </li>
                         </ul>

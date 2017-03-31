@@ -29,11 +29,11 @@ app.controller('sideBarCtrl', ['$scope', '$http', function($scope, $http) {
     });
     $scope.openBottom = function(id) {
         $("#" + id).toggle();
-    }
+    };
     $scope.openBottom2 = function(id) {
-            $("#" + 'second' + id).toggle();
-        }
-        //$scope.aaaa();
+        $("#" + 'second' + id).toggle();
+    };
+    //$scope.aaaa();
 }]);
 app.controller('warningCtrl', ['$scope', function($scope) {
     $scope.isRadioClick = false;
