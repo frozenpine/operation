@@ -1,23 +1,54 @@
-{% extends "framework.html" %} {% block content %}
-<h1>Sign In</h1>
-<form action="" method="POST" name="login">
-    [[ form.hidden_tag() ]]
-    <table>
-        <tr>
-            <td>Login Name:</td>
-            <td>[[ form.login(size=50) ]]</td>
-        </tr>
-        <tr>
-            <td>Password:</td>
-            <td>[[ form.password(size=50) ]]</td>
-        </tr>
-        <tr>
-            <td>Remeber Me:</td>
-            <td>[[ form.remember_me ]]</td>
-        </tr>
-        <tr>
-            <td colspan="2"><input type="submit" value="Sign In" /></td>
-        </tr>
-    </table>
-</form>
-{% endblock %}
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="Cache-Control" content="no-siteapp" />
+    <link rel="icon" type="image/png" href="[[ url_for('static', filename='assets/i/favicon.png', _external=True) ]]">
+    <link rel="apple-touch-icon-precomposed" href="[[ url_for('static', filename='assets/i/app-icon72x72@2x.png', _external=True) ]]">
+    <meta name="apple-mobile-web-app-title" content="Amaze UI" />
+    <link rel="stylesheet" href="[[ url_for('static', filename='assets/css/amazeui.min.css', _external=True) ]]" />
+    <link rel="stylesheet" href="[[ url_for('static', filename='assets/css/admin.css', _external=True) ]]">
+    <link rel="stylesheet" href="[[ url_for('static', filename='assets/css/app.css', _external=True) ]]"> {% if title %}
+    <title>[[title]] - Flask Test</title>
+    {% else %}
+    <title>Welcome to Flask Test</title>
+    {% endif %}
+</head>
+
+<body data-type="login">
+
+    <div class="am-g myapp-login">
+        <div class="myapp-login-logo-block  tpl-login-max">
+            <div class="myapp-login-logo-text">
+                <div class="myapp-login-logo-text">
+                    <span>用户登录</span> <i class="am-icon-skyatlas"></i>
+                </div>
+            </div>
+            <div class="am-u-sm-10 login-am-center">
+                <form class="am-form" action="" name="login" method="POST">
+                    [[ form.hidden_tag() ]]
+                    <fieldset>
+                        <div class="am-form-group">
+                            [[ form.login() ]]
+                        </div>
+                        <div class="am-form-group">
+                            [[ form.password() ]]
+                        </div>
+                        {% with messages = get_flashed_messages() %} {% for message in get_flashed_messages() %}
+                        <div class="flash">[[ message ]]</div>
+                        {% endfor %} {% endwith %}
+                        <p><button type="submit" class="am-btn am-btn-default">登录</button></p>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="[[ url_for('static', filename='assets/js/jquery.min.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='assets/js/amazeui.min.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='assets/js/app.js', _external=True) ]]"></script>
+</body>
+
+</html>

@@ -10,6 +10,7 @@ def hello_world():
 
 @main.route('/')
 @main.route('/index')
+@login_required
 def index():
     if current_user.is_authenticated:
         user = {'name': current_user.name}

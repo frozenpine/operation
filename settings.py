@@ -6,6 +6,7 @@ class Config:
     WTF_CSRF_ENABLED = True
     SECRET_KEY = os.environ.get('FLASK_SECRET_KEY') or 'SOMEthing-you-WILL-never-Guess'
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
     NEO4J_DATABASE_URI = 'bolt://{0}:{1}@{2}:{3}'
     NEO4J_HOST = os.environ.get('NEO4J_HOST')
     NEO4J_PORT = os.environ.get('NEO4J_PORT') or '7687'

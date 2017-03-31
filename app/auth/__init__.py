@@ -1,5 +1,5 @@
-from flask import Blueprint
-from flask_login import LoginManager
+from flask import Blueprint, request
+from flask_login import LoginManager, current_user
 from app.models import User, Operator
 
 login_manager = LoginManager()
@@ -18,3 +18,7 @@ def load_user(user_id):
 auth = Blueprint('auth', __name__)
 
 from . import views
+
+def authorization(func):
+    for pri in current_user.roles:
+        pass

@@ -1,10 +1,12 @@
 from . import db
+from sqlalchemy_utils.types import ChoiceType, JSONType, IPAddressType, ArrowType
 from flask_login import UserMixin
 from neomodel import (StructuredNode, RelationshipTo, RelationshipFrom, Relationship,
                       StringProperty, DateProperty, IntegerProperty, UniqueIdProperty, BooleanProperty,
                       ZeroOrOne, One)
 from .relations import *
 from werkzeug.security import generate_password_hash, check_password_hash
+from enum import Enum
 
 class NodeMixin(StructuredNode):
     __abstract_node__ = True
@@ -114,13 +116,59 @@ class SQLModelMixin(object):
     def find(cls, **kwargs):
         return cls.query.filter_by(**kwargs).first()
 
-class Operator(UserMixin, SQLModelMixin, db.Model):
-    __tablename__ = 'operators'
-    id = db.Column(db.Integer, primary_key=True)
-    login = db.Column(db.String, unique=True, index=True)
-    name = db.Column(db.String, index=True)
-    password_hash = db.Column(db.String, nullable=False)
+operator_role = db.Table('operator_role',
+    db.Column('operator_id', db.Integer, db.ForeignKey('operators.id'), index=True),
+    db.Column('role_id',db.Integer, db.ForeignKey('roles.id'), index=True)
+)
 
+role_privilege = db.Table('role_privilege',
+    db.Column('role_id', db.Integer, db.ForeignKey('roles.id'), index=True),
+    db.Column('privilege_id', db.Integer, db.ForeignKey('privileges.id'), index=True)
+)
+
+operator_system = db.Table('operator_system',
+    db.Column('operator_id', db.Integer, db.ForeignKey('operators.id'), index=True),
+    db.Column('system_id', db.Integer, db.ForeignKey('trade_systems.id'), index=True),
+)
+
+operator_server = db.Table('operator_server',
+    db.Column('operator_id', db.Integer, db.ForeignKey('operators.id'), index=True),
+    db.Column('system_id', db.Integer, db.ForeignKey('servers.id'), index=True),
+)
+
+class HaType(Enum):
+    master = 1
+    slave = 2
+
+class MethodType(Enum):
+    get = 1
+    put = 2
+    post = 4
+    delete = 8
+    all = get|put|post|delete
+
+class ScriptType(Enum):
+    checker = 1
+    starter = 2
+    stopper = 4
+    cleaner = 8
+
+class PlatformType(Enum):
+    Linux = 1
+    Windows = 2
+    Unix = 3
+    BSD = 4
+    Embedded = 5
+
+class StaticsType(Enum):
+    CPU = 1
+    MOUNT = 2
+    DISK = 3
+    MEMORY = 4
+    SWAP = 5
+    NETWORK = 6
+
+class Operator(UserMixin, SQLModelMixin, db.Model):
     def __init__(self, login, password, name=None):
         self.login = login
         self.password = password
@@ -128,6 +176,27 @@ class Operator(UserMixin, SQLModelMixin, db.Model):
             self.name = name
         else:
             self.name = login
+
+    __tablename__ = 'operators'
+    id = db.Column(db.Integer, primary_key=True)
+    login = db.Column(db.String, unique=True, index=True)
+    name = db.Column(db.String, index=True)
+    password_hash = db.Column(db.String, nullable=False)
+    roles = db.relationship('OpRole',
+        secondary=operator_role,
+        backref=db.backref('users', lazy='dynamic'),
+        lazy='dynamic'
+    )
+    managed_servers = db.relationship('Server',
+        secondary=operator_server,
+        backref=db.backref('administrators', lazy='dynamic'),
+        lazy='dynamic'
+    )
+    managed_systems = db.relationship('TradeSystem',
+        secondary=operator_system,
+        backref=db.backref('administrators', lazy='dynamic'),
+        lazy='dynamic'
+    )
 
     @property
     def password(self):
@@ -140,16 +209,18 @@ class Operator(UserMixin, SQLModelMixin, db.Model):
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    role_id = db.Column(db.Integer, db.ForeignKey('op_roles.id'))
-
     def __repr__(self):
         return '<Operator %r>' % self.login
 
 class OpRole(SQLModelMixin, db.Model):
-    __tablename__ = 'op_roles'
+    __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, unique=True, index=True)
-    users = db.relationship('Operator', backref='role')
+    privileges = db.relationship('OpPrivilege',
+        secondary=role_privilege,
+        backref=db.backref('roles', lazy='dynamic'),
+        lazy='dynamic'
+    )
 
     def __init__(self, name):
         self.name = name
@@ -157,21 +228,120 @@ class OpRole(SQLModelMixin, db.Model):
     def __repr__(self):
         return '<OpRole %r>' % self.name
 
+class OpPrivilege(SQLModelMixin, db.Model):
+    __tablename__ = 'privileges'
+    id = db.Column(db.Integer, primary_key=True)
+    uri = db.Column(db.String, nullable=False, index=True)
+    bit = db.Column(ChoiceType(MethodType, impl=db.Integer()))
+
+class TradeProcess(SQLModelMixin, db.Model):
+    __tablename__ = 'trade_processes'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=False, index=True)
+    description = db.Column(db.String)
+    type = db.Column(ChoiceType(HaType, impl=db.Integer()))
+    base_dir = db.Column(db.String)
+    exec_file = db.Column(db.String)
+    sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
+    svr_id = db.Column(db.Integer, db.ForeignKey('servers.id'), index=True)
+    config_files = db.relationship('ConfigFile', backref='process')
+
+class SystemType(SQLModelMixin, db.Model):
+    __tablename__ = 'system_types'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, unique=True, index=True)
+    description = db.Column(db.String)
+    systems = db.relationship('TradeSystem', backref='type')
+
 class TradeSystem(SQLModelMixin, db.Model):
     __tablename__ = 'trade_systems'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, unique=True, index=True)
     description = db.Column(db.String)
+    type_id = db.Column(db.Integer, db.ForeignKey('system_types.id'), index=True)
     version = db.Column(db.String)
-    manage_ip = db.Column(db.String, nullable=False)
+    manage_ip = db.Column(IPAddressType, nullable=False)
     login_user = db.Column(db.String, nullable=False)
     login_pwd = db.Column(db.String, nullable=False)
-    process = db.relationship('TradeProcess', backref='system')
+    base_dir = db.Column(db.String)
+    processes = db.relationship('TradeProcess', backref='system')
+    servers = db.relationship('Server',
+        secondary='trade_processes',
+        backref=db.backref('systems', lazy='dynamic'),
+        lazy='dynamic'
+    )
+    config_files = db.relationship('ConfigFile', backref='system')
+    vendor = db.relationship('SystemVendor', backref='system')
 
-class TradeProcess(SQLModelMixin, db.Model):
-    __tablename__ = 'trade_processes'
+class SystemVendor(SQLModelMixin, db.Model):
+    __tablename__ = "vendors"
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False)
+    sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
+    name = db.Column(db.String, unique=True, index=True)
     description = db.Column(db.String)
-    sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'))
+    contactors = db.Column(JSONType)
 
+class Server(SQLModelMixin, db.Model):
+    __tablename__ = 'servers'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, unique=True, index=True)
+    survey = db.Column(JSONType)
+    description = db.Column(db.String)
+    platform = db.Column(ChoiceType(PlatformType, impl=db.Integer()))
+    manage_ip = db.Column(IPAddressType, nullable=False)
+    admin_user = db.Column(db.String, nullable=False)
+    admin_pwd = db.Column(db.String, nullable=False)
+    processes = db.relationship('TradeProcess', backref='server')
+    statics_records = db.relationship('StaticsRecord', backref='server')
+
+class Operation(SQLModelMixin, db.Model):
+    __tablename__ = 'operations'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, unique=True, index=True)
+    sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
+    type = db.Column(ChoiceType(ScriptType, impl=db.Integer()))
+    earliest = db.Column(ArrowType)
+    latest = db.Column(ArrowType)
+    detail = db.Column(JSONType, nullable=False)
+    records = db.relationship('OperateRecord', backref='operation')
+
+class OperateRecord(SQLModelMixin, db.Model):
+    __tablename__ = 'operate_records'
+    id = db.Column(db.Integer, primary_key=True)
+    sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
+    operation_id = db.Column(db.Integer, db.ForeignKey('operations.id'), index=True)
+    operator_id = db.Column(db.Integer, db.ForeignKey('operators.id'), index=True)
+    operated_at = db.Column(ArrowType, index=True)
+    authorizor_id = db.Column(db.Integer, db.ForeignKey('operators.id'), index=True)
+    authorized_at = db.Column(ArrowType, index=True)
+    results = db.relationship('OperateResult', backref='record')
+
+class OperateResult(SQLModelMixin, db.Model):
+    __tablename__ = 'operate_results'
+    id = db.Column(db.Integer, primary_key=True)
+    op_id = db.Column(db.Integer, db.ForeignKey('operate_records.id'), index=True)
+    succeed = db.Column(db.Boolean)
+    error_code = db.Column(db.Integer, default=0)
+    detail = db.Column(JSONType, nullable=False)
+
+class StaticsRecord(SQLModelMixin, db.Model):
+    __tablename__ = 'statics_records'
+    id = db.Column(db.Integer, primary_key=True)
+    svr_id = db.Column(db.Integer, db.ForeignKey('servers.id'), index=True)
+    operator_id = db.Column(db.Integer, db.ForeignKey('operators.id'), index=True)
+    operated_at = db.Column(ArrowType, index=True)
+    type = db.Column(ChoiceType(StaticsType, impl=db.Integer()))
+    detail = db.Column(JSONType, nullable=False)
+
+class ConfigFile(SQLModelMixin, db.Model):
+    __tablename__ = 'config_files'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, index=True)
+    sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
+    proc_id = db.Column(db.Integer, db.ForeignKey('trade_processes.id'), index=True)
+    dir = db.Column(db.String, nullable=False)
+    file = db.Column(db.String, nullable=False)
+    hash_code = db.Column(db.String)
+    storage = db.Column(db.String)
+    timestamp = db.Column(ArrowType, index=True)
+    active = db.Column(db.Boolean)

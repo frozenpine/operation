@@ -30,7 +30,7 @@ def login():
             '''
             user = Operator.find(login=form.login.data)
             if user and user.verify_password(form.password.data):
-                login_user(user, form.remember_me.data)
+                login_user(user, False)
                 return redirect(request.args.get('next') or url_for('main.index'))
             else:
                 flash("Invalid login or password!")
@@ -43,7 +43,7 @@ def login():
 def logout():
     logout_user()
     flash('You have been logged out.')
-    return redirect(url_for('main.index'))
+    return redirect(url_for('auth.login'))
 
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
@@ -53,7 +53,8 @@ def register():
             #usr = User.find(login=form.login.data)
             usr = Operator.find(login=form.login.data)
             if usr:
-                flash("User({0}) \"{1}\" already exists!".format(usr.uuid, usr.name))
+                #flash("User(id: {0}) \"{1}\" already exists!".format(usr.uuid, usr.name))
+                flash("User(id: {0}) \"{1}\" already exists!".format(usr.id, usr.name))
             else:
                 try:
                     '''
