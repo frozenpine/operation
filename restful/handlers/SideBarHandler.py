@@ -5,9 +5,9 @@ from flask_restful import Resource
 
 class SideBar(Resource):
     def get(self):
-        devices = Server.query.all()
-        systems = TradeSystem.query.all()
+        systems = TradeSystem.query.filter(TradeSystem.parent_sys_id==None).all()
         list = []
+        '''
         list.append(
             {
                 "id":"1",
@@ -50,4 +50,22 @@ class SideBar(Resource):
                 "name": u"告警信息",
                 "Url": "#temp4"
             })
+        '''
+        for sys in systems:
+            system = {}
+            system['id'] = sys.id
+            system['icon'] = 'am-icon-cog'
+            system['name'] = sys.name
+            system['isSecond'] = sys.child_systems is not None
+            if system['isSecond']:
+                system['url'] = 'javascript:;'
+                system['secondName'] = [
+                    {
+                        'name': child.name,
+                        'url': "temp#{0}".format(child.id)
+                    } for child in sys.child_systems
+                ]
+            else:
+                system['url'] = "temp#{0}".format(sys.id)
+            list.append(system)
         return list

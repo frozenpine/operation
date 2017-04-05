@@ -134,7 +134,7 @@
 
     <div class="tpl-page-container tpl-page-header-fixed" ng-controller="sideBarCtrl">
         <div class="tpl-left-nav tpl-left-nav-hover" style="display: none;width: 55px;padding-left: 3px">
-            <div class="am-icon-list tpl-header-nav-hover-ico am-margin-right tpl-left-nav-title"></div>
+            <div class="am-icon-list tpl-header-nav-hover-ico tpl-left-nav-title"></div>
             <div class="tpl-left-nav-list" style="width: 55px;">
                 <ul class="tpl-left-nav-menu">
                     <li class="tpl-left-nav-item am-dropdown" data-am-dropdown ng-repeat="data in listName">
@@ -152,8 +152,8 @@
         </div>
 
         <div class="tpl-left-nav tpl-left-nav-hover" style="padding-left: 3px">
-            <div class="am-icon-list tpl-header-nav-hover-ico am-margin-right tpl-left-nav-title"></div>
-            <div class="tpl-left-nav-list">
+            <div class="am-icon-list tpl-header-nav-hover-ico tpl-left-nav-title am-fr"></div>
+            <div class="tpl-left-nav-list am-fr">
                 <ul class="tpl-left-nav-menu">
                     <li class="tpl-left-nav-item" ng-repeat="data in listName">
                         <a href="{{data.Url}}" class="nav-link tpl-left-nav-link-list" ng-click="openBottom(data.id)">

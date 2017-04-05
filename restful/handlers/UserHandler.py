@@ -7,7 +7,7 @@ class UserApi(Resource):
         #user = User.find(login=login)
         user = Operator.find(login=login)
         if user:
-            return {"login": user.login, "name": user.name}
+            return {'login': user.login, 'name': user.name}
         else:
             return {'error': 'user not found'}, 404
     def put(self, login):

@@ -37,7 +37,7 @@
                             [[ form.password() ]]
                         </div>
                         {% with messages = get_flashed_messages() %} {% for message in get_flashed_messages() %}
-                        <div class="flash">[[ message ]]</div>
+                        <div style="color: red">[[ message ]]</div>
                         {% endfor %} {% endwith %}
                         <p><button type="submit" class="am-btn am-btn-default">登录</button></p>
                     </fieldset>

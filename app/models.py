@@ -136,6 +136,15 @@ operator_server = db.Table('operator_server',
     db.Column('system_id', db.Integer, db.ForeignKey('servers.id'), index=True),
 )
 
+class SystemDependece(db.Model):
+    __tablename__ = 'system_system'
+    up_sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), primary_key=True)
+    down_sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), primary_key=True)
+
+    def __init__(self, up_sys_id, down_sys_id):
+        self.up_sys_id = up_sys_id
+        self.down_sys_id = down_sys_id
+
 class HaType(Enum):
     master = 1
     slave = 2
@@ -168,6 +177,11 @@ class StaticsType(Enum):
     SWAP = 5
     NETWORK = 6
 
+class Status(Enum):
+    Stopped = 1
+    Running = 2
+    Idle = 3
+
 class Operator(UserMixin, SQLModelMixin, db.Model):
     def __init__(self, login, password, name=None):
         self.login = login
@@ -176,6 +190,7 @@ class Operator(UserMixin, SQLModelMixin, db.Model):
             self.name = name
         else:
             self.name = login
+        super(Operator, self).__init__()
 
     __tablename__ = 'operators'
     id = db.Column(db.Integer, primary_key=True)
@@ -235,6 +250,13 @@ class OpPrivilege(SQLModelMixin, db.Model):
     bit = db.Column(ChoiceType(MethodType, impl=db.Integer()))
 
 class TradeProcess(SQLModelMixin, db.Model):
+    def __init__(self, name, sys_id, svr_id, type=HaType.master):
+        self.name = name
+        self.sys_id = sys_id
+        self.svr_id = svr_id
+        self.type = type
+        super(TradeProcess, self).__init__()
+
     __tablename__ = 'trade_processes'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False, index=True)
@@ -245,6 +267,7 @@ class TradeProcess(SQLModelMixin, db.Model):
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     svr_id = db.Column(db.Integer, db.ForeignKey('servers.id'), index=True)
     config_files = db.relationship('ConfigFile', backref='process')
+    status = db.Column(ChoiceType(Status, impl=db.Integer()))
 
 class SystemType(SQLModelMixin, db.Model):
     __tablename__ = 'system_types'
@@ -260,9 +283,9 @@ class TradeSystem(SQLModelMixin, db.Model):
     description = db.Column(db.String)
     type_id = db.Column(db.Integer, db.ForeignKey('system_types.id'), index=True)
     version = db.Column(db.String)
-    manage_ip = db.Column(IPAddressType, nullable=False)
-    login_user = db.Column(db.String, nullable=False)
-    login_pwd = db.Column(db.String, nullable=False)
+    manage_ip = db.Column(IPAddressType, index=True)
+    login_user = db.Column(db.String, index=True)
+    login_pwd = db.Column(db.String, index=True)
     base_dir = db.Column(db.String)
     processes = db.relationship('TradeProcess', backref='system')
     servers = db.relationship('Server',
@@ -272,6 +295,19 @@ class TradeSystem(SQLModelMixin, db.Model):
     )
     config_files = db.relationship('ConfigFile', backref='system')
     vendor = db.relationship('SystemVendor', backref='system')
+    parent_sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
+    parent_system = db.relationship('TradeSystem', backref='child_systems', remote_side=[id])
+    status = db.Column(ChoiceType(Status, impl=db.Integer()))
+    
+    @property
+    def up_systems(self):
+        return TradeSystem.query.join(SystemDependece,  SystemDependece.up_sys_id==TradeSystem.id)\
+            .filter(SystemDependece.down_sys_id==self.id).all()
+    
+    @property
+    def down_systems(self):
+        return TradeSystem.query.join(SystemDependece, SystemDependece.down_sys_id==TradeSystem.id)\
+            .filter(SystemDependece.up_sys_id==self.id).all()
 
 class SystemVendor(SQLModelMixin, db.Model):
     __tablename__ = "vendors"

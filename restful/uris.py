@@ -6,7 +6,9 @@ from .handlers.UserHandler import UserApi, UserListApi
 from .handlers.DeviceHandler import DeviceApi, DeviceListApi
 from .handlers.SideBarHandler import SideBar
 
-resources.add_resource(UserApi, '/users/<string:login>', 
+resources.add_resource(UserApi, 
+                       '/users/<string:login>',
+                       '/users/<int:id>',
                        methods=['GET', 'PUT'])
 resources.add_resource(UserListApi, '/users', '/users/', 
                        methods=['GET', 'POST'])
