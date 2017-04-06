@@ -125,6 +125,7 @@ class SQLModelMixin(object):
                         and x != 'metadata'
                         and x != 'query'
                         and not x.startswith('password')
+                        and not x.endswith('_id')
                      ]:
             data = getattr(self, field)
             if not callable(data):

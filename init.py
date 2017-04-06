@@ -4,7 +4,6 @@ from flask_script import Manager
 from app import create_app, db
 from app.models import (Operator, OpRole, OpPrivilege, MethodType, SystemDependece,
     Server, TradeProcess, TradeSystem, HaType, SystemType)
-import json
 
 manager = Manager(create_app('development'))
 
