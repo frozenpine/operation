@@ -7,6 +7,8 @@ from neomodel import (StructuredNode, RelationshipTo, RelationshipFrom, Relation
 from .relations import *
 from werkzeug.security import generate_password_hash, check_password_hash
 from enum import Enum
+from ipaddress import IPv4Address
+from arrow import Arrow
 
 class NodeMixin(StructuredNode):
     __abstract_node__ = True
@@ -15,7 +17,7 @@ class NodeMixin(StructuredNode):
     description = StringProperty()
     created_time = DateTimeProperty(default_now=True)
     disabled = BooleanProperty(default=False)
-    
+
     @classmethod
     def find(cls, **kwargs):
         try:
@@ -115,6 +117,30 @@ class SQLModelMixin(object):
     @classmethod
     def find(cls, **kwargs):
         return cls.query.filter_by(**kwargs).first()
+
+    def to_json(self):
+        fields = {}
+        for field in [x for x in dir(self) 
+                        if not x.startswith('_') 
+                        and x != 'metadata'
+                        and x != 'query'
+                        and not x.startswith('password')
+                     ]:
+            data = getattr(self, field)
+            if not callable(data):
+                if isinstance(data, list):
+                    fields[field] = [x.name for x in data]
+                elif isinstance(data, db.Query):
+                    fields[field] = [x.name for x in data.all()]
+                elif isinstance(data, IPv4Address):
+                    fields[field] = data.exploded
+                elif isinstance(data, Arrow):
+                    fields[field] = data.to('local').format('YYYY-MM-DD HH:mm:ss ZZ')
+                elif hasattr(data, 'name'):
+                    fields[field] = data.name
+                else:
+                    fields[field] = data
+        return fields
 
 operator_role = db.Table('operator_role',
     db.Column('operator_id', db.Integer, db.ForeignKey('operators.id'), index=True),
@@ -285,7 +311,7 @@ class TradeSystem(SQLModelMixin, db.Model):
     version = db.Column(db.String)
     manage_ip = db.Column(IPAddressType, index=True)
     login_user = db.Column(db.String, index=True)
-    login_pwd = db.Column(db.String, index=True)
+    login_pwd = db.Column(db.String)
     base_dir = db.Column(db.String)
     processes = db.relationship('TradeProcess', backref='system')
     servers = db.relationship('Server',
@@ -294,7 +320,7 @@ class TradeSystem(SQLModelMixin, db.Model):
         lazy='dynamic'
     )
     config_files = db.relationship('ConfigFile', backref='system')
-    vendor = db.relationship('SystemVendor', backref='system')
+    vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.id'), index=True)
     parent_sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     parent_system = db.relationship('TradeSystem', backref='child_systems', remote_side=[id])
     status = db.Column(ChoiceType(Status, impl=db.Integer()))
@@ -308,14 +334,29 @@ class TradeSystem(SQLModelMixin, db.Model):
     def down_systems(self):
         return TradeSystem.query.join(SystemDependece, SystemDependece.down_sys_id==TradeSystem.id)\
             .filter(SystemDependece.up_sys_id==self.id).all()
+    
+    def AddDependence(self, up_sys):
+        if isinstance(up_sys, TradeSystem):
+            if self.id is not None and up_sys.id is not None:
+                db.session.add(SystemDependece(up_sys.id, self.id))
+                db.session.commit()
+            else:
+                db.session.add_all([self, up_sys])
+                db.session.commit()
+                db.session.add(SystemDependece(up_sys.id, self.id))
+                db.session.commit()
+        else:
+            raise TypeError('{} is not <class:{}>'.format(up_sys, self.__name__))
+                
+        
 
 class SystemVendor(SQLModelMixin, db.Model):
     __tablename__ = "vendors"
     id = db.Column(db.Integer, primary_key=True)
-    sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     name = db.Column(db.String, unique=True, index=True)
     description = db.Column(db.String)
     contactors = db.Column(JSONType)
+    systems = db.relationship('TradeSystem', backref='vendor')
 
 class Server(SQLModelMixin, db.Model):
     __tablename__ = 'servers'
@@ -324,9 +365,9 @@ class Server(SQLModelMixin, db.Model):
     survey = db.Column(JSONType)
     description = db.Column(db.String)
     platform = db.Column(ChoiceType(PlatformType, impl=db.Integer()))
-    manage_ip = db.Column(IPAddressType, nullable=False)
-    admin_user = db.Column(db.String, nullable=False)
-    admin_pwd = db.Column(db.String, nullable=False)
+    manage_ip = db.Column(IPAddressType, index=True)
+    admin_user = db.Column(db.String, index=True)
+    admin_pwd = db.Column(db.String)
     processes = db.relationship('TradeProcess', backref='server')
     statics_records = db.relationship('StaticsRecord', backref='server')
 

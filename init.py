@@ -4,6 +4,7 @@ from flask_script import Manager
 from app import create_app, db
 from app.models import (Operator, OpRole, OpPrivilege, MethodType, SystemDependece,
     Server, TradeProcess, TradeSystem, HaType, SystemType)
+import json
 
 manager = Manager(create_app('development'))
 
@@ -98,10 +99,13 @@ def init_inventory():
     qmarket1 = TradeProcess(name='qmarket', type=HaType.master, sys_id=qdp01.id, svr_id=svr02.id)
     risk01.parent_sys_id = qdiam01.id
     risk02.parent_system = qdiam01
-    sys_rel1 = SystemDependece(qdp01.id, qdiam01.id)
-    sys_rel2 = SystemDependece(ctp01.id, qdiam01.id)
+    #sys_rel1 = SystemDependece(qdp01.id, qdiam01.id)
+    #sys_rel2 = SystemDependece(ctp01.id, qdiam01.id)
+    qdiam01.AddDependence(qdp01)
+    qdiam01.AddDependence(ctp01)
 
-    db.session.add_all([qtrade1, qdata1, qmdb1, qsdb1, qmarket1, sys_rel1, sys_rel2, risk01, risk02])
+    #db.session.add_all([qtrade1, qdata1, qmdb1, qsdb1, qmarket1, sys_rel1, sys_rel2, risk01, risk02])
+    db.session.add_all([qtrade1, qdata1, qmdb1, qsdb1, qmarket1, risk01, risk02])
     db.session.commit()
 
 @manager.command
@@ -127,7 +131,7 @@ def printsys():
         print "system:", sys.name
         for svr in sys.servers:
             print "\tsvr info: {0} {1}".format(svr.name, svr.manage_ip)
-            for proc in filter(lambda x: x.sys_id == sys.id, svr.processes):
+            for proc in [p for p in sys.processes if p.svr_id == svr.id]:
                 print "\t\tproc info: {0}({1})".format(proc.name, proc.id)
         print "child systems:"
         for child in sys.child_systems:
@@ -138,6 +142,20 @@ def printsys():
         print "down systems:"
         for down in sys.down_systems:
             print "\t", down.name
+        print "administrators:"
+        for usr in sys.administrators:
+            print "\t", usr.name
+
+@manager.command
+def modeltest():
+    sys = TradeSystem.find(id=1)
+    svr = Server.find(id=1)
+    proc = TradeProcess.find(id=1)
+    usr = Operator.find(id=1)
+    print sys.to_json()
+    print svr.to_json()
+    print proc.to_json()
+    print usr.to_json()
 
 if __name__ == '__main__':
     manager.run()
