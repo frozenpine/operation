@@ -62,7 +62,7 @@ class SideBar(Resource):
                 system['secondName'] = [
                     {
                         'name': child.name,
-                        'url': "temp#{0}".format(child.id)
+                        'url': 'temp'
                     } for child in sys.child_systems
                 ]
             else:

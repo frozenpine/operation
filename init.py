@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+from __future__ import unicode_literals
 from flask import url_for
 from flask_script import Manager
 from app import create_app, db
@@ -59,19 +60,19 @@ def init_inventory():
         admin_user='root', 
         admin_pwd='quantdo123456'
     )
-    qdp01 = TradeSystem(name='QDP01',
+    qdp01 = TradeSystem(name=u'QDP上期1号',
         manage_ip='10.47.55.21',
         login_user='qdp',
         login_pwd='qdp',
         type_id=qdp_type.id
     )
-    qdiam01 = TradeSystem(name='QDIAM01',
+    qdiam01 = TradeSystem(name=u'QDIAM上期1号',
         manage_ip='10.47.55.22',
         login_user='qdam',
         login_pwd='qdam',
         type_id=qdiam_type.id
     )
-    ctp01 = TradeSystem(name='CTP01',
+    ctp01 = TradeSystem(name='CTP主席',
         manage_ip='10.47.55.23',
         login_user='ctp',
         login_pwd='ctp',
@@ -111,7 +112,7 @@ def init_inventory():
 def printurl():     
     print url_for('main.index'), url_for('main.adddevice')
     print url_for('auth.login'), url_for('auth.register')
-    print url_for('api.userlistapi'), url_for('api.userapi', login='test')
+    print url_for('api.users'), url_for('api.user', login='admin'), url_for('api.user', id=1)
 
 @manager.command
 def printuser():
@@ -152,9 +153,9 @@ def modeltest():
     proc = TradeProcess.find(id=1)
     usr = Operator.find(id=1)
     print sys.to_json()
-    print svr.to_json()
-    print proc.to_json()
-    print usr.to_json()
+    #print svr.to_json()
+    #print proc.to_json()
+    #print usr.to_json()
 
 if __name__ == '__main__':
     manager.run()

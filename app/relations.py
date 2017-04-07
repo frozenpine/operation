@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 from neomodel import (StructuredRel,
                       StringProperty, IntegerProperty, DateTimeProperty)
 

@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 from . import db
 from sqlalchemy_utils.types import ChoiceType, JSONType, IPAddressType, ArrowType
 from flask_login import UserMixin
@@ -9,6 +10,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from enum import Enum
 from ipaddress import IPv4Address
 from arrow import Arrow
+import re
 
 class NodeMixin(StructuredNode):
     __abstract_node__ = True
@@ -114,19 +116,25 @@ class Privilege(NodeMixin):
     level = IntegerProperty(default=1)
 
 class SQLModelMixin(object):
+    filter_keyword = [
+        'is_active', 
+        'is_anonymous', 
+        'is_authenticated',
+        'metadata',
+        'query',
+        'filter_keyword',
+    ]
     @classmethod
     def find(cls, **kwargs):
         return cls.query.filter_by(**kwargs).first()
 
-    def to_json(self):
+    def to_json(self, filter=True):
         fields = {}
-        for field in [x for x in dir(self) 
-                        if not x.startswith('_') 
-                        and x != 'metadata'
-                        and x != 'query'
-                        and not x.startswith('password')
-                        and not x.endswith('_id')
-                     ]:
+        for field in [
+            x for x in dir(self) 
+            if not re.match('^_|\w*p(?:ass)?w(?:or)?d|\w+_id$', x, re.I)
+                and x not in self.filter_keyword
+        ]:
             data = getattr(self, field)
             if not callable(data):
                 if isinstance(data, list):
@@ -143,22 +151,26 @@ class SQLModelMixin(object):
                     fields[field] = data
         return fields
 
-operator_role = db.Table('operator_role',
+operator_role = db.Table(
+    'operator_role',
     db.Column('operator_id', db.Integer, db.ForeignKey('operators.id'), index=True),
     db.Column('role_id',db.Integer, db.ForeignKey('roles.id'), index=True)
 )
 
-role_privilege = db.Table('role_privilege',
+role_privilege = db.Table(
+    'role_privilege',
     db.Column('role_id', db.Integer, db.ForeignKey('roles.id'), index=True),
     db.Column('privilege_id', db.Integer, db.ForeignKey('privileges.id'), index=True)
 )
 
-operator_system = db.Table('operator_system',
+operator_system = db.Table(
+    'operator_system',
     db.Column('operator_id', db.Integer, db.ForeignKey('operators.id'), index=True),
     db.Column('system_id', db.Integer, db.ForeignKey('trade_systems.id'), index=True),
 )
 
-operator_server = db.Table('operator_server',
+operator_server = db.Table(
+    'operator_server',
     db.Column('operator_id', db.Integer, db.ForeignKey('operators.id'), index=True),
     db.Column('system_id', db.Integer, db.ForeignKey('servers.id'), index=True),
 )
@@ -224,17 +236,20 @@ class Operator(UserMixin, SQLModelMixin, db.Model):
     login = db.Column(db.String, unique=True, index=True)
     name = db.Column(db.String, index=True)
     password_hash = db.Column(db.String, nullable=False)
-    roles = db.relationship('OpRole',
+    roles = db.relationship(
+        'OpRole',
         secondary=operator_role,
         backref=db.backref('users', lazy='dynamic'),
         lazy='dynamic'
     )
-    managed_servers = db.relationship('Server',
+    managed_servers = db.relationship(
+        'Server',
         secondary=operator_server,
         backref=db.backref('administrators', lazy='dynamic'),
         lazy='dynamic'
     )
-    managed_systems = db.relationship('TradeSystem',
+    managed_systems = db.relationship(
+        'TradeSystem',
         secondary=operator_system,
         backref=db.backref('administrators', lazy='dynamic'),
         lazy='dynamic'
@@ -251,14 +266,12 @@ class Operator(UserMixin, SQLModelMixin, db.Model):
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    def __repr__(self):
-        return '<Operator %r>' % self.login
-
 class OpRole(SQLModelMixin, db.Model):
     __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, unique=True, index=True)
-    privileges = db.relationship('OpPrivilege',
+    privileges = db.relationship(
+        'OpPrivilege',
         secondary=role_privilege,
         backref=db.backref('roles', lazy='dynamic'),
         lazy='dynamic'
@@ -273,6 +286,9 @@ class OpRole(SQLModelMixin, db.Model):
 class OpPrivilege(SQLModelMixin, db.Model):
     __tablename__ = 'privileges'
     id = db.Column(db.Integer, primary_key=True)
+    @property
+    def name(self):
+        return '{}.{}'.format(self.uri, self.bit.name)
     uri = db.Column(db.String, nullable=False, index=True)
     bit = db.Column(ChoiceType(MethodType, impl=db.Integer()))
 
@@ -315,7 +331,8 @@ class TradeSystem(SQLModelMixin, db.Model):
     login_pwd = db.Column(db.String)
     base_dir = db.Column(db.String)
     processes = db.relationship('TradeProcess', backref='system')
-    servers = db.relationship('Server',
+    servers = db.relationship(
+        'Server',
         secondary='trade_processes',
         backref=db.backref('systems', lazy='dynamic'),
         lazy='dynamic'
