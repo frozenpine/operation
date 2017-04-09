@@ -13,7 +13,10 @@ class DeviceApi(Resource):
         '''
         dev = Server.find(**kwargs)
         if dev:
-            return {"message": 'server({}) found succeefully.'.format(dev.name), "data": dev.to_json()}
+            return {
+                "message": 'server({}) found succeefully.'.format(dev.name.encode('utf-8')), 
+                "data": dev.to_json()
+            }
         else:
             return {'message': 'server not found'}, 404
     '''

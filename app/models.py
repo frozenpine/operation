@@ -2,15 +2,18 @@
 from . import db
 from sqlalchemy_utils.types import ChoiceType, JSONType, IPAddressType, ArrowType
 from flask_login import UserMixin
-from neomodel import (StructuredNode, RelationshipTo, RelationshipFrom, Relationship,
-                      StringProperty, DateProperty, IntegerProperty, UniqueIdProperty, BooleanProperty,
-                      ZeroOrOne, One)
+from neomodel import (
+    StructuredNode, RelationshipTo, RelationshipFrom, Relationship,
+    StringProperty, DateProperty, IntegerProperty, UniqueIdProperty, BooleanProperty,
+    ZeroOrOne, One
+)
 from .relations import *
 from werkzeug.security import generate_password_hash, check_password_hash
 from enum import Enum
 from ipaddress import IPv4Address
 from arrow import Arrow
 import re
+import json
 
 class NodeMixin(StructuredNode):
     __abstract_node__ = True
@@ -117,39 +120,40 @@ class Privilege(NodeMixin):
 
 class SQLModelMixin(object):
     filter_keyword = [
-        'is_active', 
-        'is_anonymous', 
+        'is_active',
+        'is_anonymous',
         'is_authenticated',
         'metadata',
         'query',
         'filter_keyword',
+        'level'
     ]
+    level = 0
+
     @classmethod
     def find(cls, **kwargs):
         return cls.query.filter_by(**kwargs).first()
 
-    def to_json(self, filter=True):
-        fields = {}
-        for field in [
-            x for x in dir(self) 
-            if not re.match('^_|\w*p(?:ass)?w(?:or)?d|\w+_id$', x, re.I)
-                and x not in self.filter_keyword
-        ]:
+    def to_json(self, depth=1):
+        results = {}
+        for field in [x for x in dir(self) if not re.match(
+            r'^_|\w*p(?:ass)?w(?:or)?d|\w+_id$', x, re.I
+        ) and x not in self.filter_keyword]:
             data = getattr(self, field)
             if not callable(data):
                 if isinstance(data, list):
-                    fields[field] = [x.name for x in data]
+                    results[field] = [x.name for x in data]
                 elif isinstance(data, db.Query):
-                    fields[field] = [x.name for x in data.all()]
+                    results[field] = [x.name for x in data.all()]
                 elif isinstance(data, IPv4Address):
-                    fields[field] = data.exploded
+                    results[field] = data.exploded
                 elif isinstance(data, Arrow):
-                    fields[field] = data.to('local').format('YYYY-MM-DD HH:mm:ss ZZ')
+                    results[field] = data.to('local').format('YYYY-MM-DD HH:mm:ss ZZ')
                 elif hasattr(data, 'name'):
-                    fields[field] = data.name
+                    results[field] = data.name
                 else:
-                    fields[field] = data
-        return fields
+                    results[field] = data
+        return results
 
 operator_role = db.Table(
     'operator_role',
@@ -342,17 +346,26 @@ class TradeSystem(SQLModelMixin, db.Model):
     parent_sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     parent_system = db.relationship('TradeSystem', backref='child_systems', remote_side=[id])
     status = db.Column(ChoiceType(Status, impl=db.Integer()))
-    
+    operation_groups = db.relationship('OperationGroup', backref='system')
+
     @property
     def up_systems(self):
-        return TradeSystem.query.join(SystemDependece,  SystemDependece.up_sys_id==TradeSystem.id)\
-            .filter(SystemDependece.down_sys_id==self.id).all()
-    
+        return TradeSystem.query.join(
+            SystemDependece,
+            SystemDependece.up_sys_id == TradeSystem.id
+        ).filter(
+            SystemDependece.down_sys_id == self.id
+        ).all()
+
     @property
     def down_systems(self):
-        return TradeSystem.query.join(SystemDependece, SystemDependece.down_sys_id==TradeSystem.id)\
-            .filter(SystemDependece.up_sys_id==self.id).all()
-    
+        return TradeSystem.query.join(
+            SystemDependece,
+            SystemDependece.down_sys_id == TradeSystem.id
+        ).filter(
+            SystemDependece.up_sys_id == self.id
+        ).all()
+
     def AddDependence(self, up_sys):
         if isinstance(up_sys, TradeSystem):
             if self.id is not None and up_sys.id is not None:
@@ -365,8 +378,6 @@ class TradeSystem(SQLModelMixin, db.Model):
                 db.session.commit()
         else:
             raise TypeError('{} is not <class:{}>'.format(up_sys, self.__name__))
-                
-        
 
 class SystemVendor(SQLModelMixin, db.Model):
     __tablename__ = "vendors"
@@ -392,18 +403,26 @@ class Server(SQLModelMixin, db.Model):
 class Operation(SQLModelMixin, db.Model):
     __tablename__ = 'operations'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, unique=True, index=True)
-    sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
+    name = db.Column(db.String, index=True)
     type = db.Column(ChoiceType(ScriptType, impl=db.Integer()))
     earliest = db.Column(ArrowType)
     latest = db.Column(ArrowType)
     detail = db.Column(JSONType, nullable=False)
+    order = db.Column(db.Integer)
+    op_group_id = db.Column(db.Integer, db.ForeignKey('operation_groups.id'))
     records = db.relationship('OperateRecord', backref='operation')
+
+class OperationGroup(SQLModelMixin, db.Model):
+    __tablename__ = 'operation_groups'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, index=True)
+    description = db.Column(db.String)
+    sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
+    operations = db.relationship('Operation', backref='group')
 
 class OperateRecord(SQLModelMixin, db.Model):
     __tablename__ = 'operate_records'
     id = db.Column(db.Integer, primary_key=True)
-    sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     operation_id = db.Column(db.Integer, db.ForeignKey('operations.id'), index=True)
     operator_id = db.Column(db.Integer, db.ForeignKey('operators.id'), index=True)
     operated_at = db.Column(ArrowType, index=True)

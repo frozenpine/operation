@@ -6,7 +6,10 @@ class SystemApi(Resource):
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
         if sys:
-            return {"message": 'system({}) found succeefully.'.format(sys.name), "data": sys.to_json()}
+            return {
+                "message": 'system({}) found succeefully.'.format(sys.name.encode('utf-8')),
+                "data": sys.to_json()
+            }
         else:
             return {'message': 'system not found'}, 404
 

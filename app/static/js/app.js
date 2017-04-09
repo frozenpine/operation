@@ -24,18 +24,9 @@ $('.tpl-left-nav-link-list').on('click', function() {
 $('.tpl-header-nav-hover-ico').on('click', function() {
     $('.tpl-left-nav').toggle();
     $('.tpl-content-wrapper').toggleClass('tpl-content-wrapper-hover');
-//  if($('#tpl_view').css('display') == "block"){
-//  	$('.tpl-content-wrapper').css('padding-left','55px');
-//  	$('.tpl-content-wrapper').css('padding-top','10px');
-//  	$('.tpl-content-wrapper').css('margin-left','10px');
-//  }
-//  	
-//  else{
-//  	$('.tpl-content-wrapper').css('padding-left','255px');
-//  	$('.tpl-content-wrapper').css('padding-top','10px');
-//  	$('.tpl-content-wrapper').css('margin-left','10px');
-//  }
 })
+
+//滚动条默认在底部
 
 
 // 页面数据

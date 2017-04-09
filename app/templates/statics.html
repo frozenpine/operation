@@ -1,0 +1,214 @@
+<div class="row">
+    <div class="am-u-md-12 am-u-sm-12">
+        <div class="row">
+			<div class="am-u-md-6 am-u-sm-6">
+				<div class="tpl-portlet-components" style="max-height: 400px;overflow-y: auto;" ng-controller="svrStaticsControl">
+					<div class="portlet-title">
+						<div class="caption font-green bold">
+							状态信息-服务器
+						</div>
+					</div>
+					<div class="tpl-block">
+					<div class="am-g">
+						<div class="am-u-sm-12">
+							<form class="am-form">
+								<table class="am-table am-table-hover table-main">
+									<thead>
+									<tr>
+										<th>服务器</th>
+										<th>CPU</th>
+										<th>内存</th>
+										<th>SWAP</th>
+										<th>磁盘名称</th>
+										<th>占用率</th>
+									</tr>
+									</thead>
+									<tbody>
+									<tr ng-repeat="data in serverStatics">
+										<td>{{data.server}}</td>
+										<td>{{data.cpu}}</td>
+										<td>{{data.memory}}</td>
+										<td>{{data.swap}}</td>
+										<td>{{data.diskName}}</td>
+										<td>{{data.disk}}</td>
+									</tr>
+									</tbody>
+								</table>
+								<hr>
+							</form>
+						</div>
+
+					</div>
+				</div>
+				</div>
+			</div>
+			<div class="am-u-md-6 am-u-sm-6">
+				<div class="tpl-portlet-components" style="max-height: 400px;overflow-y: auto;" ng-controller="sysStaticsControl">
+					<div class="portlet-title">
+						<div class="caption font-green bold">
+							状态信息-系统
+						</div>
+					</div>
+					<div class="tpl-block">
+						<div class="am-g">
+							<div class="am-u-sm-12">
+								<form class="am-form">
+									<table class="am-table am-table-hover table-main">
+										<thead>
+										<tr>
+											<th>子系统名</th>
+											<th class="table-data">服务器名</th>
+											<th class="table-data">进程名</th>
+											<th class="table-data">角色</th>
+											<th class="table-status">进程状态</th>
+										</tr>
+										</thead>
+										<tbody>
+										<tr ng-repeat="data in systemStatics">
+											<td>{{data.systemName}}</td>
+											<td>{{data.server}}</td>
+											<td>{{data.process}}</td>
+											<td>{{data.proc_role}}</td>
+											<td>{{data.status}}</td>
+										</tr>
+										</tbody>
+									</table>
+									<hr>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+        <div class="tpl-portlet-components">
+            <div class="portlet-title">
+                <div class="caption font-green bold">
+                    状态信息-总体
+                </div>
+            </div>
+            <div class="tpl-block">
+                <div class="am-g">
+                    <div class="am-u-sm-12">
+                        <form class="am-form">
+                            <table class="am-table am-table-hover table-main">
+                                <thead>
+                                <tr>
+                                    <th class="table-data">交易日期</th>
+                                    <th class="table-title">交易所</th>
+                                    <th class="table-status">状态</th>
+                                    <th class="table-author am-hide-sm-only">报单数目检查</th>
+                                    <th class="table-date am-hide-sm-only">成交数目检查</th>
+                                    <th class="table-status">检查资金状态</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr ng-repeat="data in statusList">
+                                    <td>{{data.tradeData}}</td>
+                                    <td>{{data.tradeLocat}}</td>
+                                    <td>{{data.status}}</td>
+                                    <td>{{data.orderNumCheck}}</td>
+                                    <td>{{data.dealNumCheck}}</td>
+                                    <td>{{data.moneyStatus}}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                            <hr>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="tpl-portlet-components">
+            <div class="portlet-title">
+                <div class="caption font-green bold">
+                    状态信息-账户连接
+                </div>
+            </div>
+            <div class="tpl-block">
+                <div class="am-g">
+                    <div class="am-u-sm-12">
+                        <form class="am-form">
+                            <table class="am-table am-table-hover table-main">
+                                <thead>
+                                <tr>
+                                    <th class="table-data">资金账户</th>
+                                    <th class="table-title">所属产品（公司+产品名）</th>
+                                    <th class="table-title">期貨公司</th>
+                                    <th class="table-status">连接(IP:PROT)</th>
+                                    <th class="table-author am-hide-sm-only">连接状态</th>
+                                    <th class="table-author">对端状态</th>
+                                    <th class="table-date am-hide-sm-only">网络类型</th>
+                                    <th class="table-status">线路延迟</th>
+                                    <th class="table-title">最近连接时间</th>
+                                    <th class="table-title">断线次数</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr ng-repeat="data in statusList">
+                                    <td>{{data.tradeData}}</td>
+                                    <td>{{data.tradeLocat}}</td>
+                                    <td>{{data.status}}</td>
+                                    <td>{{data.orderNumCheck}}</td>
+                                    <td>{{data.dealNumCheck}}</td>
+                                    <td>{{data.moneyStatus}}</td>
+                                    <td>{{data.moneyStatus}}</td>
+                                    <td>{{data.moneyStatus}}</td>
+                                    <td>{{data.moneyStatus}}</td>
+                                    <td>{{data.moneyStatus}}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                            <hr>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="tpl-portlet-components">
+            <div class="portlet-title">
+                <div class="caption font-green bold">
+                    状态信息-客户端连接
+                </div>
+            </div>
+            <div class="tpl-block">
+                <div class="am-g">
+                    <div class="am-u-sm-12">
+                        <form class="am-form">
+                            <table class="am-table am-table-hover table-main">
+                                <thead>
+                                <tr>
+                                    <th class="table-data">客户端名称</th>
+                                    <th class="table-title">API版本</th>
+                                    <th class="table-status">客户端版本</th>
+                                    <th class="table-author am-hide-sm-only">最近登录时间</th>
+                                    <th class="table-date am-hide-sm-only">断开次数</th>
+                                    <th class="table-status">IP</th>
+                                    <th class="table-title">mac</th>
+                                    <th class="table-title">硬盘序列号</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr ng-repeat="data in statusList">
+                                    <td>{{data.tradeData}}</td>
+                                    <td>{{data.tradeLocat}}</td>
+                                    <td>{{data.status}}</td>
+                                    <td>{{data.orderNumCheck}}</td>
+                                    <td>{{data.dealNumCheck}}</td>
+                                    <td>{{data.moneyStatus}}</td>
+                                    <td>{{data.moneyStatus}}</td>
+                                    <td>{{data.moneyStatus}}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                            <hr>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

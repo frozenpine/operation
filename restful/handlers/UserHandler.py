@@ -8,7 +8,10 @@ class UserApi(Resource):
         #user = User.find(login=login)
         user = Operator.find(**kwargs)
         if user:
-            return {'message': 'user({}) found succeefully.'.format(user.name), 'data': user.to_json()}
+            return {
+                'message': 'user({}) found succeefully.'.format(user.name.encode('utf-8')), 
+                'data': user.to_json()
+            }
         else:
             return {'message': 'user not found'}, 404
     '''

@@ -3,8 +3,18 @@ from __future__ import unicode_literals
 from flask import url_for
 from flask_script import Manager
 from app import create_app, db
-from app.models import (Operator, OpRole, OpPrivilege, MethodType, SystemDependece,
-    Server, TradeProcess, TradeSystem, HaType, SystemType)
+from app.models import (
+    Operator, OpRole, OpPrivilege, MethodType, SystemDependece,
+    Server, TradeProcess, TradeSystem, HaType, SystemType,
+    OperationGroup, Operation
+)
+
+import sys
+reload(sys)
+sys.setdefaultencoding("utf-8")
+
+import codecs
+codecs.register(lambda name: name == 'cp65001' and codecs.lookup('utf-8') or None)
 
 manager = Manager(create_app('development'))
 
@@ -50,40 +60,47 @@ def init_inventory():
     db.session.add_all([qdp_type, qdiam_type, ctp_type])
     db.session.commit()
 
-    svr01 = Server(name='qdp01.shsq', 
+    svr01 = Server(
+        name='qdp01.shsq',
         manage_ip='10.47.55.21',
-        admin_user='root', 
+        admin_user='root',
         admin_pwd='quantdo123456'
     )
-    svr02 = Server(name='qmarket01.shsq', 
+    svr02 = Server(
+        name='qmarket01.shsq',
         manage_ip='10.47.55.22',
-        admin_user='root', 
+        admin_user='root',
         admin_pwd='quantdo123456'
     )
-    qdp01 = TradeSystem(name=u'QDP上期1号',
+    qdp01 = TradeSystem(
+        name=u'QDP上期1号',
         manage_ip='10.47.55.21',
         login_user='qdp',
         login_pwd='qdp',
         type_id=qdp_type.id
     )
-    qdiam01 = TradeSystem(name=u'QDIAM上期1号',
+    qdiam01 = TradeSystem(
+        name=u'QDIAM上期1号',
         manage_ip='10.47.55.22',
         login_user='qdam',
         login_pwd='qdam',
         type_id=qdiam_type.id
     )
-    ctp01 = TradeSystem(name='CTP主席',
+    ctp01 = TradeSystem(
+        name='CTP主席',
         manage_ip='10.47.55.23',
         login_user='ctp',
         login_pwd='ctp',
         type_id=ctp_type.id
     )
-    risk01 = TradeSystem(name='risk01',
+    risk01 = TradeSystem(
+        name='risk01',
         manage_ip='1.1.1.1',
         login_user='risk',
         login_pwd='risk'
     )
-    risk02 = TradeSystem(name='risk02',
+    risk02 = TradeSystem(
+        name='risk02',
         manage_ip='1.1.1.2',
         login_user='risk',
         login_pwd='risk'
@@ -106,6 +123,19 @@ def init_inventory():
 
     #db.session.add_all([qtrade1, qdata1, qmdb1, qsdb1, qmarket1, sys_rel1, sys_rel2, risk01, risk02])
     db.session.add_all([qtrade1, qdata1, qmdb1, qsdb1, qmarket1, risk01, risk02])
+    db.session.commit()
+
+@manager.command
+def init_operation():
+    qdp = TradeSystem.find(id=1)
+    grp1 = OperationGroup(name=u'早盘操作')
+    grp2 = OperationGroup(name=u'夜盘操作')
+    grp3 = OperationGroup(name=u'周操作')
+    qdp.operation_groups.append(grp1)
+    qdp.operation_groups.append(grp2)
+    qdp.operation_groups.append(grp3)
+
+    db.session.add_all([grp1, grp2, grp3])
     db.session.commit()
 
 @manager.command

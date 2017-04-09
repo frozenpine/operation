@@ -13,22 +13,10 @@ def index():
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        flash('Already logged in.')
         return redirect(url_for('main.index'))
     form = LoginForm(request.form)
     if request.method == 'POST':
         if form.validate():
-            '''
-            try:
-                user = User.nodes.get(login=form.login.data)
-                if user.verify_password(form.password.data):
-                    login_user(user, form.remember_me.data)
-                    return redirect(request.args.get('next') or url_for('main.index'))
-                else:
-                    flash("Invalid password!")
-            except User.DoesNotExist:
-                flash("Invalid Login Name!")
-            '''
             user = Operator.find(login=form.login.data)
             if user and user.verify_password(form.password.data):
                 login_user(user, False)

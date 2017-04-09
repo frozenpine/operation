@@ -1,0 +1,196 @@
+<!doctype html>
+<html ng-app="myApp">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="keywords" content="index">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="Cache-Control" content="no-siteapp" />
+    <link rel="icon" type="image/png" href="[[ url_for('static', filename='assets/i/favicon.png', _external=True) ]]">
+    <link rel="apple-touch-icon-precomposed" href="[[ url_for('static', filename='assets/i/app-icon72x72@2x.png', _external=True) ]]">
+    <meta name="apple-mobile-web-app-title" content="Amaze UI" />
+    <link rel="stylesheet" href="[[ url_for('static', filename='assets/css/amazeui.min.css', _external=True) ]]" />
+    <link rel="stylesheet" href="[[ url_for('static', filename='assets/css/admin.css', _external=True) ]]">
+    <link rel="stylesheet" href="[[ url_for('static', filename='assets/css/app.css', _external=True) ]]">
+	{% if title %}
+    <title>[[title]] - Flask Test</title>
+    {% else %}
+    <title>Welcome to Flask Test</title>
+    {% endif %}
+</head>
+
+<body>
+    <header class="am-topbar am-topbar-inverse admin-header">
+        <div class="am-topbar-brand">
+            <a href="index.html#/" class="tpl-logo">
+                <img src="[[ url_for('static', filename='assets/img/logo.png', _external=True) ]]" alt="">
+            </a>
+        </div>
+        <!--<div class="am-icon-list tpl-header-nav-hover-ico am-fl am-margin-right">
+        </div>-->
+
+        <button class="am-topbar-btn am-topbar-toggle am-btn am-btn-sm am-btn-success am-show-sm-only" data-am-collapse="{target: '#topbar-collapse'}">
+			<span class="am-sr-only">导航切换</span> <span class="am-icon-bars"></span>
+		</button>
+
+        <div class="am-collapse am-topbar-collapse" id="topbar-collapse" ng-controller="sideBarCtrl">
+            <ul class="am-nav am-nav-pills am-topbar-nav am-topbar-left admin-header-list tpl-header-list">
+                <li class="am-dropdown" data-am-dropdown data-am-dropdown-toggle>
+                    <a class="am-dropdown-toggle tpl-header-list-link" href="javascript:;">
+                        <span class="am-icon-bell-o"> 页面选择</span>
+                    </a>
+                    <ul class="am-dropdown-content tpl-dropdown-content">
+                        <li class="tpl-dropdown-list-bdbc" ng-repeat="list in listName">
+                            <a href="{{list.Url}}" class="tpl-dropdown-list-fl">
+                                <span class="am-icon-btn am-icon-plus tpl-dropdown-ico-btn-size tpl-badge-success">
+								</span> {{list.name}}
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <a class="tpl-header-list-link" href="#">
+                        <span class="am-icon-plus-square"></span>
+                        <span class="am-badge tpl-badge-success am-round">正常</span>
+                        <span class="am-badge tpl-badge-warning am-round">警告</span>
+                        <span class="am-badge tpl-badge-danger am-round">危险</span>
+                    </a>
+                </li>
+                <li class="am-dropdown" data-am-dropdown data-am-dropdown-toggle>
+                    <a class="am-dropdown-toggle tpl-header-list-link" href="javascript:;">
+                        <span class="am-icon-calendar"> 任务列表</span>
+                        <span class="am-badge tpl-badge-primary am-round">4</span>
+                    </a>
+                    <ul class="am-dropdown-content tpl-dropdown-content">
+                        <li class="tpl-dropdown-content-external">
+                            <h3>你有 <span class="tpl-color-primary">4</span> 个任务进度</h3>
+                            <a href="###">全部</a>
+                        </li>
+                        <li>
+                            <a href="javascript:;" class="tpl-dropdown-content-progress">
+                                <span class="task">
+									<span class="desc">任务1</span>
+                                <span class="percent">45%</span>
+                                </span>
+                                <span class="progress">
+									<div class="am-progress tpl-progress am-progress-striped">
+										<div class="am-progress-bar am-progress-bar-success" style="width:45%"></div>
+									</div>
+                    			</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="javascript:;" class="tpl-dropdown-content-progress">
+                                <span class="task">
+									<span class="desc">任务2</span>
+                                <span class="percent">30%</span>
+                                </span>
+                                <span class="progress">
+                       				<div class="am-progress tpl-progress am-progress-striped">
+										<div class="am-progress-bar am-progress-bar-secondary" style="width:30%"></div>
+									</div>
+                    			</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="javascript:;" class="tpl-dropdown-content-progress">
+                                <span class="task">
+                        			<span class="desc">任务3</span>
+                                <span class="percent">60%</span>
+                                </span>
+                                <span class="progress">
+                        			<div class="am-progress tpl-progress am-progress-striped">
+										<div class="am-progress-bar am-progress-bar-warning" style="width:60%"></div>
+									</div>
+                    			</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+            <ul class="am-nav am-nav-pills am-topbar-nav am-topbar-right admin-header-list tpl-header-list">
+                <li>
+                    <a class="tpl-header-list-link" href="#">
+                        <span class="am-icon-cog"></span> 设置中心
+                    </a>
+                </li>
+                <li class="am-dropdown" data-am-dropdown data-am-dropdown-toggle>
+                    <a class="am-dropdown-toggle tpl-header-list-link" href="javascript:;">
+                        <span class="tpl-header-list-user-nick"> [[ user.name | title ]]</span>
+                        <span class="tpl-header-list-user-ico">
+							<img src="[[ url_for('static', filename='assets/img/user01.png', _external=True) ]]">
+						</span>
+                    </a>
+                    <ul class="am-dropdown-content">
+                        <li><a href="#"><span class="am-icon-cog"></span> 用户属性</a></li>
+                        <li><a href="#"><span class="am-icon-bell-o"></span> 修改密码</a></li>
+                        <li><a href="[[ url_for('auth.logout') ]]"><span class="am-icon-power-off"></span> 注销</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </header>
+
+    <div class="tpl-page-container tpl-page-header-fixed" ng-controller="sideBarCtrl">
+        <div class="tpl-left-nav tpl-left-nav-hover" style="display: none;width: 55px;padding-left: 3px">
+            <div class="am-icon-list tpl-header-nav-hover-ico tpl-left-nav-title"></div>
+            <div class="tpl-left-nav-list" style="width: 55px;">
+                <ul class="tpl-left-nav-menu">
+                    <li class="tpl-left-nav-item am-dropdown" data-am-dropdown ng-repeat="data in listName">
+                        <a href="{{data.Url}}" class="nav-link am-dropdown-toggle" data-am-dropdown-toggle ng-click="openBottom2(data.id)">
+                            <i class="{{data.icon}}" style="height: 20;width: 15px;" ng-if="data.isSecond"></i>
+                        </a>
+                        <ul class="am-dropdown-content" id="second{{data.id}}" ng-if="data.isSecond">
+                            <li ng-repeat="children in data.secondName" ng-if="data.isSecond">
+                                <a href="{{children.url}}">{{children.name}}</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="tpl-left-nav tpl-left-nav-hover" style="padding-left: 3px">
+            <div class="am-icon-list tpl-header-nav-hover-ico tpl-left-nav-title am-fr"></div>
+            <div class="tpl-left-nav-list am-fr">
+                <ul class="tpl-left-nav-menu">
+                    <li class="tpl-left-nav-item" ng-repeat="data in listName">
+                        <a href="{{data.Url}}" class="nav-link tpl-left-nav-link-list" ng-click="openBottom(data.id)">
+                            <i class="{{data.icon}}" style="width: 15px"></i>
+                            <span ng-bind="data.name"></span>
+                            <i class="am-icon-angle-right tpl-left-nav-more-ico am-fr am-margin-right" ng-if="data.isSecond"></i>
+                        </a>
+                        <ul class="tpl-left-nav-sub-menu" id="{{data.id}}" ng-if="data.isSecond">
+                            <li ng-repeat="children in data.secondName">
+                                <a href="{{children.url}}">
+                                    <i class="am-icon-angle-right"></i>
+                                    <span>{{children.name}}</span>
+                                    <i class="am-icon-star tpl-left-nav-content-ico am-fr am-margin-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div ng-class="{true : 'tpl-content-wrapper',false: 'tpl-content-wrapper2'}[false]" ng-view>
+
+        </div>
+
+
+    </div>
+	
+	<script src="[[ url_for('static', filename='assets/js/jquery.min.js', _external=True) ]]" type="text/javascript" charset="utf-8"></script>
+    <script src="[[ url_for('static', filename='assets/js/angular.min.js', _external=True) ]]" type="text/javascript" charset="utf-8"></script>
+    <script src="[[ url_for('static', filename='assets/js/angular-route.js', _external=True) ]]" type="text/javascript" charset="utf-8"></script>
+    <script src="[[ url_for('static', filename='assets/js/amazeui.min.js', _external=True) ]]" type="text/javascript" charset="utf-8"></script>
+    <script src="[[ url_for('static', filename='assets/js/echarts.min.js', _external=True) ]]" type="text/javascript" charset="utf-8"></script>
+    <script src="[[ url_for('static', filename='assets/js/myApp.js', _external=True) ]]" type="text/javascript" charset="utf-8"></script>
+    <script src="[[ url_for('static', filename='assets/js/app.js', _external=True) ]]" type="text/javascript" charset="utf-8"></script>
+	
+</body>
+
+</html>
