@@ -29,7 +29,7 @@ app.config(['$routeProvider','$compileProvider', function($routeProvider,$compil
 			redirectTo: '/dashboard'
 		});
 }]);
-app.run(function($rootScope){
+app.run(function($rootScope){ 
 	$rootScope.tab = 1;//default
 });
 app.controller('dashBoardControl', ['$scope', function($scope) {

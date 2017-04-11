@@ -5,7 +5,7 @@ from .handlers.DeviceHandler import DeviceApi, DeviceListApi
 from .handlers.SystemHandler import SystemApi, SystemListApi
 from .handlers.RoleHandler import RoleApi, RoleListApi
 from .handlers.UIDataHandler import UIDataApi
-from .handlers.OperationHandler import OperationListApi
+from .handlers.OperationHandler import OperationListApi, OperationApi
 from .handlers.SysStaticsHandler import ServerStaticsApi, SystemStaticsApi
 
 resources.add_resource(
@@ -75,6 +75,13 @@ resources.add_resource(
     '/system/name/<string:name>/operations/',
     methods=['GET', 'POST'],
     endpoint='operations'
+)
+
+resources.add_resource(
+    OperationApi,
+    '/operation/id/<int:id>',
+    methods=['GET'],
+    endpoint='operation'
 )
 
 resources.add_resource(

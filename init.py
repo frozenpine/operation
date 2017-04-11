@@ -183,6 +183,8 @@ def modeltest():
     proc = TradeProcess.find(id=1)
     usr = Operator.find(id=1)
     print sys.to_json()
+    from SysManager.Parser import ymlParser
+    print ymlParser.Dump(sys.to_json())
     #print svr.to_json()
     #print proc.to_json()
     #print usr.to_json()
