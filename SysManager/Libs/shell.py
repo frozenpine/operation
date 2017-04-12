@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 
 def run(client, module):
     command = module.get('shell')

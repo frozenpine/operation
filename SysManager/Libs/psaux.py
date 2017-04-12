@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 import shell
 
 def run(client, module):
@@ -16,7 +17,7 @@ def run(client, module):
         else:
             proclist = ""
         mod = {
-            'shell': "ps aux | awk 'FNR==1{{print;next}}$1 ~/{}/ && $11 ~/{}/{{print}}'"\
+            'shell': "ps aux | awk 'FNR==1{{print;next}}$1 ~/{0}/ && $11 ~/{1}/{{print}}'"\
                 .format(userlist, proclist)
         }
     else:

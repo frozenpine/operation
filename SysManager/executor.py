@@ -1,13 +1,17 @@
+# -*- coding: UTF-8 -*-
 from os import path
-from paramiko import SSHClient, AutoAddPolicy, RSAKey
-#from exceptions import ModuleNotFound, SSHConnNotEstablished
-from configs import SSHConfig
+from paramiko import SSHClient, AutoAddPolicy, RSAKey, PasswordRequiredException
+#from . import logging, Result, ErrorCode
+from excepts import ModuleNotFound, SSHConnNotEstablished
+from configs import SSHConfig, Result, ErrorCode
 
 class Executor():
     def __init__(self, ssh_config):
         self.client = SSHClient()
         self.client.set_missing_host_key_policy(AutoAddPolicy())
         self.client.load_system_host_keys()
+        self.result = Result()
+        self.result.destination = ssh_config.ssh_host
         try:
             if ssh_config.ssh_key and path.isfile(ssh_config.ssh_key):
                 self.pKeyConnect(ssh_config)
@@ -18,15 +22,18 @@ class Executor():
 
     def pKeyConnect(self, ssh_config):
         try:
+            pKey = RSAKey.from_private_key_file(filename=ssh_config.ssh_key)
+        except PasswordRequiredException:
             if ssh_config.ssh_key_pass:
                 pKey = RSAKey.from_private_key_file(
                     filename=ssh_config.ssh_key,
                     password=ssh_config.ssh_key_pass
                 )
             else:
-                pKey = RSAKey.from_private_key_file(filename=ssh_config.ssh_key)
-        except Exception:
-            raise
+                logging.warning(
+                    'Fail to Load RSAKey({}), make sure password for key is correct.'\
+                        .format(ssh_config.ssh_key)
+                )
         try:
             self.client.connect(
                 hostname=ssh_config.ssh_host,
@@ -35,7 +42,7 @@ class Executor():
                 pkey=pKey
             )
         except Exception:
-            raise
+            self.result.error_code = ErrorCode.timeout
 
     def passConnect(self, ssh_config):
         try:
@@ -49,34 +56,28 @@ class Executor():
             raise
 
     def run(self, module):
-        '''
-        if self.client:
-            try:
-                mod = importlib.import_module('{}'.format(module.get('name')), package='.Libs')
-            except ImportError:
-                #raise ModuleNotFound('Module with name({}) not found.'.format(module.get('name')))
-                raise
-            else:
-                return mod.run(client=self.client, module=module)
+        import_mod = 'import Libs.{} as mod'.format(module.get('name'))
+        exec import_mod
+        #import_parser = 'import Parsers.{}Parser as parser'.format(module.get('name'))
+        #exec import_parser
+        stdin, stdout, stderr = mod.run(client=self.client, module=module)
+        self.result.return_code = stdout.channel.recv_exit_status()
+        self.result.module = module
+        if self.result.return_code == 0:
+            self.result.lines = [ line.rstrip('\r\n') for line in stdout.readlines()]
+            #self.result.data = parser.OutputParser(stdout.read())
         else:
-            #raise SSHConnNotEstablished
-            raise Exception
-        '''
-        #import Libs.shell as mod
-        import_string = 'import Libs.{} as mod'.format(module.get('name'))
-        exec import_string
-        return mod.run(client=self.client, module=module)
+            self.result.lines = [ line.rstrip('\r\n') for line in stderr.readlines()]
+        return self.result
 
 if __name__ == '__main__':
     conf = SSHConfig('192.168.92.26', 'root', 'Quantdo@SH2016!')
     executor = Executor(conf)
-    stdin, stdout, stderr = executor.run(
+    result = executor.run(
         {
-            'name': 'df'
+            'name': 'free'
         }
     )
-    return_code = stdout.channel.recv_exit_status()
-    if return_code != 0:
-        print stderr.read()
-    else:
-        print stdout.read()
+    #print result.__dict__
+    print result.lines
+    print len(result.lines)

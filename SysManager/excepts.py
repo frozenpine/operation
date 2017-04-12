@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 
 class ConfigInvalid(Exception):
     def __init__(self, msg="Config Invalid."):

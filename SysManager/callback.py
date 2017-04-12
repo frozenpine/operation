@@ -1,3 +1,5 @@
+# -*- coding: UTF-8 -*-
+
 class CallBack():
     def on_host_failed(self, result):
         print "Connect to host({}) timeout.".format(result.destination)

@@ -1,4 +1,6 @@
-from exceptions import (
+# -*- coding: UTF-8 -*-
+
+from excepts import (
     ConfigInvalid, ModuleNotFound, SSHConnNotEstablished, ImportRSAkeyFaild
 )
 

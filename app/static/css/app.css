@@ -465,12 +465,10 @@ ul.tpl-dropdown-content li>a.tpl-dropdown-content-message:last-child {
 
 .tpl-content-wrapper {
     padding-left: 255px;
-    padding-top: 10px;
     margin-left: 10px;
 }
 .tpl-content-wrapper2{
 	padding-left: 55px;
-    padding-top: 10px;
 }
 .tpl-content-wrapper-hover {
     padding-left: 0px;
@@ -776,8 +774,6 @@ ul.tpl-dropdown-content li>a.tpl-dropdown-content-message:last-child {
 }
 
 .row {
-    margin-left: -18px;
-    margin-right: -18px;
     overflow: hidden;
 }
 
@@ -1439,8 +1435,7 @@ ul.tpl-dropdown-content li>a.tpl-dropdown-content-message:last-child {
     border: 1px solid #e7ecf1;
     padding: 12px 20px 15px;
     background-color: #fff;
-    margin-top: 0;
-    margin-bottom: 25px;
+	margin: 10px;
     overflow: hidden;
 }
 

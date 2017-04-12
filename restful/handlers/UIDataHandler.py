@@ -17,10 +17,12 @@ class UIDataApi(Resource):
             system['id'] = sys.id
             system['icon'] = 'am-icon-table'
             system['name'] = sys.name
-            system['isSecond'] = sys.child_systems is not None
-            system['Url'] = '#statics'
+            system['isSecond'] = len(sys.operation_groups) > 0
+            system['isShow'] = False
+            system['Url'] = '#statics/{}'.format(sys.id)
             system['secondName'] = [
                 {
+                    'id': child.id,
                     'name': child.name,
                     'Url': '#system'
                 } for child in sys.operation_groups

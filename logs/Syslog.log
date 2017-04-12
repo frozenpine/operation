@@ -1,22 +1,4 @@
-Tue, 11 Apr 2017 15:04:03 _internal.py-_log[line:87] WARNING  * Debugger is active!
-Tue, 11 Apr 2017 15:04:03 _internal.py-_log[line:87] INFO  * Debugger pin code: 319-601-254
-Tue, 11 Apr 2017 15:04:03 _internal.py-_log[line:87] INFO  * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
-Tue, 11 Apr 2017 15:33:35 _internal.py-_log[line:87] INFO 127.0.0.1 - - [11/Apr/2017 15:33:35] "GET / HTTP/1.1" 200 -
-Tue, 11 Apr 2017 15:33:36 _internal.py-_log[line:87] INFO 127.0.0.1 - - [11/Apr/2017 15:33:36] "GET /static/img/logo.png HTTP/1.1" 304 -
-Tue, 11 Apr 2017 15:33:36 _internal.py-_log[line:87] INFO 127.0.0.1 - - [11/Apr/2017 15:33:36] "GET /static/img/user01.png HTTP/1.1" 304 -
-Tue, 11 Apr 2017 15:33:36 _internal.py-_log[line:87] INFO 127.0.0.1 - - [11/Apr/2017 15:33:36] "GET /static/js/angular.min.js HTTP/1.1" 304 -
-Tue, 11 Apr 2017 15:33:36 _internal.py-_log[line:87] INFO 127.0.0.1 - - [11/Apr/2017 15:33:36] "GET /static/js/angular-route.js HTTP/1.1" 304 -
-Tue, 11 Apr 2017 15:33:36 _internal.py-_log[line:87] INFO 127.0.0.1 - - [11/Apr/2017 15:33:36] "GET /static/js/echarts.min.js HTTP/1.1" 304 -
-Tue, 11 Apr 2017 15:33:36 _internal.py-_log[line:87] INFO 127.0.0.1 - - [11/Apr/2017 15:33:36] "GET /static/js/myApp.js HTTP/1.1" 304 -
-Tue, 11 Apr 2017 15:33:36 _internal.py-_log[line:87] INFO 127.0.0.1 - - [11/Apr/2017 15:33:36] "GET /api/UI/sideBarCtrl HTTP/1.1" 200 -
-Tue, 11 Apr 2017 15:33:36 _internal.py-_log[line:87] INFO 127.0.0.1 - - [11/Apr/2017 15:33:36] "GET /UI/views/dashboard HTTP/1.1" 200 -
-Tue, 11 Apr 2017 15:33:36 _internal.py-_log[line:87] INFO 127.0.0.1 - - [11/Apr/2017 15:33:36] "GET /api/UI/sideBarCtrl HTTP/1.1" 200 -
-Tue, 11 Apr 2017 15:33:37 _internal.py-_log[line:87] INFO 127.0.0.1 - - [11/Apr/2017 15:33:37] "GET /static/img/syncfusion-icons-white.png HTTP/1.1" 304 -
-Tue, 11 Apr 2017 15:33:39 _internal.py-_log[line:87] INFO 127.0.0.1 - - [11/Apr/2017 15:33:39] "GET /UI/views/statics HTTP/1.1" 200 -
-Tue, 11 Apr 2017 15:33:39 _internal.py-_log[line:87] INFO 127.0.0.1 - - [11/Apr/2017 15:33:39] "GET /api/system/id/1/svr_statics HTTP/1.1" 200 -
-Tue, 11 Apr 2017 15:33:39 _internal.py-_log[line:87] INFO 127.0.0.1 - - [11/Apr/2017 15:33:39] "GET /api/system/id/1/sys_statics HTTP/1.1" 200 -
-Tue, 11 Apr 2017 15:33:39 _internal.py-_log[line:87] INFO 127.0.0.1 - - [11/Apr/2017 15:33:39] "GET /api/system/id/1/svr_statics HTTP/1.1" 200 -
-Tue, 11 Apr 2017 15:36:33 _internal.py-_log[line:87] INFO 127.0.0.1 - - [11/Apr/2017 15:36:33] "GET /auth/logout HTTP/1.1" 302 -
-Tue, 11 Apr 2017 15:36:33 _internal.py-_log[line:87] INFO 127.0.0.1 - - [11/Apr/2017 15:36:33] "GET /auth/login HTTP/1.1" 200 -
-TP/1.1" 302 -
-2017-04-11 15:36:33,996 _internal.py-_log[line:87] INFO 127.0.0.1 - - [11/Apr/2017 15:36:33] "GET /auth/login HTTP/1.1" 200 -
+Wed, 12 Apr 2017 20:00:03 _internal.py-_log[line:87] WARNING  * Debugger is active!
+Wed, 12 Apr 2017 20:00:03 _internal.py-_log[line:87] INFO  * Debugger pin code: 319-601-254
+Wed, 12 Apr 2017 20:00:03 _internal.py-_log[line:87] INFO  * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+2017-04-12 20:00:03,980 _internal.py-_log[line:87] INFO  * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)

@@ -10,7 +10,8 @@
     <meta name="apple-mobile-web-app-title" content="Amaze UI" />
     <link rel="stylesheet" href="[[ url_for('static', filename='assets/css/amazeui.min.css', _external=True) ]]" />
     <link rel="stylesheet" href="[[ url_for('static', filename='assets/css/admin.css', _external=True) ]]">
-    <link rel="stylesheet" href="[[ url_for('static', filename='assets/css/app.css', _external=True) ]]"> {% if title %}
+    <link rel="stylesheet" href="[[ url_for('static', filename='assets/css/app.css', _external=True) ]]">
+	{% if title %}
     <title>[[title]] - Flask Test</title>
     {% else %}
     <title>Welcome to Flask Test</title>
