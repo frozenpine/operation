@@ -4,6 +4,7 @@ from paramiko import SSHClient, AutoAddPolicy, RSAKey, PasswordRequiredException
 #from . import logging, Result, ErrorCode
 from excepts import ModuleNotFound, SSHConnNotEstablished
 from configs import SSHConfig, Result, ErrorCode
+from Parsers.psauxParser import psauxParser
 
 class Executor():
     def __init__(self, ssh_config):
@@ -58,16 +59,13 @@ class Executor():
     def run(self, module):
         import_mod = 'import Libs.{} as mod'.format(module.get('name'))
         exec import_mod
-        #import_parser = 'import Parsers.{}Parser as parser'.format(module.get('name'))
-        #exec import_parser
         stdin, stdout, stderr = mod.run(client=self.client, module=module)
         self.result.return_code = stdout.channel.recv_exit_status()
         self.result.module = module
         if self.result.return_code == 0:
-            self.result.lines = [ line.rstrip('\r\n') for line in stdout.readlines()]
-            #self.result.data = parser.OutputParser(stdout.read())
+            self.result.lines = [line.rstrip('\r\n') for line in stdout.readlines()]
         else:
-            self.result.lines = [ line.rstrip('\r\n') for line in stderr.readlines()]
+            self.result.lines = [line.rstrip('\r\n') for line in stderr.readlines()]
         return self.result
 
 if __name__ == '__main__':
@@ -75,9 +73,13 @@ if __name__ == '__main__':
     executor = Executor(conf)
     result = executor.run(
         {
-            'name': 'free'
+            'name': 'psaux',
+            'args': {
+                'processes': ['zabbix_agentd']
+            }
         }
     )
     #print result.__dict__
-    print result.lines
+    #print result.lines
+    print psauxParser(result.lines).format2json()
     print len(result.lines)

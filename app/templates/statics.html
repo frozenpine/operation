@@ -4,13 +4,16 @@
 			<div class="caption font-green bold">
 				状态信息 - 服务器
 			</div>
+			<div class="font-green bold am-fr">
+				<span class="am-icon-refresh" ng-show="!checking"  ng-click="checkSvrStatics()" style="cursor: pointer"></span>
+				<span class="am-icon-refresh am-icon-spin" ng-show="checking"></span>
+			</div>
 		</div>
 		<div class="tpl-block">
 			<div class="am-g">
 				<div class="am-u-sm-12">
-					<form class="am-form">
-						<table class="am-table am-table-hover table-main">
-							<thead>
+					<table class="am-table am-table-hover table-main">
+						<thead>
 							<tr>
 								<th>服务器</th>
 								<th>启动时间</th>
@@ -20,11 +23,11 @@
 								<th>挂载点</th>
 								<th>使用率</th>
 							</tr>
-							</thead>
-							<tbody>
+						</thead>
+						<tbody>
 							<tr ng-repeat="data in serverStatics">
-								<td>{{data.server}}</td>
-								<td>{{data.uptime}}</td>
+								<td style="max-width: 120px">{{data.server}}</td>
+								<td style="max-width: 120px">{{data.uptime}}</td>
 								<td>{{data.cpu[0].idle}} %</td>
 								<td>{{(data.memory.total - data.memory.free) / data.memory.total * 100 | number:2}} %</td>
 								<td>{{(data.swap.total - data.swap.free) / data.swap.total * 100 | number:2}} %</td>
@@ -35,16 +38,17 @@
 										</li>
 									</ul>
 								</td>
-								<td><ul>
+								<td>
+									<ul>
 										<li ng-repeat="disk in data.disks">
 											<span>{{disk.percent}}</span>
 										</li>
-									</ul></td>
+									</ul>
+								</td>
 							</tr>
-							</tbody>
-						</table>
-						<hr>
-					</form>
+						</tbody>
+					</table>
+					<hr/>
 				</div>
 			</div>
 		</div>
@@ -55,33 +59,36 @@
 			<div class="caption font-green bold">
 				状态信息 - 系统
 			</div>
+			<div class="font-green bold am-fr">
+				<span class="am-icon-refresh" ng-show="!checking"  ng-click="checkProc()" style="cursor: pointer"></span>
+				<span class="am-icon-refresh am-icon-spin" ng-show="checking"></span>
+			</div>
 		</div>
 		<div class="tpl-block">
 			<div class="am-g">
 				<div class="am-u-sm-12">
-					<form class="am-form">
+					<span ng-repeat="data in systemStatics">
+						<span style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169)" >系统名称 ： {{data.name}}</span>
 						<table class="am-table am-table-hover table-main">
 							<thead>
-							<tr>
-								<th>子系统名</th>
-								<th class="table-data">服务器名</th>
-								<th class="table-data">进程名</th>
-								<th class="table-data">角色</th>
-								<th class="table-status">进程状态</th>
-							</tr>
+								<tr>
+									<th class="table-data">进程名</th>
+									<th class="table-data">角色</th>
+									<th class="table-status">进程状态</th>
+									<th class="table-data">服务器名</th>
+								</tr>
 							</thead>
 							<tbody>
-							<tr ng-repeat="data in systemStatics">
-								<td>{{data.systemName}}</td>
-								<td>{{data.server}}</td>
-								<td>{{data.process}}</td>
-								<td>{{data.proc_role}}</td>
-								<td>{{data.status}}</td>
-							</tr>
+								<tr ng-repeat="child in data.detail">
+									<td>{{child.process}}</td>
+									<td>{{child.proc_role}}</td>
+									<td>{{child.status.stat}}</td>
+									<td>{{child.server}}</td>
+								</tr>
 							</tbody>
 						</table>
-						<hr>
-					</form>
+						<hr/>
+					</span>
 				</div>
 			</div>
 		</div>
@@ -96,9 +103,8 @@
 		<div class="tpl-block">
 			<div class="am-g">
 				<div class="am-u-sm-12">
-					<form class="am-form">
-						<table class="am-table am-table-hover table-main">
-							<thead>
+					<table class="am-table am-table-hover table-main">
+						<thead>
 							<tr>
 								<th class="table-data">交易日期</th>
 								<th class="table-title">交易所</th>
@@ -107,8 +113,8 @@
 								<th class="table-date am-hide-sm-only">成交数目检查</th>
 								<th class="table-status">检查资金状态</th>
 							</tr>
-							</thead>
-							<tbody>
+						</thead>
+						<tbody>
 							<tr ng-repeat="data in statusList">
 								<td>{{data.tradeData}}</td>
 								<td>{{data.tradeLocat}}</td>
@@ -117,12 +123,10 @@
 								<td>{{data.dealNumCheck}}</td>
 								<td>{{data.moneyStatus}}</td>
 							</tr>
-							</tbody>
-						</table>
-						<hr>
-					</form>
+						</tbody>
+					</table>
+					<hr/>
 				</div>
-
 			</div>
 		</div>
 	</div>
@@ -136,9 +140,8 @@
 		<div class="tpl-block">
 			<div class="am-g">
 				<div class="am-u-sm-12">
-					<form class="am-form">
-						<table class="am-table am-table-hover table-main">
-							<thead>
+					<table class="am-table am-table-hover table-main">
+						<thead>
 							<tr>
 								<th class="table-data">资金账户</th>
 								<th class="table-title">所属产品（公司+产品名）</th>
@@ -151,8 +154,8 @@
 								<th class="table-title">最近连接时间</th>
 								<th class="table-title">断线次数</th>
 							</tr>
-							</thead>
-							<tbody>
+						</thead>
+						<tbody>
 							<tr ng-repeat="data in statusList">
 								<td>{{data.tradeData}}</td>
 								<td>{{data.tradeLocat}}</td>
@@ -165,10 +168,9 @@
 								<td>{{data.moneyStatus}}</td>
 								<td>{{data.moneyStatus}}</td>
 							</tr>
-							</tbody>
-						</table>
-						<hr>
-					</form>
+						</tbody>
+					</table>
+					<hr/>
 				</div>
 			</div>
 		</div>
@@ -182,9 +184,8 @@
 		<div class="tpl-block">
 			<div class="am-g">
 				<div class="am-u-sm-12">
-					<form class="am-form">
-						<table class="am-table am-table-hover table-main">
-							<thead>
+					<table class="am-table am-table-hover table-main">
+						<thead>
 							<tr>
 								<th class="table-data">客户端名称</th>
 								<th class="table-title">API版本</th>
@@ -195,8 +196,8 @@
 								<th class="table-title">mac</th>
 								<th class="table-title">硬盘序列号</th>
 							</tr>
-							</thead>
-							<tbody>
+						</thead>
+						<tbody>
 							<tr ng-repeat="data in statusList">
 								<td>{{data.tradeData}}</td>
 								<td>{{data.tradeLocat}}</td>
@@ -207,10 +208,9 @@
 								<td>{{data.moneyStatus}}</td>
 								<td>{{data.moneyStatus}}</td>
 							</tr>
-							</tbody>
-						</table>
-						<hr>
-					</form>
+						</tbody>
+					</table>
+					<hr/>
 				</div>
 			</div>
 		</div>

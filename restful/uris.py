@@ -6,7 +6,10 @@ from .handlers.SystemHandler import SystemApi, SystemListApi
 from .handlers.RoleHandler import RoleApi, RoleListApi
 from .handlers.UIDataHandler import UIDataApi
 from .handlers.OperationHandler import OperationListApi, OperationApi
-from .handlers.SysStaticsHandler import ServerStaticsApi, SystemStaticsApi
+from .handlers.SysStaticsHandler import (
+    ServerStaticListApi, SystemStaticListApi,
+    ServerStaticApi, ProcStaticApi
+)
 
 resources.add_resource(
     UserApi,
@@ -69,11 +72,8 @@ resources.add_resource(
 
 resources.add_resource(
     OperationListApi,
-    '/system/id/<int:id>/operations',
-    '/system/id/<int:id>/operations/',
-    '/system/name/<string:name>/operations',
-    '/system/name/<string:name>/operations/',
-    methods=['GET', 'POST'],
+    '/op_group/id/<int:id>',
+    methods=['GET'],
     endpoint='operations'
 )
 
@@ -85,19 +85,35 @@ resources.add_resource(
 )
 
 resources.add_resource(
-    ServerStaticsApi,
+    ServerStaticListApi,
     '/system/id/<int:id>/svr_statics',
     '/system/id/<int:id>/svr_statics/',
+    methods=['GET'],
+    endpoint='svr_static_list'
+)
+
+resources.add_resource(
+    ServerStaticApi,
+    '/server/id/<int:id>/statics',
+    '/server/id/<int:id>/statics/',
     methods=['GET'],
     endpoint='svr_statics'
 )
 
 resources.add_resource(
-    SystemStaticsApi,
+    SystemStaticListApi,
     '/system/id/<int:id>/sys_statics',
     '/system/id/<int:id>/sys_statics/',
     methods=['GET'],
-    endpoint='sys_statics'
+    endpoint='sys_static_list'
+)
+
+resources.add_resource(
+    ProcStaticApi,
+    '/process/id/<int:id>/static',
+    '/process/id/<int:id>/statics/',
+    methods=['GET'],
+    endpoint='proc_statics'
 )
 
 resources.add_resource(UIDataApi, '/UI/<string:name>', methods=['GET'], endpoint='UIdata')

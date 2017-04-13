@@ -9,6 +9,7 @@ class UIDataApi(Resource):
             return getattr(self, name)()
         else:
             return {'message': 'resource not found.'}, 404
+    
     def sideBarCtrl(self):
         systems = TradeSystem.query.filter(TradeSystem.parent_sys_id==None).all()
         list = []
@@ -22,10 +23,10 @@ class UIDataApi(Resource):
             system['Url'] = '#statics/{}'.format(sys.id)
             system['secondName'] = [
                 {
-                    'id': child.id,
-                    'name': child.name,
-                    'Url': '#system'
-                } for child in sys.operation_groups
+                    'id': group.id,
+                    'name': group.name,
+                    'Url': '#op_group/{}'.format(group.id)
+                } for group in sys.operation_groups
             ]
             list.append(system)
         return list

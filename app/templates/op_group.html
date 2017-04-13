@@ -1,0 +1,59 @@
+<div class="row" ng-controller="opGroupController">
+		<div style="width: 60%; float: left;">
+			<div class="tpl-portlet-components">
+				<div class="portlet-title">
+					<div class="caption font-green bold">
+						系统操作 - {{opList.name}}
+					</div>
+				</div>
+				<div class="tpl-block">
+					<div class="am-g">
+						<div class="am-u-sm-12">
+							<table class="am-table am-table-hover table-main">
+								<thead>
+									<tr>
+										<th>操作名称</th>
+										<th>操作描述</th>
+										<th>操作结果</th> 
+										<th>操作</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr ng-repeat="data in opList.details">
+										<td>{{data.op_name}}</td>
+										<td>{{data.op_desc}}</td>
+										<td>{{data.succeed}}</td>
+										<td>
+											<div class="am-btn-group am-btn-group-xs">
+												<button 
+													class="am-btn am-btn-default am-btn-xs am-text-secondary" 
+													ng-class="{true: '',false: 'am-disabled' }[data.enabled]" 
+													ng-click="execute($index, data.id)">
+													<span class="am-icon-pencil-square-o"></span> 执行
+												</button>
+											</div>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+							<hr/>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div style="width: 40%; float: right;">
+			<div class="tpl-portlet-components">
+				<div class="portlet-title">
+					<div class="caption font-green bold">
+						操作输出
+					</div>
+				</div>
+				<div class="tpl-block">
+					<ol ng-repeat="line in results">
+						<li>{{line}}</li>
+					</ol>
+				</div>
+			</div>
+		</div>
+</div>

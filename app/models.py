@@ -404,6 +404,7 @@ class Operation(SQLModelMixin, db.Model):
     __tablename__ = 'operations'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, index=True)
+    description = db.Column(db.String)
     type = db.Column(ChoiceType(ScriptType, impl=db.Integer()))
     earliest = db.Column(ArrowType)
     latest = db.Column(ArrowType)
@@ -418,7 +419,7 @@ class OperationGroup(SQLModelMixin, db.Model):
     name = db.Column(db.String, index=True)
     description = db.Column(db.String)
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
-    operations = db.relationship('Operation', backref='group')
+    operations = db.relationship('Operation', backref='group', order_by='Operation.order')
 
 class OperateRecord(SQLModelMixin, db.Model):
     __tablename__ = 'operate_records'

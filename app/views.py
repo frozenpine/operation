@@ -1,13 +1,19 @@
 # -*- coding: UTF-8 -*-
 from . import main
-from flask import Flask, render_template, request, flash, redirect, url_for
+from flask import Flask, render_template, request, flash, redirect, url_for, g
 from flask_login import login_required, current_user
 from forms import DeviceForm
 from .models import User, TradeSystem
 
+user = ""
+
 @main.route('/hello')
-def hello_world():
-    return render_template('hello.html')
+@main.route('/hello/<string:name>')
+def hello_world(**kwargs):
+    global user
+    if kwargs.has_key('name'):
+        user = kwargs['name']
+    return render_template('hello.html', name=user)
 
 @main.route('/')
 @main.route('/index')

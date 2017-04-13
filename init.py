@@ -127,15 +127,46 @@ def init_inventory():
 
 @manager.command
 def init_operation():
-    qdp = TradeSystem.find(id=1)
+    sys1 = TradeSystem.find(id=1)
     grp1 = OperationGroup(name=u'早盘操作')
     grp2 = OperationGroup(name=u'夜盘操作')
     grp3 = OperationGroup(name=u'周操作')
-    qdp.operation_groups.append(grp1)
-    qdp.operation_groups.append(grp2)
-    qdp.operation_groups.append(grp3)
+    sys1.operation_groups.append(grp1)
+    sys1.operation_groups.append(grp2)
+    sys1.operation_groups.append(grp3)
 
     db.session.add_all([grp1, grp2, grp3])
+    db.session.commit()
+
+    oper1 = Operation()
+    oper1.name = "hello"
+    oper1.order = 10
+    oper1.detail = {
+        'name': 'shell',
+        'shell': 'echo hello!'
+    }
+    oper1.group = grp1
+    oper2 = Operation()
+    oper2.name = "world"
+    oper2.order = 20
+    oper2.detail = {
+        'name': 'shell',
+        'shell': 'echo world!'
+    }
+    oper2.group = grp1
+
+    db.session.add_all([oper1, oper2])
+    db.session.commit()
+
+    sys2 = TradeSystem.find(id=2)
+    grp11 = OperationGroup(name=u'早盘操作')
+    grp12 = OperationGroup(name=u'夜盘操作')
+    grp13 = OperationGroup(name=u'周操作')
+    sys2.operation_groups.append(grp11)
+    sys2.operation_groups.append(grp12)
+    sys2.operation_groups.append(grp13)
+
+    db.session.add_all([grp11, grp12, grp13])
     db.session.commit()
 
 @manager.command

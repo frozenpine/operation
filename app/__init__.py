@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from settings import config
 
 db = SQLAlchemy()
+task_queue = []
 
 from auth import auth as auth_blueprint, login_manager
 from restful import restapi as restapi_blueprint
