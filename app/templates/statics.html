@@ -29,8 +29,8 @@
 								<td class="table-data" style="max-width: 120px">{{data.server}}</td>
 								<td class="table-data" style="max-width: 120px">{{data.uptime}}</td>
 								<td class="table-status">{{data.cpu[0].idle}} %</td>
-								<td class="table-status">{{(data.memory.total - data.memory.free) / data.memory.total * 100 | number:2}} %</td>
-								<td class="table-status">{{(data.swap.total - data.swap.free) / data.swap.total * 100 | number:2}} %</td>
+								<td class="table-status">{{(data.memory[0].total - data.memory[0].free) / data.memory[0].total * 100 | number:2}} %</td>
+								<td class="table-status">{{(data.swap[0].total - data.swap[0].free) / data.swap[0].total * 100 | number:2}} %</td>
 								<td class="table-data">
 									<ul>
 										<li ng-repeat="disk in data.disks">
