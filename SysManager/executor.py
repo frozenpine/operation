@@ -81,6 +81,7 @@ class Executor():
                 self.result.data = self.parser(self.result.lines).format2json()
         else:
             self.result.lines = [line.rstrip('\r\n') for line in stderr.readlines()]
+        self.client.close()
         return self.result
 
 if __name__ == '__main__':
