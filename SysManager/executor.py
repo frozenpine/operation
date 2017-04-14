@@ -1,16 +1,17 @@
 # -*- coding: UTF-8 -*-
+import logging
 from os import path
 from paramiko import SSHClient, AutoAddPolicy, RSAKey, PasswordRequiredException
-#from . import logging, Result, ErrorCode
 from excepts import ModuleNotFound, SSHConnNotEstablished
 from configs import SSHConfig, Result, ErrorCode
 from Parsers.psauxParser import psauxParser
 
 class Executor():
-    def __init__(self, ssh_config):
+    def __init__(self, ssh_config, parser=None):
         self.client = SSHClient()
         self.client.set_missing_host_key_policy(AutoAddPolicy())
         self.client.load_system_host_keys()
+        self.parser = parser
         self.result = Result()
         self.result.destination = ssh_config.ssh_host
         try:
@@ -58,12 +59,26 @@ class Executor():
 
     def run(self, module):
         import_mod = 'import Libs.{} as mod'.format(module.get('name'))
-        exec import_mod
+        try:
+            exec import_mod
+        except ImportError:
+            raise
+        if not self.parser:
+            import_parser = 'from Parsers.{0}Parser import {0}Parser as par'\
+                .format(module.get('name'))
+            try:
+                exec import_parser
+            except ImportError:
+                logging.warning("Trying import with({}) failed.".format(import_parser))
+            else:
+                self.parser = par
         stdin, stdout, stderr = mod.run(client=self.client, module=module)
         self.result.return_code = stdout.channel.recv_exit_status()
         self.result.module = module
         if self.result.return_code == 0:
             self.result.lines = [line.rstrip('\r\n') for line in stdout.readlines()]
+            if self.parser:
+                self.result.data = self.parser(self.result.lines).format2json()
         else:
             self.result.lines = [line.rstrip('\r\n') for line in stderr.readlines()]
         return self.result
@@ -73,13 +88,10 @@ if __name__ == '__main__':
     executor = Executor(conf)
     result = executor.run(
         {
-            'name': 'psaux',
-            'args': {
-                'processes': ['zabbix_agentd']
-            }
+            'name': 'quantdoLogin',
+            'quantdoLogin': '/root/right.txt',
         }
     )
     #print result.__dict__
-    #print result.lines
-    print psauxParser(result.lines).format2json()
-    print len(result.lines)
+    print result.lines
+    print result.data

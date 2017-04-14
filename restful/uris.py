@@ -10,6 +10,7 @@ from .handlers.SysStaticsHandler import (
     ServerStaticListApi, SystemStaticListApi,
     ServerStaticApi, ProcStaticApi
 )
+from .handlers.LoginLogHandler import LoginLogApi
 
 resources.add_resource(
     UserApi,
@@ -114,6 +115,14 @@ resources.add_resource(
     '/process/id/<int:id>/statics/',
     methods=['GET'],
     endpoint='proc_statics'
+)
+
+resources.add_resource(
+    LoginLogApi,
+    '/system/id/<int:id>/login_logs',
+    '/system/id/<int:id>/login_logs/',
+    methods=['GET'],
+    endpoint='login_logs'
 )
 
 resources.add_resource(UIDataApi, '/UI/<string:name>', methods=['GET'], endpoint='UIdata')

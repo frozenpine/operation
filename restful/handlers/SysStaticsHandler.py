@@ -3,11 +3,13 @@ from flask_restful import Resource, reqparse, request
 from app.models import TradeSystem, TradeProcess, Server
 from SysManager.configs import SSHConfig, Result
 from SysManager.executor import Executor
+'''
 from SysManager.Parsers.mpstatParser import mpstatParser
 from SysManager.Parsers.dfParser import dfParser
 from SysManager.Parsers.freeParser import freeParser
 from SysManager.Parsers.uptimeParser import uptimeParser
 from SysManager.Parsers.psauxParser import psauxParser
+'''
 
 class ServerStaticListApi(Resource):
     def get(self, **kwargs):
@@ -44,11 +46,18 @@ class ServerStaticApi(Resource):
                 resultlist.append(executor.run(mod))
             rtn['id'] = svr.id
             rtn['server'] = svr.manage_ip.exploded
+            '''
             rtn['uptime'] = uptimeParser(resultlist[0].lines).format2json()
             rtn['cpu'] = mpstatParser(resultlist[1].lines).format2json()
             rtn['disks'] = dfParser(resultlist[2].lines).format2json()
             rtn['memory'] = freeParser(resultlist[3].lines).format2json()['mem']
             rtn['swap'] = freeParser(resultlist[3].lines).format2json()['swap']
+            '''
+            rtn['uptime'] = resultlist[0].data
+            rtn['cpu'] = resultlist[1].data
+            rtn['disks'] = resultlist[2].data
+            rtn['memory'] = resultlist[3].data['mem']
+            rtn['swap'] = resultlist[3].data['swap']
         return rtn
 
 class SystemStaticListApi(Resource):
@@ -133,7 +142,8 @@ class ProcStaticApi(Resource):
                     'processes': [proc.name]
                 }
             }
-            result = psauxParser(executor.run(mod).lines).format2json()
+            #result = psauxParser(executor.run(mod).lines).format2json()
+            result = executor.run(mod).data
             if len(result) > 0:
                 rtn['status'] = {
                     'user': result[0]['user'],

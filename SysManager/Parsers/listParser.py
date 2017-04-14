@@ -30,11 +30,18 @@ class OutputParser(object):
             each_list = re.findall(self.pattern, each)[0]
             for i in range(0, key_len, 1):
                 if i != primary_position:
-                    temp_dict[self.key_list[i]] = each_list[i]
+                    try:
+                        temp_dict[self.key_list[i]] = each_list[i]
+                    except IndexError:
+                        temp_dict[self.key_list[i]] = None
             if primary_position < 0:
                 self.result_list.append(temp_dict)
             else:
-                self.result_dict[each_list[primary_position]] = temp_dict
+                if self.result_dict.has_key(each_list[primary_position]):
+                    self.result_dict[each_list[primary_position]]\
+                        .append(temp_dict)
+                else:
+                    self.result_dict[each_list[primary_position]] = [temp_dict]
         if primary_position < 0:
             return self.result_list
         else:

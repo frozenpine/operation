@@ -82,7 +82,7 @@ app.controller('sysStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
 			if (globalVar['current_type'] == 'sysid') {
 				$scope.systemStatics = data;
 				$scope.checkProc();
-				var sysStaticInterval = $interval(function(){$scope.checkProc();}, 15000);
+				var sysStaticInterval = $interval(function(){$scope.checkProc();}, 30000);
 				globalVar['intervals'].push(sysStaticInterval);
 				$scope.checking = false;
 			}
@@ -115,49 +115,44 @@ app.controller('opGroupController', ['$scope', '$http','$timeout','globalVar', f
 		$http.get('api/operation/id/' + id).success(function (data) {
 			if (globalVar['current_type'] == 'grpid'){
 				$scope.opList.details[index] = data
-				if (index < $scope.opList.details.length)
+				if (index < $scope.opList.details.length - 1)
 					$scope.opList.details[index + 1].enabled = data.succeed;
-				$scope.results = data.output_lines
+				if ($scope.results == null ){
+					$scope.results = data.output_lines
+				} else {
+					angular.forEach(data.output_lines, function(value, index) {
+						$scope.results.push(value);
+					});
+				}
 				console.log(data);
 			}
 		});
 	}
 }]);
-app.controller('serverStatusCtrl',['$scope','$http','globalVar', function ($scope,$http,globalVar) {
-	$scope.Url = 'json/serverStatus' + globalVar['systemId'] + '.json';
-	$http.get($scope.Url).success(function (data) {
-		$scope.serverStatusData = data;
-	});
-}])
-app.controller('systemStatusCtrl',['$scope','$http','globalVar', function ($scope,$http,globalVar) {
-	$scope.Url = 'json/systemStatus' + globalVar['systemId'] + '.json';
-	$http.get($scope.Url).success(function (data) {
-		$scope.systemStatusCtrlData = data;
-	});
-}]);
-app.controller('totalStatusCtrl',['$scope','$http','globalVar', function ($scope,$http,globalVar) {
-	$scope.Url = 'json/totalStatus' + globalVar['systemId'] + '.json';
-	$http.get($scope.Url).success(function (data) {
-		$scope.totalStatusCtrlData = data;
-	});
-}])
-app.controller('userStatusCtrl',['$scope','$http','globalVar', function ($scope,$http,globalVar) {
-	$scope.Url = 'json/userStatus' + globalVar['systemId'] + '.json';
-	$http.get($scope.Url).success(function (data) {
-		$scope.userStatus = data;
-	});
-}])
-app.controller('clientStatusCtrl',['$scope','$http','globalVar', function ($scope,$http,globalVar) {
-	$scope.Url = 'json/clientStatus' + globalVar['systemId'] + '.json';
-	$http.get($scope.Url).success(function (data) {
-		$scope.clientStatus = data;
-	});
-}])
-app.controller('subSystemCtrl',['$scope','$http','globalVar', function ($scope,$http,globalVar) {
-	$scope.Url = 'json/subSystem' + globalVar['operateId'] + '.json';
-	$http.get($scope.Url).success(function (data) {
-		$scope.subSystem = data;
-	});
+app.controller('loginStaticsControl',['$scope','$http','globalVar', '$interval', function ($scope,$http,globalVar, $interval) {
+	$scope.checking = true;
+	$scope.CheckLoginLog = function() {
+		$scope.checking = true;
+		$scope.loginLogs = [
+			{
+				'seatid': 'checking...', 
+				'detail': {
+					'exid': 'checking...', 
+					'trade_date': 'checking...', 
+					'success': 'checking...'
+				}
+			}
+		]
+		$http.get('api/system/id/'+ globalVar['sysid'] +'/login_logs').success(function (data) {
+			if (globalVar['current_type'] == 'sysid') {
+				$scope.loginLogs = data;
+				$scope.checking = false;
+			}
+		});
+	}
+	$scope.CheckLoginLog();
+	var loginLogInterval = $interval(function(){$scope.CheckLoginLog();}, 60000);
+	globalVar['intervals'].push(loginLogInterval);
 }])
 app.controller('warningCtrl', ['$scope','$http',function($scope,$http){
 	$scope.isRadioClick = false;
