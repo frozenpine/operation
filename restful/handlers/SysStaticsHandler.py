@@ -87,12 +87,21 @@ class SystemStaticListApi(Resource):
                         'detail': [{
                             'id': proc.id,
                             'process': proc.name,
+<<<<<<< HEAD
                             'proc_role': "{} {}".format(proc.type.name, proc.type),
                             'status': {
                                 'user': None,
                                 'pid': None,
                                 'cpu': None,
                                 'mem': None,
+=======
+                            'proc_role': proc.type.name,
+                            'status': {
+                                'user': None,
+                                'pid': None,
+                                'cpu%': None,
+                                'mem%': None,
+>>>>>>> d834276ffd56fca211d270df3ed541fb93b89299
                                 'vsz': None,
                                 'rss': None,
                                 'tty': None,
