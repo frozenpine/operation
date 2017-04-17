@@ -11,6 +11,7 @@ from .handlers.SysStaticsHandler import (
     ServerStaticApi, ProcStaticApi
 )
 from .handlers.LoginLogHandler import LoginLogApi
+from .handlers.LogHandler import LogApi
 
 resources.add_resource(
     UserApi,
@@ -124,5 +125,7 @@ resources.add_resource(
     methods=['GET'],
     endpoint='login_logs'
 )
+
+resources.add_resource(LogApi, '/logs', methods=['POST'])
 
 resources.add_resource(UIDataApi, '/UI/<string:name>', methods=['GET'], endpoint='UIdata')

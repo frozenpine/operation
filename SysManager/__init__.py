@@ -1,8 +1,7 @@
 # -*- coding: UTF-8 -*-
-
-from enum import Enum
 import logging
-from logging.handlers import RotatingFileHandler
+from logging.handlers import TimedRotatingFileHandler
+from enum import Enum
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -14,12 +13,18 @@ logging.basicConfig(
 
 console = logging.StreamHandler()
 console.setLevel(logging.INFO)
-formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
+formatter = logging.Formatter('%(name)s: %(levelname)s %(message)s')
 console.setFormatter(formatter)
 logging.getLogger('').addHandler(console)
 
-Rthandler = RotatingFileHandler('Logs/Syslog.log', maxBytes=300*1024*1024, backupCount=5)
-Rthandler.setLevel(logging.INFO)
+Rthandler = TimedRotatingFileHandler(
+    'Logs/Syslog.log',
+    when='midnight',
+    interval=1,
+    backupCount=15,
+    encoding='utf-8'
+)
+Rthandler.setLevel(logging.WARN)
 formatter = logging.Formatter(
     '%(asctime)s %(filename)s-%(funcName)s[line:%(lineno)d] %(levelname)s %(message)s'
 )

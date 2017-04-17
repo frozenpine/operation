@@ -14,6 +14,9 @@
     <link rel="stylesheet" href="[[ url_for('static', filename='assets/css/amazeui.min.css', _external=True) ]]" />
     <link rel="stylesheet" href="[[ url_for('static', filename='assets/css/admin.css', _external=True) ]]">
     <link rel="stylesheet" href="[[ url_for('static', filename='assets/css/app.css', _external=True) ]]">
+	<!--[if lt IE 9]>
+	<script src="[[ url_for('static', filename='assets/js/html5shiv.js', _external=True) ]]"></script>
+	<![endif]-->
 	{% if title %}
     <title>[[title]] - Flask Test</title>
     {% else %}

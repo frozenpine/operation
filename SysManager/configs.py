@@ -1,18 +1,21 @@
 # -*- coding: UTF-8 -*-
-import sys, os, ConfigParser
-#from . import logging
+import sys
+import os
+import ConfigParser
 from enum import Enum
-from excepts import ConfigInvalid
+from SysManager import logging
+from SysManager.excepts import ConfigInvalid
 
 class GlobalConfig:
     default_ssh_user = None
     default_ssh_key = None
 
     def __init__(self):
-        path = sys.path[0]
-        if os.path.isfile(path):
-            path = os.path.dirname(path)
-        global_file = os.path.join(path, 'Conf', 'Global.ini')
+        global_file = os.path.join(
+            os.path.dirname(sys.argv[0]),
+            'Conf',
+            'Global.ini'
+        )
         if os.path.exists(global_file):
             ini = ConfigParser.ConfigParser()
             ini.read(global_file)
@@ -45,7 +48,7 @@ class ErrorCode(Enum):
     succeed = 0,
     failed = 1
 
-class Result():
+class Result:
     destination = None
     module = None
     return_code = 0

@@ -29,8 +29,8 @@
 								<td class="table-data" style="max-width: 120px">{{data.server}}</td>
 								<td class="table-data" style="max-width: 120px">{{data.uptime}}</td>
 								<td class="table-status">{{data.cpu[0].idle}} %</td>
-								<td class="table-status">{{(data.memory.total - data.memory.free) / data.memory.total * 100 | number:2}} %</td>
-								<td class="table-status">{{(data.swap.total - data.swap.free) / data.swap.total * 100 | number:2}} %</td>
+								<td class="table-status">{{(data.memory[0].total - data.memory[0].free) / data.memory[0].total * 100 | number:2}} %</td>
+								<td class="table-status">{{(data.swap[0].total - data.swap[0].free) / data.swap[0].total * 100 | number:2}} %</td>
 								<td class="table-data">
 									<ul>
 										<li ng-repeat="disk in data.disks">
@@ -68,12 +68,17 @@
 			<div class="am-g">
 				<div class="am-u-sm-12">
 					<span ng-repeat="data in systemStatics">
-						<span style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169)" >系统名称 ： {{data.name}}</span>
+						<span style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169)" >子系统名称 ： {{data.name}}</span>
 						<table class="am-table am-table-hover table-main">
 							<thead>
 								<tr>
 									<th>进程名</th>
+									<th>进程号</th>
 									<th>角色</th>
+									<th>CPU%</th>
+									<th>MEM%</th>
+									<th>RSS</th>
+									<th>启动时间</th>
 									<th>进程状态</th>
 									<th>服务器名</th>
 								</tr>
@@ -81,7 +86,12 @@
 							<tbody>
 								<tr ng-repeat="child in data.detail">
 									<td class="table-data">{{child.process}}</td>
+									<td class="table-data">{{child.process.status.pid}}</td>
 									<td class="table-data">{{child.proc_role}}</td>
+									<td class="table-data">{{child.process.status.cpu}}</td>
+									<td class="table-data">{{child.process.status.mem}}</td>
+									<td class="table-data">{{child.process.status.rss}}</td>
+									<td class="table-data">{{child.process.status.start + child.process.status.time}}</td>
 									<td class="table-status">{{child.status.stat}}</td>
 									<td class="table-data">{{child.server}}</td>
 								</tr>

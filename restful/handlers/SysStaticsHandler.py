@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
-from flask_restful import Resource, reqparse, request
+from flask_restful import Resource
 from app.models import TradeSystem, TradeProcess, Server
-from SysManager.configs import SSHConfig, Result
+from SysManager.configs import SSHConfig
 from SysManager.executor import Executor
 '''
 from SysManager.Parsers.mpstatParser import mpstatParser
@@ -12,11 +12,17 @@ from SysManager.Parsers.psauxParser import psauxParser
 '''
 
 class ServerStaticListApi(Resource):
+    def __init__(self):
+        self.server_list = {}
+
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
         rtn = []
+        if len(self.server_list) > 0:
+            self.server_list = {}
         if sys:
-            for svr in sys.servers:
+            self.find_servers(sys)
+            for svr in self.server_list.values():
                 rtn.append({
                     'id': svr.id,
                     'server': svr.manage_ip.exploded,
@@ -27,6 +33,16 @@ class ServerStaticListApi(Resource):
                     'swap': None
                 })
         return rtn
+
+    def find_servers(self, sys):
+        for svr in sys.servers:
+            if self.server_list.has_key(svr.manage_ip.exploded):
+                continue
+            else:
+                self.server_list[svr.manage_ip.exploded] = svr
+        if len(sys.child_systems) > 0:
+            for child_sys in sys.child_systems:
+                self.find_servers(child_sys)
 
 class ServerStaticApi(Resource):
     def get(self, **kwargs):
@@ -46,13 +62,6 @@ class ServerStaticApi(Resource):
                 resultlist.append(executor.run(mod))
             rtn['id'] = svr.id
             rtn['server'] = svr.manage_ip.exploded
-            '''
-            rtn['uptime'] = uptimeParser(resultlist[0].lines).format2json()
-            rtn['cpu'] = mpstatParser(resultlist[1].lines).format2json()
-            rtn['disks'] = dfParser(resultlist[2].lines).format2json()
-            rtn['memory'] = freeParser(resultlist[3].lines).format2json()['mem']
-            rtn['swap'] = freeParser(resultlist[3].lines).format2json()['swap']
-            '''
             rtn['uptime'] = resultlist[0].data
             rtn['cpu'] = resultlist[1].data
             rtn['disks'] = resultlist[2].data
@@ -61,64 +70,50 @@ class ServerStaticApi(Resource):
         return rtn
 
 class SystemStaticListApi(Resource):
+    def __init__(self):
+        self.system_list = []
+
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
         rtn = []
+        if len(self.system_list) > 0:
+            self.system_list = []
         if sys:
-            rtn.append(
-                {
-                    'name': sys.name,
-                    'detail': [{
-                        'id': proc.id,
-                        'process': proc.name,
-                        'proc_role': proc.type.name,
-                        'status': {
-                            'user': None,
-                            'pid': None,
-                            'cpu%': None,
-                            'mem%': None,
-                            'vsz': None,
-                            'rss': None,
-                            'tty': None,
-                            'stat': 'checking...',
-                            'start': None,
-                            'time': None,
-                            'command': None
-                        },
-                        'server':
-                            proc.server.name + "({})".format(proc.server.manage_ip.exploded)
-                    } for proc in sys.processes]
-                }
-            )
-            if len(sys.child_systems) > 0:
-                for child in sys.child_systems:
-                    rtn.append(
-                        {
-                            'name': child.name,
-                            'detail': [{
-                                'id': child_proc.id,
-                                'process': child_proc.name,
-                                'proc_role': child_proc.type.name,
-                                'status': {
-                                    'user': None,
-                                    'pid': None,
-                                    'cpu%': None,
-                                    'mem%': None,
-                                    'vsz': None,
-                                    'rss': None,
-                                    'tty': None,
-                                    'stat': 'checking...',
-                                    'start': None,
-                                    'time': None,
-                                    'command': None
-                                },
-                                'server':
-                                    child_proc.server.name + "({})"\
-                                        .format(child_proc.server.manage_ip.exploded)
-                            } for child_proc in child.processes]
-                        }
-                    )
+            self.find_systems(sys)
+            for each_sys in self.system_list:
+                rtn.append(
+                    {
+                        'name': each_sys.name,
+                        'detail': [{
+                            'id': proc.id,
+                            'process': proc.name,
+                            'proc_role': "{} {}".format(proc.type.name, proc.type),
+                            'status': {
+                                'user': None,
+                                'pid': None,
+                                'cpu': None,
+                                'mem': None,
+                                'vsz': None,
+                                'rss': None,
+                                'tty': None,
+                                'stat': 'checking...',
+                                'start': None,
+                                'time': None,
+                                'command': None
+                            },
+                            'server':
+                                proc.server.name + "({})".format(proc.server.manage_ip.exploded)
+                        } for proc in each_sys.processes]
+                    }
+                )
         return rtn
+
+    def find_systems(self, sys):
+        if len(sys.processes) > 0:
+            self.system_list.append(sys)
+        if len(sys.child_systems) > 0:
+            for child_sys in sys.child_systems:
+                self.find_systems(child_sys)
 
 class ProcStaticApi(Resource):
     def get(self, **kwargs):
@@ -139,17 +134,17 @@ class ProcStaticApi(Resource):
             mod = {
                 'name': 'psaux',
                 'args': {
-                    'processes': [proc.name]
+                    'processes': [proc.name],
+                    'param': [proc.type]
                 }
             }
-            #result = psauxParser(executor.run(mod).lines).format2json()
             result = executor.run(mod).data
             if len(result) > 0:
                 rtn['status'] = {
                     'user': result[0]['user'],
                     'pid': result[0]['pid'],
-                    'cpu%': result[0]['cpu%'],
-                    'mem%': result[0]['mem%'],
+                    'cpu': result[0]['cpu%'],
+                    'mem': result[0]['mem%'],
                     'vsz': result[0]['vsz'],
                     'rss': result[0]['rss'],
                     'tty': result[0]['tty'],

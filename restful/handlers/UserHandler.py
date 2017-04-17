@@ -9,7 +9,7 @@ class UserApi(Resource):
         user = Operator.find(**kwargs)
         if user:
             return {
-                'message': 'user({}) found succeefully.'.format(user.name.encode('utf-8')), 
+                'message': 'user({}) found succeefully.'.format(user.name.encode('utf-8')),
                 'data': user.to_json()
             }
         else:
@@ -31,7 +31,7 @@ class UserApi(Resource):
 class UserListApi(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
-        self.parser.add_argument('username', type=str, required=True, dest='user_name', 
+        self.parser.add_argument('username', type=str, required=True, dest='user_name',
                                  help='username can not been none', action='append')
         super(UserListApi, self).__init__()
 

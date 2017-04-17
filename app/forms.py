@@ -1,10 +1,10 @@
 # -*- coding: UTF-8 -*-
-from flask_wtf import Form
+from flask_wtf import FlaskForm
 from wtforms import (StringField, BooleanField, PasswordField, SelectField, IntegerField)
 from wtforms.validators import DataRequired, Length
 from app.models import Device
 
-class DeviceForm(Form):
+class DeviceForm(FlaskForm):
     name = StringField('name', validators=[DataRequired(), Length(min=1,max=100)])
     model = StringField('name', validators=[Length(min=-1,max=100)])
     serial_num = StringField('name', validators=[Length(min=-1,max=100)])

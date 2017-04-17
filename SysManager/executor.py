@@ -1,10 +1,13 @@
 # -*- coding: UTF-8 -*-
-import logging
 from os import path
-from paramiko import SSHClient, AutoAddPolicy, RSAKey, PasswordRequiredException
-from excepts import ModuleNotFound, SSHConnNotEstablished
-from configs import SSHConfig, Result, ErrorCode
-from Parsers.psauxParser import psauxParser
+from paramiko import (
+    SSHClient, AutoAddPolicy, RSAKey,
+    PasswordRequiredException
+)
+from paramiko.ssh_exception import NoValidConnectionsError
+from SysManager import logging
+from SysManager.excepts import ModuleNotFound
+from SysManager.configs import SSHConfig, Result, ErrorCode
 
 class Executor():
     def __init__(self, ssh_config, parser=None):
@@ -15,12 +18,15 @@ class Executor():
         self.result = Result()
         self.result.destination = ssh_config.ssh_host
         try:
-            if ssh_config.ssh_key and path.isfile(ssh_config.ssh_key):
-                self.pKeyConnect(ssh_config)
+            if ssh_config.ssh_key:
+                if path.isfile(ssh_config.ssh_key):
+                    self.pKeyConnect(ssh_config)
             else:
                 self.passConnect(ssh_config)
-        except Exception:
-            raise
+        except NoValidConnectionsError, err:
+            logging.error(err)
+        except Exception, err:
+            logging.error(err)
 
     def pKeyConnect(self, ssh_config):
         try:
@@ -32,44 +38,40 @@ class Executor():
                     password=ssh_config.ssh_key_pass
                 )
             else:
-                logging.warning(
-                    'Fail to Load RSAKey({}), make sure password for key is correct.'\
-                        .format(ssh_config.ssh_key)
-                )
-        try:
+                err_msg = 'Fail to Load RSAKey({}), make sure password for key is correct.'\
+                    .format(ssh_config.ssh_key)
+                logging.warning(err_msg)
+                self.result.error_code = ErrorCode.failed
+                self.result.error_msg = err_msg
+        else:
             self.client.connect(
                 hostname=ssh_config.ssh_host,
                 port=ssh_config.ssh_port,
                 username=ssh_config.ssh_user,
                 pkey=pKey
             )
-        except Exception:
-            self.result.error_code = ErrorCode.timeout
 
     def passConnect(self, ssh_config):
-        try:
-            self.client.connect(
-                hostname=ssh_config.ssh_host,
-                port=ssh_config.ssh_port,
-                username=ssh_config.ssh_user,
-                password=ssh_config.ssh_password
-            )
-        except Exception:
-            raise
+        self.client.connect(
+            hostname=ssh_config.ssh_host,
+            port=ssh_config.ssh_port,
+            username=ssh_config.ssh_user,
+            password=ssh_config.ssh_password
+        )
 
     def run(self, module):
         import_mod = 'import Libs.{} as mod'.format(module.get('name'))
         try:
             exec import_mod
         except ImportError:
-            raise
+            raise ModuleNotFound
         if not self.parser:
             import_parser = 'from Parsers.{0}Parser import {0}Parser as par'\
                 .format(module.get('name'))
             try:
                 exec import_parser
             except ImportError:
-                logging.warning("Trying import with({}) failed.".format(import_parser))
+                logging.info("Trying import with({}) failed.".format(import_parser))
             else:
                 self.parser = par
         stdin, stdout, stderr = mod.run(client=self.client, module=module)
@@ -85,6 +87,8 @@ class Executor():
         return self.result
 
 if __name__ == '__main__':
+    import sys
+    sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
     conf = SSHConfig('192.168.92.26', 'root', 'Quantdo@SH2016!')
     executor = Executor(conf)
     result = executor.run(
@@ -93,6 +97,5 @@ if __name__ == '__main__':
             'quantdoLogin': '/root/right.txt',
         }
     )
-    #print result.__dict__
     print result.lines
     print result.data

@@ -16,9 +16,15 @@ def run(client, module):
                 proclist += "|{}".format(proc)
         else:
             proclist = ""
+        if args.has_key('param'):
+            paramlist = args.get('param')[0]
+            for param in args.get('param')[1:]:
+                paramlist += "|{}".format(param)
+        else:
+            paramlist = ""
         mod = {
-            'shell': "ps aux | awk 'FNR==1{{print;next}}$1 ~/{0}/ && $11 ~/{1}/{{print}}'"\
-                .format(userlist, proclist)
+            'shell': "ps aux | awk 'FNR==1{{print;next}}$1 ~/{0}/ && $11 ~/{1}/ && $12 ~/{2}/{{print}}'"\
+                .format(userlist, proclist, paramlist)
         }
     else:
         mod = {
