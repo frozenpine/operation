@@ -1,15 +1,9 @@
 # -*- coding: UTF-8 -*-
 from flask_restful import Resource
 from app.models import TradeSystem, TradeProcess, Server
+from SysManager import logging
 from SysManager.configs import SSHConfig
 from SysManager.executor import Executor
-'''
-from SysManager.Parsers.mpstatParser import mpstatParser
-from SysManager.Parsers.dfParser import dfParser
-from SysManager.Parsers.freeParser import freeParser
-from SysManager.Parsers.uptimeParser import uptimeParser
-from SysManager.Parsers.psauxParser import psauxParser
-'''
 
 class ServerStaticListApi(Resource):
     def __init__(self):
@@ -87,21 +81,12 @@ class SystemStaticListApi(Resource):
                         'detail': [{
                             'id': proc.id,
                             'process': proc.name,
-<<<<<<< HEAD
-                            'proc_role': "{} {}".format(proc.type.name, proc.type),
+                            'proc_role': "{}".format(proc.type.name),
                             'status': {
                                 'user': None,
                                 'pid': None,
                                 'cpu': None,
                                 'mem': None,
-=======
-                            'proc_role': proc.type.name,
-                            'status': {
-                                'user': None,
-                                'pid': None,
-                                'cpu%': None,
-                                'mem%': None,
->>>>>>> d834276ffd56fca211d270df3ed541fb93b89299
                                 'vsz': None,
                                 'rss': None,
                                 'tty': None,
@@ -131,7 +116,7 @@ class ProcStaticApi(Resource):
         if proc:
             rtn['id'] = proc.id
             rtn['process'] = proc.name
-            rtn['proc_role'] = proc.type.name
+            rtn['proc_role'] = "{}".format(proc.type.name)
             rtn['server'] = proc.server.name + "({})"\
                 .format(proc.server.manage_ip.exploded)
             conf = SSHConfig(
@@ -143,8 +128,8 @@ class ProcStaticApi(Resource):
             mod = {
                 'name': 'psaux',
                 'args': {
-                    'processes': [proc.name],
-                    'param': [proc.type]
+                    'processes': [proc.exec_file],
+                    'param': [proc.param]
                 }
             }
             result = executor.run(mod).data
@@ -166,8 +151,8 @@ class ProcStaticApi(Resource):
                 rtn['status'] = {
                     'user': None,
                     'pid': None,
-                    'cpu%': None,
-                    'mem%': None,
+                    'cpu': None,
+                    'mem': None,
                     'vsz': None,
                     'rss': None,
                     'tty': None,

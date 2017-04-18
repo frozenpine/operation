@@ -112,7 +112,7 @@ resources.add_resource(
 
 resources.add_resource(
     ProcStaticApi,
-    '/process/id/<int:id>/static',
+    '/process/id/<int:id>/statics',
     '/process/id/<int:id>/statics/',
     methods=['GET'],
     endpoint='proc_statics'

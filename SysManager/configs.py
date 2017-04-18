@@ -1,10 +1,11 @@
 # -*- coding: UTF-8 -*-
+import logging
 import sys
 import os
 import ConfigParser
 from enum import Enum
-from SysManager import logging
-from SysManager.excepts import ConfigInvalid
+#from SysManager import logging
+from excepts import ConfigInvalid
 
 class GlobalConfig:
     default_ssh_user = None

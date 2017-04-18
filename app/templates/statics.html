@@ -78,7 +78,8 @@
 									<th>CPU%</th>
 									<th>MEM%</th>
 									<th>RSS</th>
-									<th>启动时间</th>
+									<th>启动日期</th>
+									<th>运行时间</th>
 									<th>进程状态</th>
 									<th>服务器名</th>
 								</tr>
@@ -86,12 +87,13 @@
 							<tbody>
 								<tr ng-repeat="child in data.detail">
 									<td class="table-data">{{child.process}}</td>
-									<td class="table-data">{{child.process.status.pid}}</td>
+									<td class="table-data">{{child.status.pid}}</td>
 									<td class="table-data">{{child.proc_role}}</td>
-									<td class="table-data">{{child.process.status.cpu}}</td>
-									<td class="table-data">{{child.process.status.mem}}</td>
-									<td class="table-data">{{child.process.status.rss}}</td>
-									<td class="table-data">{{child.process.status.start + child.process.status.time}}</td>
+									<td class="table-data">{{child.status.cpu}}</td>
+									<td class="table-data">{{child.status.mem}}</td>
+									<td class="table-data">{{child.status.rss}}</td>
+									<td class="table-data">{{child.status.start}}</td>
+									<td class="table-data">{{child.status.time}}</td>
 									<td class="table-status">{{child.status.stat}}</td>
 									<td class="table-data">{{child.server}}</td>
 								</tr>

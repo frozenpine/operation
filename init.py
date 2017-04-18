@@ -188,12 +188,13 @@ def printuser():
 
 @manager.command
 def printsys():
+    '''
     for sys in TradeSystem.query.filter(TradeSystem.parent_sys_id==None).all():
         print "system:", sys.name
         for svr in sys.servers:
             print "\tsvr info: {0} {1}".format(svr.name, svr.manage_ip)
             for proc in [p for p in sys.processes if p.svr_id == svr.id]:
-                print "\t\tproc info: {0}({1})".format(proc.name, proc.id)
+                print "\t\tproc info: {0}({1})".format(proc.name, proc.id), proc.type
         print "child systems:"
         for child in sys.child_systems:
             print "\t", child.name
@@ -206,6 +207,10 @@ def printsys():
         print "administrators:"
         for usr in sys.administrators:
             print "\t", usr.name
+    '''
+
+    proc = TradeProcess.find(id=12)
+    print proc.type.value
 
 @manager.command
 def modeltest():

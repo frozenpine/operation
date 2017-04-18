@@ -16,10 +16,10 @@ def run(client, module):
                 proclist += "|{}".format(proc)
         else:
             proclist = ""
-        if args.has_key('param'):
-            paramlist = args.get('param')[0]
+        if args.has_key('param') and len(args.get('param')) > 0:
+            paramlist = args.get('param')[0] or ""
             for param in args.get('param')[1:]:
-                paramlist += "|{}".format(param)
+                paramlist += "|{}".format(param or "")
         else:
             paramlist = ""
         mod = {

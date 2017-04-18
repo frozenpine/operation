@@ -311,6 +311,7 @@ class TradeProcess(SQLModelMixin, db.Model):
     type = db.Column(ChoiceType(HaType, impl=db.Integer()))
     base_dir = db.Column(db.String)
     exec_file = db.Column(db.String)
+    param = db.Column(db.String)
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     svr_id = db.Column(db.Integer, db.ForeignKey('servers.id'), index=True)
     config_files = db.relationship('ConfigFile', backref='process')

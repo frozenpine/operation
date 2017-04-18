@@ -1,13 +1,14 @@
 # -*- coding: UTF-8 -*-
+import logging
 from os import path
 from paramiko import (
     SSHClient, AutoAddPolicy, RSAKey,
     PasswordRequiredException
 )
 from paramiko.ssh_exception import NoValidConnectionsError
-from SysManager import logging
-from SysManager.excepts import ModuleNotFound
-from SysManager.configs import SSHConfig, Result, ErrorCode
+#from SysManager import logging
+from excepts import ModuleNotFound
+from configs import SSHConfig, Result, ErrorCode
 
 class Executor():
     def __init__(self, ssh_config, parser=None):
@@ -89,13 +90,16 @@ class Executor():
 if __name__ == '__main__':
     import sys
     sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
-    conf = SSHConfig('192.168.92.26', 'root', 'Quantdo@SH2016!')
+    conf = SSHConfig('192.168.101.100', 'qdam', 'qdam')
     executor = Executor(conf)
     result = executor.run(
         {
-            'name': 'quantdoLogin',
-            'quantdoLogin': '/root/right.txt',
+            'name': 'psaux',
+            'args': {
+                'processes': ['qicegateway'],
+                'param': [1]
+            }
         }
     )
-    print result.lines
+    #print result.lines
     print result.data
