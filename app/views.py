@@ -1,25 +1,10 @@
 # -*- coding: UTF-8 -*-
 import logging
-#from geventwebsocket import WebSocketError
+from geventwebsocket import WebSocketError
 from flask import render_template, request, abort
 from flask_login import login_required, current_user
-from . import main
-
-'''
-class MessageServer(object):
-    def __init__(self):
-        self.observers = []
-    def add_message(self, msg):
-        for ws in self.observers:
-            try:
-                ws.send(msg)
-            except WebSocketError:
-                self.observers.pop(self.observers.index(ws))
-                print ws, 'is closed'
-                continue
-
-#msgsvr = MessageServer()
-'''
+from . import main, msgQueues
+import json
 
 user = ""
 
@@ -42,18 +27,14 @@ def index():
 def UIView(name):
     return render_template("{}.html".format(name))
 
-'''
-@main.route('/notify/')
-def notify():
+@main.route('/websocket')
+def websocket():
     if request.environ.has_key('wsgi.websocket'):
         ws = request.environ['wsgi.websocket']
-        msgsvr.observers.append(ws)
-        while True:
-            if ws.socket:
-                message = ws.receive()
-                if message:
-                    msgsvr.add_message("{}".format(message))
-            else:
-                abort(404)
-        return 'Connected!'
-'''
+        if ws:
+            msgQueues['public'].subscribe(ws)
+            while True:
+                msg = ws.receive()
+                msgQueues['public'].send_message(msg)
+        else:
+            abort(500)

@@ -17,7 +17,7 @@ resources.add_resource(
     UserApi,
     '/user/login/<string:login>',
     '/user/id/<int:id>',
-    methods=['GET'], endpoint='user'
+    methods=['GET', 'PUT'], endpoint='user'
 )
 resources.add_resource(
     UserListApi,

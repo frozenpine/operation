@@ -52,7 +52,7 @@ class ServerStaticApi(Resource):
             ]
             resultlist = []
             for mod in modlist:
-                executor = Executor(conf)
+                executor = Executor.Create(conf)
                 resultlist.append(executor.run(mod))
             rtn['id'] = svr.id
             rtn['server'] = svr.manage_ip.exploded
@@ -124,7 +124,7 @@ class ProcStaticApi(Resource):
                 proc.server.admin_user,
                 proc.server.admin_pwd
             )
-            executor = Executor(conf)
+            executor = Executor.Create(conf)
             mod = {
                 'name': 'psaux',
                 'args': {

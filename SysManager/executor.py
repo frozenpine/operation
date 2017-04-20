@@ -1,29 +1,56 @@
 # -*- coding: UTF-8 -*-
-import logging
+import sys
 from os import path
 from paramiko import (
     SSHClient, AutoAddPolicy, RSAKey,
     PasswordRequiredException
 )
 from paramiko.ssh_exception import NoValidConnectionsError
-#from SysManager import logging
+import winrm
+sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
+from SysManager import logging
 from excepts import ModuleNotFound
-from configs import SSHConfig, Result, ErrorCode
-
+from configs import (
+    RemoteConfig, SSHConfig, WinRmConfig,
+    Result, ErrorCode
+)
 class Executor():
-    def __init__(self, ssh_config, parser=None):
+    def __init__(self, remote_config, parser=None):
+        self.parser = parser
+        self.result = Result()
+        self.result.destination = remote_config.remote_host
+
+    @staticmethod
+    def Create(remote_config, parser=None):
+        if isinstance(remote_config, SSHConfig):
+            return SSHExecutor(remote_config, parser)
+        if isinstance(remote_config, WinRmConfig):
+            return WinRmExecutor(remote_config, parser)
+
+    def run(self, module):
+        pass
+
+class WinRmExecutor(Executor):
+    def __init__(self, remote_config, parser=None):
+        Executor.__init__(self, remote_config, parser)
+        self.client = winrm.Session(
+            remote_config.remote_host,
+            (remote_config.remote_user, remote_config.remote_password)
+        )
+
+
+class SSHExecutor(Executor):
+    def __init__(self, remote_config, parser=None):
+        Executor.__init__(self, remote_config, parser)
         self.client = SSHClient()
         self.client.set_missing_host_key_policy(AutoAddPolicy())
         self.client.load_system_host_keys()
-        self.parser = parser
-        self.result = Result()
-        self.result.destination = ssh_config.ssh_host
         try:
-            if ssh_config.ssh_key:
-                if path.isfile(ssh_config.ssh_key):
-                    self.pKeyConnect(ssh_config)
+            if remote_config.ssh_key:
+                if path.isfile(remote_config.ssh_key):
+                    self.pKeyConnect(remote_config)
             else:
-                self.passConnect(ssh_config)
+                self.passConnect(remote_config)
         except NoValidConnectionsError, err:
             logging.error(err)
         except Exception, err:
@@ -46,18 +73,18 @@ class Executor():
                 self.result.error_msg = err_msg
         else:
             self.client.connect(
-                hostname=ssh_config.ssh_host,
-                port=ssh_config.ssh_port,
-                username=ssh_config.ssh_user,
+                hostname=ssh_config.remote_host,
+                port=ssh_config.remote_port,
+                username=ssh_config.remote_user,
                 pkey=pKey
             )
 
     def passConnect(self, ssh_config):
         self.client.connect(
-            hostname=ssh_config.ssh_host,
-            port=ssh_config.ssh_port,
-            username=ssh_config.ssh_user,
-            password=ssh_config.ssh_password
+            hostname=ssh_config.remote_host,
+            port=ssh_config.remote_port,
+            username=ssh_config.remote_user,
+            password=ssh_config.remote_password
         )
 
     def run(self, module):
@@ -88,10 +115,8 @@ class Executor():
         return self.result
 
 if __name__ == '__main__':
-    import sys
-    sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
     conf = SSHConfig('192.168.101.100', 'qdam', 'qdam')
-    executor = Executor(conf)
+    executor = Executor.Create(conf)
     result = executor.run(
         {
             'name': 'psaux',
@@ -102,4 +127,5 @@ if __name__ == '__main__':
         }
     )
     #print result.lines
+    logging.info(result.data)
     print result.data

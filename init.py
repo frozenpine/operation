@@ -8,6 +8,8 @@ from app.models import (
     Server, TradeProcess, TradeSystem, HaType, SystemType,
     OperationGroup, Operation
 )
+import json, re
+from flask.testing import EnvironBuilder
 
 import sys
 reload(sys)
@@ -16,7 +18,8 @@ sys.setdefaultencoding("utf-8")
 import codecs
 codecs.register(lambda name: name == 'cp65001' and codecs.lookup('utf-8') or None)
 
-manager = Manager(create_app('development'))
+test_app = create_app('development')
+manager = Manager(test_app)
 
 @manager.command
 def create_db():
@@ -224,6 +227,24 @@ def modeltest():
     #print svr.to_json()
     #print proc.to_json()
     #print usr.to_json()
+
+@manager.command
+def route_test():
+    #print dir(test_app)
+    '''
+    urls = test_app.url_map.bind('localhost')
+    a = urls.match('api/user/id/1')
+    print a
+    rsp = test_app.view_functions[a[0]](**a[1])
+    print json.dumps(rsp.response)
+    '''
+    urls = test_app.url_map.bind('localhost')
+    match = urls.match('api/user/id/1')
+    with test_app.request_context(
+        EnvironBuilder().get_environ()
+    ):
+        rsp = test_app.view_functions[match[0]](**match[1])
+        print json.dumps(rsp.response)
 
 if __name__ == '__main__':
     manager.run()

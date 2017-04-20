@@ -65,9 +65,9 @@ app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
 app.controller('sysStaticsControl', ['$scope', '$http', 'globalVar', '$interval', function($scope, $http, globalVar, $interval) {
     $scope.checking = true;
     $scope.checkProc = function() {
+        $scope.checking = true;
         angular.forEach($scope.systemStatics, function(value1, index1) {
             angular.forEach(value1.detail, function(value2, index2) {
-                $scope.checking = true;
                 $scope.systemStatics[index1].detail[index2].status.stat = "checking...";
                 $http.get('api/process/id/' + value2.id + '/statics')
                     .success(function(data) {

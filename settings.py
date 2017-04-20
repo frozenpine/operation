@@ -33,6 +33,8 @@ class DevelopmentConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
+    SQLALCHEMY_DATABASE_URI = os.environ.get('FLASK_SQLALCHEMY_DATABASE_URI') or \
+         'sqlite:///' + os.path.join(base_dir, 'database/flask.db')
 
 config = {
     'development': DevelopmentConfig,
