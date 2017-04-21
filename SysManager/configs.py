@@ -1,10 +1,11 @@
 # -*- coding: UTF-8 -*-
-import logging
+#import logging
 import sys
-import os
+from os import path
 import ConfigParser
 from enum import Enum
-#from SysManager import logging
+sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
+from SysManager import logging
 from excepts import ConfigInvalid
 
 class GlobalConfig:
@@ -12,12 +13,12 @@ class GlobalConfig:
     default_ssh_key = None
 
     def __init__(self):
-        global_file = os.path.join(
-            os.path.dirname(sys.argv[0]),
+        global_file = path.join(
+            path.dirname(sys.argv[0]),
             'Conf',
             'Global.ini'
         )
-        if os.path.exists(global_file):
+        if path.exists(global_file):
             ini = ConfigParser.ConfigParser()
             ini.read(global_file)
             for key in [x for x in dir(self) if not x.startswith('_')]:
@@ -32,16 +33,24 @@ class GlobalConfig:
                 except ConfigParser.NoOptionError:
                     continue
 
-class SSHConfig:
+class RemoteConfig(object):
+    def __init__(self, ip, user, password, port):
+        self.remote_host = ip
+        self.remote_port = port
+        self.remote_user = user
+        self.remote_password = password
+
+class SSHConfig(RemoteConfig):
     def __init__(self, ip, user, password=None, port=22, pKey=None, key_pass=None):
         if not password and not pKey:
             raise ConfigInvalid('Either "password" or "pKey" must be specified.')
-        self.ssh_host = ip
-        self.ssh_port = port
-        self.ssh_user = user
-        self.ssh_password = password
         self.ssh_key = pKey
         self.ssh_key_pass = key_pass
+        RemoteConfig.__init__(self, ip, user, password, port)
+
+class WinRmConfig(RemoteConfig):
+    def __init__(self, ip, user, password, port=5986):
+        RemoteConfig.__init__(self, ip, user, password, port)
 
 class ErrorCode(Enum):
     timeout = -2,

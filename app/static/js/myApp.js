@@ -7,6 +7,43 @@ var app = angular.module('myApp', ['ngRoute'], function($provide) {
             'intervals': []
         };
     });
+    $provide.factory('Message', function() {
+        var syslogs = [];
+        if ("WebSocket" in window) {
+            var ws = new WebSocket("ws://10.9.101.39:5000/websocket");
+
+            ws.onopen = function() {
+                console.log("conn success");
+                ws.send(JSON.stringify({
+                    subscribe: 'public'
+                }));
+            };
+
+            ws.onmessage = function(msg) {
+                console.log(msg.data);
+                syslogs.push(msg.data);
+            };
+        } else {
+            console.log('WebSocket not supported');
+        }
+
+        window.onbeforeunload = function() {
+            ws.onclose = function() {
+                console.log('unlodad');
+            };
+            ws.close();
+        };
+
+        return {
+            send: function(message) {
+                if (angular.isString(message)) {
+                    ws.send(message);
+                } else if (angular.isObject(message)) {
+                    ws.send(JSON.stringify(message));
+                }
+            }
+        };
+    });
 });
 app.config(['$routeProvider', function($routeProvider) {
     $routeProvider
@@ -35,8 +72,8 @@ app.run(function($rootScope, $interval, $location, globalVar) {
     });
     $rootScope.status = "normal";
 });
-app.controller('dashBoardControl', ['$scope', function($scope) {
-
+app.controller('dashBoardControl', ['$scope', 'Message', '$rootScope', function($scope, Message, $rootScope) {
+    $rootScope.Message = Message;
 }]);
 app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval', function($scope, $http, globalVar, $interval) {
     $scope.checking = true;
@@ -46,7 +83,6 @@ app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
             $http.get('api/server/id/' + value.id + '/statics')
                 .success(function(data) {
                     $scope.serverStatics[index] = data;
-                    console.log(data);
                     $scope.checking = false;
                 });
         });
@@ -65,9 +101,9 @@ app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
 app.controller('sysStaticsControl', ['$scope', '$http', 'globalVar', '$interval', function($scope, $http, globalVar, $interval) {
     $scope.checking = true;
     $scope.checkProc = function() {
+        $scope.checking = true;
         angular.forEach($scope.systemStatics, function(value1, index1) {
             angular.forEach(value1.detail, function(value2, index2) {
-                $scope.checking = true;
                 $scope.systemStatics[index1].detail[index2].status.stat = "checking...";
                 $http.get('api/process/id/' + value2.id + '/statics')
                     .success(function(data) {
@@ -124,7 +160,6 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', 'globalVar',
                         $scope.results.push(value);
                     });
                 }
-                console.log(data);
             }
         });
     };
@@ -177,7 +212,6 @@ app.controller('warningCtrl', ['$scope', '$http', function($scope, $http) {
                 $scope.outData.push(array[index + 1]);
             }
         });
-        console.log($scope.outData);
     };
     $scope.clearRadio = function() {
         $scope.isRadioClick = false;

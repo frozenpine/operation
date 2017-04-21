@@ -1,25 +1,11 @@
 # -*- coding: UTF-8 -*-
 import logging
-#from geventwebsocket import WebSocketError
+from geventwebsocket import WebSocketError
 from flask import render_template, request, abort
 from flask_login import login_required, current_user
 from . import main
-
-'''
-class MessageServer(object):
-    def __init__(self):
-        self.observers = []
-    def add_message(self, msg):
-        for ws in self.observers:
-            try:
-                ws.send(msg)
-            except WebSocketError:
-                self.observers.pop(self.observers.index(ws))
-                print ws, 'is closed'
-                continue
-
-#msgsvr = MessageServer()
-'''
+from MessageQueue.msgserver import MessageServer
+import json
 
 user = ""
 
@@ -42,18 +28,30 @@ def index():
 def UIView(name):
     return render_template("{}.html".format(name))
 
-'''
-@main.route('/notify/')
-def notify():
+@main.route('/websocket')
+def websocket():
     if request.environ.has_key('wsgi.websocket'):
         ws = request.environ['wsgi.websocket']
-        msgsvr.observers.append(ws)
-        while True:
-            if ws.socket:
-                message = ws.receive()
-                if message:
-                    msgsvr.add_message("{}".format(message))
+        if ws:
+            #msgQueues['public'].subscribe(ws)
+            '''
+            tmp = ws.receive()
+            print tmp
+            init_msg = json.loads(tmp)
+            try:
+                queue_key = init_msg['subscribe']
+            except KeyError:
+                msgQueues['public'].subscribe(ws)
             else:
-                abort(404)
-        return 'Connected!'
-'''
+                if msgQueues.has_key(queue_key):
+                    msgQueues[queue_key].subscribe(ws)
+                else:
+                    ws.send(json.dumps({
+                        'RspType': 'text',
+                        'Data': 'MessageQueue[{}] not exists.'.format(queue_key)
+                    }))
+            '''
+            while True:
+                MessageServer.parseRequest(ws)
+        else:
+            abort(500)

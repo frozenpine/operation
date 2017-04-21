@@ -8,7 +8,7 @@ logging.basicConfig(
     format='%(asctime)s %(filename)s-%(funcName)s[line:%(lineno)d] %(levelname)s %(message)s',
     datefmt='%a, %d %b %Y %H:%M:%S',
     filename='Logs/Syslog.log',
-    filemode='w'
+    filemode='a'
 )
 
 console = logging.StreamHandler()

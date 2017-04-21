@@ -3,9 +3,10 @@ from flask import Flask, Blueprint
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from settings import config
+from MessageQueue.msgserver import MessageQueues
 
 db = SQLAlchemy()
-task_queue = []
+msgQueues = MessageQueues
 
 from auth import auth as auth_blueprint, login_manager
 from restful import restapi as restapi_blueprint
