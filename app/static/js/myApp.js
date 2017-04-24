@@ -81,6 +81,9 @@ app.run(function($rootScope, $interval, $location, globalVar, Message) {
     });
     $rootScope.status = "normal";
     $rootScope.Messenger = Message;
+    $rootScope.Messages = {
+        'public': []
+    };
 });
 app.controller('dashBoardControl', ['$scope', function($scope) {
 
@@ -238,6 +241,12 @@ app.controller('warningCtrl', ['$scope', '$http', function($scope, $http) {
             }
         });
     };
+}]);
+app.controller('taskControl', ['$scope', '$rootScope', function($scope, $rootScope) {
+    var watcher = $scope.$watchCollection('$rootScope.Messages.public', function() {
+        $scope.messages = $rootScope.Messages.public;
+        $scope.$apply();
+    });
 }]);
 app.filter('filterStatus', function() {
     //return function (obj) {

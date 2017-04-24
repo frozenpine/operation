@@ -47,18 +47,19 @@
 							</span>
 						</a>
 					</li>
-					<li class="am-dropdown" data-am-dropdown data-am-dropdown-toggle>
+					<li ng-controller='taskControl' class="am-dropdown" data-am-dropdown data-am-dropdown-toggle>
 						<a class="am-dropdown-toggle tpl-header-list-link" href="javascript:;">
 							<span class="am-dropdown-toggle tpl-header-list-link" style="cursor: pointer">
 								<span class="am-badge am-round tpl-badge-primary">
 									<i class="am-icon-tasks am-icon-md"></i>
 									<span>任务列表</span>
-									<span class="am-badge tpl-badge-primary am-round">{{$root.Messages.public.length}}</span>
+									<span class="am-badge tpl-badge-primary am-round">{{messages.length}}</span>
 								</span>
 							</span>
 						</a>
 						<ul class="am-dropdown-content">
-							<li ng-repeat="msg in $root.Messages.public">
+							<li><span>你有 {{messages.length}} 条消息</span></li>
+							<li ng-repeat="msg in messages">
 								<span>{{msg}}</span>
 							</li>
 						</ul>
