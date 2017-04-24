@@ -17,8 +17,8 @@ class MyQueue(threading.Thread):
         while True:
             current_date = time.strftime("%Y-%m-%d")
             if current_date != self.establish_date:
-                shutil.move("log/{0}.out".format(self.filename),
-                            "log/{0}.{1}.out".format(self.filename, self.establish_date))
+                shutil.move("Flows/{0}.out".format(self.filename),
+                            "Flows/{0}_{1}.out".format(self.filename, self.establish_date))
                 self.establish_date = current_date
             self.sink()
             time.sleep(self.timer)
@@ -49,8 +49,8 @@ class MyQueue(threading.Thread):
 
 class LogQueue(MyQueue):
     def sink(self):
-        if not os.path.exists("Logs"):
-            os.mkdir("Logs")
-        with open("Logs/{0}.out".format(self.filename), "ab+") as f:
+        if not os.path.exists("Flows"):
+            os.mkdir("Flows")
+        with open("Flows/{0}.out".format(self.filename), "ab+") as f:
             while not self.queue.empty():
                 f.write(self.queue.get() + "\n")

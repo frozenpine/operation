@@ -7,6 +7,39 @@ var app = angular.module('myApp', ['ngRoute'], function($provide) {
             'intervals': []
         };
     });
+    $provide.factory('Message', function() {
+        var messages = [];
+        if ("WebSocket" in window) {
+            var ws = new WebSocket("ws://10.9.101.39:5000/websocket");
+            ws.onopen = function() {
+                console.log("conn success");
+                ws.send(JSON.stringify({
+                    subscribe: 'public'
+                }));
+            };
+
+            ws.onmessage = function(event) {
+                console.log(event.data);
+                messages.push(event.data);
+            };
+        } else {
+            console.log("WebSocket not supported");
+        }
+
+        window.onbeforeunload = function() {
+            ws.onclose = function() {
+                console.log('unlodad');
+            };
+            ws.close();
+        };
+
+        return {
+            Messages: messages,
+            Send: function(msg) {
+                ws.send(JSON.stringify(msg));
+            }
+        };
+    });
 });
 app.config(['$routeProvider', function($routeProvider) {
     $routeProvider
@@ -24,7 +57,7 @@ app.config(['$routeProvider', function($routeProvider) {
             redirectTo: '/dashboard'
         });
 }]);
-app.run(function($rootScope, $interval, $location, globalVar) {
+app.run(function($rootScope, $interval, $location, globalVar, Message) {
     $rootScope.tab = 1; //default
     $rootScope.$on('$routeChangeStart', function(evt, next, current) {
         console.log('route begin change');
@@ -34,6 +67,7 @@ app.run(function($rootScope, $interval, $location, globalVar) {
         globalVar.intervals = [];
     });
     $rootScope.status = "normal";
+    $rootScope.Messages = Message.Messages;
 });
 app.controller('dashBoardControl', ['$scope', function($scope) {
 
