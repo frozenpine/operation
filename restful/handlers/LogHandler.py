@@ -4,6 +4,7 @@ from app import msgQueues
 
 class LogApi(Resource):
     def post(self):
-        msg = request.form['msg']
-        print msg
+        msg = request.values['msg']
+        source = request.headers.get('src')
+        print msg, source
         msgQueues['public'].put_message(msg)

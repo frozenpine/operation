@@ -181,13 +181,11 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', 'globalVar',
 }]);
 app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$interval', function($scope, $http, globalVar, $interval) {
     $scope.checking = true;
+    /*
     $scope.CheckLoginLog = function() {
         $scope.checking = true;
         $scope.loginLogs = [{
-            'seatid': 'checking...',
             'detail': {
-                'exid': 'checking...',
-                'trade_date': 'checking...',
                 'success': 'checking...'
             }
         }];
@@ -201,6 +199,11 @@ app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$interva
     $scope.CheckLoginLog();
     var loginLogInterval = $interval(function() { $scope.CheckLoginLog(); }, 60000);
     globalVar.intervals.push(loginLogInterval);
+    */
+    $http.get('api/system/id/' + globalVar.sysid + '/login_statics').success(function(data) {
+        $scope.logins = data;
+        $scope.checking = false;
+    })
 }]);
 app.controller('warningCtrl', ['$scope', '$http', function($scope, $http) {
     $scope.isRadioClick = false;

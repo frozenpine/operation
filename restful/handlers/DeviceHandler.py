@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 from flask_restful import Resource, reqparse, request
-from app.models import Device, Server
+from app.models import Server
 
 class DeviceApi(Resource):
     def get(self, **kwargs):
@@ -14,7 +14,7 @@ class DeviceApi(Resource):
         dev = Server.find(**kwargs)
         if dev:
             return {
-                "message": 'server({}) found succeefully.'.format(dev.name.encode('utf-8')), 
+                "message": 'server({}) found succeefully.'.format(dev.name.encode('utf-8')),
                 "data": dev.to_json()
             }
         else:

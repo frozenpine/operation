@@ -2,7 +2,7 @@
 import logging
 from flask_restful import Resource, reqparse, request
 from app import db
-from app.models import User, Operator
+from app.models import Operator
 
 class UserApi(Resource):
     def get(self, **kwargs):

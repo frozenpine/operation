@@ -2,19 +2,23 @@
 from . import db
 from sqlalchemy_utils.types import ChoiceType, JSONType, IPAddressType, ArrowType
 from flask_login import UserMixin
+'''
 from neomodel import (
     StructuredNode, RelationshipTo, RelationshipFrom, Relationship,
     StringProperty, DateProperty, IntegerProperty, UniqueIdProperty, BooleanProperty,
     ZeroOrOne, One
 )
 from .relations import *
+'''
 from werkzeug.security import generate_password_hash, check_password_hash
 from enum import Enum
 from ipaddress import IPv4Address
 from arrow import Arrow
 import re
 import json
+import uuid
 
+'''
 class NodeMixin(StructuredNode):
     __abstract_node__ = True
     uuid = UniqueIdProperty()
@@ -117,6 +121,7 @@ class Role(NodeMixin):
 
 class Privilege(NodeMixin):
     level = IntegerProperty(default=1)
+'''
 
 class SQLModelMixin(object):
     filter_keyword = [
@@ -327,6 +332,10 @@ class SystemType(SQLModelMixin, db.Model):
 class TradeSystem(SQLModelMixin, db.Model):
     __tablename__ = 'trade_systems'
     id = db.Column(db.Integer, primary_key=True)
+    uuid = db.Column(
+        db.String, index=True,
+        default=lambda: unicode(uuid4()).replace('-', '').lower()
+    )
     name = db.Column(db.String, unique=True, index=True)
     description = db.Column(db.String)
     type_id = db.Column(db.Integer, db.ForeignKey('system_types.id'), index=True)
@@ -335,6 +344,7 @@ class TradeSystem(SQLModelMixin, db.Model):
     login_user = db.Column(db.String, index=True)
     login_pwd = db.Column(db.String)
     base_dir = db.Column(db.String)
+    db_uri = db.Column(db.String)
     processes = db.relationship('TradeProcess', backref='system')
     servers = db.relationship(
         'Server',
@@ -343,6 +353,7 @@ class TradeSystem(SQLModelMixin, db.Model):
         lazy='dynamic'
     )
     config_files = db.relationship('ConfigFile', backref='system')
+    syslog_files = db.relationship('SyslogFile', backref='system')
     vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.id'), index=True)
     parent_sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     parent_system = db.relationship('TradeSystem', backref='child_systems', remote_side=[id])
@@ -380,6 +391,15 @@ class TradeSystem(SQLModelMixin, db.Model):
         else:
             raise TypeError('{} is not <class:{}>'.format(up_sys, self.__name__))
 
+class SyslogFile(SQLModelMixin, db.Model):
+    __tablename__ = 'syslog_files'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, unique=True, index=True)
+    description = db.Column(db.String)
+    file_path = db.Column(db.String)
+    sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
+    svr_id = db.Column(db.Integer, db.ForeignKey('servers.id'), index=True)
+
 class SystemVendor(SQLModelMixin, db.Model):
     __tablename__ = "vendors"
     id = db.Column(db.Integer, primary_key=True)
@@ -391,6 +411,10 @@ class SystemVendor(SQLModelMixin, db.Model):
 class Server(SQLModelMixin, db.Model):
     __tablename__ = 'servers'
     id = db.Column(db.Integer, primary_key=True)
+    uuid = db.Column(
+        db.String, index=True,
+        default=lambda: unicode(uuid4()).replace('-', '').lower()
+    )
     name = db.Column(db.String, unique=True, index=True)
     survey = db.Column(JSONType)
     description = db.Column(db.String)
@@ -400,6 +424,7 @@ class Server(SQLModelMixin, db.Model):
     admin_pwd = db.Column(db.String)
     processes = db.relationship('TradeProcess', backref='server')
     statics_records = db.relationship('StaticsRecord', backref='server')
+    syslog_files = db.relationship('SyslogFile', backref='server')
 
 class Operation(SQLModelMixin, db.Model):
     __tablename__ = 'operations'

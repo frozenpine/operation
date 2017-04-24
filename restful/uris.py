@@ -8,9 +8,9 @@ from .handlers.UIDataHandler import UIDataApi
 from .handlers.OperationHandler import OperationListApi, OperationApi
 from .handlers.SysStaticsHandler import (
     ServerStaticListApi, SystemStaticListApi,
-    ServerStaticApi, ProcStaticApi
+    ServerStaticApi, ProcStaticApi,
+    LoginListApi, LoginCheckApi
 )
-from .handlers.LoginLogHandler import LoginLogApi
 from .handlers.LogHandler import LogApi
 
 resources.add_resource(
@@ -119,11 +119,19 @@ resources.add_resource(
 )
 
 resources.add_resource(
-    LoginLogApi,
-    '/system/id/<int:id>/login_logs',
-    '/system/id/<int:id>/login_logs/',
+    LoginListApi,
+    '/system/id/<int:id>/login_statics',
+    '/system/id/<int:id>/login_statics/',
     methods=['GET'],
-    endpoint='login_logs'
+    endpoint='login_statics_list'
+)
+
+resources.add_resource(
+    LoginCheckApi,
+    '/system/id/<int:id>/login_statics/check',
+    '/system/id/<int:id>/login_statics/checks/',
+    methods=['GET'],
+    endpoint='login_statics'
 )
 
 resources.add_resource(LogApi, '/logs', methods=['POST'])

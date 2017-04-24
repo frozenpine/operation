@@ -4,6 +4,10 @@ from app.models import TradeSystem, TradeProcess, Server
 from SysManager import logging
 from SysManager.configs import SSHConfig
 from SysManager.executor import Executor
+import pymysql
+pymysql.install_as_MySQLdb()
+from sqlalchemy import create_engine
+from sqlalchemy.sql import text
 
 class ServerStaticListApi(Resource):
     def __init__(self):
@@ -162,3 +166,43 @@ class ProcStaticApi(Resource):
                     'command': None
                 }
         return rtn
+
+class LoginListApi(Resource):
+    def get(self, **kwargs):
+        sys = TradeSystem.find(**kwargs)
+        rtn = []
+        if sys:
+            '''
+            conf = SSHConfig(sys.manage_ip.exploded, sys.login_user, sys.login_pwd)
+            executor = Executor(conf)
+            mod = {
+                'name': 'quantdoLogin',
+                'quantdoLogin': '/root/right.txt'
+            }
+            result = executor.run(mod)
+            for key in result.data.keys():
+                rtn.append({
+                    'seatid': key,
+                    'detail': result.data[key][-1]
+                })
+            '''
+            db = create_engine(sys.db_uri)
+            results = db.execute(text("""
+                SELECT seat.seat_name, sync.brokerid, sync.exchangeid, sync.frontaddr, sync.seatid 
+                FROM t_seat seat, t_sync_seat sync , t_capital_account 
+                WHERE seat.seat_id = t_capital_account.seat_id 
+                    AND sync.seatid=t_capital_account.account_id 
+                    AND sync.isactive = TRUE""")).fetchall()
+            for result in results:
+                rtn.append({
+                    'seat_name': result[0],
+                    'broker_id': result[1],
+                    'exchange_id': result[2],
+                    'front_addr': result[3],
+                    'seat_id': result[4]
+                })
+        return rtn
+
+class LoginCheckApi(Resource):
+    def get(self, **kwargs):
+        pass
