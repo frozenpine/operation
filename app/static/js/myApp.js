@@ -7,20 +7,21 @@ var app = angular.module('myApp', ['ngRoute'], function($provide) {
             'intervals': []
         };
     });
-    $provide.factory('Message', function() {
-        var messages = [];
+    $provide.factory('Message', function($rootScope) {
+        $rootScope.Messages = {};
         if ("WebSocket" in window) {
             var ws = new WebSocket("ws://10.9.101.39:5000/websocket");
             ws.onopen = function() {
                 console.log("conn success");
                 ws.send(JSON.stringify({
-                    subscribe: 'public'
+                    method: 'subscribe',
+                    topic: 'public'
                 }));
             };
 
             ws.onmessage = function(event) {
-                console.log(event.data);
-                messages.push(event.data);
+                onMessage(JSON.parse(event.data));
+                $rootScope.$apply();
             };
         } else {
             console.log("WebSocket not supported");
@@ -33,8 +34,20 @@ var app = angular.module('myApp', ['ngRoute'], function($provide) {
             ws.close();
         };
 
+        var onMessage = function(msg) {
+            switch (msg.topic) {
+                case "public":
+                    if ($rootScope.Messages.public === undefined) {
+                        $rootScope.Messages.public = [];
+                    }
+                    $rootScope.Messages.public.push(msg.data);
+                    break;
+                default:
+                    console.log(JSON.stringify(msg));
+            }
+        };
+
         return {
-            Messages: messages,
             Send: function(msg) {
                 ws.send(JSON.stringify(msg));
             }
@@ -67,7 +80,7 @@ app.run(function($rootScope, $interval, $location, globalVar, Message) {
         globalVar.intervals = [];
     });
     $rootScope.status = "normal";
-    $rootScope.Messages = Message.Messages;
+    $rootScope.Messenger = Message;
 });
 app.controller('dashBoardControl', ['$scope', function($scope) {
 

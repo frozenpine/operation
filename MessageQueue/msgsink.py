@@ -5,7 +5,7 @@ import shutil
 import threading
 import time
 
-class MyQueue(threading.Thread):
+class BaseSinker(threading.Thread):
     def __init__(self, filename, timer=10):
         threading.Thread.__init__(self)
         self.queue = Queue()
@@ -47,7 +47,7 @@ class MyQueue(threading.Thread):
     def get_nowait(self):
         return self.queue.get(False)
 
-class LogQueue(MyQueue):
+class LogSinker(BaseSinker):
     def sink(self):
         if not os.path.exists("Flows"):
             os.mkdir("Flows")

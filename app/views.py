@@ -3,7 +3,8 @@ import logging
 from geventwebsocket import WebSocketError
 from flask import render_template, request, abort
 from flask_login import login_required, current_user
-from . import main, msgQueues
+from . import main
+from MessageQueue.msgserver import MessageServer
 import json
 
 user = ""
@@ -32,9 +33,7 @@ def websocket():
     if request.environ.has_key('wsgi.websocket'):
         ws = request.environ['wsgi.websocket']
         if ws:
-            msgQueues['public'].subscribe(ws)
             while True:
-                msg = ws.receive()
-                msgQueues['public'].send_message(msg)
+                MessageServer.parse_request(ws)
         else:
             abort(500)
