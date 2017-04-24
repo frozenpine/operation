@@ -36,7 +36,7 @@ class OperationApi(Resource):
                 op.group.system.login_user,
                 op.group.system.login_pwd
             )
-            executor = Executor(conf)
+            executor = Executor.Create(conf)
             result = executor.run(op.detail)
             if result.return_code == 0:
                 rtn['succeed'] = True
