@@ -225,11 +225,6 @@ class StaticsType(Enum):
     SWAP = 5
     NETWORK = 6
 
-class Status(Enum):
-    Stopped = 1
-    Running = 2
-    Idle = 3
-
 class Operator(UserMixin, SQLModelMixin, db.Model):
     def __init__(self, login, password, name=None):
         self.login = login
@@ -320,7 +315,7 @@ class TradeProcess(SQLModelMixin, db.Model):
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     svr_id = db.Column(db.Integer, db.ForeignKey('servers.id'), index=True)
     config_files = db.relationship('ConfigFile', backref='process')
-    status = db.Column(ChoiceType(Status, impl=db.Integer()))
+    status = db.Column(JSONType, default={})
 
 class SystemType(SQLModelMixin, db.Model):
     __tablename__ = 'system_types'
@@ -334,7 +329,7 @@ class TradeSystem(SQLModelMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     uuid = db.Column(
         db.String, index=True,
-        default=lambda: unicode(uuid4()).replace('-', '').lower()
+        default=lambda: unicode(uuid4()).lower()
     )
     name = db.Column(db.String, unique=True, index=True)
     description = db.Column(db.String)
@@ -357,7 +352,6 @@ class TradeSystem(SQLModelMixin, db.Model):
     vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.id'), index=True)
     parent_sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     parent_system = db.relationship('TradeSystem', backref='child_systems', remote_side=[id])
-    status = db.Column(ChoiceType(Status, impl=db.Integer()))
     operation_groups = db.relationship('OperationGroup', backref='system')
 
     @property
@@ -405,7 +399,7 @@ class SystemVendor(SQLModelMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, unique=True, index=True)
     description = db.Column(db.String)
-    contactors = db.Column(JSONType)
+    contactors = db.Column(JSONType, default={})
     systems = db.relationship('TradeSystem', backref='vendor')
 
 class Server(SQLModelMixin, db.Model):
@@ -413,10 +407,10 @@ class Server(SQLModelMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     uuid = db.Column(
         db.String, index=True,
-        default=lambda: unicode(uuid4()).replace('-', '').lower()
+        default=lambda: unicode(uuid4()).lower()
     )
     name = db.Column(db.String, unique=True, index=True)
-    survey = db.Column(JSONType)
+    survey = db.Column(JSONType, default={})
     description = db.Column(db.String)
     platform = db.Column(ChoiceType(PlatformType, impl=db.Integer()))
     manage_ip = db.Column(IPAddressType, index=True)
@@ -425,6 +419,7 @@ class Server(SQLModelMixin, db.Model):
     processes = db.relationship('TradeProcess', backref='server')
     statics_records = db.relationship('StaticsRecord', backref='server')
     syslog_files = db.relationship('SyslogFile', backref='server')
+    status = db.Column(JSONType, default={})
 
 class Operation(SQLModelMixin, db.Model):
     __tablename__ = 'operations'
@@ -434,7 +429,7 @@ class Operation(SQLModelMixin, db.Model):
     type = db.Column(ChoiceType(ScriptType, impl=db.Integer()))
     earliest = db.Column(ArrowType)
     latest = db.Column(ArrowType)
-    detail = db.Column(JSONType, nullable=False)
+    detail = db.Column(JSONType, nullable=False, default={})
     order = db.Column(db.Integer)
     op_group_id = db.Column(db.Integer, db.ForeignKey('operation_groups.id'))
     records = db.relationship('OperateRecord', backref='operation')
@@ -463,7 +458,7 @@ class OperateResult(SQLModelMixin, db.Model):
     op_id = db.Column(db.Integer, db.ForeignKey('operate_records.id'), index=True)
     succeed = db.Column(db.Boolean)
     error_code = db.Column(db.Integer, default=0)
-    detail = db.Column(JSONType, nullable=False)
+    detail = db.Column(JSONType, nullable=False, default={})
 
 class StaticsRecord(SQLModelMixin, db.Model):
     __tablename__ = 'statics_records'
@@ -472,7 +467,7 @@ class StaticsRecord(SQLModelMixin, db.Model):
     operator_id = db.Column(db.Integer, db.ForeignKey('operators.id'), index=True)
     operated_at = db.Column(ArrowType, index=True)
     type = db.Column(ChoiceType(StaticsType, impl=db.Integer()))
-    detail = db.Column(JSONType, nullable=False)
+    detail = db.Column(JSONType, nullable=False, default={})
 
 class ConfigFile(SQLModelMixin, db.Model):
     __tablename__ = 'config_files'

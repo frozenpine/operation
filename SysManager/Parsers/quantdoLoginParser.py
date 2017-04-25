@@ -8,9 +8,9 @@ class quantdoLoginParser(OutputParser):
             self,
             output_lines=output_lines,
             re_str=
-            r'^(.+us) .+EXID:([^,]+),SeatID:([^,]+),.+席位\[(.+)\]登录(?:(成功).*TradeDate=\[([^]]+)\].*TradeTime=\[([^]]+)\].+|(失败).+)$',
+            r'^(.+us) .+EXID:([^,]+),SeatID:([^,]+),.+Main:\d+:(.+)$',
             key_list=[
-                'timestamp', 'exid', 'seatid', 'login', 'success', 'trade_date', 'trade_time', 'fail'
+                'timestamp', 'exid', 'seatid', 'message'
             ],
             primary_key='seatid',
             skip_headline=False

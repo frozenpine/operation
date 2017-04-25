@@ -9,7 +9,7 @@ from .handlers.OperationHandler import OperationListApi, OperationApi
 from .handlers.SysStaticsHandler import (
     ServerStaticListApi, SystemStaticListApi,
     ServerStaticApi, ProcStaticApi,
-    LoginListApi, LoginCheckApi
+    LoginListApi, LoginCheckApi, UserSessionListApi
 )
 from .handlers.LogHandler import LogApi
 
@@ -96,8 +96,8 @@ resources.add_resource(
 
 resources.add_resource(
     ServerStaticApi,
-    '/server/id/<int:id>/statics',
-    '/server/id/<int:id>/statics/',
+    '/system/id/<int:id>/svr_statics/check',
+    '/system/id/<int:id>/svr_statics/check/',
     methods=['GET'],
     endpoint='svr_statics'
 )
@@ -112,8 +112,8 @@ resources.add_resource(
 
 resources.add_resource(
     ProcStaticApi,
-    '/process/id/<int:id>/statics',
-    '/process/id/<int:id>/statics/',
+    '/system/id/<int:id>/sys_statics/check',
+    '/system/id/<int:id>/sys_statics/check/',
     methods=['GET'],
     endpoint='proc_statics'
 )
@@ -129,9 +129,17 @@ resources.add_resource(
 resources.add_resource(
     LoginCheckApi,
     '/system/id/<int:id>/login_statics/check',
-    '/system/id/<int:id>/login_statics/checks/',
+    '/system/id/<int:id>/login_statics/check/',
     methods=['GET'],
     endpoint='login_statics'
+)
+
+resources.add_resource(
+    UserSessionListApi,
+    '/system/id/<int:id>/user_sessions',
+    '/system/id/<int:id>/user_sessions/',
+    methods=['GET'],
+    endpoint='user_sessions'
 )
 
 resources.add_resource(LogApi, '/logs', methods=['POST'])

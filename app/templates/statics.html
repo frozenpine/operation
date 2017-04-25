@@ -124,16 +124,18 @@
 							<tr>
 								<th>上联系统</th>
 								<th>交易日</th>
+								<th>连接地址</th>
 								<th>登录账户</th>
 								<th>连接状态</th>
 							</tr>
 						</thead>
 						<tbody>
-							<tr ng-repeat="data in loginLogs">
-								<td class="table-data">{{data.detail.exid}}</td>
-								<td class="table-data">{{data.detail.trade_date}}</td>
-								<td class="table-data">{{data.seatid}}</td>
-								<td class="table-status">{{data.detail.success + data.detail.fail}}</td>
+							<tr ng-repeat="data in loginStatics">
+								<td class="table-data">{{data.seat_name}}</td>
+								<td class="table-data">{{data.trading_day}}</td>
+								<td class="table-data">{{data.front_addr}}</td>
+								<td class="table-data">{{data.seat_id}}</td>
+								<td class="table-status">{{data.seat_status}}</td>
 							</tr>
 						</tbody>
 					</table>

@@ -81,9 +81,11 @@ app.run(function($rootScope, $interval, $location, globalVar, Message) {
     });
     $rootScope.status = "normal";
     $rootScope.Messenger = Message;
-    $rootScope.Messages = {
-        'public': []
-    };
+    if ($rootScope.Messages === undefined) {
+        $rootScope.Messages = {
+            'public': []
+        };
+    }
 });
 app.controller('dashBoardControl', ['$scope', function($scope) {
 
@@ -92,22 +94,24 @@ app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
     $scope.checking = true;
     $scope.checkSvrStatics = function() {
         $scope.checking = true;
-        angular.forEach($scope.serverStatics, function(value, index) {
-            $http.get('api/server/id/' + value.id + '/statics')
-                .success(function(data) {
-                    $scope.serverStatics[index] = data;
-                    console.log(data);
-                    $scope.checking = false;
-                });
-        });
+        $http.get('api/system/id/' + globalVar.sysid + '/svr_statics/check')
+            .success(function(response) {
+                if (response.sys_id == globalVar.sysid) {
+                    $scope.serverStatics = response.details;
+                }
+                $scope.checking = false;
+            });
     };
     $http.get('api/system/id/' + globalVar.sysid + '/svr_statics')
         .success(function(data) {
+            console.log(data);
             if (globalVar.current_type == 'sysid') {
-                $scope.serverStatics = data;
-                $scope.checkSvrStatics();
-                var svrStaticInterval = $interval(function() { $scope.checkSvrStatics(); }, 60000);
-                globalVar.intervals.push(svrStaticInterval);
+                if (data.sys_id == globalVar.sysid) {
+                    $scope.serverStatics = data.details;
+                    $scope.checkSvrStatics();
+                    var svrStaticInterval = $interval(function() { $scope.checkSvrStatics(); }, 60000);
+                    globalVar.intervals.push(svrStaticInterval);
+                }
                 $scope.checking = false;
             }
         });
@@ -116,16 +120,11 @@ app.controller('sysStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
     $scope.checking = true;
     $scope.checkProc = function() {
         $scope.checking = true;
-        angular.forEach($scope.systemStatics, function(value1, index1) {
-            angular.forEach(value1.detail, function(value2, index2) {
-                $scope.systemStatics[index1].detail[index2].status.stat = "checking...";
-                $http.get('api/process/id/' + value2.id + '/statics')
-                    .success(function(data) {
-                        $scope.systemStatics[index1].detail[index2] = data;
-                        $scope.checking = false;
-                    });
+        $http.get('api/system/id/' + globalVar.sysid + '/sys_statics/check')
+            .success(function(response) {
+                $scope.systemStatics = response;
+                $scope.checking = false;
             });
-        });
     };
     $http.get('api/system/id/' + globalVar.sysid + '/sys_statics')
         .success(function(data) {
@@ -179,31 +178,39 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', 'globalVar',
         });
     };
 }]);
-app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$interval', function($scope, $http, globalVar, $interval) {
+app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootScope', '$interval', function($scope, $http, globalVar, $rootScope, $interval) {
+    if ($rootScope.LoginStatics === undefined) {
+        $rootScope.LoginStatics = {};
+    }
+    $scope.$watch('$rootScope.LoginStatics', function(newValue, oldValue) {
+        $scope.loginStatics = $rootScope.LoginStatics[globalVar.sysid];
+        $scope.$apply();
+    }, true);
     $scope.checking = true;
-    /*
     $scope.CheckLoginLog = function() {
         $scope.checking = true;
-        $scope.loginLogs = [{
-            'detail': {
-                'success': 'checking...'
-            }
-        }];
-        $http.get('api/system/id/' + globalVar.sysid + '/login_logs').success(function(data) {
+        $http.get('api/system/id/' + globalVar.sysid + '/login_statics/check').success(function(data) {
             if (globalVar.current_type == 'sysid') {
-                $scope.loginLogs = data;
+                console.log(data);
+                angular.forEach(data, function(value1, index1) {
+                    angular.forEach($rootScope.LoginStatics[globalVar.sysid], function(value2, index2) {
+                        if (value1.seat_id == value2.seat_id) {
+                            $rootScope.LoginStatics[globalVar.sysid][index2].seat_status = value1.seat_status;
+                        }
+                    });
+                });
                 $scope.checking = false;
             }
         });
     };
-    $scope.CheckLoginLog();
-    var loginLogInterval = $interval(function() { $scope.CheckLoginLog(); }, 60000);
-    globalVar.intervals.push(loginLogInterval);
-    */
     $http.get('api/system/id/' + globalVar.sysid + '/login_statics').success(function(data) {
-        $scope.logins = data;
+        $rootScope.LoginStatics[globalVar.sysid] = data;
+        $scope.loginStatics = $rootScope.LoginStatics[globalVar.sysid];
+        $scope.CheckLoginLog();
+        var loginStaticInterval = $interval(function() { $scope.CheckLoginLog(); }, 30000);
+        globalVar.intervals.push(loginStaticInterval);
         $scope.checking = false;
-    })
+    });
 }]);
 app.controller('warningCtrl', ['$scope', '$http', function($scope, $http) {
     $scope.isRadioClick = false;

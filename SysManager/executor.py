@@ -14,11 +14,12 @@ from configs import (
     RemoteConfig, SSHConfig, WinRmConfig,
     Result, ErrorCode
 )
+import re
+
 class Executor():
     def __init__(self, remote_config, parser=None):
+        self.remote_config = remote_config
         self.parser = parser
-        self.result = Result()
-        self.result.destination = remote_config.remote_host
 
     @staticmethod
     def Create(remote_config, parser=None):
@@ -103,29 +104,69 @@ class SSHExecutor(Executor):
             else:
                 self.parser = par
         stdin, stdout, stderr = mod.run(client=self.client, module=module)
+        self.result = Result()
+        self.result.destination = self.remote_config.remote_host
         self.result.return_code = stdout.channel.recv_exit_status()
         self.result.module = module
         if self.result.return_code == 0:
             self.result.lines = [line.rstrip('\r\n') for line in stdout.readlines()]
             if self.parser:
                 self.result.data = self.parser(self.result.lines).format2json()
+                self.parser = None
         else:
             self.result.lines = [line.rstrip('\r\n') for line in stderr.readlines()]
-        self.client.close()
         return self.result
 
 if __name__ == '__main__':
-    conf = SSHConfig('192.168.101.100', 'qdam', 'qdam')
+    rtn = []
+    result = {}
+    conf = SSHConfig('192.168.92.26', 'root', 'Quantdo@SH2016!')
+    modlist = [
+            {'name': 'uptime'},
+            {'name': 'mpstat'},
+            {'name': 'df'},
+            {'name': 'free'}
+    ]
+    resultlist = []
+    executor = Executor.Create(conf)
+    for mod in modlist:
+        resultlist.append(executor.run(mod))
+    result['server'] = conf.remote_host
+    result['uptime'] = resultlist[0].data
+    result['cpu'] = resultlist[1].data
+    result['disks'] = resultlist[2].data
+    result['memory'] = resultlist[3].data['mem']
+    result['swap'] = resultlist[3].data['swap']
+    '''
     executor = Executor.Create(conf)
     result = executor.run(
         {
-            'name': 'psaux',
-            'args': {
-                'processes': ['qicegateway'],
-                'param': [1]
-            }
+            'name': 'quantdoLogin',
+            'quantdoLogin': '/root/right.txt'
         }
     )
     #print result.lines
-    logging.info(result.data)
-    print result.data
+    #logging.info(result)
+    for key in result.data.keys():
+        if u'登录成功' in result.data[key][-1]['message'].decode('utf-8'):
+            rtn.append({
+                'seat_id': key,
+                'seat_status': u'已连接'
+            })
+        elif u'登录失败' in result.data[key][-1]['message'].decode('utf-8'):
+            rtn.append({
+                'seat_id': key,
+                'seat_status': u'登录失败'
+            })
+        elif u'断开' in result.data[key][-1]['message'].decode('utf-8'):
+            rtn.append({
+                'seat_id': key,
+                'seat_status': u'连接断开'
+            })
+        else:
+            rtn.append({
+                'seat_id': key,
+                'seat_status': u'未连接'
+            })
+        '''
+    print rtn
