@@ -27,7 +27,10 @@ class OutputParser(object):
             primary_position = -1
         for each in self.output_lines:
             temp_dict = {}
-            each_list = re.findall(self.pattern, each)[0]
+            try:
+                each_list = re.findall(self.pattern, each)[0]
+            except IndexError:
+                each_list = ['' for x in self.key_list]
             for i in range(0, key_len, 1):
                 if i != primary_position:
                     try:

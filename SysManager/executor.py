@@ -120,6 +120,7 @@ class SSHExecutor(Executor):
 if __name__ == '__main__':
     rtn = []
     result = {}
+    '''
     conf = SSHConfig('192.168.92.26', 'root', 'Quantdo@SH2016!')
     modlist = [
             {'name': 'uptime'},
@@ -138,11 +139,12 @@ if __name__ == '__main__':
     result['memory'] = resultlist[3].data['mem']
     result['swap'] = resultlist[3].data['swap']
     '''
+    conf = SSHConfig('192.168.101.100', 'qdam', 'qdam')
     executor = Executor.Create(conf)
     result = executor.run(
         {
             'name': 'quantdoLogin',
-            'quantdoLogin': '/root/right.txt'
+            'quantdoLogin': '/home/qdam/qtrade/bin/Syslog.log'
         }
     )
     #print result.lines
@@ -168,5 +170,4 @@ if __name__ == '__main__':
                 'seat_id': key,
                 'seat_status': u'未连接'
             })
-        '''
     print rtn

@@ -281,56 +281,83 @@ class LoginListApi(Resource):
         return rtn
 
 class LoginCheckApi(Resource):
+    def __init__(self):
+        self.syslog_list = {}
+        self.rtn = []
+        self.check = []
+        self.mutex = threading.Lock()
+
+    def find_syslog(self, sys):
+        for log in sys.syslog_files:
+            if self.syslog_list.has_key(log.server):
+                self.syslog_list[log.server].append(log)
+            else:
+                self.syslog_list[log.server] = []
+                self.syslog_list[log.server].append(log)
+        if len(sys.child_systems) > 0:
+            for child_sys in sys.child_systems:
+                self.find_syslog(child_sys)
+
+    def check_log(self, svr, logs):
+        if svr.platform:                        #不同平台，使用不同的执行器，当前测试均为SSH
+            conf = SSHConfig(
+                svr.manage_ip.exploded,
+                svr.admin_user,
+                svr.admin_pwd
+            )
+        else:
+            conf = SSHConfig(
+                svr.manage_ip.exploded,
+                svr.admin_user,
+                svr.admin_pwd
+            )
+        executor = Executor.Create(conf)
+        for log in logs:
+            mod = {
+                'name': 'quantdoLogin',
+                'quantdoLogin': log.file_path
+            }
+            result = executor.run(mod)
+            self.mutex.acquire()
+            for key in result.data.keys():
+                if u'连接成功' in result.data[key][-1]['message'].decode('utf-8'):
+                    self.rtn.append({
+                        'seat_id': key,
+                        'seat_status': u'连接成功'
+                    })
+                elif u'登录成功' in result.data[key][-1]['message'].decode('utf-8'):
+                    self.rtn.append({
+                        'seat_id': key,
+                        'seat_status': u'登录成功'
+                    })
+                elif u'登录失败' in result.data[key][-1]['message'].decode('utf-8'):
+                    self.rtn.append({
+                        'seat_id': key,
+                        'seat_status': u'登录失败'
+                    })
+                elif u'断开' in result.data[key][-1]['message'].decode('utf-8'):
+                    self.rtn.append({
+                        'seat_id': key,
+                        'seat_status': u'连接断开'
+                    })
+                else:
+                    self.rtn.append({
+                        'seat_id': key,
+                        'seat_status': u'未连接'
+                    })
+            self.mutex.release()
+        executor.client.close()
+
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
-        rtn = []
         if sys:
-            for syslog in sys.syslog_files:
-                if syslog.server.platform:                  #不同平台，使用不同的执行器，当前测试均为SSH
-                    conf = SSHConfig(
-                        syslog.server.manage_ip.exploded,
-                        syslog.server.admin_user,
-                        syslog.server.admin_pwd
-                    )
-                else:
-                    conf = SSHConfig(
-                        syslog.server.manage_ip.exploded,
-                        syslog.server.admin_user,
-                        syslog.server.admin_pwd
-                    )
-                executor = Executor.Create(conf)
-                mod = {
-                    'name': 'quantdoLogin',
-                    'quantdoLogin': syslog.file_path
-                }
-                result = executor.run(mod)
-                for key in result.data.keys():
-                    if u'连接成功' in result.data[key][-1]['message'].decode('utf-8'):
-                        rtn.append({
-                            'seat_id': key,
-                            'seat_status': u'连接成功'
-                        })
-                    elif u'登录成功' in result.data[key][-1]['message'].decode('utf-8'):
-                        rtn.append({
-                            'seat_id': key,
-                            'seat_status': u'登录成功'
-                        })
-                    elif u'登录失败' in result.data[key][-1]['message'].decode('utf-8'):
-                        rtn.append({
-                            'seat_id': key,
-                            'seat_status': u'登录失败'
-                        })
-                    elif u'断开' in result.data[key][-1]['message'].decode('utf-8'):
-                        rtn.append({
-                            'seat_id': key,
-                            'seat_status': u'连接断开'
-                        })
-                    else:
-                        rtn.append({
-                            'seat_id': key,
-                            'seat_status': u'未连接'
-                        })
-        return rtn
+            self.find_syslog(sys)
+            for (k, v) in self.syslog_list.items():
+                self.check.append(threading.Thread(target=self.check_log, args=(k, v)))
+            for tr in self.check:
+                tr.start()
+                tr.join()
+        return self.rtn
 
 class UserSessionListApi(Resource):
     def get(self, **kwargs):
@@ -342,7 +369,7 @@ class UserSessionListApi(Resource):
             except Exception:
                 abort(404)
             else:
-                results = db.execute(text("""
+                results = sys_db.execute(text("""
                     SELECT brokerid, userid, usertype, sessionid, frontid,
                         logintime, ipaddress, macaddress
                     FROM t_oper_usersession
