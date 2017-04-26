@@ -94,7 +94,7 @@
 									<td class="table-data">{{child.status.rss}}</td>
 									<td class="table-data">{{child.status.start}}</td>
 									<td class="table-data">{{child.status.time}}</td>
-									<td class="table-status">{{child.status.stat}}</td>
+									<td class="table-status">{{child.status.stat | status}}</td>
 									<td class="table-data">{{child.server}}</td>
 								</tr>
 							</tbody>
@@ -134,7 +134,7 @@
 								<td class="table-data">{{data.seat_name}}</td>
 								<td class="table-data">{{data.trading_day}}</td>
 								<td class="table-data">{{data.front_addr}}</td>
-								<td class="table-data">{{data.seat_id}}</td>
+								<td class="table-data">{{data.seat_id | mask}}</td>
 								<td class="table-status">{{data.seat_status}}</td>
 							</tr>
 						</tbody>

@@ -2,6 +2,7 @@
 from geventwebsocket import WebSocketError
 from msgsink import LogSinker
 import json
+import time
 
 def req_subscribe(request):
     try:
@@ -32,7 +33,7 @@ def req_unsubscribe(request):
         if MessageQueues.has_key(topic):
             try:
                 MessageQueues[topic].unsubscribe(request['ws'])
-            except ValueError:
+            except KeyError:
                 request['ws'].send(json.dumps({
                     'error': """You haven't subscribed this topic[{}]""".format(topic)
                 }))
@@ -43,13 +44,19 @@ def req_unsubscribe(request):
                 'error': 'Topic {} not exist.'.format(topic)
             }))
 
+def req_heartbeat(request):
+    request['ws'].send(json.dumps({
+        'heartbeat': time.strftime('%Y-%m-%d %H:%M:%S')
+    }))
+
 class MessageServer(object):
     switchRequest = {
         'subscribe': lambda req: req_subscribe(req),
-        'unsubscribe': lambda req: req_unsubscribe(req)
+        'unsubscribe': lambda req: req_unsubscribe(req),
+        'heartbeat': lambda req: req_heartbeat(req)
     }
     def __init__(self, topic):
-        self.observers = []
+        self.observers = set()
         self.topic = topic
         self.message_queue = LogSinker(self.topic, 5)
         self.message_queue.setDaemon(True)
@@ -60,6 +67,7 @@ class MessageServer(object):
 
     def send_message(self, msg):
         self.put_message(msg)
+        fail_socket = set()
         for ws in self.observers:
             try:
                 ws.send(json.dumps({
@@ -67,14 +75,17 @@ class MessageServer(object):
                     'data': msg
                 }))
             except WebSocketError:
-                self.observers.pop(self.observers.index(ws))
+                print len(self.observers)
+                print self.observers
+                fail_socket.add(ws)
                 continue
+        self.observers -= fail_socket
 
     def subscribe(self, websocket):
-        self.observers.append(websocket)
+        self.observers.add(websocket)
 
     def unsubscribe(self, websocket):
-        self.observers.pop(self.observers.index(websocket))
+        self.observers.remove(websocket)
 
     @staticmethod
     def parse_request(websocket):
@@ -92,7 +103,7 @@ class MessageServer(object):
                 MessageServer.switchRequest[request['method']](request)
             except KeyError:
                 websocket.send(json.dumps({
-                    'error': """Sorry, i don't understand."""
+                    'error': """Request method not valid."""
                 }))
 
 MessageQueues = {

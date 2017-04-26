@@ -258,16 +258,39 @@ app.controller('taskControl', ['$scope', '$rootScope', function($scope, $rootSco
         $scope.$apply();
     });
 }]);
-app.filter('filterStatus', function() {
-    //return function (obj) {
-    //	var newObj = [];
-    //	angular.forEach(obj,function(o){
-    //		if(o.id == 7){
-    //			newObj.push(o);
-    //		}
-    //	});
-    //	return newObj;
-    //}
+app.filter('mask', function() {
+    return function(str) {
+        var len = str.length;
+        if (len > 3) {
+            return str.substring(0, len - 4) + '***';
+        } else {
+            var mask = '';
+            for (var i = 0; i < len - 1; i++) { mask += '*'; }
+            return str[0] + mask;
+        }
+    };
+});
+app.filter('status', function() {
+    return function(stat) {
+        if (stat != "stopped") {
+            switch (stat[0]) {
+                case 'D':
+                    return '不可中断 ';
+                case 'R':
+                    return '运行中';
+                case 'S':
+                    return '休眠';
+                case 'T':
+                    return '已停止';
+                case 'Z':
+                    return '僵尸进程';
+                default:
+                    return '未知';
+            }
+        } else {
+            return '未启动';
+        }
+    };
 });
 app.directive('echart', [function() {
     return {
