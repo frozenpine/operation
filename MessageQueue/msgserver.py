@@ -57,19 +57,18 @@ class MessageServer(object):
 
     def put_message(self, msg):
         self.message_queue.put(msg)
-        self.send_message(msg)
 
     def send_message(self, msg):
-        if self.observers:
-            for ws in self.observers:
-                try:
-                    ws.send(json.dumps({
-                        'topic': self.topic,
-                        'data': msg
-                    }))
-                except WebSocketError:
-                    self.observers.pop(self.observers.index(ws))
-                    continue
+        self.put_message(msg)
+        for ws in self.observers:
+            try:
+                ws.send(json.dumps({
+                    'topic': self.topic,
+                    'data': msg
+                }))
+            except WebSocketError:
+                self.observers.pop(self.observers.index(ws))
+                continue
 
     def subscribe(self, websocket):
         self.observers.append(websocket)

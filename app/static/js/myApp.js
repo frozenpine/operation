@@ -8,7 +8,6 @@ var app = angular.module('myApp', ['ngRoute'], function($provide) {
         };
     });
     $provide.factory('Message', function($rootScope) {
-        $rootScope.Messages = {};
         if ("WebSocket" in window) {
             var ws = new WebSocket("ws://10.9.101.39:5000/websocket");
             ws.onopen = function() {
@@ -81,11 +80,7 @@ app.run(function($rootScope, $interval, $location, globalVar, Message) {
     });
     $rootScope.status = "normal";
     $rootScope.Messenger = Message;
-    if ($rootScope.Messages === undefined) {
-        $rootScope.Messages = {
-            'public': []
-        };
-    }
+    $rootScope.Messages = {};
 });
 app.controller('dashBoardControl', ['$scope', function($scope) {
 
@@ -186,12 +181,10 @@ app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootSco
         $scope.loginStatics = $rootScope.LoginStatics[globalVar.sysid];
         $scope.$apply();
     }, true);
-    $scope.checking = true;
     $scope.CheckLoginLog = function() {
         $scope.checking = true;
         $http.get('api/system/id/' + globalVar.sysid + '/login_statics/check').success(function(data) {
             if (globalVar.current_type == 'sysid') {
-                console.log(data);
                 angular.forEach(data, function(value1, index1) {
                     angular.forEach($rootScope.LoginStatics[globalVar.sysid], function(value2, index2) {
                         if (value1.seat_id == value2.seat_id) {
@@ -209,7 +202,6 @@ app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootSco
         $scope.CheckLoginLog();
         var loginStaticInterval = $interval(function() { $scope.CheckLoginLog(); }, 30000);
         globalVar.intervals.push(loginStaticInterval);
-        $scope.checking = false;
     });
 }]);
 app.controller('warningCtrl', ['$scope', '$http', function($scope, $http) {
@@ -253,7 +245,15 @@ app.controller('warningCtrl', ['$scope', '$http', function($scope, $http) {
     };
 }]);
 app.controller('taskControl', ['$scope', '$rootScope', function($scope, $rootScope) {
-    var watcher = $scope.$watchCollection('$rootScope.Messages.public', function() {
+    if ($rootScope.Messages === undefined) {
+        $rootScope.Messages = {
+            'public': []
+        };
+    }
+    $scope.$watchCollection('$rootScope.Messages', function() {
+        if ($rootScope.Messages.public === undefined) {
+            $rootScope.Messages.public = [];
+        }
         $scope.messages = $rootScope.Messages.public;
         $scope.$apply();
     });

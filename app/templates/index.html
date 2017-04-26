@@ -59,7 +59,7 @@
 						</a>
 						<ul class="am-dropdown-content">
 							<li><span>你有 {{messages.length}} 条消息</span></li>
-							<li ng-repeat="msg in messages">
+							<li ng-repeat="msg in messages track by $index">
 								<span>{{msg}}</span>
 							</li>
 						</ul>

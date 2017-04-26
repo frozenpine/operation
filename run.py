@@ -3,6 +3,8 @@ import sys
 from geventwebsocket.handler import WebSocketHandler
 from gevent.pywsgi import WSGIServer
 from gevent import version_info
+from gevent import monkey
+monkey.patch_all()
 from app import create_app
 
 host = environ.get('FLASK_HOST') or '0.0.0.0'
@@ -13,6 +15,7 @@ if __name__ == '__main__':
     if app.config['DEBUG']:
         app.run(host=host, port=port, threaded=True)
     else:
+        '''
         base_env = {
             'GATEWAY_INTERFACE': 'CGI/1.1',
             'SERVER_SOFTWARE': 'gevent/%d.%d Python/%d.%d' % \
@@ -23,9 +26,6 @@ if __name__ == '__main__':
             'wsgi.multiprocess': True,
             'wsgi.run_once': False
         }
-        http_server = WSGIServer(
-            (host, port), app,
-            handler_class=WebSocketHandler,
-            environ=base_env
-        )
+        '''
+        http_server = WSGIServer((host, port), app, handler_class=WebSocketHandler,)
         http_server.serve_forever()

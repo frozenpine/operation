@@ -12,6 +12,18 @@ class BaseSinker(threading.Thread):
         self.filename = filename
         self.timer = timer
         self.establish_date = time.strftime("%Y-%m-%d")
+        if not os.path.exists("Flows"):
+            os.mkdir("Flows")
+        if os.path.exists("Flows/{}.out".format(filename)):
+            timestamp = time.localtime(os.stat("Flows/{}.out".format(filename)).st_ctime)
+            create_date = "{}-{}-{}".format(timestamp[0], timestamp[1], timestamp[2])
+            if time.strptime(self.establish_date, '%Y-%m-%d') != \
+                time.strptime(create_date, '%Y-%m-%d'):
+                shutil.move(
+                    "Flows/{0}.out".format(filename),
+                    "Flows/{0}_{1}.out".format(filename, create_date)
+                )
+
 
     def run(self):
         while True:
@@ -49,8 +61,6 @@ class BaseSinker(threading.Thread):
 
 class LogSinker(BaseSinker):
     def sink(self):
-        if not os.path.exists("Flows"):
-            os.mkdir("Flows")
         with open("Flows/{0}.out".format(self.filename), "ab+") as f:
             while not self.queue.empty():
                 f.write(self.queue.get() + "\n")
