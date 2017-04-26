@@ -54,7 +54,7 @@ a:hover {
 .am-topbar-inverse .am-topbar-nav>li>a {
     height: 75px;
     line-height: 75px;
-    padding: 0 12px;
+    padding: 0 3px;
 }
 
 .am-topbar-inverse .am-topbar-nav>li>a:focus,
@@ -138,10 +138,14 @@ ul.am-dropdown-content>li>a {
     background-color: #8E44AD!important;
 }
 
+.tpl-badge-secondary {
+    background-color: #F1C40F!important;
+}
+
 .tpl-header-list li {
     color: #999;
     border-bottom: 1px solid #F1F4F7;
-    padding: 3px;
+    padding: 5px;
 }
 
 .tpl-header-list li:last-child {
@@ -781,6 +785,7 @@ ul.tpl-dropdown-content li>a.tpl-dropdown-content-message:last-child {
 
 .row {
     overflow: hidden;
+    padding: 0px 10px 0px 10px;
 }
 
 .row-mb {
@@ -1440,9 +1445,9 @@ ul.tpl-dropdown-content li>a.tpl-dropdown-content-message:last-child {
 
 .tpl-portlet-components {
     border: 1px solid #e7ecf1;
-    padding: 15px;
+    padding: 10px;
+    margin: 0px 0px 10px 0px;
     background-color: #fff;
-    margin: 10px;
     overflow: hidden;
 }
 
@@ -1493,6 +1498,12 @@ ul.tpl-dropdown-content li>a.tpl-dropdown-content-message:last-child {
 
 .am-selected-btn.am-btn-default {
     border-radius: 3px;
+}
+
+.am-icon-close {
+    cursor: pointer;
+    font-size: 60%;
+    z-index: 200;
 }
 
 .am-input-group {

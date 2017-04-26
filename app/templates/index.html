@@ -53,7 +53,23 @@
 								<span class="am-badge am-round tpl-badge-primary">
 									<i class="am-icon-tasks am-icon-md"></i>
 									<span>任务列表</span>
-									<span class="am-badge tpl-badge-primary am-round">{{messages.length}}</span>
+									<span class="am-badge tpl-badge-primary am-round"></span>
+								</span>
+							</span>
+						</a>
+						<ul class="am-dropdown-content">
+							<li>
+								测试
+							</li>
+						</ul>
+					</li>
+					<li ng-controller='messageControl' class="am-dropdown" data-am-dropdown data-am-dropdown-toggle>
+						<a class="am-dropdown-toggle tpl-header-list-link" href="javascript:;">
+							<span class="am-dropdown-toggle tpl-header-list-link" style="cursor: pointer">
+								<span class="am-badge am-round tpl-badge-secondary">
+									<i class="am-icon-commenting-o am-icon-md"></i>
+									<span>消息列表</span>
+									<span class="am-badge tpl-badge-secondary am-round">{{messages.length}}</span>
 								</span>
 							</span>
 						</a>
@@ -103,8 +119,7 @@
 			</div>
 		</header>
 
-		<!--<aside class="tpl-page-container tpl-page-header-fixed" ng-controller="sideBarCtrl">-->
-		<aside ng-controller="sideBarCtrl">
+		<aside class="tpl-page-container tpl-page-header-fixed" ng-controller="sideBarCtrl">
 			<div class="tpl-left-nav tpl-left-nav-hover" style="display: none; width: 55px;">
 				<div class="tpl-left-nav-title">
 					<div class="am-icon-list tpl-header-nav-hover-ico am-fl am-margin-right" style="cursor: pointer">
@@ -120,6 +135,9 @@
 									</i>
 								</a>
 								<ul class="am-dropdown-content" id="second{{data.id}}" ng-if="data.isSecond" style="display: block" ng-show="showListIcon">
+									<li style="margin-left: 15px; font-size: 10pt; font-weight: bold; color: #7FB0DA;">
+										{{data.name}}
+									</li>
 									<li ng-repeat="children in data.secondName" ng-click="operateChange(children.id)">
 										<a href="{{children.Url}}">{{children.name}}</a>
 									</li>
@@ -156,9 +174,20 @@
 					</ul>
 				</div>
 			</div>
+			
+			<div class="row" ng-if="clearTabList()" style="padding-left:10px; padding-right:10px;">
+				<ul class="am-tabs-nav am-nav am-nav-tabs">
+					<li ng-repeat="data in tabList" class="{{data.active}}" style="margin-right: 5px">
+						<span class="am-icon-close" style="position: absolute;left: 77%" ng-click="tabDelete(data.id)"></span>
+						<a href="{{data.Url}}" ng-bind="data.name" ng-click="tabChangeActive(data.id)" style="display: inline-block;z-index: 100; padding-right: 20px;"></a>
+					</li>
+				</ul>
+			</div>
 		</aside>
 		
-		<div ng-class="{true : 'tpl-content-wrapper',false: 'tpl-content-wrapper2'}[false]" ng-view>
+		<!--<div ng-class="{true : 'tpl-content-wrapper',false: 'tpl-content-wrapper2'}[false]" ng-view>
+		</div>-->
+		<div ng-view>
 		</div>
 
 		<script src="[[ url_for('static', filename='js/jquery.min.js', _external=True) ]]"></script>

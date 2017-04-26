@@ -20,7 +20,8 @@ var app = angular.module('myApp', ['ngRoute'], function($provide) {
 
             ws.onmessage = function(event) {
                 onMessage(JSON.parse(event.data));
-                $rootScope.$apply();
+                //$rootScope.$apply();
+                //$rootScope.$digest();
             };
         } else {
             console.log("WebSocket not supported");
@@ -39,7 +40,9 @@ var app = angular.module('myApp', ['ngRoute'], function($provide) {
                     if ($rootScope.Messages.public === undefined) {
                         $rootScope.Messages.public = [];
                     }
-                    $rootScope.Messages.public.push(msg.data);
+                    $rootScope.$apply(function() {
+                        $rootScope.Messages.public.push(msg.data);
+                    })
                     break;
                 default:
                     console.log(JSON.stringify(msg));
@@ -82,8 +85,8 @@ app.run(function($rootScope, $interval, $location, globalVar, Message) {
     $rootScope.Messenger = Message;
     $rootScope.Messages = {};
 });
-app.controller('dashBoardControl', ['$scope', function($scope) {
-
+app.controller('dashBoardControl', ['$scope', '$rootScope', function($scope, $rootScope) {
+    $rootScope.isShowSideList = false;
 }]);
 app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval', function($scope, $http, globalVar, $interval) {
     $scope.checking = true;
@@ -132,19 +135,88 @@ app.controller('sysStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
             }
         });
 }]);
-app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', 'globalVar', function($scope, $http, $timeout, globalVar) {
+app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', 'globalVar', '$rootScope', '$location', function($scope, $http, $timeout, globalVar, $rootScope, $location) {
+    $scope.tabList = [];
+    var idList = [];
     $http.get('api/UI/sideBarCtrl').success(function(data) {
         $scope.listName = data;
     });
     $scope.showListChange = function(id) {
-        globalVar.sysid = id;
+        $rootScope.isShowSideList = true;
         globalVar.current_type = 'sysid';
-        angular.forEach($scope.listName, function(value, index) {
-            if (value.id == id)
-                $scope.listName[index].isShow = true;
-            else
-                $scope.listName[index].isShow = false;
+        angular.forEach($scope.tabList, function(value, index) {
+            value.active = "";
+            if (idList.indexOf(value.id) == -1) {
+                idList.push(value.id);
+            }
         });
+        angular.forEach($scope.listName, function(value, index) {
+            if (value.id == id) {
+                $scope.listName[index].isShow = !$scope.listName[index].isShow;
+                if (idList.indexOf($scope.listName[index].id) == -1) {
+                    $scope.tabList.push({
+                        "id": $scope.listName[index].id,
+                        "name": $scope.listName[index].name,
+                        "active": "am-active",
+                        "Url": $scope.listName[index].Url
+                    });
+                } else {
+                    angular.forEach($scope.tabList, function(tab) {
+                        if (tab.id == id) {
+                            tab.active = "am-active";
+                        }
+                    });
+                }
+            } else {
+                $scope.listName[index].isShow = false;
+            }
+        });
+        globalVar.sysid = id;
+    };
+    $scope.tabChangeActive = function(id) {
+        $rootScope.isShowSideList = true;
+        globalVar.sysid = id;
+        angular.forEach($scope.tabList, function(value) {
+            value.active = "";
+            if (value.id == id) {
+                value.active = "am-active";
+            }
+        });
+    };
+    $scope.tabDelete = function(id) {
+        $rootScope.isShowSideList = true;
+        angular.forEach($scope.tabList, function(data, index) {
+            if (data.id == id) {
+                $scope.tabList.splice(index, 1);
+                idList.splice(index, 1);
+            }
+        });
+        var length = $scope.tabList.length;
+        if (length > 0) {
+            var set = true;
+            angular.forEach($scope.tabList, function(value, index) {
+                if (value.active == "am-active") set = false;
+            });
+            if (set)
+                $scope.tabList[length - 1].active = "am-active";
+            globalVar.sysid = $scope.tabList[length - 1].id;
+            var LocationUrl = $scope.tabList[length - 1].Url;
+            LocationUrl = LocationUrl.substring(1, LocationUrl.length);
+            LocationUrl = '/' + LocationUrl;
+            $location.url(LocationUrl);
+        } else {
+            $location.url('/dashboard');
+        }
+    };
+    $scope.clearTabList = function() {
+        if ($rootScope.isShowSideList === false) {
+            idList.splice(0, idList.length);
+            $scope.tabList.splice(0, $scope.tabList.length);
+            return false;
+        } else {
+            $rootScope.isShowSideList = true;
+            return true;
+        }
     };
     $scope.operateChange = function(id) {
         globalVar.grpid = id;
@@ -178,8 +250,12 @@ app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootSco
         $rootScope.LoginStatics = {};
     }
     $scope.$watch('$rootScope.LoginStatics', function(newValue, oldValue) {
-        $scope.loginStatics = $rootScope.LoginStatics[globalVar.sysid];
-        $scope.$apply();
+        //$scope.loginStatics = $rootScope.LoginStatics[globalVar.sysid];
+        //$scope.$apply();
+        //$scope.$digest();
+        $scope.$apply(function() {
+            $scope.loginStatics = $rootScope.LoginStatics[globalVar.sysid];
+        });
     }, true);
     $scope.CheckLoginLog = function() {
         $scope.checking = true;
@@ -245,24 +321,41 @@ app.controller('warningCtrl', ['$scope', '$http', function($scope, $http) {
     };
 }]);
 app.controller('taskControl', ['$scope', '$rootScope', function($scope, $rootScope) {
+
+}]);
+app.controller('messageControl', ['$scope', '$rootScope', function($scope, $rootScope) {
     if ($rootScope.Messages === undefined) {
         $rootScope.Messages = {
             'public': []
         };
     }
     $scope.$watchCollection('$rootScope.Messages', function() {
-        if ($rootScope.Messages.public === undefined) {
+        /*if ($rootScope.Messages.public === undefined) {
             $rootScope.Messages.public = [];
-        }
-        $scope.messages = $rootScope.Messages.public;
-        $scope.$apply();
+        }*/
+        //$scope.messages = $rootScope.Messages.public;
+        //$scope.$apply();
+        //$scope.$digest();
+        $scope.$apply(function() {
+            $scope.messages = $rootScope.Messages.public;
+        });
     });
 }]);
+app.filter('percent', function() {
+    return function(value, len) {
+        var num = parseFloat(value);
+        var fix = 2;
+        if (len !== undefined) {
+            fix = len;
+        }
+        return num.toFixed(fix).toString() + " %";
+    };
+});
 app.filter('mask', function() {
     return function(str) {
         var len = str.length;
         if (len > 3) {
-            return str.substring(0, len - 4) + '***';
+            return str.substring(0, len - 3) + '***';
         } else {
             var mask = '';
             for (var i = 0; i < len - 1; i++) { mask += '*'; }
