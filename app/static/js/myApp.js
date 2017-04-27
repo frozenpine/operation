@@ -265,6 +265,10 @@ app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootSco
                     angular.forEach($rootScope.LoginStatics[globalVar.sysid], function(value2, index2) {
                         if (value1.seat_id == value2.seat_id) {
                             $rootScope.LoginStatics[globalVar.sysid][index2].seat_status = value1.seat_status;
+                            $rootScope.LoginStatics[globalVar.sysid][index2].conn_count = value1.conn_count;
+                            $rootScope.LoginStatics[globalVar.sysid][index2].disconn_count = value1.disconn_count;
+                            $rootScope.LoginStatics[globalVar.sysid][index2].login_fail = value1.login_fail;
+                            $rootScope.LoginStatics[globalVar.sysid][index2].login_success = value1.login_success;
                         }
                     });
                 });

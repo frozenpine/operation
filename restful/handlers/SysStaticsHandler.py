@@ -275,7 +275,11 @@ class LoginListApi(Resource):
                         'trading_day': result[1],
                         'front_addr': result[2],
                         'seat_id': result[3],
-                        'seat_status': u'未连接'
+                        'seat_status': u'未连接',
+                        'conn_count': 0,
+                        'login_success': 0,
+                        'login_fail': 0,
+                        'disconn_count': 0
                     })
                 sys_db.dispose()
         return rtn
@@ -320,31 +324,61 @@ class LoginCheckApi(Resource):
             result = executor.run(mod)
             self.mutex.acquire()
             for key in result.data.keys():
-                if u'连接成功' in result.data[key][-1]['message'].decode('utf-8'):
-                    self.rtn.append({
-                        'seat_id': key,
-                        'seat_status': u'连接成功'
-                    })
-                elif u'登录成功' in result.data[key][-1]['message'].decode('utf-8'):
-                    self.rtn.append({
-                        'seat_id': key,
-                        'seat_status': u'登录成功'
-                    })
-                elif u'登录失败' in result.data[key][-1]['message'].decode('utf-8'):
-                    self.rtn.append({
-                        'seat_id': key,
-                        'seat_status': u'登录失败'
-                    })
-                elif u'断开' in result.data[key][-1]['message'].decode('utf-8'):
-                    self.rtn.append({
-                        'seat_id': key,
-                        'seat_status': u'连接断开'
-                    })
-                else:
-                    self.rtn.append({
-                        'seat_id': key,
-                        'seat_status': u'未连接'
-                    })
+                length = len(result.data[key])
+                data = {
+                    'seat_id': key,
+                    'seat_status': "",
+                    'conn_count': 0,
+                    'login_success': 0,
+                    'login_fail': 0,
+                    'disconn_count': 0
+                }
+                for i in range(0, length):
+                    if u'连接成功' in result.data[key][i]['message'].decode('utf-8'):
+                        data['seat_status'] = u'连接成功'
+                        data['conn_count'] += 1
+                        '''
+                        self.rtn.append({
+                            'seat_id': key,
+                            'seat_status': u'连接成功'
+                        })
+                        '''
+                    elif u'登录成功' in result.data[key][-1]['message'].decode('utf-8'):
+                        data['seat_status'] = u'登录成功'
+                        data['login_success'] += 1
+                        '''
+                        self.rtn.append({
+                            'seat_id': key,
+                            'seat_status': u'登录成功'
+                        })
+                        '''
+                    elif u'登录失败' in result.data[key][-1]['message'].decode('utf-8'):
+                        data['seat_status'] = u'登录失败'
+                        data['login_fail'] += 1
+                        '''
+                        self.rtn.append({
+                            'seat_id': key,
+                            'seat_status': u'登录失败'
+                        })
+                        '''
+                    elif u'断开' in result.data[key][-1]['message'].decode('utf-8'):
+                        data['seat_status'] = u'连接断开'
+                        data['disconn_count'] += 1
+                        '''
+                        self.rtn.append({
+                            'seat_id': key,
+                            'seat_status': u'连接断开'
+                        })
+                        '''
+                    else:
+                        data['seat_status'] = u'未连接'
+                        '''
+                        self.rtn.append({
+                            'seat_id': key,
+                            'seat_status': u'未连接'
+                        })
+                        '''
+                self.rtn.append(data)
             self.mutex.release()
         executor.client.close()
 

@@ -127,6 +127,9 @@
 								<th>连接地址</th>
 								<th>登录账户</th>
 								<th>连接状态</th>
+								<th>重连次数</th>
+								<th>成功</th>
+								<th>失败</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -136,6 +139,9 @@
 								<td class="table-data">{{data.front_addr}}</td>
 								<td class="table-data">{{data.seat_id | mask}}</td>
 								<td class="table-status">{{data.seat_status}}</td>
+								<td class="table-data">{{data.conn_count - (data.conn_count - data.disconn_count)}}</td>
+								<td class="table-data">{{data.login_success}}</td>
+								<td class="table-data">{{data.login_fail}}</td>
 							</tr>
 						</tbody>
 					</table>
