@@ -143,12 +143,17 @@ if __name__ == '__main__':
     executor = Executor.Create(conf)
     result = executor.run(
         {
-            'name': 'quantdoLogin',
-            'quantdoLogin': '/home/qdam/qtrade/bin/Syslog.log'
+            'name': 'shell',
+            'shell': 'mcall show',
+            'args': {
+                'chdir': '/home/qdam/bin'
+            }
         }
     )
-    #print result.lines
+    for line in result.lines:
+        print line
     #logging.info(result)
+    '''
     for key in result.data.keys():
         if u'登录成功' in result.data[key][-1]['message'].decode('utf-8'):
             rtn.append({
@@ -171,3 +176,4 @@ if __name__ == '__main__':
                 'seat_status': u'未连接'
             })
     print rtn
+    '''

@@ -432,7 +432,11 @@ class Operation(SQLModelMixin, db.Model):
     detail = db.Column(JSONType, nullable=False, default={})
     order = db.Column(db.Integer)
     op_group_id = db.Column(db.Integer, db.ForeignKey('operation_groups.id'))
-    records = db.relationship('OperateRecord', backref='operation')
+    records = db.relationship(
+        'OperateRecord',
+        backref='operation',
+        order_by='OperateRecord.operated_at.desc()',
+    )
 
 class OperationGroup(SQLModelMixin, db.Model):
     __tablename__ = 'operation_groups'
@@ -455,7 +459,7 @@ class OperateRecord(SQLModelMixin, db.Model):
 class OperateResult(SQLModelMixin, db.Model):
     __tablename__ = 'operate_results'
     id = db.Column(db.Integer, primary_key=True)
-    op_id = db.Column(db.Integer, db.ForeignKey('operate_records.id'), index=True)
+    op_rec_id = db.Column(db.Integer, db.ForeignKey('operate_records.id'), index=True)
     succeed = db.Column(db.Boolean)
     error_code = db.Column(db.Integer, default=0)
     detail = db.Column(JSONType, nullable=False, default={})

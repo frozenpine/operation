@@ -1,5 +1,5 @@
 <div class="row" style="margin-top: -1px">
-	<div class="tpl-portlet-components" ng-controller="svrStaticsControl">
+	<div class="tpl-portlet-components" ng-controller="svrStaticsControl" id="server_statics">
 		<div class="portlet-title">
 			<div class="caption font-green bold">
 				状态信息 - 服务器
@@ -28,9 +28,71 @@
 							<tr ng-repeat="data in serverStatics">
 								<td class="table-data" style="max-width: 120px">{{data.server}}</td>
 								<td class="table-data" style="max-width: 120px">{{data.uptime}}</td>
-								<td class="table-status">{{data.cpu[0].idle | percent}}</td>
-								<td class="table-status">{{(data.memory[0].total - data.memory[0].free) / data.memory[0].total * 100 | percent}}</td>
-								<td class="table-status">{{(data.swap[0].total - data.swap[0].free) / data.swap[0].total * 100 | percent}}</td>
+								<td class="table-data">
+									<div class="am-dropdown" style="cursor: pointer" ng-mouseover="showCPUDetail = true" ng-mouseleave="showCPUDetail = false">
+										{{data.cpu[0].idle | percent}}
+										<div class=" am-dropdown-content" ng-show="showCPUDetail" style="display: block;margin-top: 0; width: 400px">
+											<table class="am-table">
+												<thead>
+													<th>IO Wait</th>
+													<th>IRQ</th>
+													<th>USER</th>
+													<th>SYS</th>
+													<th>IDLE</th>
+												</thead>
+												<tbody>
+													<tr>
+														<td>{{data.cpu[0].iowait | percent}}</td>
+														<td>{{data.cpu[0].irq | percent}}</td>
+														<td>{{data.cpu[0].usr | percent}}</td>
+														<td>{{data.cpu[0].sys | percent}}</td>
+														<td>{{data.cpu[0].idle | percent}}</td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+									</div>
+								</td>
+								<td class="table-data">
+									<div class="am-dropdown" style="cursor: pointer" ng-mouseover="showMemDetail = true"
+                                                ng-mouseleave="showMemDetail = false">
+										{{(data.memory[0].total - data.memory[0].free) / data.memory[0].total * 100 | percent}}
+										<div class="am-dropdown-content" ng-show="showMemDetail" style="display: block;margin-top: 0; width: 200px">
+											<table class="am-table">
+												<thead>
+													<th>TOTAL</th>
+													<th>FREE</th>
+												</thead>
+												<tbody>
+													<tr>
+														<td>{{data.memory[0].total | KB2:'G'}}</td>
+														<td>{{data.memory[0].free | KB2:'G'}}</td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+									</div>
+								</td>
+								<td class="table-data">
+									<div class="am-dropdown" style="cursor: pointer" ng-mouseover="showSwapDetail = true"
+                                                ng-mouseleave="showSwapDetail = false">
+										{{(data.swap[0].total - data.swap[0].free) / data.swap[0].total * 100 | percent}}
+										<div class="am-dropdown-content" ng-show="showSwapDetail" style="display: block;margin-top: 0; width: 200px">
+											<table class="am-table">
+												<thead>
+													<th>TOTAL</th>
+													<th>FREE</th>
+												</thead>
+												<tbody>
+													<tr>
+														<td>{{data.swap[0].total | KB2:'G'}}</td>
+														<td>{{data.swap[0].free | KB2:'G'}}</td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+									</div>
+								</td>
 								<td class="table-data">
 									<ul>
 										<li ng-repeat="disk in data.disks">
@@ -41,7 +103,26 @@
 								<td class="table-status">
 									<ul>
 										<li ng-repeat="disk in data.disks">
-											<span>{{disk.percent}}</span>
+											<span>
+												<div class="am-dropdown" style="cursor: pointer" ng-mouseover="showMountDetail[$index] = true"
+                                                ng-mouseleave="showMountDetail[$index] = false" data-am-dropdown="{boundary: '#server_statics'}">
+													{{disk.percent}}
+													<div class="am-dropdown-content" ng-show="showMountDetail[$index]" style="display: block;margin-top: 0; width: 200px">
+														<table class="am-table">
+															<thead>
+																<th>TOTAL</th>
+																<th>AVAILABLE</th>
+															</thead>
+															<tbody>
+																<tr>
+																	<td>{{disk.total | KB2:'G'}}</td>
+																	<td>{{disk.available | KB2:'G'}}</td>
+																</tr>
+															</tbody>
+														</table>
+													</div>
+												</div>
+											</span>
 										</li>
 									</ul>
 								</td>

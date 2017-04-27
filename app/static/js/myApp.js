@@ -96,6 +96,10 @@ app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
             .success(function(response) {
                 if (response.sys_id == globalVar.sysid) {
                     $scope.serverStatics = response.details;
+                    $scope.serverStatics.showMountDetail = [];
+                    angular.forEach(response.details.disks, function(value, index) {
+                        $scope.serverStatics.showMountDetail.push(false);
+                    });
                 }
                 $scope.checking = false;
             });
@@ -224,21 +228,20 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', 'globalVar', '$roo
     };
 }]);
 app.controller('opGroupController', ['$scope', '$http', '$timeout', 'globalVar', function($scope, $http, $timeout, globalVar) {
-    $http.get('api/op_group/id/' + globalVar.grpid).success(function(data) {
-        $scope.opList = data;
+    $http.get('api/op_group/id/' + globalVar.grpid).success(function(list) {
+        $scope.opList = list;
     });
+    $scope.confirm = function(index) {
+        if (index < $scope.opList.details.length - 1) {
+            $scope.opList.details[index + 1].enabled = true;
+        }
+    };
     $scope.execute = function(index, id) {
         $http.get('api/operation/id/' + id).success(function(data) {
             if (globalVar.current_type == 'grpid') {
                 $scope.opList.details[index] = data;
-                if (index < $scope.opList.details.length - 1)
+                if (index < $scope.opList.details.length - 1 && !$scope.opList.details[index].check) {
                     $scope.opList.details[index + 1].enabled = data.succeed;
-                if ($scope.results === null || $scope.results === undefined) {
-                    $scope.results = data.output_lines;
-                } else {
-                    angular.forEach(data.output_lines, function(value, index) {
-                        $scope.results.push(value);
-                    });
                 }
                 console.log(data);
             }
@@ -334,17 +337,24 @@ app.controller('messageControl', ['$scope', '$rootScope', function($scope, $root
         };
     }
     $scope.$watchCollection('$rootScope.Messages', function() {
-        /*if ($rootScope.Messages.public === undefined) {
-            $rootScope.Messages.public = [];
-        }*/
-        //$scope.messages = $rootScope.Messages.public;
-        //$scope.$apply();
-        //$scope.$digest();
         $scope.$apply(function() {
             $scope.messages = $rootScope.Messages.public;
         });
     });
 }]);
+app.filter('KB2', function() {
+    return function(value, dst) {
+        var num = parseInt(value);
+        switch (dst) {
+            case "M":
+                return (num / 1024).toFixed(2).toString() + " MB";
+            case "G":
+                return (num / (1024 * 1024)).toFixed(2).toString() + " GB";
+            default:
+                return (num / 1024).toFixed(2).toString() + " MB";
+        }
+    };
+});
 app.filter('percent', function() {
     return function(value, len) {
         var num = parseFloat(value);
@@ -386,6 +396,24 @@ app.filter('status', function() {
             }
         } else {
             return '未启动';
+        }
+    };
+});
+app.filter('exe_result', function() {
+    return function(value) {
+        switch (value) {
+            case -1:
+                return "未执行";
+            case 0:
+                return "执行完毕";
+            case -2:
+                return "执行中...";
+            case -3:
+                return "跳过执行";
+            case 1:
+                return "执行失败";
+            default:
+                return "状态未知";
         }
     };
 });

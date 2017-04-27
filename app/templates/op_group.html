@@ -14,23 +14,44 @@
 								<tr>
 									<th>操作名称</th>
 									<th>操作描述</th>
-									<th>操作结果</th> 
 									<th>操作</th>
-									<th>操作输出</th>
+									<th>操作结果</th>
+									<th>确认/跳过</th>
 								</tr>
 							</thead>
 							<tbody>
 								<tr ng-repeat="data in opList.details">
 									<td>{{data.op_name}}</td>
 									<td>{{data.op_desc}}</td>
-									<td>{{data.succeed}}</td>
 									<td>
 										<div class="am-btn-group am-btn-group-xs">
 											<button 
 												class="am-btn am-btn-default am-btn-xs am-text-secondary" 
-												ng-class="{true: '',false: 'am-disabled' }[data.enabled]" 
-												ng-click="execute($index, data.id)">
+												ng-class="{true: '',false: 'am-disabled' }[data.enabled && data.err_code!=0 && data.err_code!=-3]" 
+												ng-click="execute($index, data.id);data.err_code=-2;data.skip=false">
 												<span class="am-icon-pencil-square-o"></span> 执行
+											</button>
+										</div>
+									</td>
+									<td>
+										<div class="am-dropdown" style="cursor: pointer" ng-mouseover="showResults = true" ng-mouseleave="showResults = false">
+											{{data.err_code | exe_result}}
+											<ul class="am-dropdown-content" ng-show="showResults" ng-repeat="line in data.output_lines">
+												<li>{{line}}</li>
+											</ul>
+										</div>
+									</td>
+									<td>
+										<div class="am-btn-group am-btn-group-xs">
+											<button 
+												class="am-btn am-btn-default am-btn-xs am-text-secondary" 
+												ng-if="data.check && data.err_code == 0 && !data.skip" ng-click="confirm($index)">
+												<span class="am-icon-pencil-square-o"></span> 确认
+											</button>
+											<button 
+												class="am-btn am-btn-default am-btn-xs am-text-secondary" 
+												ng-if="data.skip" ng-click="confirm($index);data.err_code=-3">
+												<span class="am-icon-pencil-square-o"></span> 跳过
 											</button>
 										</div>
 									</td>
