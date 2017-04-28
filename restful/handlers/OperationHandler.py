@@ -72,6 +72,7 @@ class OperationApi(Resource):
             )
             executor = Executor.Create(conf)
             result = executor.run(op.detail)
+            executor.client.close()
             if result.return_code == 0:
                 rtn['err_code'] = 0
             else:
