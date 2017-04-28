@@ -69,13 +69,13 @@
 								<span class="am-badge am-round tpl-badge-secondary">
 									<i class="am-icon-commenting-o am-icon-md"></i>
 									<span>消息列表</span>
-									<span class="am-badge tpl-badge-secondary am-round">{{messages.length}}</span>
+									<span class="am-badge tpl-badge-secondary am-round">{{$root.Messages.public.length}}</span>
 								</span>
 							</span>
 						</a>
 						<ul class="am-dropdown-content">
-							<li><span>你有 {{messages.length}} 条消息</span></li>
-							<li ng-repeat="msg in messages track by $index">
+							<li><span>你有 {{$root.Messages.public.length}} 条消息</span></li>
+							<li ng-repeat="msg in $root.Messages.public track by $index">
 								<span>{{msg}}</span>
 							</li>
 						</ul>

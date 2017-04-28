@@ -8,6 +8,11 @@ var app = angular.module('myApp', ['ngRoute'], function($provide) {
         };
     });
     $provide.factory('Message', function($rootScope) {
+        if ($rootScope.Messages === undefined) {
+            $rootScope.Messages = {
+                public: []
+            };
+        }
         if ("WebSocket" in window) {
             var ws = new WebSocket("ws://10.9.101.39:5000/websocket");
             ws.onopen = function() {
@@ -35,12 +40,9 @@ var app = angular.module('myApp', ['ngRoute'], function($provide) {
         var onMessage = function(msg) {
             switch (msg.topic) {
                 case "public":
-                    if ($rootScope.Messages.public === undefined) {
-                        $rootScope.Messages.public = [];
-                    }
                     $rootScope.$apply(function() {
                         $rootScope.Messages.public.push(msg.data);
-                    })
+                    });
                     break;
                 default:
                     console.log(JSON.stringify(msg));
@@ -81,9 +83,6 @@ app.run(function($rootScope, $interval, $location, globalVar, Message) {
     });
     $rootScope.status = "normal";
     $rootScope.Messenger = Message;
-    $rootScope.Messages = {
-        public: []
-    };
 });
 app.controller('dashBoardControl', ['$scope', '$rootScope', function($scope, $rootScope) {
     $rootScope.isShowSideList = false;
@@ -361,14 +360,18 @@ app.controller('taskControl', ['$scope', '$rootScope', function($scope, $rootSco
 
 }]);
 app.controller('messageControl', ['$scope', '$rootScope', function($scope, $rootScope) {
-    $scope.$watchCollection('$rootScope.Messages', function() {
-        if ($rootScope.Messages.public === undefined) {
-            $rootScope.Messages.public = [];
-        }
+    /*
+    if ($rootScope.Messages === undefined) {
+        $rootScope.Messages = {
+            public: []
+        };
+    }
+    $scope.$watchCollection('$rootScope.Messages.public', function() {
         $scope.$apply(function() {
             $scope.messages = $rootScope.Messages.public;
         });
     });
+    */
 }]);
 app.filter('KB2', function() {
     return function(value, dst) {
