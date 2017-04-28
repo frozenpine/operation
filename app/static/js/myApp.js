@@ -147,9 +147,22 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', 'globalVar', '$roo
     $http.get('api/UI/sideBarCtrl').success(function(data) {
         $scope.listName = data;
     });
+    $scope.showListChild = function(id) {
+        $rootScope.isShowSideList = true;
+        globalVar.current_type = 'sysid';
+        globalVar.sysid = id;
+        angular.forEach($scope.listName, function(value, index) {
+            if (value.id == id) {
+                $scope.listName[index].isShow = !$scope.listName[index].isShow;
+            } else {
+                $scope.listName[index].isShow = false;
+            }
+        });
+    };
     $scope.showListChange = function(id) {
         $rootScope.isShowSideList = true;
         globalVar.current_type = 'sysid';
+        globalVar.sysid = id;
         angular.forEach($scope.tabList, function(value, index) {
             value.active = "";
             if (idList.indexOf(value.id) == -1) {
@@ -177,7 +190,6 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', 'globalVar', '$roo
                 $scope.listName[index].isShow = false;
             }
         });
-        globalVar.sysid = id;
     };
     $scope.tabChangeActive = function(id) {
         $rootScope.isShowSideList = true;
@@ -227,6 +239,7 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', 'globalVar', '$roo
     $scope.operateChange = function(id) {
         globalVar.grpid = id;
         globalVar.current_type = 'grpid';
+        $rootScope.isShowSideList = false;
     };
 }]);
 app.controller('opGroupController', ['$scope', '$http', '$timeout', 'globalVar', function($scope, $http, $timeout, globalVar) {
