@@ -243,6 +243,7 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', 'globalVar', '$roo
 app.controller('opGroupController', ['$scope', '$http', '$timeout', 'globalVar', function($scope, $http, $timeout, globalVar) {
     $http.get('api/op_group/id/' + globalVar.grpid).success(function(list) {
         $scope.opList = list;
+        console.log(list);
     });
     $scope.confirm = function(index) {
         $('#result' + index).modal({

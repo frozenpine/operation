@@ -19,14 +19,14 @@
 							</tr>
 						</thead>
 						<tbody>
-							<tr ng-repeat="data in opList.details">
+							<tr ng-repeat="data in opList.details track by $index">
 								<td>{{data.op_name}}</td>
 								<td>{{data.op_desc}}</td>
 								<td>
 									<div class="am-btn-group am-btn-group-xs">
 										<button 
 											class="am-btn am-btn-default am-btn-xs am-text-secondary" 
-											ng-class="{true: '',false: 'am-disabled' }[data.enabled]" ng-click="execute($index, data.id);data.err_code=-2;data.skip=false">
+											ng-class="{true: '', false: 'am-disabled'}[data.enabled]" ng-click="execute($index, data.id);data.err_code=-2;data.skip=false">
 											<span class="am-icon-pencil-square-o"></span> 执行
 										</button>
 									</div>
@@ -41,7 +41,7 @@
 											<span class="am-icon-pencil-square-o"></span> 确认
 										</button>
 										<button 
-											class="am-btn am-btn-default am-btn-xs am-text-secondary" ng-if="data.checker.checked && data.err_code != -1 && date.err_code!=-2 && !data.skip" ng-click="check_result($index)">
+											class="am-btn am-btn-default am-btn-xs am-text-secondary" ng-if="(data.checker.checked || !data.checker.isTrue) && data.err_code >= 0" ng-click="check_result($index)">
 											<span class="am-icon-pencil-square-o"></span> 查看
 										</button>
 										<button 
@@ -54,17 +54,18 @@
 										<div class="am-modal-dialog">
 											<div class="am-modal-hd">操作输出</div>
 											<div class="am-modal-bd">
-												<span ng-if="!data.checker.checked">操作结果是否正确？</span>
+												<span ng-if="!(data.checker.checked || !data.checker.isTrue)">操作结果是否正确？</span>
 												<ul class="am-list am-list-static">
-													<li style="text-align: left;" ng-repeat="line in data.output_lines">
+													<li style="text-align: left;" ng-repeat="line in data.output_lines track by $index">
 														<span class="am-icon-terminal am-icon-sm" style="white-space: pre; margin-left: 5px; margin-right: 5px"> {{line}}</span>
 													</li>
 												</ul>
+												<span ng-if="data.output_lines.length == 0">无操作回显。</span>
 											</div>
 											<div class="am-modal-footer">
-												<span ng-show="!data.checker.checked" class="am-modal-btn" data-am-modal-cancel>取消</span>
-												<span ng-show="!data.checker.checked" class="am-modal-btn" data-am-modal-confirm>确定</span>
-												<span ng-if="data.checker.checked" class="am-modal-btn">确定</span>
+												<span ng-show="!(data.checker.checked || !data.checker.isTrue)" class="am-modal-btn" data-am-modal-cancel>取消</span>
+												<span ng-show="!(data.checker.checked || !data.checker.isTrue)" class="am-modal-btn" data-am-modal-confirm>确定</span>
+												<span ng-if="(data.checker.checked || !data.checker.isTrue)" class="am-modal-btn">确定</span>
 											</div>
 										</div>
 									</div>
