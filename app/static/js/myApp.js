@@ -20,8 +20,6 @@ var app = angular.module('myApp', ['ngRoute'], function($provide) {
 
             ws.onmessage = function(event) {
                 onMessage(JSON.parse(event.data));
-                //$rootScope.$apply();
-                //$rootScope.$digest();
             };
         } else {
             console.log("WebSocket not supported");
@@ -246,12 +244,6 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', 'globalVar',
     $http.get('api/op_group/id/' + globalVar.grpid).success(function(list) {
         $scope.opList = list;
     });
-    /*
-    $scope.confirm = function(index) {
-        if (index < $scope.opList.details.length - 1) {
-            $scope.opList.details[index + 1].enabled = true;
-        }
-    }*/
     $scope.confirm = function(index) {
         $('#result' + index).modal({
             relatedTarget: this,

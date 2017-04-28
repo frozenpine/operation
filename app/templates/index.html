@@ -83,12 +83,12 @@
 				</ul>
 				<ul class="am-nav am-nav-pills am-topbar-nav am-topbar-right admin-header-list tpl-header-list">
 					<li>
-						<a class="tpl-header-list-link" href="#">
+						<a class="tpl-header-list-link" href="">
 							<span class="am-icon-cogs"></span> 设置中心</span>
 						</a>
 					</li>
 					<li class="am-dropdown" data-am-dropdown data-am-dropdown-toggle>
-						<a class="am-dropdown-toggle tpl-header-list-link" href="javascript:;">
+						<a class="am-dropdown-toggle tpl-header-list-link" href="">
 							<span class="tpl-header-list-user-nick">[[user]]</span>
 							<span class="tpl-header-list-user-ico">
 								<img src="[[ url_for('static', filename='img/user01.png', _external=True) ]]">
@@ -128,11 +128,10 @@
 				<div class="tpl-left-nav-list" style="width: 55px;">
 					<ul class="tpl-left-nav-menu">
 						<li class="tpl-left-nav-item am-dropdown" data-am-dropdown ng-repeat="data in listName"  ng-mouseover="showListIcon = true"
-							ng-mouseleave="showListIcon = false" ng-click="showListChange(data.id)">
+							ng-mouseleave="showListIcon = false">
 							<div>
 								<a href="{{data.Url}}" class="nav-link am-dropdown-toggle" data-am-dropdown-toggle>
-									<i class="{{data.icon}}">
-									</i>
+									<i class="{{data.icon}}" ng-click="showListChange(data.id)"></i>
 								</a>
 								<ul class="am-dropdown-content" id="second{{data.id}}" ng-if="data.isSecond" style="display: block" ng-show="showListIcon">
 									<li style="margin-left: 15px; font-size: 10pt; font-weight: bold; color: #7FB0DA;">
@@ -156,17 +155,20 @@
 				<div class="tpl-left-nav-list">
 					<ul class="tpl-left-nav-menu">
 						<li class="tpl-left-nav-item" ng-repeat="data in listName">
-							<a href="{{data.Url}}" class="nav-link tpl-left-nav-link-list"  ng-click="showListChange(data.id)">
+							<div class="nav-link tpl-left-nav-link-list">
 								<i class="{{data.icon}} am-icon-fw"></i>
-								<span ng-bind="data.name"></span>
-								<i ng-class="{true: 'am-icon-angle-right tpl-left-nav-more-ico am-fr am-margin-right',false: ''}[data.isSecond]"></i>
-							</a>
+								<a href="{{data.Url}}" ng-click="showListChange(data.id)">
+									<span ng-bind="data.name"></span>
+								</a>
+								<span ng-switch="data.isShow">
+									<i ng-class="{true: 'am-icon-angle-right tpl-left-nav-more-ico am-fr am-margin-right',false: ''}[data.isSecond]" style="cursor: pointer" ng-click="showListChild(data.id)" ng-switch-when="false"></i>
+									<i ng-class="{true: 'am-icon-angle-down tpl-left-nav-more-ico am-fr am-margin-right',false: ''}[data.isSecond]" style="cursor: pointer" ng-click="showListChild(data.id)" ng-switch-when="true"></i>
+								</span>
+							</div>
 							<ul class="tpl-left-nav-sub-menu" id="{{data.id}}" ng-if="data.isSecond" style="display: block" ng-show="data.isShow">
-								<li ng-repeat="children in data.secondName" ng-click="operateChange(children.id)">
+								<li ng-repeat="children in data.secondName" ng-click="operateChange(children.id)" style="vertical-align: center;">
 									<a href="{{children.Url}}">
-										<i ng-class="{true: 'am-icon-angle-right'}[true]"></i>
-										<span ng-bind="children.name"></span>
-										<i ng-class="{true: 'am-icon-star tpl-left-nav-content-ico am-fr am-margin-right'}[true]"></i>
+										<span class="am-icon-circle">&nbsp&nbsp{{children.name}}</span>
 									</a>
 								</li>
 							</ul>

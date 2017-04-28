@@ -12,7 +12,7 @@
 		<div class="tpl-block">
 			<div class="am-g">
 				<div class="am-u-sm-12">
-					<table class="am-table am-table-hover table-main">
+					<table class="am-table am-table-hover table-main" id="drop-down-test">
 						<thead>
 							<tr>
 								<th>服务器</th>
@@ -29,10 +29,10 @@
 								<td class="table-data" style="max-width: 120px">{{data.server}}</td>
 								<td class="table-data" style="max-width: 120px">{{data.uptime}}</td>
 								<td class="table-data">
-									<div class="am-dropdown" style="cursor: pointer" ng-mouseover="showCPUDetail = true" ng-mouseleave="showCPUDetail = false">
+									<div class="am-dropdown" style="cursor: pointer" ng-mouseover="showCPUDetail = true" ng-mouseleave="showCPUDetail = false" data-am-dropdown="{boundary: '#drop-down-test'}">
 										{{data.cpu[0].idle | percent}}
-										<div class=" am-dropdown-content" ng-show="showCPUDetail" style="display: block;margin-top: 0; width: 400px">
-											<table class="am-table">
+										<div class=" am-dropdown-content" ng-show="showCPUDetail" style="display: block;margin-top: 0;">
+											<table class="am-table am-text-nowrap am-table-compact">
 												<thead>
 													<th>IO Wait</th>
 													<th>IRQ</th>
@@ -57,8 +57,8 @@
 									<div class="am-dropdown" style="cursor: pointer" ng-mouseover="showMemDetail = true"
                                                 ng-mouseleave="showMemDetail = false">
 										{{(data.memory[0].total - data.memory[0].free) / data.memory[0].total * 100 | percent}}
-										<div class="am-dropdown-content" ng-show="showMemDetail" style="display: block;margin-top: 0; width: 200px">
-											<table class="am-table">
+										<div class="am-dropdown-content" ng-show="showMemDetail" style="display: block;margin-top: 0;">
+											<table class="am-table am-text-nowrap am-table-compact">
 												<thead>
 													<th>TOTAL</th>
 													<th>FREE</th>
@@ -77,8 +77,8 @@
 									<div class="am-dropdown" style="cursor: pointer" ng-mouseover="showSwapDetail = true"
                                                 ng-mouseleave="showSwapDetail = false">
 										{{(data.swap[0].total - data.swap[0].free) / data.swap[0].total * 100 | percent}}
-										<div class="am-dropdown-content" ng-show="showSwapDetail" style="display: block;margin-top: 0; width: 200px">
-											<table class="am-table">
+										<div class="am-dropdown-content" ng-show="showSwapDetail" style="display: block;margin-top: 0;">
+											<table class="am-table am-text-nowrap am-table-compact">
 												<thead>
 													<th>TOTAL</th>
 													<th>FREE</th>
@@ -107,8 +107,8 @@
 												<div class="am-dropdown" style="cursor: pointer" ng-mouseover="showMountDetail[$index] = true"
                                                 ng-mouseleave="showMountDetail[$index] = false" data-am-dropdown="{boundary: '#server_statics'}">
 													{{disk.percent}}
-													<div class="am-dropdown-content" ng-show="showMountDetail[$index]" style="display: block;margin-top: 0; width: 200px">
-														<table class="am-table">
+													<div class="am-dropdown-content_l" ng-show="showMountDetail[$index]" style="display: block;margin-top: 0;">
+														<table class="am-table am-text-nowrap am-table-compact">
 															<thead>
 																<th>TOTAL</th>
 																<th>AVAILABLE</th>
@@ -214,15 +214,15 @@
 							</tr>
 						</thead>
 						<tbody>
-							<tr ng-repeat="data in loginStatics">
-								<td class="table-data">{{data.seat_name}}</td>
-								<td class="table-data">{{data.trading_day}}</td>
-								<td class="table-data">{{data.front_addr}}</td>
-								<td class="table-data">{{data.seat_id | mask}}</td>
-								<td class="table-status">{{data.seat_status}}</td>
-								<td class="table-data">{{data.conn_count - (data.conn_count - data.disconn_count)}}</td>
-								<td class="table-data">{{data.login_success}}</td>
-								<td class="table-data">{{data.login_fail}}</td>
+							<tr ng-class="{'未连接': 'am-disabled', '登录成功': 'am-success', '连接成功': 'am-primary', '登录失败': 'am-warning', '连接断开': 'am-danger'}[loginStatics[$index].seat_status]" ng-repeat="data in loginStatics track by $index">
+								<td>{{data.seat_name}}</td>
+								<td>{{data.trading_day}}</td>
+								<td>{{data.front_addr}}</td>
+								<td>{{data.seat_id | mask}}</td>
+								<td>{{data.seat_status}}</td>
+								<td>{{data.conn_count - (data.conn_count - data.disconn_count)}}</td>
+								<td>{{data.login_success}}</td>
+								<td>{{data.login_fail}}</td>
 							</tr>
 						</tbody>
 					</table>

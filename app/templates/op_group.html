@@ -1,94 +1,80 @@
 <div class="row" ng-controller="opGroupController" style="margin-top: -1px;">
-	<!--<div style="width: 60%; float: left;">-->
-		<div class="tpl-portlet-components">
-			<div class="portlet-title">
-				<div class="caption font-green bold">
-					系统操作 - {{opList.name}}
-				</div>
+	<div class="tpl-portlet-components">
+		<div class="portlet-title">
+			<div class="caption font-green bold">
+				系统操作 - {{opList.name}}
 			</div>
-			<div class="tpl-block">
-				<div class="am-g">
-					<div class="am-u-sm-12">
-						<table class="am-table am-table-hover table-main">
-							<thead>
-								<tr>
-									<th>操作名称</th>
-									<th>操作描述</th>
-									<th>操作</th>
-									<th>操作结果</th>
-									<th>查看/确认/跳过</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr ng-repeat="data in opList.details">
-									<td>{{data.op_name}}</td>
-									<td>{{data.op_desc}}</td>
-									<td>
-										<div class="am-btn-group am-btn-group-xs">
-											<button 
-												class="am-btn am-btn-default am-btn-xs am-text-secondary" 
-												ng-class="{true: '',false: 'am-disabled' }[data.enabled]" ng-click="execute($index, data.id);data.err_code=-2;data.skip=false">
-												<span class="am-icon-pencil-square-o"></span> 执行
-											</button>
-										</div>
-									</td>
-									<td>
-										{{data.err_code | exe_result}}
-									</td>
-									<td>
-										<div class="am-btn-group am-btn-group-xs">
-											<button 
-												class="am-btn am-btn-default am-btn-xs am-text-secondary" ng-if="data.checker.isTrue && data.err_code == 0 && !data.skip && !data.checker.checked" ng-click="confirm($index)" ng-class="{true: '',false: 'am-disabled'}[!data.checker.checked]">
-												<span class="am-icon-pencil-square-o"></span> 确认
-											</button>
-											<button 
-												class="am-btn am-btn-default am-btn-xs am-text-secondary" ng-if="data.checker.checked && data.err_code != -1 && date.err_code!=-2 && !data.skip" ng-click="check_result($index)">
-												<span class="am-icon-pencil-square-o"></span> 查看
-											</button>
-											<button 
-												class="am-btn am-btn-default am-btn-xs am-text-secondary" 
-												ng-if="data.skip" ng-click="skip($index);data.err_code=-3">
-												<span class="am-icon-pencil-square-o"></span> 跳过
-											</button>
-										</div>
-										<div class="am-modal" ng-class="{true: 'am-modal-confirm', false: 'am-modal-alert'}[data.checker.checked]" tabindex="-1" id="{{'result' + $index}}">
-											<div class="am-modal-dialog">
-												<div class="am-modal-hd">操作输出</div>
-												<div class="am-modal-bd">
-													<span ng-if="!data.checker.checked">操作结果是否正确？</span>
-													<ul class="am-list am-list-static">
-														<li style="text-align: left; white-space: pre; margin-left: 5px; margin-right: 5px" ng-repeat="line in data.output_lines">{{line}}</li>
-													</ul>
-												</div>
-												<div class="am-modal-footer">
-													<span ng-if="!data.checker.checked" class="am-modal-btn" data-am-modal-cancel>取消</span>
-													<span ng-if="!data.checker.checked" class="am-modal-btn" data-am-modal-confirm>确定</span>
-													<span ng-if="data.checker.checked" class="am-modal-btn">确定</span>
-												</div>
+		</div>
+		<div class="tpl-block">
+			<div class="am-g">
+				<div class="am-u-sm-12">
+					<table class="am-table am-table-hover table-main">
+						<thead>
+							<tr>
+								<th>操作名称</th>
+								<th>操作描述</th>
+								<th>操作</th>
+								<th>操作结果</th>
+								<th>查看/确认/跳过</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr ng-repeat="data in opList.details">
+								<td>{{data.op_name}}</td>
+								<td>{{data.op_desc}}</td>
+								<td>
+									<div class="am-btn-group am-btn-group-xs">
+										<button 
+											class="am-btn am-btn-default am-btn-xs am-text-secondary" 
+											ng-class="{true: '',false: 'am-disabled' }[data.enabled]" ng-click="execute($index, data.id);data.err_code=-2;data.skip=false">
+											<span class="am-icon-pencil-square-o"></span> 执行
+										</button>
+									</div>
+								</td>
+								<td>
+									{{data.err_code | exe_result}}
+								</td>
+								<td>
+									<div class="am-btn-group am-btn-group-xs">
+										<button 
+											class="am-btn am-btn-default am-btn-xs am-text-secondary" ng-if="data.checker.isTrue && data.err_code == 0 && !data.skip && !data.checker.checked" ng-click="confirm($index)" ng-class="{true: '',false: 'am-disabled'}[!data.checker.checked]">
+											<span class="am-icon-pencil-square-o"></span> 确认
+										</button>
+										<button 
+											class="am-btn am-btn-default am-btn-xs am-text-secondary" ng-if="data.checker.checked && data.err_code != -1 && date.err_code!=-2 && !data.skip" ng-click="check_result($index)">
+											<span class="am-icon-pencil-square-o"></span> 查看
+										</button>
+										<button 
+											class="am-btn am-btn-default am-btn-xs am-text-secondary" 
+											ng-if="data.skip" ng-click="skip($index);data.err_code=-3">
+											<span class="am-icon-pencil-square-o"></span> 跳过
+										</button>
+									</div>
+									<div class="am-modal" ng-class="{true: 'am-modal-confirm', false: 'am-modal-alert'}[data.checker.checked]" tabindex="-1" id="{{'result' + $index}}">
+										<div class="am-modal-dialog">
+											<div class="am-modal-hd">操作输出</div>
+											<div class="am-modal-bd">
+												<span ng-if="!data.checker.checked">操作结果是否正确？</span>
+												<ul class="am-list am-list-static">
+													<li style="text-align: left;" ng-repeat="line in data.output_lines">
+														<span class="am-icon-terminal am-icon-sm" style="white-space: pre; margin-left: 5px; margin-right: 5px"> {{line}}</span>
+													</li>
+												</ul>
+											</div>
+											<div class="am-modal-footer">
+												<span ng-show="!data.checker.checked" class="am-modal-btn" data-am-modal-cancel>取消</span>
+												<span ng-show="!data.checker.checked" class="am-modal-btn" data-am-modal-confirm>确定</span>
+												<span ng-if="data.checker.checked" class="am-modal-btn">确定</span>
 											</div>
 										</div>
-									</td>
-								</tr>
-							</tbody>
-						</table>
-						<hr/>
-					</div>
+									</div>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+					<hr/>
 				</div>
 			</div>
 		</div>
-	<!--</div>-->
-	<!--<div style="width: 40%; float: right;">
-		<div class="tpl-portlet-components">
-			<div class="portlet-title">
-				<div class="caption font-green bold">
-					操作输出
-				</div>
-			</div>
-			<div class="tpl-block cmdBorder">
-				<ol class="cmdOut" ng-repeat="line in results">
-					<li>{{line}}</li>
-				</ol>
-			</div>
-		</div>
-	</div>-->
+	</div>
 </div>

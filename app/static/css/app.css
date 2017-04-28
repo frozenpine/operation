@@ -619,7 +619,7 @@ ul.tpl-dropdown-content li>a.tpl-dropdown-content-message:last-child {
 .tpl-left-nav-sub-menu a {
     display: block;
     margin: 0;
-    padding: 4px 14px 9px 30px;
+    padding: 10px 14px 10px 40px;
     text-decoration: none;
     font-size: 14px;
     font-weight: 400;
@@ -1448,7 +1448,7 @@ ul.tpl-dropdown-content li>a.tpl-dropdown-content-message:last-child {
     padding: 10px;
     margin: 0px 0px 10px 0px;
     background-color: #fff;
-    overflow: hidden;
+    /*overflow: hidden;*/
 }
 
 .tpl-portlet-components .portlet-title {
@@ -2018,4 +2018,63 @@ div#cmdBorder {
     .tpl-content-wrapper {
         padding-left: 0;
     }
+}
+
+.am-dropdown-content_l {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 1020;
+    display: none;
+    float: left;
+    min-width: 160px;
+    padding: 15px;
+    margin: 9px 0 0;
+    text-align: left;
+    line-height: 1.6;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 0;
+    -webkit-background-clip: padding-box;
+    background-clip: padding-box;
+    -webkit-animation-duration: .15s;
+    animation-duration: .15s
+}
+
+.am-dropdown-content_l:after,
+.am-dropdown-content_l:before {
+    position: absolute;
+    display: block;
+    content: "";
+    width: 0;
+    height: 0;
+    border: 8px dashed transparent;
+    z-index: 1
+}
+
+.am-dropdown-content_l:after,
+.am-dropdown-content_l:before {
+    border-bottom-style: solid;
+    border-width: 0 8px 8px
+}
+
+.am-dropdown-content_l:before {
+    border-bottom-color: #ddd;
+    bottom: 0
+}
+
+.am-dropdown-content_l:after {
+    border-bottom-color: #fff;
+    bottom: -1px
+}
+
+.am-dropdown-content_l:after,
+.am-dropdown-content_l:before {
+    right: 10px;
+    top: -8px;
+    pointer-events: none
+}
+
+.am-dropdown-content_l:after {
+    top: -7px
 }
