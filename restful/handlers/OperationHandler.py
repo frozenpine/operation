@@ -37,7 +37,10 @@ class OperationListApi(Resource):
                     'op_desc': op.description,
                     'err_code': -1,
                     'enabled': False,
-                    'check': op.type == ScriptType.checker,
+                    'checker': {
+                        'isTrue': op.type == ScriptType.checker,
+                        'checked': False
+                    },
                     'skip': self.find_op_results(op)
                 } for op in op_group.operations]
             if len(self.rtn['details']) > 0:
