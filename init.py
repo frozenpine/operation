@@ -218,21 +218,23 @@ def printsys():
 
 @manager.command
 def modeltest():
-    #sys = TradeSystem.find(id=1)
+    sys = TradeSystem.find(id=1)
     #svr = Server.find(id=1)
     #proc = TradeProcess.find(id=1)
     #usr = Operator.find(id=1)
-    #print sys.to_json()
+    print sys.to_json()
     #from SysManager.Parsers import ymlParser
     #print ymlParser.Dump(sys.to_json())
     #print svr.to_json()
     #print proc.to_json()
     #print usr.to_json()
+    '''
     op = Operation.find(id=6)
     records = OperateRecord.query\
         .filter(OperateRecord.operation_id==op.id)\
             .order_by(OperateRecord.operated_at.desc())
     print records.first().operated_at
+    '''
 
 @manager.command
 def route_test():

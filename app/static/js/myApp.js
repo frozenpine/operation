@@ -83,7 +83,9 @@ app.run(function($rootScope, $interval, $location, globalVar, Message) {
     });
     $rootScope.status = "normal";
     $rootScope.Messenger = Message;
-    $rootScope.Messages = {};
+    $rootScope.Messages = {
+        public: []
+    };
 });
 app.controller('dashBoardControl', ['$scope', '$rootScope', function($scope, $rootScope) {
     $rootScope.isShowSideList = false;
@@ -231,16 +233,41 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', 'globalVar',
     $http.get('api/op_group/id/' + globalVar.grpid).success(function(list) {
         $scope.opList = list;
     });
+    /*
     $scope.confirm = function(index) {
         if (index < $scope.opList.details.length - 1) {
             $scope.opList.details[index + 1].enabled = true;
+        }
+    }*/
+    $scope.confirm = function(index) {
+        $('#result' + index).modal({
+            relatedTarget: this,
+            onConfirm: function() {
+                $scope.$apply(function() {
+                    if (index < $scope.opList.details.length - 1) {
+                        $scope.opList.details[index + 1].enabled = true;
+                    }
+                    $scope.opList.details[index].checker.checked = true;
+                });
+            }
+        });
+    };
+    $scope.check_result = function(index) {
+        $('#result' + index).modal({ relatedTarget: this });
+    };
+    $scope.skip = function(index) {
+        if (index < $scope.opList.details.length - 1) {
+            $scope.opList.details[index + 1].enabled = true;
+        }
+        for (var i = 0; i <= index; i++) {
+            $scope.opList.details[i].skip = false;
         }
     };
     $scope.execute = function(index, id) {
         $http.get('api/operation/id/' + id).success(function(data) {
             if (globalVar.current_type == 'grpid') {
                 $scope.opList.details[index] = data;
-                if (index < $scope.opList.details.length - 1 && !$scope.opList.details[index].check) {
+                if (index < $scope.opList.details.length - 1 && !$scope.opList.details[index].checker.isTrue) {
                     $scope.opList.details[index + 1].enabled = data.succeed;
                 }
                 console.log(data);
@@ -253,9 +280,6 @@ app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootSco
         $rootScope.LoginStatics = {};
     }
     $scope.$watch('$rootScope.LoginStatics', function(newValue, oldValue) {
-        //$scope.loginStatics = $rootScope.LoginStatics[globalVar.sysid];
-        //$scope.$apply();
-        //$scope.$digest();
         $scope.$apply(function() {
             $scope.loginStatics = $rootScope.LoginStatics[globalVar.sysid];
         });
@@ -331,12 +355,10 @@ app.controller('taskControl', ['$scope', '$rootScope', function($scope, $rootSco
 
 }]);
 app.controller('messageControl', ['$scope', '$rootScope', function($scope, $rootScope) {
-    if ($rootScope.Messages === undefined) {
-        $rootScope.Messages = {
-            'public': []
-        };
-    }
     $scope.$watchCollection('$rootScope.Messages', function() {
+        if ($rootScope.Messages.public === undefined) {
+            $rootScope.Messages.public = [];
+        }
         $scope.$apply(function() {
             $scope.messages = $rootScope.Messages.public;
         });

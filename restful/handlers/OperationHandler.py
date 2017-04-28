@@ -58,7 +58,10 @@ class OperationApi(Resource):
             rtn['id'] = op.id
             rtn['op_name'] = op.name
             rtn['op_desc'] = op.description
-            rtn['check'] = op.type == ScriptType.checker
+            rtn['checker'] = {
+                'isTrue': op.type == ScriptType.checker,
+                'checked': False
+            }
             conf = SSHConfig(
                 op.group.system.manage_ip.exploded,
                 op.group.system.login_user,
