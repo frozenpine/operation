@@ -1,7 +1,6 @@
 {
     "version": "0.2.0",
-    "configurations": [
-        {
+    "configurations": [{
             "name": "Python",
             "type": "python",
             "request": "launch",
@@ -116,13 +115,13 @@
             "request": "launch",
             "stopOnEntry": false,
             "pythonPath": "${config.python.pythonPath}",
-            "program": "fully qualified path fo 'flask' executable. Generally located along with python interpreter",
+            "program": "d:\\Users\\Sonny\\Documents\\Visual Studio 2015\\Projects\\Flask\\run.py",
             "cwd": "${workspaceRoot}",
             "env": {
                 "FLASK_APP": "${workspaceRoot}/quickstart/app.py"
             },
             "args": [
-                "run",
+                "development",
                 "--no-debugger",
                 "--no-reload"
             ],

@@ -26,3 +26,4 @@ build/target/
 
 *.pyc
 *.log
+.idea

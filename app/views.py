@@ -21,7 +21,12 @@ def hello_world(**kwargs):
 @main.route('/index')
 @login_required
 def index():
-    return render_template("index.html", title='ITIL Test', user=current_user.name)
+    return render_template(
+        "index.html", title='ITIL Test',
+        user_name=current_user.name,
+        user_id=current_user.id,
+        user_login=current_user.login
+    )
 
 @main.route('/UI/views/<string:name>')
 @login_required

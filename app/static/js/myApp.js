@@ -7,14 +7,14 @@ var app = angular.module('myApp', ['ngRoute'], function($provide) {
             'intervals': []
         };
     });
-    $provide.factory('Message', function($rootScope) {
+    $provide.factory('Message', function($rootScope, $location) {
         if ($rootScope.Messages === undefined) {
             $rootScope.Messages = {
                 public: []
             };
         }
         if ("WebSocket" in window) {
-            var ws = new WebSocket("ws://10.9.101.39:5000/websocket");
+            var ws = new WebSocket("ws://" + $location.host() + ":5000/websocket");
             ws.onopen = function() {
                 console.log("conn success");
                 ws.send(JSON.stringify({
@@ -86,6 +86,16 @@ app.run(function($rootScope, $interval, $location, globalVar, Message) {
 });
 app.controller('dashBoardControl', ['$scope', '$rootScope', function($scope, $rootScope) {
     $rootScope.isShowSideList = false;
+}]);
+app.controller('userController', ['$scope', function($scope) {
+    $scope.ModifyPassword = function() {
+        $('#modifyPassword').modal({
+            relatedTarget: this,
+            onConfirm: function() {
+                alert('test');
+            }
+        });
+    };
 }]);
 app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval', function($scope, $http, globalVar, $interval) {
     $scope.checking = true;
@@ -168,7 +178,7 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', 'globalVar', '$roo
         });
         angular.forEach($scope.listName, function(value, index) {
             if (value.id == id) {
-                $scope.listName[index].isShow = !$scope.listName[index].isShow;
+                $scope.listName[index].isShow = true;
                 if (idList.indexOf($scope.listName[index].id) == -1) {
                     $scope.tabList.push({
                         "id": $scope.listName[index].id,
@@ -220,6 +230,7 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', 'globalVar', '$roo
             LocationUrl = '/' + LocationUrl;
             $location.url(LocationUrl);
         } else {
+            $rootScope.isShowSideList = false;
             $location.url('/dashboard');
         }
     };
@@ -229,7 +240,7 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', 'globalVar', '$roo
             $scope.tabList.splice(0, $scope.tabList.length);
             return false;
         } else {
-            $rootScope.isShowSideList = true;
+            //$rootScope.isShowSideList = true;
             return true;
         }
     };
@@ -308,13 +319,18 @@ app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootSco
             }
         });
     };
-    $http.get('api/system/id/' + globalVar.sysid + '/login_statics').success(function(data) {
-        $rootScope.LoginStatics[globalVar.sysid] = data;
-        $scope.loginStatics = $rootScope.LoginStatics[globalVar.sysid];
-        $scope.CheckLoginLog();
-        var loginStaticInterval = $interval(function() { $scope.CheckLoginLog(); }, 30000);
-        globalVar.intervals.push(loginStaticInterval);
-    });
+    $http.get('api/system/id/' + globalVar.sysid + '/login_statics')
+        .success(function(data) {
+            $scope.loginStaticsShow = true;
+            $rootScope.LoginStatics[globalVar.sysid] = data;
+            $scope.loginStatics = $rootScope.LoginStatics[globalVar.sysid];
+            $scope.CheckLoginLog();
+            var loginStaticInterval = $interval(function() { $scope.CheckLoginLog(); }, 30000);
+            globalVar.intervals.push(loginStaticInterval);
+        })
+        .error(function() {
+            $scope.loginStaticsShow = false;
+        });
 }]);
 app.controller('warningCtrl', ['$scope', '$http', function($scope, $http) {
     $scope.isRadioClick = false;

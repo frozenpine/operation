@@ -1,4 +1,4 @@
-# coding=utf-8
+# -*- coding: UTF-8 -*-
 from geventwebsocket import WebSocketError
 from msgsink import LogSinker
 import json
@@ -75,8 +75,8 @@ class MessageServer(object):
                     'data': msg
                 }))
             except WebSocketError:
-                print len(self.observers)
-                print self.observers
+                #print len(self.observers)
+                #print self.observers
                 fail_socket.add(ws)
                 continue
         self.observers -= fail_socket
@@ -90,7 +90,7 @@ class MessageServer(object):
     @staticmethod
     def parse_request(websocket):
         msg = websocket.receive()
-        print msg
+        #print msg
         try:
             request = json.loads(msg)
         except ValueError:

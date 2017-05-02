@@ -14,19 +14,20 @@ class UIDataApi(Resource):
         systems = TradeSystem.query.filter(TradeSystem.parent_sys_id == None).all()
         rtn = []
         for sys in systems:
-            system = {}
-            system['id'] = sys.id
-            system['icon'] = 'am-icon-table'
-            system['name'] = sys.name
-            system['isSecond'] = len(sys.operation_groups) > 0
-            system['isShow'] = False
-            system['Url'] = '#statics/{}'.format(sys.id)
-            system['secondName'] = [
-                {
-                    'id': group.id,
-                    'name': group.name,
-                    'Url': '#op_group/{}'.format(group.id)
-                } for group in sys.operation_groups
-            ]
+            system = {
+                'id': sys.id,
+                'icon': 'am-icon-table',
+                'name': sys.name,
+                'desc': sys.description,
+                'isSecond': len(sys.operation_groups) > 0,
+                'isShow': False,
+                'Url': '#statics/{}'.format(sys.id),
+                'secondName': [
+                    {
+                        'id': group.id,
+                        'name': group.name,
+                        'Url': '#op_group/{}'.format(group.id)
+                    } for group in sys.operation_groups]
+            }
             rtn.append(system)
         return rtn
