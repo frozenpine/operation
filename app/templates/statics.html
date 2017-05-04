@@ -2,14 +2,14 @@
     <div class="tpl-portlet-components" ng-controller="svrStaticsControl" id="server_statics">
         <div class="portlet-title">
             <div class="caption font-green bold">
-                状态信息 - 服务器
+                <span ng-click="svrShowDetail = !svrShowDetail;" style="cursor: pointer">状态信息 - 服务器 <i ng-class="{true: 'am-icon-angle-double-up am-icon-sm', false: 'am-icon-angle-double-down am-icon-sm'}[svrShowDetail]"></i></span>
             </div>
             <div class="font-green bold am-fr">
                 <span class="am-icon-refresh" ng-show="!checking" ng-click="checkSvrStatics()" style="cursor: pointer"></span>
                 <span class="am-icon-refresh am-icon-spin" ng-show="checking"></span>
             </div>
         </div>
-        <div class="tpl-block">
+        <div class="tpl-block" ng-show="svrShowDetail">
             <div class="am-g">
                 <div class="am-u-sm-12">
                     <table class="am-table am-table-hover table-main" id="drop-down-test">
@@ -136,17 +136,17 @@
     <div class="tpl-portlet-components" ng-controller="sysStaticsControl">
         <div class="portlet-title">
             <div class="caption font-green bold">
-                状态信息 - 系统
+                <span ng-click="sysShowDetail = !sysShowDetail;" style="cursor: pointer">状态信息 - 系统 <i ng-class="{true: 'am-icon-angle-double-up am-icon-sm', false: 'am-icon-angle-double-down am-icon-sm'}[sysShowDetail]"></i></span>
             </div>
             <div class="font-green bold am-fr">
                 <span class="am-icon-refresh" ng-show="!checking" ng-click="checkProc()" style="cursor: pointer"></span>
                 <span class="am-icon-refresh am-icon-spin" ng-show="checking"></span>
             </div>
         </div>
-        <div class="tpl-block">
+        <div class="tpl-block" ng-show="sysShowDetail">
             <div class="am-g">
                 <div class="am-u-sm-12" ng-repeat="data in systemStatics">
-					<span class="am-icon-angle-double-down" style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169); hover: pointer" > 子系统名称 ： {{data.name}}</span>
+					<span class="am-icon-angle-double-right" style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169); hover: pointer" > 子系统名称 ： {{data.name}}</span>
 					<table class="am-table am-table-hover table-main">
 						<thead>
 							<tr>
@@ -186,14 +186,14 @@
     <div class="tpl-portlet-components" ng-controller="loginStaticsControl" ng-show="loginStaticsShow">
         <div class="portlet-title">
             <div class="caption font-green bold">
-                状态信息 - 账号连接
+                <span ng-click="loginShowDetail = !loginShowDetail;" style="cursor: pointer">状态信息 - 账号连接 <i ng-class="{true: 'am-icon-angle-double-up am-icon-sm', false: 'am-icon-angle-double-down am-icon-sm'}[loginShowDetail]"></i></span>
             </div>
             <div class="font-green bold am-fr">
                 <span class="am-icon-refresh" ng-show="!checking" ng-click="CheckLoginLog()" style="cursor: pointer"></span>
                 <span class="am-icon-refresh am-icon-spin" ng-show="checking"></span>
             </div>
         </div>
-        <div class="tpl-block">
+        <div class="tpl-block" ng-show="loginShowDetail">
             <div class="am-g">
                 <div class="am-u-sm-12">
                     <table class="am-table am-table-hover table-main">
@@ -228,13 +228,13 @@
         </div>
     </div>
 
-    <div class="tpl-portlet-components">
+    <div class="tpl-portlet-components" ng-controller="clientStaticsControl">
         <div class="portlet-title">
             <div class="caption font-green bold">
-                状态信息-客户端连接
+                <span ng-click="clientShowDetail = !clientShowDetail;" style="cursor: pointer">状态信息-客户端连接 <i ng-class="{true: 'am-icon-angle-double-up am-icon-sm', false: 'am-icon-angle-double-down am-icon-sm'}[clientShowDetail]"></i></span>
             </div>
         </div>
-        <div class="tpl-block">
+        <div class="tpl-block" ng-show="clientShowDetail">
             <div class="am-g">
                 <div class="am-u-sm-12">
                     <table class="am-table am-table-hover table-main">

@@ -23,10 +23,10 @@
 	<body>
 	<!-- Modal Dialog Begin -->
 		<div class="am-modal am-modal-confirm" tabindex="-1" id="modifyPassword">
-			<div class="am-modal-dialog" style="width: 400px;">
+			<div class="am-modal-dialog">
 				<div class="am-modal-hd" style="font-weight: bold; color: #000">修改密码</div>
-				<div class="am-modal-bd" style="margin-bottom: 3px">
-					<form>
+				<div class="am-modal-bd am-vertical-align">
+					<form class="am-center am-vertical-align-middle am-form" style="width: 400px">
 						<fieldset>
 							<input type="hidden" name="user_id" value="[[user_id]]" />
 							<input type="hidden" name="user_login" value="[[user_login]]" />
@@ -52,7 +52,7 @@
 			</div>
 		</div>
 	<!-- Modal Dialog End -->
-		<header class="am-topbar am-topbar-inverse">
+		<header class="am-topbar am-topbar-inverse" style="margin-bottom: 10px">
 			<div class="am-topbar-brand">
 				<a href="#/dashboard" class="tpl-logo">
 					<img src="[[ url_for('static', filename='img/logo.png', _external=True) ]]" alt="">
@@ -156,8 +156,8 @@
 				</div>
 				<div class="tpl-left-nav-list" style="width: 55px;">
 					<ul class="tpl-left-nav-menu">
-						<li class="tpl-left-nav-item am-dropdown" data-am-dropdown ng-repeat="data in listName"  ng-mouseover="showListIcon = true"
-							ng-mouseleave="showListIcon = false">
+						<li class="tpl-left-nav-item am-dropdown" ng-repeat="data in listName"  ng-mouseover="showListIcon = true"
+							ng-mouseleave="showListIcon = false" data-am-dropdown>
 							<div>
 								<a href="{{data.Url}}" class="nav-link am-dropdown-toggle" data-am-dropdown-toggle>
 									<i class="{{data.icon}}" ng-click="showListChange(data.id)"></i>

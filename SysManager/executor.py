@@ -139,41 +139,45 @@ if __name__ == '__main__':
     result['memory'] = resultlist[3].data['mem']
     result['swap'] = resultlist[3].data['swap']
     '''
-    conf = SSHConfig('192.168.101.100', 'qdam', 'qdam')
+    conf = SSHConfig('192.168.92.26', 'root', 'Quantdo@SH2016!')
     executor = Executor.Create(conf)
     result = executor.run(
         {
-            'name': 'shell',
-            'shell': 'mcall show',
-            'args': {
-                'chdir': '/home/qdam/bin'
-            }
+            'name': 'quantdoLogin',
+            'quantdoLogin': '/root/right.txt'
         }
     )
+    #print result.data
+    '''
     for line in result.lines:
         print line
     #logging.info(result)
     '''
-    for key in result.data.keys():
-        if u'登录成功' in result.data[key][-1]['message'].decode('utf-8'):
-            rtn.append({
-                'seat_id': key,
-                'seat_status': u'已连接'
-            })
-        elif u'登录失败' in result.data[key][-1]['message'].decode('utf-8'):
-            rtn.append({
-                'seat_id': key,
-                'seat_status': u'登录失败'
-            })
-        elif u'断开' in result.data[key][-1]['message'].decode('utf-8'):
-            rtn.append({
-                'seat_id': key,
-                'seat_status': u'连接断开'
-            })
-        else:
-            rtn.append({
-                'seat_id': key,
-                'seat_status': u'未连接'
-            })
+    for (k, v) in result.data.iteritems():
+        data = {
+            'seat_id': k,
+            'seat_status': u"",
+            'conn_count': 0,
+            'login_success': 0,
+            'login_fail': 0,
+            'disconn_count': 0
+        }
+        for each in v:
+            print type(each.get('message'))
+            print each.get('message')
+            if each.get('message').find('连接成功') >= 0:
+                data['seat_status'] = u'连接成功'
+                data['conn_count'] += 1
+            elif each['message'].find('登录成功') >= 0:
+                data['seat_status'] = u'登录成功'
+                data['login_success'] += 1
+            elif each['message'].find('登录失败') >= 0:
+                data['seat_status'] = u'登录失败'
+                data['login_fail'] += 1
+            elif each['message'].find('断开') >= 0:
+                data['seat_status'] = u'连接断开'
+                data['disconn_count'] += 1
+            else:
+                data['seat_status'] = u'未连接'
+        rtn.append(data)
     print rtn
-    '''

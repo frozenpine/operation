@@ -8,6 +8,7 @@
     <script src="js/echarts.min.js"></script>
     <script src="js/jquery.min.js"></script>
     <script src="js/dataTool.min.js"></script>
+	<script src="js/amazeui.min.js"></script>
     <style>
         .am-nav-pills li {
             padding: 0px 5px 0px 5px;
@@ -34,47 +35,44 @@
             Amaze UI & eCharts
         </h1>
         <div class="am-header-right am-header-nav">
-            <a href="">
-                <i class="am-icon-circle"></i>
-            </a>
+            <button class="am-button" data-am-offcanvas="{target: '#sideBar', effect: 'push'}" />
         </div>
     </header>
-    <div class="am-g am-g-collapse">
-        <div class="am-u-sm-1">
-            <aside id="sideBar">
-                <ul class="am-avg-md-1" style="min-height: 640px; width: 150px; padding-top: 10px; padding-left: 5px">
-                    <li>
-                        <a href="">
-                            <i class="am-icon-list am-icon-fw am-fr"></i>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="">
-                            <i class="am-icon-weibo am-icon-fw"></i>
-                            <span>微博</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="">
-                            <i class="am-icon-qq am-icon-fw"></i>
-                            <span>QQ</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="">
-                            <i class="am-icon-weixin am-icon-fw"></i>
-                            <span>微信</span>
-                        </a>
-                    </li>
-                </ul>
-            </aside>
-        </div>
-        <div class="am-u-sm-11 am-u-end">
-            <div id="main" style="height: 300px; width: 100%"></div>
-            <div id='map' style="height: 600px; width: 100%"></div>
-            <div id='echarts_map' style="height: 600px; width: 100%"></div>
-        </div>
-    </div>
+	<aside id="sideBar" class="am-offcanvas">
+		<div class="am-offcanvas-bar">
+			<div class="am-offcanvas-content">
+			<ul class="am-avg-md-1" style="min-height: 640px; padding-top: 10px; padding-left: 5px">
+				<li>
+					<a href="#sideBar" class="am-icon-list am-icon-fw am-fr" data-am-offcanvas="{effect: 'push'}">
+					</a>
+				</li>
+				<li>
+					<a href="">
+						<i class="am-icon-weibo am-icon-fw"></i>
+						<span>微博</span>
+					</a>
+				</li>
+				<li>
+					<a href="">
+						<i class="am-icon-qq am-icon-fw"></i>
+						<span>QQ</span>
+					</a>
+				</li>
+				<li>
+					<a href="">
+						<i class="am-icon-weixin am-icon-fw"></i>
+						<span>微信</span>
+					</a>
+				</li>
+			</ul>
+			</div>
+		</div>
+	</aside>
+	<div class="am-container">
+		<div id="main" style="height: 300px; width: 100%"></div>
+		<div id='map' style="height: 600px; width: 100%"></div>
+		<div id='echarts_map' style="height: 600px; width: 100%"></div>
+	</div>
     <script type="text/javascript">
         var myChart = echarts.init(document.getElementById('main'));
 
