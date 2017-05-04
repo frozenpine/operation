@@ -45,7 +45,11 @@ class OperationListApi(Resource):
                 } for op in op_group.operations]
             if len(self.rtn['details']) > 0:
                 self.rtn['details'][0]['enabled'] = True
-        return self.rtn
+            return self.rtn
+        else:
+            return {
+                'message': 'operation group not found'
+            }, 404
 
 class OperationApi(Resource):
     def get(self, **kwargs):
@@ -86,4 +90,8 @@ class OperationApi(Resource):
             res.detail = json.dumps(result.lines)
             db.session.add(res)
             db.session.commit()
-        return rtn
+            return rtn
+        else:
+            return {
+                'message': 'operation not found'
+            }, 404

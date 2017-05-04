@@ -83,6 +83,9 @@ app.run(function($rootScope, $interval, $location, globalVar, Message) {
     });
     $rootScope.status = "normal";
     $rootScope.Messenger = Message;
+    if ($rootScope.LoginStatics === undefined) {
+        $rootScope.LoginStatics = {};
+    }
 });
 app.controller('dashBoardControl', ['$scope', '$rootScope', function($scope, $rootScope) {
     $rootScope.isShowSideList = false;
@@ -98,10 +101,27 @@ app.controller('userController', ['$scope', function($scope) {
     };
 }]);
 app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval', function($scope, $http, globalVar, $interval) {
-    $scope.checking = true;
+    $scope.svrShowDetail = true;
     $scope.checkSvrStatics = function() {
         $scope.checking = true;
         $http.get('api/system/id/' + globalVar.sysid + '/svr_statics/check')
+            /*
+            .then(
+                function successCallback(response) {
+                    if (response.sys_id == globalVar.sysid) {
+                        $scope.serverStatics = response.details;
+                        $scope.serverStatics.showMountDetail = [];
+                        angular.forEach(response.details.disks, function(value, index) {
+                            $scope.serverStatics.showMountDetail.push(false);
+                        });
+                    }
+                    $scope.checking = false;
+                },
+                function errorCallback(response) {
+                    console.log(response);
+                }
+            );
+            */
             .success(function(response) {
                 if (response.sys_id == globalVar.sysid) {
                     $scope.serverStatics = response.details;
@@ -114,6 +134,23 @@ app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
             });
     };
     $http.get('api/system/id/' + globalVar.sysid + '/svr_statics')
+        /*
+        .then(
+            function successCallback(response) {
+                if (globalVar.current_type == 'sysid') {
+                    if (response.sys_id == globalVar.sysid) {
+                        $scope.serverStatics = response.details;
+                        $scope.checkSvrStatics();
+                        var svrStaticInterval = $interval(function() { $scope.checkSvrStatics(); }, 60000);
+                        globalVar.intervals.push(svrStaticInterval);
+                    }
+                }
+            },
+            function errorCallback(response) {
+                console.log(response);
+            }
+        );
+        */
         .success(function(data) {
             console.log(data);
             if (globalVar.current_type == 'sysid') {
@@ -123,21 +160,47 @@ app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
                     var svrStaticInterval = $interval(function() { $scope.checkSvrStatics(); }, 60000);
                     globalVar.intervals.push(svrStaticInterval);
                 }
-                $scope.checking = false;
             }
         });
 }]);
 app.controller('sysStaticsControl', ['$scope', '$http', 'globalVar', '$interval', function($scope, $http, globalVar, $interval) {
-    $scope.checking = true;
+    $scope.sysShowDetail = true;
     $scope.checkProc = function() {
         $scope.checking = true;
         $http.get('api/system/id/' + globalVar.sysid + '/sys_statics/check')
+            /*
+            .then(
+                function successCallback(response) {
+                    $scope.systemStatics = response;
+                    $scope.checking = false;
+                },
+                function errorCallback(response) {
+                    console.log(response);
+                }
+            );
+            */
             .success(function(response) {
                 $scope.systemStatics = response;
                 $scope.checking = false;
             });
     };
     $http.get('api/system/id/' + globalVar.sysid + '/sys_statics')
+        /*
+        .then(
+            function successCallback(response) {
+                if (globalVar.current_type == 'sysid') {
+                    $scope.systemStatics = response;
+                    $scope.checkProc();
+                    var sysStaticInterval = $interval(function() { $scope.checkProc(); }, 30000);
+                    globalVar.intervals.push(sysStaticInterval);
+                    $scope.checking = false;
+                }
+            },
+            function errorCallback(response) {
+                console.log(response);
+            }
+        );
+        */
         .success(function(data) {
             if (globalVar.current_type == 'sysid') {
                 $scope.systemStatics = data;
@@ -151,11 +214,21 @@ app.controller('sysStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
 app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', 'globalVar', '$rootScope', '$location', function($scope, $http, $timeout, globalVar, $rootScope, $location) {
     $scope.tabList = [];
     var idList = [];
-    $http.get('api/UI/sideBarCtrl').success(function(data) {
-        $scope.listName = data;
-    });
+    $http.get('api/UI/sideBarCtrl')
+        /*
+        .then(
+            function successCallback(response) {
+                $scope.listName = response;
+            },
+            function errorCallback(response) {
+                console.log(response);
+            }
+        );
+        */
+        .success(function(data) {
+            $scope.listName = data;
+        });
     $scope.showListChild = function(id) {
-        $rootScope.isShowSideList = true;
         globalVar.current_type = 'sysid';
         globalVar.sysid = id;
         angular.forEach($scope.listName, function(value, index) {
@@ -251,10 +324,21 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', 'globalVar', '$roo
     };
 }]);
 app.controller('opGroupController', ['$scope', '$http', '$timeout', 'globalVar', function($scope, $http, $timeout, globalVar) {
-    $http.get('api/op_group/id/' + globalVar.grpid).success(function(list) {
-        $scope.opList = list;
-        console.log(list);
-    });
+    $http.get('api/op_group/id/' + globalVar.grpid)
+        /*
+        .then(
+            function successCallback(response) {
+                $scope.opList = response;
+            },
+            function errorCallback(response) {
+
+            }
+        );
+        */
+        .success(function(list) {
+            $scope.opList = list;
+            console.log(list);
+        });
     $scope.confirm = function(index) {
         $('#result' + index).modal({
             relatedTarget: this,
@@ -280,21 +364,35 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', 'globalVar',
         }
     };
     $scope.execute = function(index, id) {
-        $http.get('api/operation/id/' + id).success(function(data) {
-            if (globalVar.current_type == 'grpid') {
-                $scope.opList.details[index] = data;
-                if (index < $scope.opList.details.length - 1 && !$scope.opList.details[index].checker.isTrue) {
-                    $scope.opList.details[index + 1].enabled = data.succeed;
+        $http.get('api/operation/id/' + id)
+            /*
+            .then(
+                function successCallback(response) {
+                    if (globalVar.current_type == 'grpid') {
+                        $scope.opList.details[index] = response;
+                        if (index < $scope.opList.details.length - 1 && !$scope.opList.details[index].checker.isTrue) {
+                            $scope.opList.details[index + 1].enabled = response.succeed;
+                        }
+                    }
+                },
+                function errorCallback(response) {
+
                 }
-                console.log(data);
-            }
-        });
+            );
+            */
+            .success(function(data) {
+                if (globalVar.current_type == 'grpid') {
+                    $scope.opList.details[index] = data;
+                    if (index < $scope.opList.details.length - 1 && !$scope.opList.details[index].checker.isTrue) {
+                        $scope.opList.details[index + 1].enabled = data.succeed;
+                    }
+                    console.log(data);
+                }
+            });
     };
 }]);
 app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootScope', '$interval', function($scope, $http, globalVar, $rootScope, $interval) {
-    if ($rootScope.LoginStatics === undefined) {
-        $rootScope.LoginStatics = {};
-    }
+    $scope.loginShowDetail = true;
     $scope.$watch('$rootScope.LoginStatics', function(newValue, oldValue) {
         $scope.$apply(function() {
             $scope.loginStatics = $rootScope.LoginStatics[globalVar.sysid];
@@ -302,24 +400,63 @@ app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootSco
     }, true);
     $scope.CheckLoginLog = function() {
         $scope.checking = true;
-        $http.get('api/system/id/' + globalVar.sysid + '/login_statics/check').success(function(data) {
-            if (globalVar.current_type == 'sysid') {
-                angular.forEach(data, function(value1, index1) {
-                    angular.forEach($rootScope.LoginStatics[globalVar.sysid], function(value2, index2) {
-                        if (value1.seat_id == value2.seat_id) {
-                            $rootScope.LoginStatics[globalVar.sysid][index2].seat_status = value1.seat_status;
-                            $rootScope.LoginStatics[globalVar.sysid][index2].conn_count = value1.conn_count;
-                            $rootScope.LoginStatics[globalVar.sysid][index2].disconn_count = value1.disconn_count;
-                            $rootScope.LoginStatics[globalVar.sysid][index2].login_fail = value1.login_fail;
-                            $rootScope.LoginStatics[globalVar.sysid][index2].login_success = value1.login_success;
-                        }
+        $http.get('api/system/id/' + globalVar.sysid + '/login_statics/check')
+            /*
+            .then(
+                function successCallback(response) {
+                    if (globalVar.current_type == 'sysid') {
+                        angular.forEach(response, function(value1, index1) {
+                            angular.forEach($rootScope.LoginStatics[globalVar.sysid], function(value2, index2) {
+                                if (value1.seat_id == value2.seat_id) {
+                                    $rootScope.LoginStatics[globalVar.sysid][index2].seat_status = value1.seat_status;
+                                    $rootScope.LoginStatics[globalVar.sysid][index2].conn_count = value1.conn_count;
+                                    $rootScope.LoginStatics[globalVar.sysid][index2].disconn_count = value1.disconn_count;
+                                    $rootScope.LoginStatics[globalVar.sysid][index2].login_fail = value1.login_fail;
+                                    $rootScope.LoginStatics[globalVar.sysid][index2].login_success = value1.login_success;
+                                }
+                            });
+                        });
+                        $scope.checking = false;
+                    }
+                },
+                function errorCallback(response) {
+
+                }
+            );
+            */
+            .success(function(data) {
+                if (globalVar.current_type == 'sysid') {
+                    angular.forEach(data, function(value1, index1) {
+                        angular.forEach($rootScope.LoginStatics[globalVar.sysid], function(value2, index2) {
+                            if (value1.seat_id == value2.seat_id) {
+                                $rootScope.LoginStatics[globalVar.sysid][index2].seat_status = value1.seat_status;
+                                $rootScope.LoginStatics[globalVar.sysid][index2].conn_count = value1.conn_count;
+                                $rootScope.LoginStatics[globalVar.sysid][index2].disconn_count = value1.disconn_count;
+                                $rootScope.LoginStatics[globalVar.sysid][index2].login_fail = value1.login_fail;
+                                $rootScope.LoginStatics[globalVar.sysid][index2].login_success = value1.login_success;
+                            }
+                        });
                     });
-                });
-                $scope.checking = false;
-            }
-        });
+                    $scope.checking = false;
+                }
+            });
     };
     $http.get('api/system/id/' + globalVar.sysid + '/login_statics')
+        /*
+        .then(
+            function successCallback(response) {
+                $scope.loginStaticsShow = true;
+                $rootScope.LoginStatics[globalVar.sysid] = response;
+                $scope.loginStatics = $rootScope.LoginStatics[globalVar.sysid];
+                $scope.CheckLoginLog();
+                var loginStaticInterval = $interval(function() { $scope.CheckLoginLog(); }, 30000);
+                globalVar.intervals.push(loginStaticInterval);
+            },
+            function errorCallback(response) {
+                $scope.loginStaticsShow = false;
+            }
+        );
+        */
         .success(function(data) {
             $scope.loginStaticsShow = true;
             $rootScope.LoginStatics[globalVar.sysid] = data;
@@ -331,6 +468,9 @@ app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootSco
         .error(function() {
             $scope.loginStaticsShow = false;
         });
+}]);
+app.controller('clientStaticsControl', ['$scope', '$http', 'globalVar', function($scope, $http, globalVar) {
+    $scope.clientShowDetail = true;
 }]);
 app.controller('warningCtrl', ['$scope', '$http', function($scope, $http) {
     $scope.isRadioClick = false;
@@ -391,7 +531,10 @@ app.controller('messageControl', ['$scope', '$rootScope', function($scope, $root
 }]);
 app.filter('KB2', function() {
     return function(value, dst) {
-        var num = parseInt(value);
+        var num = parseFloat(value);
+		if (isNaN(num)) {
+            return "无数据";
+        }
         switch (dst) {
             case "M":
                 return (num / 1024).toFixed(2).toString() + " MB";
@@ -405,6 +548,9 @@ app.filter('KB2', function() {
 app.filter('percent', function() {
     return function(value, len) {
         var num = parseFloat(value);
+		if (isNaN(num)) {
+            return "无数据";
+        }
         var fix = 2;
         if (len !== undefined) {
             fix = len;
@@ -457,10 +603,8 @@ app.filter('exe_result', function() {
                 return "执行中...";
             case -3:
                 return "跳过执行";
-            case 1:
-                return "执行失败";
             default:
-                return "状态未知";
+                return "执行失败";
         }
     };
 });

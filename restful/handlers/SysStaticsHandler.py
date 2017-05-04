@@ -63,7 +63,11 @@ class ServerStaticListApi(Resource, ServerList):
             self.rtn['sys_id'] = sys.id
             self.find_servers(sys)
             self.make_response()
-        return self.rtn
+            return self.rtn
+        else:
+            return {
+                'message': 'system not found'
+            }, 404
 
 class ServerStaticApi(Resource, ServerList):
     def __init__(self):
@@ -83,7 +87,11 @@ class ServerStaticApi(Resource, ServerList):
                 tr.start()
                 tr.join()
             self.make_response()
-        return self.rtn
+            return self.rtn
+        else:
+            return {
+                'message': 'system not found'
+            }, 404
 
     def check_svr(self, svr):
         result = {}
@@ -186,7 +194,11 @@ class SystemStaticListApi(Resource, SystemList):
         if sys:
             self.find_systems(sys)
             self.make_response()
-        return self.rtn
+            return self.rtn
+        else:
+            return {
+                'message': 'system not found'
+            }, 404
 
 class ProcStaticApi(Resource, SystemList):
     def __init__(self):
@@ -251,7 +263,11 @@ class ProcStaticApi(Resource, SystemList):
                 tr.start()
                 tr.join()
             self.make_response()
-        return self.rtn
+            return self.rtn
+        else:
+            return {
+                'message': 'system not found'
+            }, 404
 
 class LoginListApi(Resource):
     def get(self, **kwargs):
@@ -261,7 +277,9 @@ class LoginListApi(Resource):
             try:
                 sys_db = create_engine(sys.db_uri)
             except Exception:
-                abort(404)
+                return {
+                    'message': "System({}) didn't configured a db uri".format(sys.name)
+                }, 204
             else:
                 results = sys_db.execute(text("""
                     SELECT seat.seat_name, sync.tradingday, sync.frontaddr, sync.seatid 
@@ -282,7 +300,11 @@ class LoginListApi(Resource):
                         'disconn_count': 0
                     })
                 sys_db.dispose()
-        return rtn
+            return rtn
+        else:
+            return {
+                'message': 'system not found'
+            }, 404
 
 class LoginCheckApi(Resource):
     def __init__(self):
@@ -322,64 +344,33 @@ class LoginCheckApi(Resource):
                 'quantdoLogin': log.file_path
             }
             result = executor.run(mod)
-            self.mutex.acquire()
-            for key in result.data.keys():
-                length = len(result.data[key])
+            for (k, v) in result.data.iteritems():
                 data = {
-                    'seat_id': key,
-                    'seat_status': "",
+                    'seat_id': k,
+                    'seat_status': u"",
                     'conn_count': 0,
                     'login_success': 0,
                     'login_fail': 0,
                     'disconn_count': 0
                 }
-                for i in range(0, length):
-                    if u'连接成功' in result.data[key][i]['message'].decode('utf-8'):
+                for each in v:
+                    if each.get('message').find('连接成功') >= 0:
                         data['seat_status'] = u'连接成功'
                         data['conn_count'] += 1
-                        '''
-                        self.rtn.append({
-                            'seat_id': key,
-                            'seat_status': u'连接成功'
-                        })
-                        '''
-                    elif u'登录成功' in result.data[key][-1]['message'].decode('utf-8'):
+                    elif each['message'].find('登录成功') >= 0:
                         data['seat_status'] = u'登录成功'
                         data['login_success'] += 1
-                        '''
-                        self.rtn.append({
-                            'seat_id': key,
-                            'seat_status': u'登录成功'
-                        })
-                        '''
-                    elif u'登录失败' in result.data[key][-1]['message'].decode('utf-8'):
+                    elif each['message'].find('登录失败') >= 0:
                         data['seat_status'] = u'登录失败'
                         data['login_fail'] += 1
-                        '''
-                        self.rtn.append({
-                            'seat_id': key,
-                            'seat_status': u'登录失败'
-                        })
-                        '''
-                    elif u'断开' in result.data[key][-1]['message'].decode('utf-8'):
+                    elif each['message'].find('断开') >= 0:
                         data['seat_status'] = u'连接断开'
                         data['disconn_count'] += 1
-                        '''
-                        self.rtn.append({
-                            'seat_id': key,
-                            'seat_status': u'连接断开'
-                        })
-                        '''
                     else:
                         data['seat_status'] = u'未连接'
-                        '''
-                        self.rtn.append({
-                            'seat_id': key,
-                            'seat_status': u'未连接'
-                        })
-                        '''
+                self.mutex.acquire()
                 self.rtn.append(data)
-            self.mutex.release()
+                self.mutex.release()
         executor.client.close()
 
     def get(self, **kwargs):
@@ -391,7 +382,11 @@ class LoginCheckApi(Resource):
             for tr in self.check:
                 tr.start()
                 tr.join()
-        return self.rtn
+            return self.rtn
+        else:
+            return {
+                'message': 'system not found'
+            }, 404
 
 class UserSessionListApi(Resource):
     def get(self, **kwargs):
@@ -401,7 +396,9 @@ class UserSessionListApi(Resource):
             try:
                 sys_db = create_engine(sys.db_uri)
             except Exception:
-                abort(404)
+                return {
+                    'message': "System({}) didn't configured a db uri".format(sys.name)
+                }, 204
             else:
                 results = sys_db.execute(text("""
                     SELECT brokerid, userid, usertype, sessionid, frontid,
@@ -420,4 +417,8 @@ class UserSessionListApi(Resource):
                         'mac_address': result[7],
                     })
                 sys_db.dispose()
-        return rtn
+            return rtn
+        else:
+            return {
+                'message': 'system not found'
+            }, 404
