@@ -5,8 +5,8 @@ from app.models import TradeSystem, TradeProcess, Server
 from SysManager import logging
 from SysManager.configs import SSHConfig
 from SysManager.executor import Executor
-import pymysql
-pymysql.install_as_MySQLdb()
+#import pymysql
+#pymysql.install_as_MySQLdb()
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
 import re
@@ -279,7 +279,7 @@ class LoginListApi(Resource):
             except Exception:
                 return {
                     'message': "System({}) didn't configured a db uri".format(sys.name)
-                }, 204
+                }, 404
             else:
                 results = sys_db.execute(text("""
                     SELECT seat.seat_name, sync.tradingday, sync.frontaddr, sync.seatid 
@@ -398,11 +398,11 @@ class UserSessionListApi(Resource):
             except Exception:
                 return {
                     'message': "System({}) didn't configured a db uri".format(sys.name)
-                }, 204
+                }, 404
             else:
                 results = sys_db.execute(text("""
                     SELECT brokerid, userid, usertype, sessionid, frontid,
-                        logintime, ipaddress, macaddress
+                        logintime, ipaddress, macaddress, userproductinfo
                     FROM t_oper_usersession
                 """)).fetchall()
                 for result in results:
@@ -415,6 +415,7 @@ class UserSessionListApi(Resource):
                         'login_time': result[5],
                         'ip_address': result[6],
                         'mac_address': result[7],
+                        'prod_info': result[8]
                     })
                 sys_db.dispose()
             return rtn

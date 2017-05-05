@@ -315,6 +315,7 @@ class TradeProcess(SQLModelMixin, db.Model):
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     svr_id = db.Column(db.Integer, db.ForeignKey('servers.id'), index=True)
     config_files = db.relationship('ConfigFile', backref='process')
+    syslog_files = db.relationship('SyslogFile', backref='process')
     status = db.Column(JSONType, default={})
 
 class SystemType(SQLModelMixin, db.Model):
@@ -393,6 +394,7 @@ class SyslogFile(SQLModelMixin, db.Model):
     file_path = db.Column(db.String)
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     svr_id = db.Column(db.Integer, db.ForeignKey('servers.id'), index=True)
+    proc_id = db.Column(db.Integer, db.ForeignKey('trade_processes.id'), index=True)
 
 class SystemVendor(SQLModelMixin, db.Model):
     __tablename__ = "vendors"

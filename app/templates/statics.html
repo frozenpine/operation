@@ -26,7 +26,7 @@
                         </thead>
                         <tbody>
                             <tr ng-repeat="data in serverStatics">
-                                <td class="table-data" style="max-width: 120px">{{data.server}}</td>
+                                <td class="table-data" style="max-width: 120px">{{::data.server}}</td>
                                 <td class="table-data" style="max-width: 120px">{{data.uptime}}</td>
                                 <td class="table-data">
                                     <div class="am-dropdown" style="cursor: pointer" ng-mouseover="showCPUDetail = true" ng-mouseleave="showCPUDetail = false" data-am-dropdown="{boundary: '#drop-down-test'}">
@@ -64,8 +64,8 @@
                                                 </thead>
                                                 <tbody>
                                                     <tr>
-                                                        <td>{{data.memory[0].total | KB2:'G'}}</td>
-                                                        <td>{{data.memory[0].free | KB2:'G'}}</td>
+                                                        <td>{{data.memory[0].total | KB2}}</td>
+                                                        <td>{{data.memory[0].free | KB2}}</td>
                                                     </tr>
                                                 </tbody>
                                             </table>
@@ -83,8 +83,8 @@
                                                 </thead>
                                                 <tbody>
                                                     <tr>
-                                                        <td>{{data.swap[0].total | KB2:'G'}}</td>
-                                                        <td>{{data.swap[0].free | KB2:'G'}}</td>
+                                                        <td>{{data.swap[0].total | KB2}}</td>
+                                                        <td>{{data.swap[0].free | KB2}}</td>
                                                     </tr>
                                                 </tbody>
                                             </table>
@@ -113,8 +113,8 @@
 															</thead>
 															<tbody>
 																<tr>
-																	<td>{{disk.total | KB2:'G'}}</td>
-																	<td>{{disk.available | KB2:'G'}}</td>
+																	<td>{{disk.total | KB2}}</td>
+																	<td>{{disk.available | KB2}}</td>
 																</tr>
 															</tbody>
 														</table>
@@ -146,38 +146,38 @@
         <div class="tpl-block" ng-show="sysShowDetail">
             <div class="am-g">
                 <div class="am-u-sm-12" ng-repeat="data in systemStatics">
-					<span class="am-icon-angle-double-right" style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169); hover: pointer" > 子系统名称 ： {{data.name}}</span>
-					<table class="am-table am-table-hover table-main">
-						<thead>
-							<tr>
-								<th>进程名</th>
-								<th>进程号</th>
-								<th>角色</th>
-								<th>CPU%</th>
-								<th>MEM%</th>
-								<th>RSS</th>
-								<th>启动日期</th>
-								<th>运行时间</th>
-								<th>进程状态</th>
-								<th>服务器名</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr ng-repeat="child in data.detail">
-								<td class="table-data">{{child.process}}</td>
-								<td class="table-data">{{child.status.pid}}</td>
-								<td class="table-data">{{child.proc_role}}</td>
-								<td class="table-data">{{child.status.cpu}}</td>
-								<td class="table-data">{{child.status.mem}}</td>
-								<td class="table-data">{{child.status.rss}}</td>
-								<td class="table-data">{{child.status.start}}</td>
-								<td class="table-data">{{child.status.time}}</td>
-								<td class="table-status">{{child.status.stat | status}}</td>
-								<td class="table-data">{{child.server}}</td>
-							</tr>
-						</tbody>
-					</table>
-					<hr/>
+                    <span class="am-icon-angle-double-right" style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169); hover: pointer"> 子系统名称 ： {{::data.name}}</span>
+                    <table class="am-table am-table-hover table-main">
+                        <thead>
+                            <tr>
+                                <th>进程名</th>
+                                <th>进程号</th>
+                                <th>角色</th>
+                                <th>CPU%</th>
+                                <th>MEM%</th>
+                                <th>RSS</th>
+                                <th>启动日期</th>
+                                <th>运行时间</th>
+                                <th>进程状态</th>
+                                <th>服务器名</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="child in data.detail" ng-class="{true: 'am-danger', false: ''}[child.status.stat=='stopped']">
+                                <td class="table-data">{{::child.process}}</td>
+                                <td class="table-data">{{::child.status.pid}}</td>
+                                <td class="table-data">{{::child.proc_role}}</td>
+                                <td class="table-data">{{child.status.cpu}}</td>
+                                <td class="table-data">{{child.status.mem}}</td>
+                                <td class="table-data">{{child.status.rss | KB2}}</td>
+                                <td class="table-data">{{::child.status.start}}</td>
+                                <td class="table-data">{{child.status.time}}</td>
+                                <td class="table-status">{{child.status.stat | status}}</td>
+                                <td class="table-data">{{::child.server}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <hr/>
                 </div>
             </div>
         </div>
@@ -211,10 +211,10 @@
                         </thead>
                         <tbody>
                             <tr ng-class="{'未连接': 'am-disabled', '登录成功': 'am-success', '连接成功': 'am-primary', '登录失败': 'am-warning', '连接断开': 'am-danger'}[loginStatics[$index].seat_status]" ng-repeat="data in loginStatics track by $index">
-                                <td>{{data.seat_name}}</td>
-                                <td>{{data.trading_day}}</td>
-                                <td>{{data.front_addr}}</td>
-                                <td>{{data.seat_id | mask}}</td>
+                                <td>{{::data.seat_name}}</td>
+                                <td>{{::data.trading_day}}</td>
+                                <td>{{::data.front_addr}}</td>
+                                <td>{{::data.seat_id | mask}}</td>
                                 <td>{{data.seat_status}}</td>
                                 <td>{{data.conn_count - (data.conn_count - data.disconn_count)}}</td>
                                 <td>{{data.login_success}}</td>
@@ -228,7 +228,7 @@
         </div>
     </div>
 
-    <div class="tpl-portlet-components" ng-controller="clientStaticsControl">
+    <div class="tpl-portlet-components" ng-controller="clientStaticsControl" ng-show="userSessionShow">
         <div class="portlet-title">
             <div class="caption font-green bold">
                 <span ng-click="clientShowDetail = !clientShowDetail;" style="cursor: pointer">状态信息-客户端连接 <i ng-class="{true: 'am-icon-angle-double-up am-icon-sm', false: 'am-icon-angle-double-down am-icon-sm'}[clientShowDetail]"></i></span>
@@ -240,26 +240,27 @@
                     <table class="am-table am-table-hover table-main">
                         <thead>
                             <tr>
-                                <th class="table-data">客户端名称</th>
-                                <th class="table-title">API版本</th>
-                                <th class="table-status">客户端版本</th>
-                                <th class="table-author am-hide-sm-only">最近登录时间</th>
-                                <th class="table-date am-hide-sm-only">断开次数</th>
-                                <th class="table-status">IP</th>
-                                <th class="table-title">mac</th>
-                                <th class="table-title">硬盘序列号</th>
+								<th class="table-data">经纪公司代码</th>
+                                <th class="table-data">交易用户代码</th>
+                                <th class="table-data">交易用户类型</th>
+                                <th class="table-data">会话编号</th>
+                                <th class="table-data">前置编号</th>
+                                <th class="table-data">登录时间</th>
+                                <th class="table-data">IP地址</th>
+                                <th class="table-data">MAC地址</th>
+								<th class="table-data">用户端产品信息</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr ng-repeat="child in statusList">
-                                <td>{{data.tradeData}}</td>
-                                <td>{{data.tradeLocat}}</td>
-                                <td>{{data.status}}</td>
-                                <td>{{data.orderNumCheck}}</td>
-                                <td>{{data.dealNumCheck}}</td>
-                                <td>{{data.moneyStatus}}</td>
-                                <td>{{data.moneyStatus}}</td>
-                                <td>{{data.moneyStatus}}</td>
+                            <tr ng-repeat="data in statusList">
+                                <td>{{data.broker_id}}</td>
+                                <td>{{data.user_id}}</td>
+                                <td>{{data.session_id}}</td>
+                                <td>{{data.front_id}}</td>
+                                <td>{{data.login_time}}</td>
+                                <td>{{data.ip_address}}</td>
+                                <td>{{data.mac_address}}</td>
+								<td>{{data.prod_info}}</td>
                             </tr>
                         </tbody>
                     </table>

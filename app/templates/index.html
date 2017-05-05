@@ -1,231 +1,232 @@
 <!doctype html>
 <html ng-app="myApp">
-	<head>
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<meta name="keywords" content="index">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<meta name="renderer" content="webkit">
-		<meta http-equiv="Cache-Control" content="no-siteapp" />
-		<link rel="icon" type="image/png" href="[[ url_for('static', filename='i/favicon.png', _external=True) ]]">
-		<link rel="apple-touch-icon-precomposed" href="[[ url_for('static', filename='i/app-icon72x72@2x.png', _external=True) ]]">
-		<meta name="apple-mobile-web-app-title" content="Amaze UI" />
-		<link rel="stylesheet" href="[[ url_for('static', filename='css/amazeui.min.css', _external=True) ]]" />
-		<link rel="stylesheet" href="[[ url_for('static', filename='css/admin.css', _external=True) ]]">
-		<link rel="stylesheet" href="[[ url_for('static', filename='css/app.css', _external=True) ]]">
-		{% if title %}
-		<title>[[title]] - Flask Test</title>
-		{% else %}
-		<title>Welcome to Flask Test</title>
-		{% endif %}
-	</head>
 
-	<body>
-	<!-- Modal Dialog Begin -->
-		<div class="am-modal am-modal-confirm" tabindex="-1" id="modifyPassword">
-			<div class="am-modal-dialog">
-				<div class="am-modal-hd" style="font-weight: bold; color: #000">修改密码</div>
-				<div class="am-modal-bd am-vertical-align">
-					<form class="am-center am-vertical-align-middle am-form" style="width: 400px">
-						<fieldset>
-							<input type="hidden" name="user_id" value="[[user_id]]" />
-							<input type="hidden" name="user_login" value="[[user_login]]" />
-							<div class="am-input-group" style="padding: 3px">
-								<span class="am-input-group-label"><i class="am-icon-lock am-icon-fw"></i></span>
-								<input id="oldPwd" type="password" class="am-form-field" placeholder=" 原始密码" required/>
-							</div>
-							<div class="am-input-group" style="padding: 3px">
-								<span class="am-input-group-label"><i class="am-icon-lock am-icon-fw"></i></span>
-								<input id="newPwd" type="password" class="am-form-field" placeholder=" 修改密码" required/>
-							</div>
-							<div class="am-input-group" style="padding: 3px">
-								<span class="am-input-group-label"><i class="am-icon-lock am-icon-fw"></i></span>
-								<input id="newPwdConfirm" type="password" class="am-form-field" placeholder=" 确认密码" required/>
-							</div>
-						</fieldset>
-					</form>
-				</div>
-				<div class="am-modal-footer">
-					<span class="am-modal-btn" data-am-modal-cancel>取消</span>
-					<span class="am-modal-btn" data-am-modal-confirm>确定</span>
-				</div>
-			</div>
-		</div>
-	<!-- Modal Dialog End -->
-		<header class="am-topbar am-topbar-inverse" style="margin-bottom: 10px">
-			<div class="am-topbar-brand">
-				<a href="#/dashboard" class="tpl-logo">
-					<img src="[[ url_for('static', filename='img/logo.png', _external=True) ]]" alt="">
-				</a>
-			</div>
-			<div class="am-collapse am-topbar-collapse" id="topbar-collapse">
-				<ul class="am-nav am-nav-pills am-topbar-nav am-topbar-left admin-header-list tpl-header-list">
-					<li>
-						<a class="am-dropdown-toggle tpl-header-list-link" href="javascript:;">
-							<span ng-switch="status" style="cursor: pointer">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="keywords" content="index">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="Cache-Control" content="no-siteapp" />
+    <link rel="icon" type="image/png" href="[[ url_for('static', filename='i/favicon.png', _external=True) ]]">
+    <link rel="apple-touch-icon-precomposed" href="[[ url_for('static', filename='i/app-icon72x72@2x.png', _external=True) ]]">
+    <meta name="apple-mobile-web-app-title" content="Amaze UI" />
+    <link rel="stylesheet" href="[[ url_for('static', filename='css/amazeui.min.css', _external=True) ]]" />
+    <link rel="stylesheet" href="[[ url_for('static', filename='css/admin.css', _external=True) ]]">
+    <link rel="stylesheet" href="[[ url_for('static', filename='css/app.css', _external=True) ]]">
+	{% if title %}
+    <title>[[title]] - Flask Test</title>
+    {% else %}
+    <title>Welcome to Flask Test</title>
+    {% endif %}
+</head>
+
+<body>
+    <!-- Modal Dialog Begin -->
+    <div class="am-modal am-modal-confirm" tabindex="-1" id="modifyPassword">
+        <div class="am-modal-dialog">
+            <div class="am-modal-hd" style="font-weight: bold; color: #000">修改密码</div>
+            <div class="am-modal-bd am-vertical-align">
+                <form class="am-center am-vertical-align-middle am-form" style="width: 400px">
+                    <fieldset>
+                        <input type="hidden" name="user_id" value="[[user_id]]" />
+                        <input type="hidden" name="user_login" value="[[user_login]]" />
+                        <div class="am-input-group" style="padding: 3px">
+                            <span class="am-input-group-label"><i class="am-icon-lock am-icon-fw"></i></span>
+                            <input id="oldPwd" type="password" class="am-form-field" placeholder=" 原始密码" required/>
+                        </div>
+                        <div class="am-input-group" style="padding: 3px">
+                            <span class="am-input-group-label"><i class="am-icon-lock am-icon-fw"></i></span>
+                            <input id="newPwd" type="password" class="am-form-field" placeholder=" 修改密码" required/>
+                        </div>
+                        <div class="am-input-group" style="padding: 3px">
+                            <span class="am-input-group-label"><i class="am-icon-lock am-icon-fw"></i></span>
+                            <input id="newPwdConfirm" type="password" class="am-form-field" placeholder=" 确认密码" required/>
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+            <div class="am-modal-footer">
+                <span class="am-modal-btn" data-am-modal-cancel>取消</span>
+                <span class="am-modal-btn" data-am-modal-confirm>确定</span>
+            </div>
+        </div>
+    </div>
+    <!-- Modal Dialog End -->
+    <header class="am-topbar am-topbar-inverse" style="margin-bottom: 10px">
+        <div class="am-topbar-brand">
+            <a href="#/dashboard" class="tpl-logo">
+                <img src="[[ url_for('static', filename='img/logo.png', _external=True) ]]" alt="">
+            </a>
+        </div>
+        <div class="am-collapse am-topbar-collapse" id="topbar-collapse">
+            <ul class="am-nav am-nav-pills am-topbar-nav am-topbar-left admin-header-list tpl-header-list">
+                <li>
+                    <a class="am-dropdown-toggle tpl-header-list-link" href="javascript:;">
+                        <span ng-switch="status" style="cursor: pointer">
 								<span class="am-badge am-round tpl-badge-success" ng-switch-when="normal">
 									<i class="am-icon-heartbeat am-icon-md"></i>
 									<span>正常</span>
-								</span>
-								<span class="am-badge am-round tpl-badge-warning" ng-switch-when="warning">
+                        </span>
+                        <span class="am-badge am-round tpl-badge-warning" ng-switch-when="warning">
 									<i class="am-icon-heartbeat am-icon-md"></i>
 									<span>警告</span>
-								</span>
-								<span class="am-badge am-round tpl-badge-danger" ng-switch-when="error">
+                        </span>
+                        <span class="am-badge am-round tpl-badge-danger" ng-switch-when="error">
 									<i class="am-icon-heartbeat am-icon-md"></i>
 									<span>错误</span>
-								</span>
-							</span>
-						</a>
-					</li>
-					<li ng-controller='taskControl' class="am-dropdown" data-am-dropdown data-am-dropdown-toggle>
-						<a class="am-dropdown-toggle tpl-header-list-link" href="javascript:;">
-							<span class="am-dropdown-toggle tpl-header-list-link" style="cursor: pointer">
+                        </span>
+                        </span>
+                    </a>
+                </li>
+                <li ng-controller='taskControl' class="am-dropdown" data-am-dropdown data-am-dropdown-toggle>
+                    <a class="am-dropdown-toggle tpl-header-list-link" href="javascript:;">
+                        <span class="am-dropdown-toggle tpl-header-list-link" style="cursor: pointer">
 								<span class="am-badge am-round tpl-badge-primary">
 									<i class="am-icon-tasks am-icon-md"></i>
 									<span>任务列表</span>
-									<span class="am-badge tpl-badge-primary am-round"></span>
-								</span>
-							</span>
-						</a>
-						<ul class="am-dropdown-content">
-							<li>当前有 0 项任务</li>
-						</ul>
-					</li>
-					<li ng-controller='messageControl' class="am-dropdown" data-am-dropdown data-am-dropdown-toggle>
-						<a class="am-dropdown-toggle tpl-header-list-link" href="javascript:;">
-							<span class="am-dropdown-toggle tpl-header-list-link" style="cursor: pointer">
+                        <span class="am-badge tpl-badge-primary am-round"></span>
+                        </span>
+                        </span>
+                    </a>
+                    <ul class="am-dropdown-content">
+                        <li>当前有 0 项任务</li>
+                    </ul>
+                </li>
+                <li ng-controller='messageControl' class="am-dropdown" data-am-dropdown data-am-dropdown-toggle>
+                    <a class="am-dropdown-toggle tpl-header-list-link" href="javascript:;">
+                        <span class="am-dropdown-toggle tpl-header-list-link" style="cursor: pointer">
 								<span class="am-badge am-round tpl-badge-secondary">
 									<i class="am-icon-commenting-o am-icon-md"></i>
 									<span>消息列表</span>
-									<span class="am-badge tpl-badge-secondary am-round">{{$root.Messages.public.length}}</span>
-								</span>
-							</span>
-						</a>
-						<ul class="am-dropdown-content">
-							<li><span>你有 {{$root.Messages.public.length}} 条消息</span></li>
-							<li ng-repeat="msg in $root.Messages.public track by $index">
-								<span>{{msg}}</span>
-							</li>
-						</ul>
-					</li>
-				</ul>
-				<ul class="am-nav am-nav-pills am-topbar-nav am-topbar-right admin-header-list tpl-header-list">
-					<li>
-						<a class="tpl-header-list-link" href="">
-							<span class="am-icon-cogs"></span> 设置中心</span>
-						</a>
-					</li>
-					<li ng-controller="userController" class="am-dropdown" data-am-dropdown data-am-dropdown-toggle>
-						<a class="am-dropdown-toggle tpl-header-list-link" href="">
-							<span class="tpl-header-list-user-nick">[[user_name]]</span>
-							<span class="tpl-header-list-user-ico">
+                        <span class="am-badge tpl-badge-secondary am-round">{{$root.Messages.public.length}}</span>
+                        </span>
+                        </span>
+                    </a>
+                    <ul class="am-dropdown-content">
+                        <li><span>你有 {{$root.Messages.public.length}} 条消息</span></li>
+                        <li ng-repeat="msg in $root.Messages.public track by $index">
+                            <span>{{msg}}</span>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+            <ul class="am-nav am-nav-pills am-topbar-nav am-topbar-right admin-header-list tpl-header-list">
+                <li>
+                    <a class="tpl-header-list-link" href="">
+                        <span class="am-icon-cogs"></span> 设置中心</span>
+                    </a>
+                </li>
+                <li ng-controller="userController" class="am-dropdown" data-am-dropdown data-am-dropdown-toggle>
+                    <a class="am-dropdown-toggle tpl-header-list-link" href="">
+                        <span class="tpl-header-list-user-nick">[[user_name]]</span>
+                        <span class="tpl-header-list-user-ico">
 								<img src="[[ url_for('static', filename='img/user01.png', _external=True) ]]">
 							</span>
-						</a>
-						<ul class="am-dropdown-content">
-							<li>
-								<a href="">
-									<i class="am-icon-bell-o am-icon-fw"></i>
-									<span style="margin-left: 3px">用户属性</span>
-								</a>
-							</li>
-							<li>
-								<a ng-click="ModifyPassword()">
-									<i class="am-icon-cog  am-icon-fw"></i>
-									<span style="margin-left: 3px">修改密码</span>
-								</a>
-							</li>
-							<li>
-								<a href="[[ url_for('auth.logout', _external=True) ]]">
-									<i class="am-icon-power-off  am-icon-fw"></i>
-									<span style="margin-left: 3px">注销</span>
-								</a>
-							</li>
-						</ul>
-					</li>
-				</ul>
-			</div>
-		</header>
+                    </a>
+                    <ul class="am-dropdown-content">
+                        <li>
+                            <a href="">
+                                <i class="am-icon-bell-o am-icon-fw"></i>
+                                <span style="margin-left: 3px">用户属性</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a ng-click="ModifyPassword()">
+                                <i class="am-icon-cog  am-icon-fw"></i>
+                                <span style="margin-left: 3px">修改密码</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="[[ url_for('auth.logout', _external=True) ]]">
+                                <i class="am-icon-power-off  am-icon-fw"></i>
+                                <span style="margin-left: 3px">注销</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </header>
 
-		<aside class="tpl-page-container tpl-page-header-fixed" ng-controller="sideBarCtrl">
-			<div class="tpl-left-nav tpl-left-nav-hover" style="display: none; width: 55px;">
-				<div class="tpl-left-nav-title">
-					<div class="am-icon-list tpl-header-nav-hover-ico am-fl am-margin-right" style="cursor: pointer">
-					</div>
-				</div>
-				<div class="tpl-left-nav-list" style="width: 55px;">
-					<ul class="tpl-left-nav-menu">
-						<li class="tpl-left-nav-item am-dropdown" ng-repeat="data in listName"  ng-mouseover="showListIcon = true"
-							ng-mouseleave="showListIcon = false" data-am-dropdown>
-							<div>
-								<a href="{{data.Url}}" class="nav-link am-dropdown-toggle" data-am-dropdown-toggle>
-									<i class="{{data.icon}}" ng-click="showListChange(data.id)"></i>
-								</a>
-								<ul class="am-dropdown-content" id="second{{data.id}}" ng-if="data.isSecond" style="display: block" ng-show="showListIcon">
-									<li style="margin-left: 15px; font-size: 10pt; font-weight: bold; color: #7FB0DA;">
-										{{data.name}}
-									</li>
-									<li ng-repeat="children in data.secondName" ng-click="operateChange(children.id)">
-										<a href="{{children.Url}}">{{children.name}}</a>
-									</li>
-								</ul>
-							</div>
-						</li>
-					</ul>
-				</div>
-			</div>
-			
-			<div class="tpl-left-nav tpl-left-nav-hover">
-				<div class="tpl-left-nav-title">
-					<div class="am-icon-list tpl-header-nav-hover-ico am-fr am-margin-right"  style="cursor: pointer">
-					</div>
-				</div>
-				<div class="tpl-left-nav-list">
-					<ul class="tpl-left-nav-menu">
-						<li class="tpl-left-nav-item" ng-repeat="data in listName">
-							<div class="nav-link tpl-left-nav-link-list">
-								<a href="{{data.Url}}" ng-click="showListChange(data.id)">
-									<i class="{{data.icon}} am-icon-fw"></i>
-									<span ng-bind="data.name"></span>
-								</a>
-								<span ng-switch="data.isShow">
+    <aside class="tpl-page-container tpl-page-header-fixed" ng-controller="sideBarCtrl">
+        <div class="tpl-left-nav tpl-left-nav-hover" style="display: none; width: 55px;">
+            <div class="tpl-left-nav-title">
+                <div class="am-icon-list tpl-header-nav-hover-ico am-fl am-margin-right" style="cursor: pointer">
+                </div>
+            </div>
+            <div class="tpl-left-nav-list" style="width: 55px;">
+                <ul class="tpl-left-nav-menu">
+                    <li class="tpl-left-nav-item am-dropdown" ng-repeat="data in listName" ng-mouseover="showListIcon = true" ng-mouseleave="showListIcon = false" data-am-dropdown>
+                        <div>
+                            <a href="{{data.Url}}" class="nav-link am-dropdown-toggle" data-am-dropdown-toggle>
+                                <i class="{{data.icon}}" ng-click="showListChange(data.id)"></i>
+                            </a>
+                            <ul class="am-dropdown-content" id="second{{data.id}}" ng-if="data.isSecond" style="display: block" ng-show="showListIcon">
+                                <li style="margin-left: 15px; font-size: 10pt; font-weight: bold; color: #7FB0DA;">
+                                    {{data.name}}
+                                </li>
+                                <li ng-repeat="children in data.secondName" ng-click="operateChange(children.id)">
+                                    <a href="{{children.Url}}">{{children.name}}</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="tpl-left-nav tpl-left-nav-hover">
+            <div class="tpl-left-nav-title">
+                <div class="am-icon-list tpl-header-nav-hover-ico am-fr am-margin-right" style="cursor: pointer">
+                </div>
+            </div>
+            <div class="tpl-left-nav-list">
+                <ul class="tpl-left-nav-menu">
+                    <li class="tpl-left-nav-item" ng-repeat="data in listName">
+                        <div class="nav-link tpl-left-nav-link-list">
+                            <a href="{{data.Url}}" ng-click="showListChange(data.id)">
+                                <i class="{{data.icon}} am-icon-fw"></i>
+                                <span ng-bind="data.name"></span>
+                            </a>
+                            <span ng-switch="data.isShow">
 									<i ng-class="{true: 'am-icon-angle-right tpl-left-nav-more-ico am-fr am-margin-right',false: ''}[data.isSecond]" style="cursor: pointer" ng-click="showListChild(data.id)" ng-switch-when="false"></i>
 									<i ng-class="{true: 'am-icon-angle-down tpl-left-nav-more-ico am-fr am-margin-right',false: ''}[data.isSecond]" style="cursor: pointer" ng-click="showListChild(data.id)" ng-switch-when="true"></i>
 								</span>
-							</div>
-							<ul class="tpl-left-nav-sub-menu" id="{{data.id}}" ng-if="data.isSecond" style="display: block" ng-show="data.isShow">
-								<li ng-repeat="children in data.secondName" ng-click="operateChange(children.id)" style="vertical-align: center;">
-									<a href="{{children.Url}}">
-										<span class="am-icon-circle">&nbsp&nbsp{{children.name}}</span>
-									</a>
-								</li>
-							</ul>
-                    	</li>
-					</ul>
-				</div>
-			</div>
-			
-			<div class="row" ng-if="clearTabList()">
-				<ul class="am-tabs-nav am-nav am-nav-tabs">
-					<li ng-repeat="data in tabList" class="{{data.active}}" style="margin-right: 5px">
-						<span class="am-icon-close" style="position: absolute;left: 77%" ng-click="tabDelete(data.id)"></span>
-						<a href="{{data.Url}}" ng-bind="data.name" ng-click="tabChangeActive(data.id)" style="display: inline-block;z-index: 100; padding-right: 20px;"></a>
-					</li>
-				</ul>
-			</div>
-		</aside>
-		
-		<div ng-view>
-		</div>
+                        </div>
+                        <ul class="tpl-left-nav-sub-menu" id="{{data.id}}" ng-if="data.isSecond" style="display: block" ng-show="data.isShow">
+                            <li ng-repeat="children in data.secondName" ng-click="operateChange(children.id)" style="vertical-align: center;">
+                                <a href="{{children.Url}}">
+                                    <span class="am-icon-circle">&nbsp&nbsp{{children.name}}</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
 
-		<script src="[[ url_for('static', filename='js/jquery.min.js', _external=True) ]]"></script>
-		<script src="[[ url_for('static', filename='js/angular.min.js', _external=True) ]]"></script>
-		<script src="[[ url_for('static', filename='js/angular-route.js', _external=True) ]]"></script>
-		<script src="[[ url_for('static', filename='js/amazeui.min.js', _external=True) ]]"></script>
-		<script src="[[ url_for('static', filename='js/echarts.min.js', _external=True) ]]"></script>
-		<script src="[[ url_for('static', filename='js/app.js', _external=True) ]]" type="text/javascript" charset="utf-8"></script>
-		<script src="[[ url_for('static', filename='js/myApp.js', _external=True) ]]" type="text/javascript" charset="utf-8"></script>
-	</body>
+        <div class="row" ng-if="clearTabList()">
+            <ul class="am-tabs-nav am-nav am-nav-tabs">
+                <li ng-repeat="data in tabList" class="{{data.active}}" style="margin-right: 5px">
+                    <span class="am-icon-close" style="position: absolute;left: 77%" ng-click="tabDelete(data.id)"></span>
+                    <a href="{{data.Url}}" ng-bind="data.name" ng-click="tabChangeActive(data.id)" style="display: inline-block;z-index: 100; padding-right: 20px;"></a>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    <div ng-view>
+    </div>
+
+    <script src="[[ url_for('static', filename='js/jquery.min.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/angular.min.js', _external=True) ]]"></script>
+	<script src="[[ url_for('static', filename='js/angular-route.min.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/amazeui.min.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/echarts.min.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/dataTool.min.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/app.js', _external=True) ]]" type="text/javascript" charset="utf-8"></script>
+    <script src="[[ url_for('static', filename='js/myApp.js', _external=True) ]]" type="text/javascript" charset="utf-8"></script>
+</body>
 
 </html>
