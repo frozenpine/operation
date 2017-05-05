@@ -1,6 +1,8 @@
 # -*- coding: UTF-8 -*-
+from os import path
+from sys import argv
 from app.models import Server, TradeSystem
-from flask import url_for
+from flask import url_for, request, redirect
 from flask_restful import Resource
 
 class UIDataApi(Resource):
@@ -31,3 +33,27 @@ class UIDataApi(Resource):
             }
             rtn.append(system)
         return rtn
+
+    def map(self):
+        try:
+            name = request.values['name']
+        except KeyError:
+            return {
+                'message': 'no name specified.'
+            }, 404
+        uri = url_for('static', filename='json/map/{}.json'.format(name))
+        base_path = path.dirname(argv[0])
+        abs_path = path.join(base_path, 'app{}'.format(uri))
+        if path.isfile(abs_path):
+            return redirect(uri)
+        else:
+            return {
+                'message': 'no map data for {}.'.format(name)
+            }, 404
+
+    def idc(self):
+        return [
+            {'name': '上海', 'value': [121.48, 31.22, 20]},
+            {'name': '大连', 'value': [121.46, 39.03, 15]},
+            {'name': '郑州', 'value': [113.65, 34.76, 10]},
+        ]

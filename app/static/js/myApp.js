@@ -42,6 +42,8 @@ var app = angular.module('myApp', ['ngRoute'], function($provide) {
                 case "public":
                     $rootScope.$apply(function() {
                         $rootScope.Messages.public.push(msg.data);
+                        $rootScope.AlertMessage = msg.data;
+                        $rootScope.triggered = true;
                     });
                     break;
                 default:
@@ -453,7 +455,7 @@ app.filter('KB2', function() {
     };
 });
 app.filter('percent', function() {
-    return function(value, len) {
+    return function(value, len, multi) {
         var num = parseFloat(value);
         if (isNaN(num)) {
             return "无数据";
@@ -462,7 +464,11 @@ app.filter('percent', function() {
         if (len !== undefined) {
             fix = len;
         }
-        return num.toFixed(fix).toString() + " %";
+        var multiplier = 1;
+        if (multi !== undefined && multi !== null) {
+            multiplier = multi;
+        }
+        return (num * multiplier).toFixed(fix).toString() + " %";
     };
 });
 app.filter('mask', function() {
@@ -515,184 +521,251 @@ app.filter('exe_result', function() {
         }
     };
 });
-app.directive('echart', [function() {
-    return {
-        restrict: 'AE',
-        scope: {
-            echart: '='
-        },
-        link: link
-    };
-
-    function link(scope, element, attr) {
-        var myChart = echarts.init(element[0]);
-        // 指定图表的配置项和数据
-        var defaultOption = {
-            title: {
-                text: '内存使用率',
-                x: 'center'
-            },
-            tooltip: {
-                trigger: 'item',
-                formatter: "{a} <br/>{b} : {c} ({d}%)"
-            },
-            series: [{
-                name: '内存使用',
-                type: 'pie',
-                radius: '55%',
-                center: ['50%', '60%'],
-                data: [{
-                    value: 1000,
-                    name: '已使用内存(MB)'
-                }, {
-                    value: 3100,
-                    name: '剩余内存(MB)'
-                }],
-                itemStyle: {
-                    emphasis: {
-                        shadowBlur: 10,
-                        shadowOffsetX: 0,
-                        shadowColor: 'rgba(0, 0, 0, 0.5)'
-                    }
-                }
-            }]
-        };
-        // 使用刚指定的配置项和数据显示图表。
-        myChart.setOption(defaultOption);
-
-        // 双向传值
-        // scope.$watch('echart', function(n, o) {
-        //  if (n === o || !n) return;
-        //  myChart.setOption(n);
-        // });
-
-        //当浏览器窗口发生变化的时候调用div的resize方法
-        window.addEventListener('resize', chartResize);
-
-        scope.$on('$destory', function() {
-            window.removeEventListener('resize', chartResize);
-        });
-
-        function chartResize() {
-            myChart.resize();
-        }
-    }
-}]);
-app.directive('echart2', [function() {
-    return {
-        restrict: 'AE',
-        scope: {
-            echart: '='
-        },
-        link: link
-    };
-
-    function link(scope, element, attr) {
-        var myChart = echarts.init(element[0]);
-        // 指定图表的配置项和数据
-        var defaultOption = {
-            title: {
-                text: '内存使用率',
-                x: 'center'
-            },
-            tooltip: {
-                trigger: 'item',
-                formatter: "{a} <br/>{b} : {c} ({d}%)"
-            },
-            series: [{
-                name: '内存使用',
-                type: 'pie',
-                radius: '55%',
-                center: ['50%', '60%'],
-                data: [{
-                    value: 2000,
-                    name: '已使用内存(MB)'
-                }, {
-                    value: 3100,
-                    name: '剩余内存(MB)'
-                }],
-                itemStyle: {
-                    emphasis: {
-                        shadowBlur: 10,
-                        shadowOffsetX: 0,
-                        shadowColor: 'rgba(0, 0, 0, 0.5)'
-                    }
-                }
-            }]
-        };
-        // 使用刚指定的配置项和数据显示图表。
-        myChart.setOption(defaultOption);
-
-        // 双向传值
-        // scope.$watch('echart', function(n, o) {
-        //  if (n === o || !n) return;
-        //  myChart.setOption(n);
-        // });
-
-        //当浏览器窗口发生变化的时候调用div的resize方法
-        window.addEventListener('resize', chartResize);
-
-        scope.$on('$destory', function() {
-            window.removeEventListener('resize', chartResize);
-        });
-
-        function chartResize() {
-            myChart.resize();
-        }
-    }
-}]);
 app.directive('relamap', [function() {
     return {
-        restrict: 'EA',
-        scope: {
-            echart: '='
-        },
+        restrict: 'A',
         link: link
     };
 
     function link(scope, element, attr) {
         var myChart = echarts.init(element[0]);
+        myChart.showLoading();
+        var myData = [{
+            name: 'KVM',
+            symbolSize: 30,
+            draggable: true,
+            category: 'KVM'
+        }, {
+            name: '办公系统',
+            symbolSize: 30,
+            draggable: true,
+            category: '办公系统'
+        }, {
+            name: 'QDIAM',
+            symbolSize: 30,
+            draggable: true,
+            category: 'QDIAM'
+        }, {
+            name: 'nas26',
+            symbolSize: 25,
+            draggable: true,
+            category: 'KVM'
+        }, {
+            name: 'kvm23',
+            symbolSize: 25,
+            draggable: true,
+            category: 'KVM'
+        }, {
+            name: 'confluence',
+            symbolSize: 25,
+            draggable: true,
+            category: '办公系统'
+        }, {
+            name: 'jira',
+            symbolSize: 25,
+            draggable: true,
+            category: '办公系统'
+        }, {
+            name: '行情子系统',
+            symbolSize: 25,
+            draggable: true,
+            category: 'QDIAM'
+        }, {
+            name: '交易子系统',
+            symbolSize: 25,
+            draggable: true,
+            category: 'QDIAM'
+        }, {
+            name: '风控子系统',
+            symbolSize: 25,
+            draggable: true,
+            category: 'QDIAM'
+        }, {
+            name: '柜台子系统',
+            symbolSize: 25,
+            draggable: true,
+            category: 'QDIAM'
+        }, {
+            name: 'qmarket 1',
+            symbolSize: 15,
+            draggable: true,
+            category: 'QDIAM'
+        }, {
+            name: 'qmarket 2',
+            symbolSize: 15,
+            draggable: true,
+            category: 'QDIAM'
+        }, {
+            name: 'qicegateway 1',
+            symbolSize: 15,
+            draggable: true,
+            category: 'QDIAM'
+        }, {
+            name: 'qicegateway 2',
+            symbolSize: 15,
+            draggable: true,
+            category: 'QDIAM'
+        }, {
+            name: 'qtrade',
+            symbolSize: 15,
+            draggable: true,
+            category: 'QDIAM'
+        }, {
+            name: 'qdata',
+            symbolSize: 15,
+            draggable: true,
+            category: 'QDIAM'
+        }, {
+            name: 'qquery',
+            symbolSize: 15,
+            draggable: true,
+            category: 'QDIAM'
+        }, {
+            name: 'qmdb',
+            symbolSize: 15,
+            draggable: true,
+            category: 'QDIAM'
+        }, {
+            name: 'qsdb',
+            symbolSize: 15,
+            draggable: true,
+            category: 'QDIAM'
+        }, {
+            name: 'mysql',
+            symbolSize: 15,
+            draggable: true,
+            category: 'QDIAM'
+        }, {
+            name: 'tomcat',
+            symbolSize: 15,
+            draggable: true,
+            category: 'QDIAM'
+        }];
 
-        function getVirtulData(year) {
-            year = year || '2017';
-            var date = +echarts.number.parseDate(year + '-01-01');
-            var end = +echarts.number.parseDate(year + '-12-31');
-            var dayTime = 3600 * 24 * 1000;
-            var data = [];
-            for (var time = date; time <= end; time += dayTime) {
-                data.push([
-                    echarts.format.formatTime('yyyy-MM-dd', time),
-                    Math.floor(Math.random() * 10000)
-                ]);
-            }
-            return data;
-        }
+        var myLink = [{
+            source: 'KVM',
+            target: 'kvm23'
+        }, {
+            source: 'KVM',
+            target: 'nas26'
+        }, {
+            source: '办公系统',
+            target: 'confluence'
+        }, {
+            source: '办公系统',
+            target: 'jira'
+        }, {
+            source: 'QDIAM',
+            target: '行情子系统'
+        }, {
+            source: 'QDIAM',
+            target: '交易子系统'
+        }, {
+            source: 'QDIAM',
+            target: '风控子系统'
+        }, {
+            source: 'QDIAM',
+            target: '柜台子系统'
+        }, {
+            source: '行情子系统',
+            target: 'qmarket 1'
+        }, {
+            source: '行情子系统',
+            target: 'qmarket 2'
+        }, {
+            source: '风控子系统',
+            target: 'qicegateway 1'
+        }, {
+            source: '风控子系统',
+            target: 'qicegateway 2'
+        }, {
+            source: '交易子系统',
+            target: 'qtrade'
+        }, {
+            source: '交易子系统',
+            target: 'qdata'
+        }, {
+            source: '交易子系统',
+            target: 'qquery'
+        }, {
+            source: '交易子系统',
+            target: 'qmdb'
+        }, {
+            source: '交易子系统',
+            target: 'qsdb'
+        }, {
+            source: '柜台子系统',
+            target: 'mysql'
+        }, {
+            source: '柜台子系统',
+            target: 'tomcat'
+        }];
         var option = {
-            visualMap: {
-                show: false,
-                min: 0,
-                max: 10000
+            backgroundColor: '#fff',
+            title: {
+                text: "系统关系图",
+                top: "top",
+                left: "center"
             },
-            calendar: {
-                range: '2017'
+            legend: [{
+                tooltip: {
+                    show: true
+                },
+                selectedMode: 'false',
+                bottom: 20,
+                data: ['KVM', '办公系统', 'QDIAM']
+            }],
+            toolbox: {
+                show: true,
+                feature: {
+                    dataView: { show: true, readOnly: true },
+                    restore: { show: true },
+                    saveAsImage: { show: true }
+                }
             },
-            series: {
-                type: 'heatmap',
-                coordinateSystem: 'calendar',
-                data: getVirtulData(2017)
-            }
+            animationDuration: 3000,
+            animationEasingUpdate: 'quinticInOut',
+            series: [{
+                name: 'Quantdo',
+                type: 'graph',
+                layout: 'force',
+                force: {
+                    repulsion: 50,
+                    gravity: 0.1,
+                    edgeLength: [10, 50],
+                },
+                draggable: true,
+                data: myData,
+                links: myLink,
+                categories: [
+                    { name: 'KVM' },
+                    { name: '办公系统' },
+                    { name: 'QDIAM' }
+                ],
+                focusNodeAdjacency: true,
+                roam: true,
+                label: {
+                    normal: {
+                        show: true,
+                        position: 'top'
+                    }
+                },
+                lineStyle: {
+                    normal: {
+                        color: 'source',
+                        curveness: 0.3,
+                        type: "solid"
+                    }
+                }
+            }]
         };
-        // 使用刚指定的配置项和数据显示图表。
         myChart.setOption(option);
+        myChart.hideLoading();
 
-        // 双向传值
-        // scope.$watch('echart', function(n, o) {
-        //  if (n === o || !n) return;
-        //  myChart.setOption(n);
-        // });
-
-        //当浏览器窗口发生变化的时候调用div的resize方法
         window.addEventListener('resize', chartResize);
+        $(element[0]).resize(function() {
+            chartResize();
+        });
 
         scope.$on('$destory', function() {
             window.removeEventListener('resize', chartResize);
@@ -700,6 +773,96 @@ app.directive('relamap', [function() {
 
         function chartResize() {
             myChart.resize();
+        }
+    }
+}]);
+app.directive('idcmap', [function() {
+    return {
+        restrict: 'A',
+        link: link
+    };
+
+    function link(scope, element, attr) {
+        $.get('api/UI/map?name=china', function(chinaJson) {
+            echarts.registerMap('china', chinaJson);
+            myChart = echarts.init(element[0]);
+            myChart.showLoading();
+            myChart.setOption({
+                backgroundColor: '#fff',
+                title: {
+                    text: '数据中心分布',
+                    left: '10px',
+                    top: '10px'
+                },
+                tooltip: {
+                    trigger: 'item',
+                },
+                legend: {
+                    orient: 'vertical',
+                    y: 'bottom',
+                    x: 'left',
+                    data: ['数据中心'],
+                    textStyle: {
+                        color: '#111'
+                    }
+                },
+                geo: {
+                    map: 'china',
+                    itemStyle: {
+                        normal: {
+                            borderColor: '#111'
+                        }
+                    }
+                }
+            });
+            window.addEventListener('resize', chartResize);
+            $(element[0]).resize(function() {
+                chartResize();
+            });
+
+            scope.$on('$destory', function() {
+                window.removeEventListener('resize', chartResize);
+            });
+
+            function chartResize() {
+                myChart.resize();
+            }
+            getIDC();
+        });
+
+        function getIDC() {
+            $.get('api/UI/idc', function(idcs) {
+                myChart.setOption({
+                    series: [{
+                        name: '数据中心',
+                        type: 'effectScatter',
+                        coordinateSystem: 'geo',
+                        showEffectOn: 'emphasis',
+                        rippleEffect: {
+                            period: 4,
+                            scale: 3,
+                            brushType: 'fill'
+                        },
+                        label: {
+                            normal: {
+                                show: true,
+                                position: 'right',
+                                formatter: '{b}'
+                            }
+                        },
+                        symbolSize: function(val) {
+                            return val[2];
+                        },
+                        itemStyle: {
+                            normal: {
+                                color: '#ddb926'
+                            }
+                        },
+                        data: idcs
+                    }]
+                });
+                myChart.hideLoading();
+            });
         }
     }
 }]);

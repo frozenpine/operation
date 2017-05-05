@@ -4,8 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="keywords" content="index">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta name="renderer" content="webkit">
     <meta http-equiv="Cache-Control" content="no-siteapp" />
     <link rel="icon" type="image/png" href="[[ url_for('static', filename='i/favicon.png', _external=True) ]]">
@@ -148,7 +147,10 @@
             </ul>
         </div>
     </header>
-
+	<div class="am-alert am-alert-danger" style="margin-top: 0px" ng-show="$root.triggered" ng-init="$root.triggered=false">
+		<button type="button" class="am-close" ng-click="$root.triggered=!$root.triggered">&times;</button>
+		<p class="am-text-center">{{$root.AlertMessage}}</p>
+	</div>
     <aside class="tpl-page-container tpl-page-header-fixed" ng-controller="sideBarCtrl">
         <div class="tpl-left-nav tpl-left-nav-hover" style="display: none; width: 55px;">
             <div class="tpl-left-nav-title">
@@ -220,6 +222,7 @@
     </div>
 
     <script src="[[ url_for('static', filename='js/jquery.min.js', _external=True) ]]"></script>
+	<script src="[[ url_for('static', filename='js/jquery.ba-resize.min.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/angular.min.js', _external=True) ]]"></script>
 	<script src="[[ url_for('static', filename='js/angular-route.min.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/amazeui.min.js', _external=True) ]]"></script>
