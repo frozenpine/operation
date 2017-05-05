@@ -313,12 +313,17 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', 'globalVar',
             });
     };
 }]);
-app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootScope', '$interval', function($scope, $http, globalVar, $rootScope, $interval) {
+app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootScope', '$interval', '$timeout', function($scope, $http, globalVar, $rootScope, $interval, $timeout) {
     $scope.loginShowDetail = true;
     $scope.$watch('$rootScope.LoginStatics', function(newValue, oldValue) {
+        /*
         $scope.$apply(function() {
             $scope.loginStatics = $rootScope.LoginStatics[globalVar.sysid];
         });
+        */
+        $timeout(function() {
+            $scope.loginStatics = $rootScope.LoginStatics[globalVar.sysid];
+        }, 0);
     }, true);
     $scope.CheckLoginLog = function() {
         $scope.checking = true;
