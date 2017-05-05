@@ -114,6 +114,7 @@ app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
                     });
                 }
                 $scope.checking = false;
+                console.log(response);
             })
             .error(function(response) {
                 console.log(response);
