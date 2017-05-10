@@ -498,7 +498,7 @@ ul.tpl-dropdown-content li>a.tpl-dropdown-content-message:last-child {
 }
 
 .tpl-left-nav {
-    min-height: 560px;
+    min-height: 540px;
     width: 235px;
     float: left;
     background: #fff;

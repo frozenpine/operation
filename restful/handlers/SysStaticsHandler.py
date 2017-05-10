@@ -1,7 +1,10 @@
 # -*- coding: UTF-8 -*-
 from flask import abort
 from flask_restful import Resource
-from app.models import TradeSystem, TradeProcess, Server
+from app.models import (
+    TradeSystem, TradeProcess, Server,
+    DataSource, DatasourceModel, DataSourceType
+)
 from SysManager import logging
 from SysManager.configs import SSHConfig
 from SysManager.executor import Executor
@@ -12,6 +15,7 @@ from sqlalchemy.sql import text
 import re
 import threading
 import json
+from app import db_list
 
 class ServerList(object):
     def __init__(self):
@@ -274,33 +278,81 @@ class LoginListApi(Resource):
         sys = TradeSystem.find(**kwargs)
         rtn = []
         if sys:
-            try:
-                sys_db = create_engine(sys.db_uri)
-            except Exception:
-                return {
-                    'message': "System({}) didn't configured a db uri".format(sys.name)
-                }, 404
+            '''
+            if db_list.has_key(sys.data_source):
+                sys_db = db_list[sys.id]
             else:
-                results = sys_db.execute(text("""
-                    SELECT seat.seat_name, sync.tradingday, sync.frontaddr, sync.seatid 
-                    FROM t_seat seat, t_sync_seat sync , t_capital_account 
-                    WHERE seat.seat_id = t_capital_account.seat_id 
-                        AND sync.seatid=t_capital_account.account_id 
-                        AND sync.isactive = TRUE""")).fetchall()
-                for result in results:
-                    rtn.append({
-                        'seat_name': result[0],
-                        'trading_day': result[1],
-                        'front_addr': result[2],
-                        'seat_id': result[3],
-                        'seat_status': u'未连接',
-                        'conn_count': 0,
-                        'login_success': 0,
-                        'login_fail': 0,
-                        'disconn_count': 0
-                    })
-                sys_db.dispose()
+                try:
+                    sys_db = create_engine(sys.db_uri).connect()
+                    db_list[sys.id] = sys_db
+                except Exception:
+                    return {
+                        'message': "System({}) didn't configured a db uri".format(sys.name)
+                    }, 404
+            results = sys_db.execute(text("""
+                SELECT seat.seat_name, sync.tradingday, sync.frontaddr, sync.seatid 
+                FROM t_seat seat, t_sync_seat sync , t_capital_account 
+                WHERE seat.seat_id = t_capital_account.seat_id 
+                    AND sync.seatid=t_capital_account.account_id 
+                    AND sync.isactive = TRUE""")).fetchall()
+            for result in results:
+                rtn.append({
+                    'seat_name': result[0],
+                    'trading_day': result[1],
+                    'front_addr': result[2],
+                    'seat_id': result[3],
+                    'seat_status': u'未连接',
+                    'conn_count': 0,
+                    'login_success': 0,
+                    'login_fail': 0,
+                    'disconn_count': 0
+                })
             return rtn
+            '''
+            src = DataSource.query.filter(
+                DataSource.src_type == DataSourceType.SQL,
+                DataSource.src_model == DatasourceModel.DbSeat,
+                DataSource.sys_id == sys.id
+            ).first()
+            if src:
+                sys_db = db_list.get(src.source['uri'])
+                if not sys_db:
+                    try:
+                        sys_db = create_engine(src.source['uri']).connect()
+                    except Exception:
+                        return {
+                            'message': 'faild to connect to database.'
+                        }, 404
+                    else:
+                        db_list[src.source['uri']] = sys_db
+                results = sys_db.execute(text(src.source['sql'])).fetchall()
+                for result in results:
+                    tmp = {}
+                    for idx in xrange(len(src.source['formatter'])):
+                        try:
+                            tmp[src.source['formatter'][idx]['key']] = unicode(result[idx])
+                        except IndexError:
+                            tmp[src.source['formatter'][idx]['key']] = \
+                                src.source['formatter'][idx]['default']
+                    rtn.append(tmp)
+                    '''
+                    rtn.append({
+                        src.source['formatter'][0]: result[0],
+                        src.source['formatter'][1]: result[1],
+                        src.source['formatter'][2]: result[2],
+                        src.source['formatter'][3]: result[3],
+                        src.source['formatter'][4]: u'未连接',
+                        src.source['formatter'][5]: 0,
+                        src.source['formatter'][6]: 0,
+                        src.source['formatter'][7]: 0,
+                        src.source['formatter'][8]: 0
+                    })
+                    '''
+                return rtn
+            else:
+                return {
+                    'message': 'no data source configured for system {}'.format(sys.name)
+                }, 404
         else:
             return {
                 'message': 'system not found'
@@ -393,32 +445,67 @@ class UserSessionListApi(Resource):
         sys = TradeSystem.find(**kwargs)
         rtn = []
         if sys:
-            try:
-                sys_db = create_engine(sys.db_uri)
-            except Exception:
-                return {
-                    'message': "System({}) didn't configured a db uri".format(sys.name)
-                }, 404
+            '''
+            if db_list.has_key(sys.id):
+                sys_db = db_list[sys.id]
             else:
-                results = sys_db.execute(text("""
-                    SELECT brokerid, userid, usertype, sessionid, frontid,
-                        logintime, ipaddress, macaddress, userproductinfo
-                    FROM t_oper_usersession
-                """)).fetchall()
-                for result in results:
-                    rtn.append({
-                        'broker_id': result[0],
-                        'user_id': result[1],
-                        'user_type': result[2],
-                        'session_id': result[3],
-                        'front_id': result[4],
-                        'login_time': result[5],
-                        'ip_address': result[6],
-                        'mac_address': result[7],
-                        'prod_info': result[8]
-                    })
-                sys_db.dispose()
+                try:
+                    sys_db = create_engine(sys.db_uri).connect()
+                    db_list[sys.id] = sys_db
+                except Exception:
+                    return {
+                        'message': "System({}) didn't configured a db uri".format(sys.name)
+                    }, 404
+            results = sys_db.execute(text("""
+                SELECT brokerid, userid, usertype, sessionid, frontid,
+                    logintime, ipaddress, macaddress, userproductinfo, 
+                FROM t_oper_usersession
+            """)).fetchall()
+            for result in results:
+                rtn.append({
+                    'broker_id': unicode(result[0]),
+                    'user_id': unicode(result[1]),
+                    'user_type': unicode(result[2]),
+                    'session_id': unicode(result[3]),
+                    'front_id': unicode(result[4]),
+                    'login_time': unicode(result[5]),
+                    'ip_address': unicode(result[6]),
+                    'mac_address': unicode(result[7]),
+                    'prod_info': unicode(result[8])
+                })
             return rtn
+            '''
+            src = DataSource.query.filter(
+                DataSource.src_type == DataSourceType.SQL,
+                DataSource.src_model == DatasourceModel.DbSession,
+                DataSource.sys_id == sys.id
+            ).first()
+            if src:
+                sys_db = db_list.get(src.source['uri'])
+                if not sys_db:
+                    try:
+                        sys_db = create_engine(src.source['uri']).connect()
+                    except Exception:
+                        return {
+                            'message': 'failed to connect to database.'
+                        }, 404
+                    else:
+                        db_list[src.source['uri']] = sys_db
+                results = sys_db.execute(text(src.source['sql'])).fetchall()
+                for result in results:
+                    tmp = {}
+                    for idx in xrange(len(src.source['formatter'])):
+                        try:
+                            tmp[src.source['formatter'][idx]['key']] = unicode(result[idx])
+                        except IndexError:
+                            tmp[src.source['formatter'][idx]['key']] = \
+                                src.source['formatter'][idx]['default']
+                    rtn.append(tmp)
+                return rtn
+            else:
+                return {
+                    'message': 'no data source for system {}'.format(sys.name)
+                }, 404
         else:
             return {
                 'message': 'system not found'

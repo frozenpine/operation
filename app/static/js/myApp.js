@@ -299,6 +299,7 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', 'globalVar',
         }
         for (var i = 0; i <= index; i++) {
             $scope.opList.details[i].skip = false;
+            $scope.opList.details[i].enabled = true;
         }
     };
     $scope.execute = function(index, id) {
@@ -318,12 +319,8 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', 'globalVar',
 }]);
 app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootScope', '$interval', '$timeout', function($scope, $http, globalVar, $rootScope, $interval, $timeout) {
     $scope.loginShowDetail = true;
+    $scope.loginStaticsShow = false;
     $scope.$watch('$rootScope.LoginStatics', function(newValue, oldValue) {
-        /*
-        $scope.$apply(function() {
-            $scope.loginStatics = $rootScope.LoginStatics[globalVar.sysid];
-        });
-        */
         $timeout(function() {
             $scope.loginStatics = $rootScope.LoginStatics[globalVar.sysid];
         }, 0);
@@ -361,21 +358,25 @@ app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootSco
             globalVar.intervals.push(loginStaticInterval);
         })
         .error(function(response) {
-            $scope.loginStaticsShow = false;
             console.log(response);
         });
 }]);
 app.controller('clientStaticsControl', ['$scope', '$http', 'globalVar', function($scope, $http, globalVar) {
     $scope.clientShowDetail = true;
-    $scope.userSessionShow = true;
-    $http.get('api/system/id/' + globalVar.sysid + '/user_sessions')
-        .success(function(response) {
-            $scope.statusList = response;
-        })
-        .error(function(response) {
-            $scope.userSessionShow = false;
-            console.log(response);
-        });
+    $scope.userSessionShow = false;
+    $scope.CheckClientSessions = function() {
+        $scope.checking = true;
+        $http.get('api/system/id/' + globalVar.sysid + '/user_sessions')
+            .success(function(response) {
+                $scope.userSessionShow = true;
+                $scope.checking = false;
+                $scope.statusList = response;
+            })
+            .error(function(response) {
+                console.log(response);
+            });
+    };
+    $scope.CheckClientSessions();
 }]);
 app.controller('warningCtrl', ['$scope', '$http', function($scope, $http) {
     $scope.isRadioClick = false;
@@ -530,250 +531,14 @@ app.directive('relamap', [function() {
     function link(scope, element, attr) {
         var myChart = echarts.init(element[0]);
         myChart.showLoading();
-        var myData = [{
-            name: 'KVM',
-            symbolSize: 30,
-            draggable: true,
-            category: 'KVM'
-        }, {
-            name: '办公系统',
-            symbolSize: 30,
-            draggable: true,
-            category: '办公系统'
-        }, {
-            name: 'QDIAM',
-            symbolSize: 30,
-            draggable: true,
-            category: 'QDIAM'
-        }, {
-            name: 'nas26',
-            symbolSize: 25,
-            draggable: true,
-            category: 'KVM'
-        }, {
-            name: 'kvm23',
-            symbolSize: 25,
-            draggable: true,
-            category: 'KVM'
-        }, {
-            name: 'confluence',
-            symbolSize: 25,
-            draggable: true,
-            category: '办公系统'
-        }, {
-            name: 'jira',
-            symbolSize: 25,
-            draggable: true,
-            category: '办公系统'
-        }, {
-            name: '行情子系统',
-            symbolSize: 25,
-            draggable: true,
-            category: 'QDIAM'
-        }, {
-            name: '交易子系统',
-            symbolSize: 25,
-            draggable: true,
-            category: 'QDIAM'
-        }, {
-            name: '风控子系统',
-            symbolSize: 25,
-            draggable: true,
-            category: 'QDIAM'
-        }, {
-            name: '柜台子系统',
-            symbolSize: 25,
-            draggable: true,
-            category: 'QDIAM'
-        }, {
-            name: 'qmarket 1',
-            symbolSize: 15,
-            draggable: true,
-            category: 'QDIAM'
-        }, {
-            name: 'qmarket 2',
-            symbolSize: 15,
-            draggable: true,
-            category: 'QDIAM'
-        }, {
-            name: 'qicegateway 1',
-            symbolSize: 15,
-            draggable: true,
-            category: 'QDIAM'
-        }, {
-            name: 'qicegateway 2',
-            symbolSize: 15,
-            draggable: true,
-            category: 'QDIAM'
-        }, {
-            name: 'qtrade',
-            symbolSize: 15,
-            draggable: true,
-            category: 'QDIAM'
-        }, {
-            name: 'qdata',
-            symbolSize: 15,
-            draggable: true,
-            category: 'QDIAM'
-        }, {
-            name: 'qquery',
-            symbolSize: 15,
-            draggable: true,
-            category: 'QDIAM'
-        }, {
-            name: 'qmdb',
-            symbolSize: 15,
-            draggable: true,
-            category: 'QDIAM'
-        }, {
-            name: 'qsdb',
-            symbolSize: 15,
-            draggable: true,
-            category: 'QDIAM'
-        }, {
-            name: 'mysql',
-            symbolSize: 15,
-            draggable: true,
-            category: 'QDIAM'
-        }, {
-            name: 'tomcat',
-            symbolSize: 15,
-            draggable: true,
-            category: 'QDIAM'
-        }];
+        $.get('api/UI/relation', function(option) {
+            myChart.hideLoading();
+            myChart.setOption(option);
+        });
 
-        var myLink = [{
-            source: 'KVM',
-            target: 'kvm23'
-        }, {
-            source: 'KVM',
-            target: 'nas26'
-        }, {
-            source: '办公系统',
-            target: 'confluence'
-        }, {
-            source: '办公系统',
-            target: 'jira'
-        }, {
-            source: 'QDIAM',
-            target: '行情子系统'
-        }, {
-            source: 'QDIAM',
-            target: '交易子系统'
-        }, {
-            source: 'QDIAM',
-            target: '风控子系统'
-        }, {
-            source: 'QDIAM',
-            target: '柜台子系统'
-        }, {
-            source: '行情子系统',
-            target: 'qmarket 1'
-        }, {
-            source: '行情子系统',
-            target: 'qmarket 2'
-        }, {
-            source: '风控子系统',
-            target: 'qicegateway 1'
-        }, {
-            source: '风控子系统',
-            target: 'qicegateway 2'
-        }, {
-            source: '交易子系统',
-            target: 'qtrade'
-        }, {
-            source: '交易子系统',
-            target: 'qdata'
-        }, {
-            source: '交易子系统',
-            target: 'qquery'
-        }, {
-            source: '交易子系统',
-            target: 'qmdb'
-        }, {
-            source: '交易子系统',
-            target: 'qsdb'
-        }, {
-            source: '柜台子系统',
-            target: 'mysql'
-        }, {
-            source: '柜台子系统',
-            target: 'tomcat'
-        }];
-        var option = {
-            backgroundColor: '#fff',
-            title: {
-                text: "系统关系图",
-                top: "top",
-                left: "center"
-            },
-            legend: [{
-                tooltip: {
-                    show: true
-                },
-                selectedMode: 'false',
-                bottom: 20,
-                data: ['KVM', '办公系统', 'QDIAM']
-            }],
-            toolbox: {
-                show: true,
-                feature: {
-                    dataView: { show: true, readOnly: true },
-                    restore: { show: true },
-                    saveAsImage: { show: true }
-                }
-            },
-            animationDuration: 3000,
-            animationEasingUpdate: 'quinticInOut',
-            series: [{
-                name: 'Quantdo',
-                type: 'graph',
-                layout: 'force',
-                force: {
-                    repulsion: 50,
-                    gravity: 0.1,
-                    edgeLength: [10, 50],
-                },
-                draggable: true,
-                data: myData,
-                links: myLink,
-                categories: [
-                    { name: 'KVM' },
-                    { name: '办公系统' },
-                    { name: 'QDIAM' }
-                ],
-                focusNodeAdjacency: true,
-                roam: true,
-                label: {
-                    normal: {
-                        show: true,
-                        position: 'top'
-                    }
-                },
-                lineStyle: {
-                    normal: {
-                        color: 'source',
-                        curveness: 0.3,
-                        type: "solid"
-                    }
-                }
-            }]
-        };
-        myChart.setOption(option);
-        myChart.hideLoading();
-
-        window.addEventListener('resize', chartResize);
         $(element[0]).resize(function() {
-            chartResize();
-        });
-
-        scope.$on('$destory', function() {
-            window.removeEventListener('resize', chartResize);
-        });
-
-        function chartResize() {
             myChart.resize();
-        }
+        });
     }
 }]);
 app.directive('idcmap', [function() {
@@ -797,6 +562,13 @@ app.directive('idcmap', [function() {
                 tooltip: {
                     trigger: 'item',
                 },
+                toolbox: {
+                    show: true,
+                    feature: {
+                        dataView: { show: true, readOnly: true },
+                        restore: { show: true }
+                    }
+                },
                 legend: {
                     orient: 'vertical',
                     y: 'bottom',
@@ -815,18 +587,12 @@ app.directive('idcmap', [function() {
                     }
                 }
             });
-            window.addEventListener('resize', chartResize);
+
             $(element[0]).resize(function() {
-                chartResize();
-            });
-
-            scope.$on('$destory', function() {
-                window.removeEventListener('resize', chartResize);
-            });
-
-            function chartResize() {
+                //chartResize();
                 myChart.resize();
-            }
+            });
+
             getIDC();
         });
 

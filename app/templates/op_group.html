@@ -38,16 +38,16 @@
 									<div class="am-btn-group am-btn-group-xs">
 										<button 
 											class="am-btn am-btn-default am-btn-xs am-text-secondary" ng-if="data.checker.isTrue && data.err_code == 0 && !data.skip && !data.checker.checked" ng-click="confirm($index)" ng-class="{true: '',false: 'am-disabled'}[!data.checker.checked]">
-											<span class="am-icon-pencil-square-o"></span> 确认
+											<span class="am-icon-pencil-square-o"></span> 确认结果
 										</button>
 										<button 
 											class="am-btn am-btn-default am-btn-xs am-text-secondary" ng-if="(data.checker.checked || !data.checker.isTrue) && data.err_code >= 0" ng-click="check_result($index)">
-											<span class="am-icon-pencil-square-o"></span> 查看
+											<span class="am-icon-pencil-square-o"></span> 查看结果
 										</button>
 										<button 
 											class="am-btn am-btn-default am-btn-xs am-text-secondary" 
 											ng-if="data.skip" ng-click="skip($index);data.err_code=-3">
-											<span class="am-icon-pencil-square-o"></span> 跳过
+											<span class="am-icon-pencil-square-o"></span> 跳过执行
 										</button>
 									</div>
 									<div class="am-modal" ng-class="{true: 'am-modal-confirm', false: 'am-modal-alert'}[data.checker.checked]" tabindex="-1" id="{{'result' + $index}}">
@@ -56,7 +56,7 @@
 											<div class="am-modal-bd">
 												<span ng-if="!(data.checker.checked || !data.checker.isTrue)">操作结果是否正确？</span>
 												<ul class="am-list am-list-static">
-													<li style="text-align: left;" ng-repeat="line in data.output_lines track by $index">
+													<li style="text-align: left; padding: 0px 5px" ng-repeat="line in data.output_lines track by $index">
 														<span class="am-icon-terminal am-icon-sm" style="white-space: pre; margin-left: 5px; margin-right: 5px"> {{line}}</span>
 													</li>
 												</ul>

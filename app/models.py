@@ -16,7 +16,7 @@ from ipaddress import IPv4Address
 from arrow import Arrow
 import re
 import json
-import uuid
+from uuid import uuid4
 
 '''
 class NodeMixin(StructuredNode):
@@ -146,8 +146,8 @@ class SQLModelMixin(object):
         ) and x not in self.filter_keyword]:
             data = getattr(self, field)
             if not callable(data):
-                if isinstance(data, list):
-                    results[field] = [x.name for x in data]
+                if isinstance(data, list) or isinstance(data, dict):
+                    results[field] = json.dumps(data)
                 elif isinstance(data, db.Query):
                     results[field] = [x.name for x in data.all()]
                 elif isinstance(data, IPv4Address):
@@ -194,21 +194,30 @@ class SystemDependece(db.Model):
         self.down_sys_id = down_sys_id
 
 class HaType(Enum):
-    master = 1
-    slave = 2
+    Master = 1
+    Slave = 2
 
 class MethodType(Enum):
-    get = 1
-    put = 2
-    post = 4
-    delete = 8
-    all = get|put|post|delete
+    Get = 1
+    Put = 2
+    Post = 4
+    Delete = 8
+    All = Get|Put|Post|Delete
+
+class DataSourceType(Enum):
+    SQL = 1
+    FILE = 2
+
+class DatasourceModel(Enum):
+    DbSeat = 1
+    DbSession = 2
+    LogSeat = 3
 
 class ScriptType(Enum):
-    checker = 1
-    starter = 2
-    stopper = 4
-    cleaner = 8
+    Checker = 1
+    Starter = 2
+    Stopper = 4
+    Cleaner = 8
 
 class PlatformType(Enum):
     Linux = 1
@@ -297,12 +306,12 @@ class OpPrivilege(SQLModelMixin, db.Model):
     bit = db.Column(ChoiceType(MethodType, impl=db.Integer()))
 
 class TradeProcess(SQLModelMixin, db.Model):
-    def __init__(self, name, sys_id, svr_id, type=HaType.master):
+    def __init__(self, name, sys_id, svr_id, type=HaType.Master, **kwargs):
         self.name = name
         self.sys_id = sys_id
         self.svr_id = svr_id
         self.type = type
-        super(TradeProcess, self).__init__()
+        super(TradeProcess, self).__init__(**kwargs)
 
     __tablename__ = 'trade_processes'
     id = db.Column(db.Integer, primary_key=True)
@@ -310,7 +319,7 @@ class TradeProcess(SQLModelMixin, db.Model):
     description = db.Column(db.String)
     type = db.Column(ChoiceType(HaType, impl=db.Integer()))
     base_dir = db.Column(db.String)
-    exec_file = db.Column(db.String)
+    exec_file = db.Column(db.String, nullable=False)
     param = db.Column(db.String)
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     svr_id = db.Column(db.Integer, db.ForeignKey('servers.id'), index=True)
@@ -340,7 +349,6 @@ class TradeSystem(SQLModelMixin, db.Model):
     login_user = db.Column(db.String, index=True)
     login_pwd = db.Column(db.String)
     base_dir = db.Column(db.String)
-    db_uri = db.Column(db.String)
     processes = db.relationship('TradeProcess', backref='system')
     servers = db.relationship(
         'Server',
@@ -354,6 +362,8 @@ class TradeSystem(SQLModelMixin, db.Model):
     parent_sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     parent_system = db.relationship('TradeSystem', backref='child_systems', remote_side=[id])
     operation_groups = db.relationship('OperationGroup', backref='system')
+    operations = db.relationship('Operation', backref='system')
+    data_sources = db.relationship('DataSource', backref='system')
 
     @property
     def up_systems(self):
@@ -385,6 +395,20 @@ class TradeSystem(SQLModelMixin, db.Model):
                 db.session.commit()
         else:
             raise TypeError('{} is not <class:{}>'.format(up_sys, self.__name__))
+
+class DataSource(SQLModelMixin, db.Model):
+    __tablename__ = "data_sources"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, unique=True, index=True)
+    description = db.Column(db.String)
+    sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
+    src_type = db.Column(
+        ChoiceType(DataSourceType, impl=db.Integer()),
+        default=DataSourceType.SQL,
+        nullable=False
+    )
+    src_model = db.Column(ChoiceType(DatasourceModel, impl=db.Integer()), nullable=False)
+    source = db.Column(JSONType, nullable=False)
 
 class SyslogFile(SQLModelMixin, db.Model):
     __tablename__ = 'syslog_files'
@@ -434,6 +458,7 @@ class Operation(SQLModelMixin, db.Model):
     detail = db.Column(JSONType, nullable=False, default={})
     order = db.Column(db.Integer)
     op_group_id = db.Column(db.Integer, db.ForeignKey('operation_groups.id'))
+    sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     records = db.relationship(
         'OperateRecord',
         backref='operation',

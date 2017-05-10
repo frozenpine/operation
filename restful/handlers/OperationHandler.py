@@ -38,7 +38,7 @@ class OperationListApi(Resource):
                     'err_code': -1,
                     'enabled': False,
                     'checker': {
-                        'isTrue': op.type == ScriptType.checker,
+                        'isTrue': op.type == ScriptType.Checker,
                         'checked': False
                     },
                     'skip': self.find_op_results(op)
@@ -66,13 +66,13 @@ class OperationApi(Resource):
             rtn['op_name'] = op.name
             rtn['op_desc'] = op.description
             rtn['checker'] = {
-                'isTrue': op.type == ScriptType.checker,
+                'isTrue': op.type == ScriptType.Checker,
                 'checked': False
             }
             conf = SSHConfig(
-                op.group.system.manage_ip.exploded,
-                op.group.system.login_user,
-                op.group.system.login_pwd
+                op.system.manage_ip.exploded,
+                op.system.login_user,
+                op.system.login_pwd
             )
             executor = Executor.Create(conf)
             result = executor.run(op.detail)
@@ -81,7 +81,7 @@ class OperationApi(Resource):
                 rtn['err_code'] = 0
             else:
                 rtn['err_code'] = 10
-            rtn['enabled'] = rtn['err_code'] == 0
+            #rtn['enabled'] = rtn['err_code'] == 0
             rtn['output_lines'] = result.lines
             res = OperateResult()
             res.op_rec_id = op_rec.id

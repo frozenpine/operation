@@ -6,6 +6,7 @@ from settings import config
 from MessageQueue.msgserver import MessageQueues
 
 db = SQLAlchemy()
+db_list = {}
 msgQueues = MessageQueues
 
 from auth import auth as auth_blueprint, login_manager

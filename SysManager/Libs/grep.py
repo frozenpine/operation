@@ -23,13 +23,17 @@ def run(client, module):
                 grep{0} {1} {2} 
             """.format(param, pattern, dest)
         }
+        '''
         stdin, stdout, stderr = shell.run(client, mod)
         stdout.read = change_read_encoding(stdout.read)
         stdout.readlines = change_readlines_encoding(stdout.read)
         stderr.read = change_read_encoding(stderr.read)
         stderr.readlines = change_readlines_encoding(stderr.read)
         return stdin, stdout, stderr
+        '''
+        return shell.run(client, mod)
 
+'''
 def change_read_encoding(func):
     def _read():
         encoding_list = ["gbk", "utf-8"]
@@ -47,3 +51,4 @@ def change_readlines_encoding(func):
             if line != "":
                 yield line
     return _readlines
+'''

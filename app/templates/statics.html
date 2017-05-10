@@ -32,28 +32,28 @@
                                     <div class="am-dropdown" style="cursor: pointer" ng-mouseover="showCPUDetail = true" ng-mouseleave="showCPUDetail = false" data-am-dropdown="{boundary: '#drop-down-test'}">
                                         {{data.cpu[0].idle | percent}}
                                         <div class="am-dropdown-content" ng-show="showCPUDetail" style="display: block;margin-top: 0">
-											<div style="max-height: 300px; overflow-y: auto">
-												<table class="am-table am-text-nowrap am-table-compact" style="margin-bottom: 0px">
-													<thead>
-														<th>NAME</th>
-														<th>IO Wait</th>
-														<th>IRQ</th>
-														<th>USER</th>
-														<th>SYS</th>
-														<th>IDLE</th>
-													</thead>
-													<tbody>
-														<tr ng-repeat="core in data.cpu">
-															<td>{{core.name}}</td>
-															<td>{{core.iowait | percent}}</td>
-															<td>{{core.irq | percent}}</td>
-															<td>{{core.usr | percent}}</td>
-															<td>{{core.sys | percent}}</td>
-															<td>{{core.idle | percent}}</td>
-														</tr>
-													</tbody>
-												</table>
-											</div>
+                                            <div style="max-height: 300px; overflow-y: auto">
+                                                <table class="am-table am-text-nowrap am-table-compact" style="margin-bottom: 0px">
+                                                    <thead>
+                                                        <th>NAME</th>
+                                                        <th>IO Wait</th>
+                                                        <th>IRQ</th>
+                                                        <th>USER</th>
+                                                        <th>SYS</th>
+                                                        <th>IDLE</th>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr ng-repeat="core in data.cpu">
+                                                            <td>{{core.name}}</td>
+                                                            <td>{{core.iowait | percent}}</td>
+                                                            <td>{{core.irq | percent}}</td>
+                                                            <td>{{core.usr | percent}}</td>
+                                                            <td>{{core.sys | percent}}</td>
+                                                            <td>{{core.idle | percent}}</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
@@ -244,7 +244,7 @@
                     <table class="am-table am-table-hover table-main">
                         <thead>
                             <tr>
-								<th class="table-data">经纪公司代码</th>
+                                <th class="table-data">经纪公司代码</th>
                                 <th class="table-data">交易用户代码</th>
                                 <th class="table-data">交易用户类型</th>
                                 <th class="table-data">会话编号</th>
@@ -252,19 +252,24 @@
                                 <th class="table-data">登录时间</th>
                                 <th class="table-data">IP地址</th>
                                 <th class="table-data">MAC地址</th>
-								<th class="table-data">用户端产品信息</th>
+                                <th class="table-data">用户端产品信息</th>
+                                <th class="table-data">用户端接口信息</th>
+                                <th class="table-data">登录次数</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr ng-repeat="data in statusList">
                                 <td>{{data.broker_id}}</td>
                                 <td>{{data.user_id}}</td>
+                                <td>{{data.user_type}}</td>
                                 <td>{{data.session_id}}</td>
                                 <td>{{data.front_id}}</td>
                                 <td>{{data.login_time}}</td>
                                 <td>{{data.ip_address}}</td>
                                 <td>{{data.mac_address}}</td>
-								<td>{{data.prod_info}}</td>
+                                <td>{{data.prod_info}}</td>
+                                <td>{{data.inter_info}}</td>
+                                <td>{{data.total_login}}</td>
                             </tr>
                         </tbody>
                     </table>

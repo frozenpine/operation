@@ -120,6 +120,7 @@ class SSHExecutor(Executor):
 if __name__ == '__main__':
     rtn = []
     result = {}
+    '''
     conf = SSHConfig('192.168.92.26', 'root', 'Quantdo@SH2016!')
     modlist = [
             {'name': 'uptime'},
@@ -146,10 +147,6 @@ if __name__ == '__main__':
             'quantdoLogin': '/root/right.txt'
         }
     )
-    #print result.data
-    for line in result.lines:
-        print line
-    #logging.info(result)
     for (k, v) in result.data.iteritems():
         data = {
             'seat_id': k,
@@ -177,5 +174,4 @@ if __name__ == '__main__':
             else:
                 data['seat_status'] = u'未连接'
         rtn.append(data)
-    '''
     print result
