@@ -293,6 +293,9 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', 'globalVar',
     $scope.check_result = function(index) {
         $('#result' + index).modal({ relatedTarget: this });
     };
+    $scope.check_his_result = function(index) {
+        $('#his_result' + index).modal({ relatedTarget: this });
+    };
     $scope.skip = function(index) {
         if (index < $scope.opList.details.length - 1) {
             $scope.opList.details[index + 1].enabled = true;

@@ -138,7 +138,6 @@ if __name__ == '__main__':
     result['disks'] = resultlist[2].data
     result['memory'] = resultlist[3].data['mem']
     result['swap'] = resultlist[3].data['swap']
-    '''
     conf = SSHConfig('192.168.92.26', 'root', 'Quantdo@SH2016!')
     executor = Executor.Create(conf)
     result = executor.run(
@@ -174,4 +173,17 @@ if __name__ == '__main__':
             else:
                 data['seat_status'] = u'未连接'
         rtn.append(data)
-    print result
+        '''
+    conf = SSHConfig('192.168.101.102', 'quantdo', 'quantdo')
+    mod = {
+        'name': 'shell',
+        'shell': """
+            grep ".CaptchaController \[" catalina.out | tail -1 | awk '{print $9}'
+        """,
+        'args': {
+            'chdir': 'apache-tomcat*/logs'
+        }
+    }
+    result = Executor.Create(conf).run(mod)
+    for line in result.lines:
+        print line

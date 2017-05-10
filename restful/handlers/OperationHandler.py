@@ -22,27 +22,50 @@ class OperationListApi(Resource):
                 .order_by(OperateRecord.operated_at.desc()).first()
         if record:
             return record.operated_at.timestamp > \
-                arrow.get(arrow.now().strftime('%Y-%m-%d')).timestamp
+                arrow.get(arrow.now().strftime('%Y-%m-%d')).timestamp, record
         else:
-            return False
+            return False, None
 
     def get(self, **kwargs):
         op_group = OperationGroup.find(**kwargs)
         if op_group:
             self.rtn['name'] = op_group.name
-            self.rtn['details'] = [
-                {
-                    'id': op.id,
-                    'op_name': op.name,
-                    'op_desc': op.description,
-                    'err_code': -1,
-                    'enabled': False,
-                    'checker': {
-                        'isTrue': op.type == ScriptType.Checker,
-                        'checked': False
-                    },
-                    'skip': self.find_op_results(op)
-                } for op in op_group.operations]
+            self.rtn['details'] = []
+            for op in op_group.operations:
+                skip, record = self.find_op_results(op)
+                if skip:
+                    self.rtn['details'].append({
+                        'id': op.id,
+                        'op_name': op.name,
+                        'op_desc': op.description,
+                        'err_code': -1,
+                        'enabled': False,
+                        're_enter': True,
+                        'checker': {
+                            'isTrue': op.type == ScriptType.Checker,
+                            'checked': False
+                        },
+                        'skip': skip,
+                        'his_results': {
+                            'operated_at': record.operated_at.humanize(),
+                            'operator': record.operator.name,
+                            'lines': json.loads(record.results[-1].detail)
+                        }
+                    })
+                else:
+                    self.rtn['details'].append({
+                        'id': op.id,
+                        'op_name': op.name,
+                        'op_desc': op.description,
+                        'err_code': -1,
+                        'enabled': False,
+                        're_enter': True,
+                        'checker': {
+                            'isTrue': op.type == ScriptType.Checker,
+                            'checked': False
+                        },
+                        'skip': skip
+                    })
             if len(self.rtn['details']) > 0:
                 self.rtn['details'][0]['enabled'] = True
             return self.rtn
