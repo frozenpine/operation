@@ -6,12 +6,20 @@ def run(client, module):
     if args and args.has_key('chdir'):
         base_dir = args.get('chdir')
         command = """
-            export PATH=$PATH:.:/bin:/sbin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin;
+            PATH=$PATH:.:/bin:/sbin;
+            PATH=$PATH:/usr/local/bin:/usr/local/sbin;
+            PATH=$PATH:/usr/bin:/usr/sbin;
+            PATH=$PATH:~/bin
+            export PATH
             cd "{}";{}
         """.format(base_dir, command)
     else:
         command = """
-            export PATH=$PATH:.:/bin:/sbin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin;
+            PATH=$PATH:.:/bin:/sbin;
+            PATH=$PATH:/usr/local/bin:/usr/local/sbin;
+            PATH=$PATH:/usr/bin:/usr/sbin;
+            PATH=$PATH:~/bin
+            export PATH
             {}
         """.format(command)
     #return client.exec_command(command)

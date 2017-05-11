@@ -138,12 +138,13 @@ if __name__ == '__main__':
     result['disks'] = resultlist[2].data
     result['memory'] = resultlist[3].data['mem']
     result['swap'] = resultlist[3].data['swap']
-    conf = SSHConfig('192.168.92.26', 'root', 'Quantdo@SH2016!')
+    '''
+    conf = SSHConfig('192.168.101.100', 'qdam', 'qdam')
     executor = Executor.Create(conf)
     result = executor.run(
         {
             'name': 'quantdoLogin',
-            'quantdoLogin': '/root/right.txt'
+            'quantdoLogin': '/home/qdam/qtrade/bin/Syslog.log'
         }
     )
     for (k, v) in result.data.iteritems():
@@ -173,7 +174,8 @@ if __name__ == '__main__':
             else:
                 data['seat_status'] = u'未连接'
         rtn.append(data)
-        '''
+    print rtn
+    '''
     conf = SSHConfig('192.168.101.102', 'quantdo', 'quantdo')
     mod = {
         'name': 'shell',
@@ -187,3 +189,4 @@ if __name__ == '__main__':
     result = Executor.Create(conf).run(mod)
     for line in result.lines:
         print line
+    '''

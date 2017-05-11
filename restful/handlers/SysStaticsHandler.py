@@ -278,37 +278,6 @@ class LoginListApi(Resource):
         sys = TradeSystem.find(**kwargs)
         rtn = []
         if sys:
-            '''
-            if db_list.has_key(sys.data_source):
-                sys_db = db_list[sys.id]
-            else:
-                try:
-                    sys_db = create_engine(sys.db_uri).connect()
-                    db_list[sys.id] = sys_db
-                except Exception:
-                    return {
-                        'message': "System({}) didn't configured a db uri".format(sys.name)
-                    }, 404
-            results = sys_db.execute(text("""
-                SELECT seat.seat_name, sync.tradingday, sync.frontaddr, sync.seatid 
-                FROM t_seat seat, t_sync_seat sync , t_capital_account 
-                WHERE seat.seat_id = t_capital_account.seat_id 
-                    AND sync.seatid=t_capital_account.account_id 
-                    AND sync.isactive = TRUE""")).fetchall()
-            for result in results:
-                rtn.append({
-                    'seat_name': result[0],
-                    'trading_day': result[1],
-                    'front_addr': result[2],
-                    'seat_id': result[3],
-                    'seat_status': u'未连接',
-                    'conn_count': 0,
-                    'login_success': 0,
-                    'login_fail': 0,
-                    'disconn_count': 0
-                })
-            return rtn
-            '''
             src = DataSource.query.filter(
                 DataSource.src_type == DataSourceType.SQL,
                 DataSource.src_model == DatasourceModel.DbSeat,
@@ -335,19 +304,6 @@ class LoginListApi(Resource):
                             tmp[src.source['formatter'][idx]['key']] = \
                                 src.source['formatter'][idx]['default']
                     rtn.append(tmp)
-                    '''
-                    rtn.append({
-                        src.source['formatter'][0]: result[0],
-                        src.source['formatter'][1]: result[1],
-                        src.source['formatter'][2]: result[2],
-                        src.source['formatter'][3]: result[3],
-                        src.source['formatter'][4]: u'未连接',
-                        src.source['formatter'][5]: 0,
-                        src.source['formatter'][6]: 0,
-                        src.source['formatter'][7]: 0,
-                        src.source['formatter'][8]: 0
-                    })
-                    '''
                 return rtn
             else:
                 return {
@@ -366,6 +322,7 @@ class LoginCheckApi(Resource):
         self.mutex = threading.Lock()
 
     def find_syslog(self, sys):
+        '''
         for log in sys.syslog_files:
             if self.syslog_list.has_key(log.server):
                 self.syslog_list[log.server].append(log)
@@ -375,8 +332,75 @@ class LoginCheckApi(Resource):
         if len(sys.child_systems) > 0:
             for child_sys in sys.child_systems:
                 self.find_syslog(child_sys)
+        '''
+        log_srcs = DataSource.query.filter(
+            DataSource.src_type == DataSourceType.FILE,
+            DataSource.src_model == DatasourceModel.LogSeat,
+            DataSource.sys_id == sys.id
+        ).all()
+        for src in log_srcs:
+            uri = src.source['uri'].split('#')
+            svr = uri[0].rstrip('/')
+            log = uri[1]
+            if not self.syslog_list.has_key(svr):
+                self.syslog_list[svr] = []
+            self.syslog_list[svr].append(log)
 
     def check_log(self, svr, logs):
+        reg = re.compile(
+            r'^(?P<method>[^:]+)://(?P<user>[^:]+):(?P<pass>[^@]+)@(?P<ip>[^:]+):(?P<port>\d+)$'
+        )
+        pars = reg.match(svr).groupdict()
+        if pars['method'] == 'ssh':
+            conf = SSHConfig(
+                ip=pars['ip'],
+                user=pars['user'],
+                password=pars['pass'],
+                port=int(pars['port'])
+            )
+        else:
+            conf = SSHConfig(
+                ip=pars['ip'],
+                user=pars['user'],
+                password=pars['pass'],
+                port=int(pars['port'])
+            )
+        executor = Executor.Create(conf)
+        for log in logs:
+            mod = {
+                'name': 'quantdoLogin',
+                'quantdoLogin': log
+            }
+            result = executor.run(mod)
+            for (k, v) in result.data.iteritems():
+                data = {
+                    'seat_id': k,
+                    'seat_status': u"",
+                    'conn_count': 0,
+                    'login_success': 0,
+                    'login_fail': 0,
+                    'disconn_count': 0
+                }
+                for each in v:
+                    if each.get('message').find('连接成功') >= 0:
+                        data['seat_status'] = u'连接成功'
+                        data['conn_count'] += 1
+                    elif each['message'].find('登录成功') >= 0:
+                        data['seat_status'] = u'登录成功'
+                        data['login_success'] += 1
+                    elif each['message'].find('登录失败') >= 0:
+                        data['seat_status'] = u'登录失败'
+                        data['login_fail'] += 1
+                    elif each['message'].find('断开') >= 0:
+                        data['seat_status'] = u'连接断开'
+                        data['disconn_count'] += 1
+                    else:
+                        data['seat_status'] = u'未连接'
+                self.mutex.acquire()
+                self.rtn.append(data)
+                self.mutex.release()
+        executor.client.close()
+        '''
         if svr.platform:                        #不同平台，使用不同的执行器，当前测试均为SSH
             conf = SSHConfig(
                 svr.manage_ip.exploded,
@@ -424,6 +448,7 @@ class LoginCheckApi(Resource):
                 self.rtn.append(data)
                 self.mutex.release()
         executor.client.close()
+        '''
 
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
@@ -445,36 +470,6 @@ class UserSessionListApi(Resource):
         sys = TradeSystem.find(**kwargs)
         rtn = []
         if sys:
-            '''
-            if db_list.has_key(sys.id):
-                sys_db = db_list[sys.id]
-            else:
-                try:
-                    sys_db = create_engine(sys.db_uri).connect()
-                    db_list[sys.id] = sys_db
-                except Exception:
-                    return {
-                        'message': "System({}) didn't configured a db uri".format(sys.name)
-                    }, 404
-            results = sys_db.execute(text("""
-                SELECT brokerid, userid, usertype, sessionid, frontid,
-                    logintime, ipaddress, macaddress, userproductinfo, 
-                FROM t_oper_usersession
-            """)).fetchall()
-            for result in results:
-                rtn.append({
-                    'broker_id': unicode(result[0]),
-                    'user_id': unicode(result[1]),
-                    'user_type': unicode(result[2]),
-                    'session_id': unicode(result[3]),
-                    'front_id': unicode(result[4]),
-                    'login_time': unicode(result[5]),
-                    'ip_address': unicode(result[6]),
-                    'mac_address': unicode(result[7]),
-                    'prod_info': unicode(result[8])
-                })
-            return rtn
-            '''
             src = DataSource.query.filter(
                 DataSource.src_type == DataSourceType.SQL,
                 DataSource.src_model == DatasourceModel.DbSession,

@@ -192,7 +192,35 @@ def init_inventory():
         ]
     }
 
-    db.session.add(db_src, db_session)
+    log_seat = DataSource(name=u'交易系统Syslog')
+    log_seat.system = sys
+    log_seat.src_type = DataSourceType.FILE
+    log_seat.src_model = DatasourceModel.LogSeat
+    log_seat.source = {
+        'formatter': [
+            {"key": "seat_id", "default": ""},
+            {"key": "seat_status", "default": ""},
+            {"key": "conn_count", "default": 0},
+            {"key": "login_success", "default": 0},
+            {"key": "login_fail", "default": 0},
+            {"key": "disconn_count", "default": 0}
+        ],
+        'uri': 'ssh://qdam:qdam@192.168.101.100:22/#/home/qdam/qtrade/bin/Syslog.log',
+        'grep': 'OnFrontConnected|OnRspUserLogin|OnFrontDisConnected',
+        'parser': {
+            "pattern": r"^(.+us) .+EXID:([^,]+),SeatID:([^,]+),.+Main:\d+:(.+)$",
+            "key_list": [
+                "timestamp",
+                "exid",
+                "seatid",
+                "message"
+            ],
+            "primary_key": "seatid",
+            "skip_headline": True
+        }
+    }
+
+    db.session.add_all([db_src, db_session, log_seat])
     db.session.commit()
 
 @manager.command
