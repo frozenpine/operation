@@ -40,6 +40,10 @@ class RemoteConfig(object):
         self.remote_user = user
         self.remote_password = password
 
+    @staticmethod
+    def CreateConfig(sub_class, params):
+        return globals()[sub_class](**params)
+
 class SSHConfig(RemoteConfig):
     def __init__(self, ip, user, password=None, port=22, pKey=None, key_pass=None):
         if not password and not pKey:
@@ -53,9 +57,7 @@ class WinRmConfig(RemoteConfig):
         RemoteConfig.__init__(self, ip, user, password, port)
 
 class HttpConfig(RemoteConfig):
-    def __init__(self, ip, port=8080, **kwargs):
-        user = kwargs.get('user', '')
-        password = kwargs.get('password', '')
+    def __init__(self, ip, user=None, password=None, port=8080, **kwargs):
         RemoteConfig.__init__(self, ip, user, password, port)
         self.web_version = kwargs.get('version', '1.3.6')
         self.login_uri = kwargs.get('login_uri', 'quantdo/logon')

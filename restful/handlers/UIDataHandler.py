@@ -70,13 +70,19 @@ class UIDataApi(Resource):
             for proc in sys.processes:
                 nodes.add(json.dumps({
                     'name': proc.uuid,
-                    'value': [proc.name],
-                    'category': 'Process'
+                    'value': [proc.name, "{} {}".format(proc.exec_file, proc.param or '')],
+                    'category': 'Process',
+                    'label': {
+                        'normal': {
+                            'show': False
+                        }
+                    }
                 }))
                 nodes.add(json.dumps({
                     'name': proc.server.uuid,
-                    'value': [proc.server.name],
-                    'category': 'Server'
+                    'value': [proc.server.name, proc.server.manage_ip.exploded],
+                    'category': 'Server',
+                    'symbolSize': 30
                 }))
                 relations.add(json.dumps({
                     'source': proc.uuid,
@@ -88,13 +94,15 @@ class UIDataApi(Resource):
                 }))
                 relations.add(json.dumps({
                     'source': sys.uuid,
-                    'target': proc.server.uuid
+                    'target': proc.server.uuid,
+                    'value': len([x for x in sys.processes if x.server == proc.server]) * 15
                 }))
             for child in sys.child_systems:
                 nodes.add(json.dumps({
                     'name': child.uuid,
-                    'value': [child.name],
-                    'category': 'System'
+                    'value': [child.name, child.manage_ip.exploded],
+                    'category': 'System',
+                    'symbolSize': (len(child.child_systems) + 1) * 30
                 }))
                 relations.add(json.dumps({
                     'source': child.uuid,
@@ -110,8 +118,9 @@ class UIDataApi(Resource):
                 series[root.name]['relations'] = set()
             series[root.name]['nodes'].add(json.dumps({
                 'name': root.uuid,
-                'value': [root.name],
-                'category': 'System'
+                'value': [root.name, root.manage_ip.exploded],
+                'category': 'System',
+                'symbolSize': (len(root.child_systems) + 1) * 15
             }))
             find_nodes(
                 root,
@@ -126,6 +135,7 @@ class UIDataApi(Resource):
                 'top': "top",
                 'left': "center"
             },
+            'tooltip': {},
             'legend': [{
                 'tooltip': {
                     'show': True
@@ -134,9 +144,6 @@ class UIDataApi(Resource):
                 'bottom': 20,
                 'data': legend
             }],
-            'tooltip': {
-                'show': False
-            },
             'toolbox': {
                 'show': True,
                 'feature': {
@@ -154,9 +161,9 @@ class UIDataApi(Resource):
                 'type': 'graph',
                 'layout': 'force',
                 'force': {
-                    'repulsion': 100,
+                    'repulsion': [50, 80],
                     'gravity': 0.1,
-                    'edgeLength': 100,
+                    'edgeLength': [100, 200],
                 },
                 'draggable': True,
                 'data': [json.loads(x) for x in v['nodes']],

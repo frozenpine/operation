@@ -8,7 +8,7 @@ from app.models import (
 )
 import arrow
 import json
-from SysManager.configs import Result, SSHConfig
+from SysManager.configs import Result, RemoteConfig, SSHConfig
 from SysManager.executor import Executor
 from SysManager.excepts import ExecuteError
 
@@ -93,14 +93,20 @@ class OperationApi(Resource):
                 'isTrue': op.type.IsChecker(),
                 'checked': False
             }
+            '''
             conf = SSHConfig(
                 op.system.manage_ip.exploded,
                 op.system.login_user,
                 op.system.login_pwd
             )
+            '''
+            conf = RemoteConfig.CreateConfig(
+                sub_class=op.detail['remote']['name'],
+                params=op.detail['remote']['params']
+            )
             executor = Executor.Create(conf)
             try:
-                result = executor.run(op.detail)
+                result = executor.run(op.detail['mod'])
             except ExecuteError, err:
                 res = OperateResult()
                 res.op_rec_id = op_rec.id
