@@ -5,7 +5,8 @@ from os import path
 import ConfigParser
 from enum import Enum
 sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
-from SysManager import logging
+#from SysManager import logging
+import logging
 from excepts import ConfigInvalid
 
 class GlobalConfig:

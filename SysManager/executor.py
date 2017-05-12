@@ -8,7 +8,8 @@ from paramiko import (
 from paramiko.ssh_exception import NoValidConnectionsError
 import winrm
 sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
-from SysManager import logging
+#from SysManager import logging
+import logging
 from excepts import ModuleNotFound
 from configs import (
     RemoteConfig, SSHConfig, WinRmConfig, HttpConfig,

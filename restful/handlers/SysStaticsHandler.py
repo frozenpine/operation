@@ -5,7 +5,8 @@ from app.models import (
     TradeSystem, TradeProcess, Server,
     DataSource, DatasourceModel, DataSourceType
 )
-from SysManager import logging
+#from SysManager import logging
+import logging
 from SysManager.configs import SSHConfig
 from SysManager.executor import Executor
 from sqlalchemy import create_engine
