@@ -8,14 +8,12 @@ from app.models import (
 from SysManager import logging
 from SysManager.configs import SSHConfig
 from SysManager.executor import Executor
-#import pymysql
-#pymysql.install_as_MySQLdb()
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
 import re
 import threading
 import json
-from app import db_list
+#from app import db_list
 
 class ServerList(object):
     def __init__(self):
@@ -284,16 +282,16 @@ class LoginListApi(Resource):
                 DataSource.sys_id == sys.id
             ).first()
             if src:
-                sys_db = db_list.get(src.source['uri'])
-                if not sys_db:
-                    try:
-                        sys_db = create_engine(src.source['uri']).connect()
-                    except Exception:
-                        return {
-                            'message': 'faild to connect to database.'
-                        }, 404
-                    else:
-                        db_list[src.source['uri']] = sys_db
+                #sys_db = db_list.get(src.source['uri'])
+                #if not sys_db:
+                try:
+                    sys_db = create_engine(src.source['uri']).connect()
+                except Exception:
+                    return {
+                        'message': 'faild to connect to database.'
+                    }, 404
+                    #else:
+                    #    db_list[src.source['uri']] = sys_db
                 results = sys_db.execute(text(src.source['sql'])).fetchall()
                 for result in results:
                     tmp = {}
@@ -304,6 +302,7 @@ class LoginListApi(Resource):
                             tmp[src.source['formatter'][idx]['key']] = \
                                 src.source['formatter'][idx]['default']
                     rtn.append(tmp)
+                sys_db.close()
                 return rtn
             else:
                 return {
@@ -322,17 +321,6 @@ class LoginCheckApi(Resource):
         self.mutex = threading.Lock()
 
     def find_syslog(self, sys):
-        '''
-        for log in sys.syslog_files:
-            if self.syslog_list.has_key(log.server):
-                self.syslog_list[log.server].append(log)
-            else:
-                self.syslog_list[log.server] = []
-                self.syslog_list[log.server].append(log)
-        if len(sys.child_systems) > 0:
-            for child_sys in sys.child_systems:
-                self.find_syslog(child_sys)
-        '''
         log_srcs = DataSource.query.filter(
             DataSource.src_type == DataSourceType.FILE,
             DataSource.src_model == DatasourceModel.LogSeat,
@@ -373,6 +361,9 @@ class LoginCheckApi(Resource):
             }
             result = executor.run(mod)
             for (k, v) in result.data.iteritems():
+                pattern = re.compile(
+                    r'.+TradeDate=\[(?P<trade_date>[^]]+)\]\s+TradeTime=\[(?P<trade_time>[^]]+)\]'
+                )
                 data = {
                     'seat_id': k,
                     'seat_status': u"",
@@ -385,13 +376,21 @@ class LoginCheckApi(Resource):
                     if each.get('message').find('连接成功') >= 0:
                         data['seat_status'] = u'连接成功'
                         data['conn_count'] += 1
-                    elif each['message'].find('登录成功') >= 0:
+                    elif each.get('message').find('登录成功') >= 0:
+                        try:
+                            pars_message = pattern.match(each.get('message'))\
+                                .groupdict()
+                        except AttributeError:
+                            pass
+                        else:
+                            data['trading_day'] = pars_message.get('trade_date')
+                            data['login_time'] = pars_message.get('trade_time')
                         data['seat_status'] = u'登录成功'
                         data['login_success'] += 1
-                    elif each['message'].find('登录失败') >= 0:
+                    elif each.get('message').find('登录失败') >= 0:
                         data['seat_status'] = u'登录失败'
                         data['login_fail'] += 1
-                    elif each['message'].find('断开') >= 0:
+                    elif each.get('message').find('断开') >= 0:
                         data['seat_status'] = u'连接断开'
                         data['disconn_count'] += 1
                     else:
@@ -400,55 +399,6 @@ class LoginCheckApi(Resource):
                 self.rtn.append(data)
                 self.mutex.release()
         executor.client.close()
-        '''
-        if svr.platform:                        #不同平台，使用不同的执行器，当前测试均为SSH
-            conf = SSHConfig(
-                svr.manage_ip.exploded,
-                svr.admin_user,
-                svr.admin_pwd
-            )
-        else:
-            conf = SSHConfig(
-                svr.manage_ip.exploded,
-                svr.admin_user,
-                svr.admin_pwd
-            )
-        executor = Executor.Create(conf)
-        for log in logs:
-            mod = {
-                'name': 'quantdoLogin',
-                'quantdoLogin': log.file_path
-            }
-            result = executor.run(mod)
-            for (k, v) in result.data.iteritems():
-                data = {
-                    'seat_id': k,
-                    'seat_status': u"",
-                    'conn_count': 0,
-                    'login_success': 0,
-                    'login_fail': 0,
-                    'disconn_count': 0
-                }
-                for each in v:
-                    if each.get('message').find('连接成功') >= 0:
-                        data['seat_status'] = u'连接成功'
-                        data['conn_count'] += 1
-                    elif each['message'].find('登录成功') >= 0:
-                        data['seat_status'] = u'登录成功'
-                        data['login_success'] += 1
-                    elif each['message'].find('登录失败') >= 0:
-                        data['seat_status'] = u'登录失败'
-                        data['login_fail'] += 1
-                    elif each['message'].find('断开') >= 0:
-                        data['seat_status'] = u'连接断开'
-                        data['disconn_count'] += 1
-                    else:
-                        data['seat_status'] = u'未连接'
-                self.mutex.acquire()
-                self.rtn.append(data)
-                self.mutex.release()
-        executor.client.close()
-        '''
 
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
@@ -476,16 +426,16 @@ class UserSessionListApi(Resource):
                 DataSource.sys_id == sys.id
             ).first()
             if src:
-                sys_db = db_list.get(src.source['uri'])
-                if not sys_db:
-                    try:
-                        sys_db = create_engine(src.source['uri']).connect()
-                    except Exception:
-                        return {
-                            'message': 'failed to connect to database.'
-                        }, 404
-                    else:
-                        db_list[src.source['uri']] = sys_db
+                #sys_db = db_list.get(src.source['uri'])
+                #if not sys_db:
+                try:
+                    sys_db = create_engine(src.source['uri']).connect()
+                except Exception:
+                    return {
+                        'message': 'failed to connect to database.'
+                    }, 404
+                    #else:
+                    #    db_list[src.source['uri']] = sys_db
                 results = sys_db.execute(text(src.source['sql'])).fetchall()
                 for result in results:
                     tmp = {}
@@ -496,6 +446,7 @@ class UserSessionListApi(Resource):
                             tmp[src.source['formatter'][idx]['key']] = \
                                 src.source['formatter'][idx]['default']
                     rtn.append(tmp)
+                sys_db.close()
                 return rtn
             else:
                 return {

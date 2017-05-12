@@ -202,6 +202,16 @@ class MethodType(Enum):
     Put = 2
     Post = 4
     Delete = 8
+    Get_Post = Get|Post
+    Get_Put = Get|Put
+    Get_Delete = Get|Delete
+    Put_Post = Put|Post
+    Put_Delete = Put|Delete
+    Post_Delete = Post|Delete
+    Get_Put_Post = Get_Put|Post
+    Get_Put_Delete = Get_Put|Delete
+    Get_Post_Delete = Get_Post|Delete
+    Put_Post_Delete = Put_Post|Delete
     All = Get|Put|Post|Delete
 
 class DataSourceType(Enum):
@@ -215,9 +225,27 @@ class DatasourceModel(Enum):
 
 class ScriptType(Enum):
     Checker = 1
-    Starter = 2
-    Stopper = 4
-    Cleaner = 8
+    Executor = 2
+    Confirmer = 4
+    Excute_Check = Executor|Checker
+    Confirm_Excute = Confirmer|Executor
+    Confirm_Excute_Check = Confirmer|Executor|Checker
+
+    def IsBatcher(self):
+        return self.value & ScriptType.Excute_Check.value \
+            == ScriptType.Excute_Check.value or \
+            self.value & ScriptType.Confirm_Excute.value \
+            == ScriptType.Confirm_Excute.value or \
+            self.value & ScriptType.Confirm_Excute_Check.value \
+            == ScriptType.Confirm_Excute_Check.value
+
+    def IsChecker(self):
+        return self.value & ScriptType.Checker.value \
+            == ScriptType.Checker.value
+
+    def IsConfirmer(self):
+        return self.value & ScriptType.Confirmer.value \
+            == ScriptType.Confirmer.value
 
 class PlatformType(Enum):
     Linux = 1
@@ -316,7 +344,7 @@ class OpRole(SQLModelMixin, db.Model):
         self.name = name
 
     def __repr__(self):
-        return '<OpRole %r>' % self.name
+        return '<OpRole {}>'.format(self.name)
 
 class OpPrivilege(SQLModelMixin, db.Model):
     __tablename__ = 'privileges'
@@ -337,6 +365,10 @@ class TradeProcess(SQLModelMixin, db.Model):
 
     __tablename__ = 'trade_processes'
     id = db.Column(db.Integer, primary_key=True)
+    uuid = db.Column(
+        db.String, index=True,
+        default=lambda: unicode(uuid4()).lower()
+    )
     name = db.Column(db.String, nullable=False, index=True)
     description = db.Column(db.String)
     type = db.Column(ChoiceType(HaType, impl=db.Integer()))
@@ -500,7 +532,6 @@ class OperateResult(SQLModelMixin, db.Model):
     __tablename__ = 'operate_results'
     id = db.Column(db.Integer, primary_key=True)
     op_rec_id = db.Column(db.Integer, db.ForeignKey('operate_records.id'), index=True)
-    succeed = db.Column(db.Boolean)
     error_code = db.Column(db.Integer, default=0)
     detail = db.Column(JSONType, nullable=False, default=[])
 

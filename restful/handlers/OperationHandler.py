@@ -10,6 +10,7 @@ import arrow
 import json
 from SysManager.configs import Result, SSHConfig
 from SysManager.executor import Executor
+from SysManager.excepts import ExecuteError
 
 class OperationListApi(Resource):
     def __init__(self):
@@ -42,7 +43,7 @@ class OperationListApi(Resource):
                         'enabled': False,
                         're_enter': True,
                         'checker': {
-                            'isTrue': op.type == ScriptType.Checker,
+                            'isTrue': op.type.IsChecker(),
                             'checked': False
                         },
                         'skip': skip,
@@ -61,7 +62,7 @@ class OperationListApi(Resource):
                         'enabled': False,
                         're_enter': True,
                         'checker': {
-                            'isTrue': op.type == ScriptType.Checker,
+                            'isTrue': op.type.IsChecker(),
                             'checked': False
                         },
                         'skip': skip
@@ -89,7 +90,7 @@ class OperationApi(Resource):
             rtn['op_name'] = op.name
             rtn['op_desc'] = op.description
             rtn['checker'] = {
-                'isTrue': op.type == ScriptType.Checker,
+                'isTrue': op.type.IsChecker(),
                 'checked': False
             }
             conf = SSHConfig(
@@ -98,22 +99,33 @@ class OperationApi(Resource):
                 op.system.login_pwd
             )
             executor = Executor.Create(conf)
-            result = executor.run(op.detail)
-            executor.client.close()
-            if result.return_code == 0:
-                rtn['err_code'] = 0
+            try:
+                result = executor.run(op.detail)
+            except ExecuteError, err:
+                res = OperateResult()
+                res.op_rec_id = op_rec.id
+                res.error_code = 500
+                res.detail = json.dumps([err.message])
+                rtn['err_code'] = 500
+                rtn['output_lines'] = [err.message]
+                db.session.add(res)
+                db.session.commit()
+                return rtn, 500
             else:
-                rtn['err_code'] = 10
-            #rtn['enabled'] = rtn['err_code'] == 0
-            rtn['output_lines'] = result.lines
-            res = OperateResult()
-            res.op_rec_id = op_rec.id
-            res.succeed = result.return_code == 0
-            res.error_code = result.error_code.name
-            res.detail = json.dumps(result.lines)
-            db.session.add(res)
-            db.session.commit()
-            return rtn
+                if result.return_code == 0:
+                    rtn['err_code'] = 0
+                else:
+                    rtn['err_code'] = 10
+                rtn['output_lines'] = result.lines
+                res = OperateResult()
+                res.op_rec_id = op_rec.id
+                res.error_code = result.return_code
+                res.detail = json.dumps(result.lines)
+                db.session.add(res)
+                db.session.commit()
+                return rtn
+            finally:
+                executor.client.close()
         else:
             return {
                 'message': 'operation not found'

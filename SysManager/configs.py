@@ -46,23 +46,29 @@ class SSHConfig(RemoteConfig):
             raise ConfigInvalid('Either "password" or "pKey" must be specified.')
         self.ssh_key = pKey
         self.ssh_key_pass = key_pass
-        RemoteConfig.__init__(self,ip, user, password, port)
+        RemoteConfig.__init__(self, ip, user, password, port)
 
 class WinRmConfig(RemoteConfig):
     def __init__(self, ip, user, password, port=5986):
         RemoteConfig.__init__(self, ip, user, password, port)
 
-class ErrorCode(Enum):
-    timeout = -2,
-    invalid_login = -1,
-    succeed = 0,
-    failed = 1
+class HttpConfig(RemoteConfig):
+    def __init__(self, ip, port=8080, **kwargs):
+        user = kwargs.get('user', '')
+        password = kwargs.get('password', '')
+        RemoteConfig.__init__(self, ip, user, password, port)
+        self.web_version = kwargs.get('version', '1.3.6')
+        self.login_uri = kwargs.get('login_uri', 'quantdo/logon')
+        self.captcha = kwargs.get('captcha', False)
+        self.captcha_uri = kwargs.get('captcha_uri', 'quantdo/captcha')
+        self.ssh_user = kwargs.get('ssh_user', '')
+        self.ssh_pass = kwargs.get('ssh_pass', '')
+        self.ssh_port = kwargs.get('ssh_port', 22)
 
 class Result:
     destination = None
     module = None
     return_code = 0
-    error_code = ErrorCode.succeed
     error_msg = ""
     data = {}
     lines = []

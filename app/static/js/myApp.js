@@ -317,6 +317,9 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', 'globalVar',
             })
             .error(function(response) {
                 console.log(response);
+                if (globalVar.current_type == 'grpid') {
+                    $scope.opList.details[index] = response;
+                }
             });
     };
 }]);
@@ -341,6 +344,12 @@ app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootSco
                                 $rootScope.LoginStatics[globalVar.sysid][index2].disconn_count = value1.disconn_count;
                                 $rootScope.LoginStatics[globalVar.sysid][index2].login_fail = value1.login_fail;
                                 $rootScope.LoginStatics[globalVar.sysid][index2].login_success = value1.login_success;
+                                if (value1.hasOwnProperty('trading_day')) {
+                                    $rootScope.LoginStatics[globalVar.sysid][index2].trading_day = value1.trading_day;
+                                }
+                                if (value1.hasOwnProperty('login_time')) {
+                                    $rootScope.LoginStatics[globalVar.sysid][index2].login_time = value1.login_time;
+                                }
                             }
                         });
                     });
@@ -377,6 +386,7 @@ app.controller('clientStaticsControl', ['$scope', '$http', 'globalVar', function
             })
             .error(function(response) {
                 console.log(response);
+                $scope.checking = false;
             });
     };
     $scope.CheckClientSessions();

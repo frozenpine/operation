@@ -11,10 +11,13 @@ sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
 from SysManager import logging
 from excepts import ModuleNotFound
 from configs import (
-    RemoteConfig, SSHConfig, WinRmConfig,
-    Result, ErrorCode
+    RemoteConfig, SSHConfig, WinRmConfig, HttpConfig,
+    Result
 )
+import urllib
+import requests
 import re
+import json
 
 class Executor():
     def __init__(self, remote_config, parser=None):
@@ -27,6 +30,8 @@ class Executor():
             return SSHExecutor(remote_config, parser)
         if isinstance(remote_config, WinRmConfig):
             return WinRmExecutor(remote_config, parser)
+        if isinstance(remote_config, HttpConfig):
+            return HttpExecutor(remote_config, parser)
 
     def run(self, module):
         pass
@@ -117,6 +122,141 @@ class SSHExecutor(Executor):
             self.result.lines = [line.rstrip('\r\n') for line in stderr.readlines()]
         return self.result
 
+class HttpExecutor(Executor):
+    def __init__(self, remote_config, parser=None):
+        Executor.__init__(self, remote_config, parser)
+        self.login = False
+        self.session = requests.Session()
+        if remote_config.captcha:
+            count = 0
+            while True:
+                count += 1
+                if count > 3:
+                    raise requests.exceptions.RetryError
+                if self.Captcha(remote_config):
+                    self.login = True
+                    break
+        else:
+            if self.Login(remote_config):
+                self.login = True
+
+    def Captcha(self, http_config):
+        response = self.session.get(
+            "http://{}:{}/{}".format(
+                http_config.remote_host,
+                http_config.remote_port,
+                http_config.captcha_uri
+            )
+        )
+        ssh_client = SSHClient()
+        ssh_client.set_missing_host_key_policy(AutoAddPolicy())
+        ssh_client.load_system_host_keys()
+        ssh_client.connect(
+            hostname=http_config.remote_host,
+            port=http_config.ssh_port,
+            username=http_config.ssh_user,
+            password=http_config.ssh_pass
+        )
+        command = """
+            PATH=$PATH:.:/bin:/sbin;
+            PATH=$PATH:/usr/local/bin:/usr/local/sbin;
+            PATH=$PATH:/usr/bin:/usr/sbin;
+            PATH=$PATH:~/bin;
+            export PATH;
+            cd apache-tomcat*/logs;
+            grep "\\.CaptchaController " catalina.out | tail -1 | awk '{print $NF}'
+        """
+        stdin, stdout, stderr = ssh_client.exec_command(command)
+        captcha = stdout.read().rstrip('\r\n')
+        ver = http_config.web_version.split('.')
+        maj = ver[0]
+        sub = ver[1]
+        if maj >= 1 and sub >= 3:
+            response = self.session.post(
+                "http://{}:{}/quantdo/logon".format(
+                    http_config.remote_host,
+                    http_config.remote_port
+                ),
+                data={
+                    'params': json.dumps({
+                        "userName": http_config.remote_user,
+                        "password": http_config.remote_password,
+                        'verification_code': captcha,
+                        'extends': 'null'
+                    })
+                }
+            )
+        else:
+            response = self.session.post(
+                "http://{}:{}/quantdo/logon".format(
+                    http_config.remote_host,
+                    http_config.remote_port
+                ),
+                data={
+                    'params': '{{\
+                        userName: "{}", password: "{}", \
+                        verification_code: "{}", \
+                        extends: "null"\
+                    }}'.format(
+                        http_config.remote_user,
+                        http_config.remote_password,
+                        captcha
+                    )
+                }
+            )
+        if json.loads(response.text)['errorCode'] == 0:
+            logging.info(response.text)
+            return True
+        else:
+            logging.warning(response.text)
+            return False
+
+    def Login(self, http_config):
+        ver = http_config.web_version.split('.')
+        maj = int(ver[0])
+        sub = int(ver[1])
+        if maj >= 1 and sub >= 3:
+            response = self.session.post(
+                "http://{}:{}/quantdo/logon".format(
+                    http_config.remote_host,
+                    http_config.remote_port
+                ),
+                data={
+                    'params': json.dumps({
+                        "userName": http_config.remote_user,
+                        "password": http_config.remote_password
+                    })
+                }
+            )
+        else:
+            response = self.session.post(
+                "http://{}:{}/quantdo/logon".format(
+                    http_config.remote_host,
+                    http_config.remote_port
+                ),
+                data={
+                    'params': '{{\
+                        userName: "{}", \
+                        password: "{}"\
+                    }}'.format(
+                        http_config.remote_user,
+                        http_config.remote_password
+                    )
+                }
+            )
+        if json.loads(response.text)['errorCode'] == 0:
+            logging.info(response.text)
+            return True
+        else:
+            logging.warning(response.text)
+            return False
+
+    def Get(self, uri):
+        pass
+
+    def Post(self, uri):
+        pass
+
 if __name__ == '__main__':
     rtn = []
     result = {}
@@ -138,7 +278,6 @@ if __name__ == '__main__':
     result['disks'] = resultlist[2].data
     result['memory'] = resultlist[3].data['mem']
     result['swap'] = resultlist[3].data['swap']
-    '''
     conf = SSHConfig('192.168.101.100', 'qdam', 'qdam')
     executor = Executor.Create(conf)
     result = executor.run(
@@ -175,7 +314,6 @@ if __name__ == '__main__':
                 data['seat_status'] = u'未连接'
         rtn.append(data)
     print rtn
-    '''
     conf = SSHConfig('192.168.101.102', 'quantdo', 'quantdo')
     mod = {
         'name': 'shell',
@@ -190,3 +328,11 @@ if __name__ == '__main__':
     for line in result.lines:
         print line
     '''
+    conf = HttpConfig(
+        ip='10.100.10.10',
+        user='yw',
+        password='1',
+        version='1.0.3'
+    )
+    exe = Executor.Create(conf)
+    print exe.login

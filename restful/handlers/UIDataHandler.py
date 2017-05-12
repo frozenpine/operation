@@ -4,6 +4,7 @@ from sys import argv
 from app.models import Server, TradeSystem, SystemType
 from flask import url_for, request, redirect
 from flask_restful import Resource
+import json
 
 class UIDataApi(Resource):
     def get(self, name):
@@ -59,133 +60,65 @@ class UIDataApi(Resource):
         ]
 
     def relation(self):
-        office = [{
-            'name': '办公系统'
-        }, {
-            'name': 'confluence',
-            'category': 'System'
-        }, {
-            'name': 'jira',
-            'category': 'System'
-        }]
-        qdiam = [{
-            'name': 'QDIAM'
-        }, {
-            'name': '行情子系统',
-            'category': 'System'
-        }, {
-            'name': '交易子系统',
-            'category': 'System'
-        }, {
-            'name': '风控子系统',
-            'category': 'System'
-        }, {
-            'name': '柜台子系统',
-            'category': 'System'
-        }, {
-            'name': 'qmarket 1',
-            'category': 'Process'
-        }, {
-            'name': 'qmarket 2',
-            'category': 'Process'
-        }, {
-            'name': 'qicegateway 1',
-            'category': 'Process'
-        }, {
-            'name': 'qicegateway 2',
-            'category': 'Process'
-        }, {
-            'name': 'qtrade',
-            'category': 'Process'
-        }, {
-            'name': 'qdata',
-            'category': 'Process'
-        }, {
-            'name': 'qquery',
-            'category': 'Process'
-        }, {
-            'name': 'qmdb',
-            'category': 'Process'
-        }, {
-            'name': 'qsdb',
-            'category': 'Process'
-        }, {
-            'name': 'mysql',
-            'category': 'Process'
-        }, {
-            'name': 'tomcat',
-            'category': 'Process'
-        }]
-        kvm = [{
-            'name': 'KVM'
-        }, {
-            'name': 'nas26',
-            'category': 'System'
-        }, {
-            'name': 'kvm23',
-            'category': 'System'
-        }]
+        root_systems = TradeSystem.query.filter(
+            TradeSystem.parent_system == None
+        ).all()
+        series = {}
+        legend = ['System', 'Process', 'Server']
 
-        kvmLink = [{
-            'source': 'KVM',
-            'target': 'kvm23'
-        }, {
-            'source': 'KVM',
-            'target': 'nas26'
-        }]
-        officeLink = [{
-            'source': '办公系统',
-            'target': 'confluence'
-        }, {
-            'source': '办公系统',
-            'target': 'jira'
-        }]
-        qdiamLink = [{
-            'source': 'QDIAM',
-            'target': '行情子系统'
-        }, {
-            'source': 'QDIAM',
-            'target': '交易子系统'
-        }, {
-            'source': 'QDIAM',
-            'target': '风控子系统'
-        }, {
-            'source': 'QDIAM',
-            'target': '柜台子系统'
-        }, {
-            'source': '行情子系统',
-            'target': 'qmarket 1'
-        }, {
-            'source': '行情子系统',
-            'target': 'qmarket 2'
-        }, {
-            'source': '风控子系统',
-            'target': 'qicegateway 1'
-        }, {
-            'source': '风控子系统',
-            'target': 'qicegateway 2'
-        }, {
-            'source': '交易子系统',
-            'target': 'qtrade'
-        }, {
-            'source': '交易子系统',
-            'target': 'qdata'
-        }, {
-            'source': '交易子系统',
-            'target': 'qquery'
-        }, {
-            'source': '交易子系统',
-            'target': 'qmdb'
-        }, {
-            'source': '交易子系统',
-            'target': 'qsdb'
-        }, {
-            'source': '柜台子系统',
-            'target': 'mysql'
-        }, {
-            'source': '柜台子系统',
-            'target': 'tomcat'
-        }]
+        def find_nodes(sys, nodes, relations):
+            for proc in sys.processes:
+                nodes.add(json.dumps({
+                    'name': proc.uuid,
+                    'value': [proc.name],
+                    'category': 'Process'
+                }))
+                nodes.add(json.dumps({
+                    'name': proc.server.uuid,
+                    'value': [proc.server.name],
+                    'category': 'Server'
+                }))
+                relations.add(json.dumps({
+                    'source': proc.uuid,
+                    'target': sys.uuid
+                }))
+                relations.add(json.dumps({
+                    'source': proc.uuid,
+                    'target': proc.server.uuid
+                }))
+                relations.add(json.dumps({
+                    'source': sys.uuid,
+                    'target': proc.server.uuid
+                }))
+            for child in sys.child_systems:
+                nodes.add(json.dumps({
+                    'name': child.uuid,
+                    'value': [child.name],
+                    'category': 'System'
+                }))
+                relations.add(json.dumps({
+                    'source': child.uuid,
+                    'target': sys.uuid
+                }))
+                find_nodes(child, nodes, relations)
+
+        for root in root_systems:
+            legend.append(root.name)
+            if not series.has_key(root.name):
+                series[root.name] = {}
+                series[root.name]['nodes'] = set()
+                series[root.name]['relations'] = set()
+            series[root.name]['nodes'].add(json.dumps({
+                'name': root.uuid,
+                'value': [root.name],
+                'category': 'System'
+            }))
+            find_nodes(
+                root,
+                series[root.name]['nodes'],
+                series[root.name]['relations']
+            )
+
         option = {
             'backgroundColor': '#fff',
             'title': {
@@ -199,8 +132,11 @@ class UIDataApi(Resource):
                 },
                 'selectedMode': 'false',
                 'bottom': 20,
-                'data': ['KVM', 'QDIAM', '办公系统', 'System', 'Process']
+                'data': legend
             }],
+            'tooltip': {
+                'show': False
+            },
             'toolbox': {
                 'show': True,
                 'feature': {
@@ -210,103 +146,41 @@ class UIDataApi(Resource):
             },
             'animationDuration': 3000,
             'animationEasingUpdate': 'quinticInOut',
-            'series': [{
-                'name': 'KVM',
-                'type': 'graph',
-                'layout': 'force',
-                'force': {
-                    'initLayout': 'circular',
-                    'repulsion': [30, 100],
-                    'gravity': 0.6,
-                    'edgeLength': [30, 100],
-                },
-                'draggable': True,
-                'data': kvm,
-                'links': kvmLink,
-                'edgeSymbol': ['', 'arrow'],
-                'categories': [
-                    {'name': 'System'},
-                    {'name': 'Process'}
-                ],
-                'focusNodeAdjacency': True,
-                'roam': True,
-                'label': {
-                    'normal': {
-                        'show': True,
-                        'position': 'top'
-                    }
-                },
-                'lineStyle': {
-                    'normal': {
-                        'color': 'source',
-                        'curveness': 0.3,
-                        'type': "solid"
-                    }
-                }
-            }, {
-                'name': '办公系统',
-                'type': 'graph',
-                'layout': 'force',
-                'force': {
-                    'repulsion': 100,
-                    'gravity': 0.1,
-                    'edgeLength': 100,
-                },
-                'draggable': True,
-                'data': office,
-                'links': officeLink,
-                'edgeSymbol': ['', 'arrow'],
-                'categories': [
-                    {'name': 'System'},
-                    {'name': 'Process'}
-                ],
-                'focusNodeAdjacency': True,
-                'roam': True,
-                'label': {
-                    'normal': {
-                        'show': True,
-                        'position': 'top'
-                    }
-                },
-                'lineStyle': {
-                    'normal': {
-                        'color': 'source',
-                        'curveness': 0.3,
-                        'type': "solid"
-                    }
-                }
-            }, {
-                'name': 'QDIAM',
-                'type': 'graph',
-                'layout': 'force',
-                'force': {
-                    'repulsion': 100,
-                    'gravity': 0.1,
-                    'edgeLength': 100,
-                },
-                'draggable': True,
-                'data': qdiam,
-                'links': qdiamLink,
-                'edgeSymbol': ['', 'arrow'],
-                'categories': [
-                    {'name': 'System'},
-                    {'name': 'Process'}
-                ],
-                'focusNodeAdjacency': True,
-                'roam': True,
-                'label': {
-                    'normal': {
-                        'show': True,
-                        'position': 'top'
-                    }
-                },
-                'lineStyle': {
-                    'normal': {
-                        'color': 'source',
-                        'curveness': 0.3,
-                        'type': "solid"
-                    }
-                }
-            }]
+            'series': []
         }
+        for k, v in series.iteritems():
+            option['series'].append({
+                'name': k,
+                'type': 'graph',
+                'layout': 'force',
+                'force': {
+                    'repulsion': 100,
+                    'gravity': 0.1,
+                    'edgeLength': 100,
+                },
+                'draggable': True,
+                'data': [json.loads(x) for x in v['nodes']],
+                'links': [json.loads(y) for y in v['relations']],
+                'categories': [
+                    {'name': 'System'},
+                    {'name': 'Process'},
+                    {'name': 'Server'}
+                ],
+                'label': {
+                    'normal': {
+                        'show': True,
+                        'formatter': '{c0}',
+                        'position': 'top'
+                    }
+                },
+                'focusNodeAdjacency': True,
+                'roam': True,
+                'lineStyle': {
+                    'normal': {
+                        'color': 'source',
+                        'curveness': 0.3,
+                        'type': "solid"
+                    }
+                }
+            })
         return option
