@@ -5,7 +5,10 @@ from .handlers.DeviceHandler import DeviceApi, DeviceListApi
 from .handlers.SystemHandler import SystemApi, SystemListApi
 from .handlers.RoleHandler import RoleApi, RoleListApi
 from .handlers.UIDataHandler import UIDataApi
-from .handlers.OperationHandler import OperationListApi, OperationApi
+from .handlers.OperationHandler import (
+    OperationListApi, OperationApi,
+    OperationCaptchaApi, OperationLoginApi
+)
 from .handlers.SysStaticsHandler import (
     ServerStaticListApi, SystemStaticListApi,
     ServerStaticApi, ProcStaticApi,
@@ -84,6 +87,20 @@ resources.add_resource(
     '/operation/id/<int:id>',
     methods=['GET'],
     endpoint='operation'
+)
+
+resources.add_resource(
+    OperationCaptchaApi,
+    '/operation/id/<int:id>/captcha',
+    methods=['GET'],
+    endpoint='operation_captcha'
+)
+
+resources.add_resource(
+    OperationLoginApi,
+    '/operation/id/<int:id>/login',
+    methods=['POST'],
+    endpoint='operation_login'
 )
 
 resources.add_resource(

@@ -306,21 +306,42 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', 'globalVar',
         }
     };
     $scope.execute = function(index, id) {
-        $http.get('api/operation/id/' + id)
-            .success(function(response) {
-                if (globalVar.current_type == 'grpid') {
-                    $scope.opList.details[index] = response;
-                    if (index < $scope.opList.details.length - 1 && !$scope.opList.details[index].checker.isTrue) {
-                        $scope.opList.details[index + 1].enabled = response.succeed;
-                    }
-                }
-            })
-            .error(function(response) {
-                console.log(response);
-                if (globalVar.current_type == 'grpid') {
-                    $scope.opList.details[index] = response;
+        if ($scope.opList.details[index].interactivator.isTrue) {
+            $('#interactive' + index).find('img')[0].setAttribute('src', '');
+            $('#interactive' + index).find('img')[0].click();
+            $('#interactive' + index).modal({
+                relatedTarget: this,
+                onConfirm: function() {
+                    $scope.$apply(function() {
+                        if (index < $scope.opList.details.length - 1) {
+                            $scope.opList.details[index + 1].enabled = true;
+                        }
+                        $scope.opList.details[index].checker.checked = true;
+                    });
+                },
+                onCancel: function() {
+                    $scope.$apply(function() {
+                        $scope.opList.details[index].err_code = -1;
+                    });
                 }
             });
+        } else {
+            $http.get('api/operation/id/' + id)
+                .success(function(response) {
+                    if (globalVar.current_type == 'grpid') {
+                        $scope.opList.details[index] = response;
+                        if (index < $scope.opList.details.length - 1 && !$scope.opList.details[index].checker.isTrue) {
+                            $scope.opList.details[index + 1].enabled = response.succeed;
+                        }
+                    }
+                })
+                .error(function(response) {
+                    console.log(response);
+                    if (globalVar.current_type == 'grpid') {
+                        $scope.opList.details[index] = response;
+                    }
+                });
+        }
     };
 }]);
 app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootScope', '$interval', '$timeout', function($scope, $http, globalVar, $rootScope, $interval, $timeout) {
@@ -468,6 +489,11 @@ app.filter('KB2', function() {
         }
     };
 });
+app.filter('html_trust', ['$sce', function($sce) {
+    return function(template) {
+        return $sce.trustAsHtml(template);
+    };
+}]);
 app.filter('percent', function() {
     return function(value, len, multi) {
         var num = parseFloat(value);

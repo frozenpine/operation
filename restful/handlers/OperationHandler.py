@@ -1,13 +1,20 @@
 # -*- coding: UTF-8 -*-
+import logging
 from app import db
+from sqlalchemy import text
+from flask import (
+    render_template, url_for,
+    make_response, request, session
+)
 from flask_login import current_user
-from flask_restful import Resource, reqparse, request
+from flask_restful import Resource
 from app.models import (
     OperationGroup, Operation, ScriptType,
     OperateRecord, OperateResult
 )
 import arrow
 import json
+import requests
 from SysManager.configs import Result, RemoteConfig, SSHConfig
 from SysManager.executor import Executor
 from SysManager.excepts import ExecuteError
@@ -34,39 +41,38 @@ class OperationListApi(Resource):
             self.rtn['details'] = []
             for op in op_group.operations:
                 skip, record = self.find_op_results(op)
+                dtl = {
+                    'id': op.id,
+                    'op_name': op.name,
+                    'op_desc': op.description,
+                    'err_code': -1,
+                    'enabled': False,
+                    're_enter': True,
+                    'checker': {
+                        'isTrue': op.type.IsChecker(),
+                        'checked': False
+                    },
+                    'interactivator': {
+                        'isTrue': op.type.IsInteractivator()
+                    },
+                    'skip': skip
+                }
                 if skip:
-                    self.rtn['details'].append({
-                        'id': op.id,
-                        'op_name': op.name,
-                        'op_desc': op.description,
-                        'err_code': -1,
-                        'enabled': False,
-                        're_enter': True,
-                        'checker': {
-                            'isTrue': op.type.IsChecker(),
-                            'checked': False
-                        },
-                        'skip': skip,
-                        'his_results': {
-                            'operated_at': record.operated_at.humanize(),
-                            'operator': record.operator.name,
-                            'lines': json.loads(record.results[-1].detail)
-                        }
-                    })
-                else:
-                    self.rtn['details'].append({
-                        'id': op.id,
-                        'op_name': op.name,
-                        'op_desc': op.description,
-                        'err_code': -1,
-                        'enabled': False,
-                        're_enter': True,
-                        'checker': {
-                            'isTrue': op.type.IsChecker(),
-                            'checked': False
-                        },
-                        'skip': skip
-                    })
+                    dtl['his_results'] = {
+                        'operated_at': record.operated_at.humanize(),
+                        'operator': record.operator.name,
+                        'lines': json.loads(record.results[-1].detail)
+                    }
+                if op.type.IsInteractivator():
+                    dtl['interactivator']['template'] = render_template(
+                        'Interactivators/{}.html'.format('quantdo'),
+                        login_user=op.detail['remote']['params']['user'],
+                        login_password=op.detail['remote']['params']['password'],
+                        captcha=op.detail['remote']['params'].get('captcha', False),
+                        captcha_uri=url_for('api.operation_captcha', id=op.id),
+                        login_uri=url_for('api.operation_login', id=op.id)
+                    )
+                self.rtn['details'].append(dtl)
             if len(self.rtn['details']) > 0:
                 self.rtn['details'][0]['enabled'] = True
             return self.rtn
@@ -93,14 +99,7 @@ class OperationApi(Resource):
                 'isTrue': op.type.IsChecker(),
                 'checked': False
             }
-            '''
-            conf = SSHConfig(
-                op.system.manage_ip.exploded,
-                op.system.login_user,
-                op.system.login_pwd
-            )
-            '''
-            conf = RemoteConfig.CreateConfig(
+            conf = RemoteConfig.Create(
                 sub_class=op.detail['remote']['name'],
                 params=op.detail['remote']['params']
             )
@@ -136,3 +135,69 @@ class OperationApi(Resource):
             return {
                 'message': 'operation not found'
             }, 404
+
+class OperationCaptchaApi(Resource):
+    def get(self, id):
+        op = Operation.find(id=id)
+        if op:
+            '''
+            conf = RemoteConfig.Create(
+                op.detail['remote']['name'],
+                op.detail['remote']['params']
+            )
+            executor = Executor.Create(conf)
+            rsp = executor.Captcha(conf)
+            return make_response(rsp.content)
+            '''
+            params = op.detail['remote']['params']
+            req = requests.Session()
+            rsp = req.get(
+                'http://{}:{}/{}'.format(
+                    params.get('ip'),
+                    params.get('port') or '8080',
+                    params.get('captcha_uri').lstrip('/')
+                )
+            )
+            session['http_token'] = rsp.cookies['token']
+            rtn = make_response(rsp.content)
+            return rtn
+
+class OperationLoginApi(Resource):
+    def post(self, id):
+        op = Operation.find(id=id)
+        if op:
+            req = requests.Session()
+            if session.has_key('http_token'):
+                cookie = {'token': session['http_token']}
+            else:
+                cookie = None
+            params = op.detail['remote']['params']
+            rsp = req.post(
+                'http://{}:{}/{}'.format(
+                    params.get('ip'),
+                    params.get('port') or '8080',
+                    params.get('login_uri')
+                ),
+                data={
+                    'params': json.dumps({
+                        'userName': request.values.get('userName'),
+                        'password': request.values.get('password'),
+                        'verification_code': request.values.get('verification_code')
+                    })
+                },
+                cookies=cookie
+            )
+            rtn = rsp.json()
+            next_trading_day = db.session.execute(
+                text(
+                    "\
+                    SELECT trade_calendar.full_date \
+                    FROM trade_calendar \
+                    WHERE trade_calendar.full_date>'{}' \
+                        AND trade_calendar.is_trade=1 \
+                    LIMIT 1\
+                    ".format(arrow.utcnow().to('Asia/Shanghai').format('YYYYMMDD'))
+                )
+            ).first()[0]
+            rtn['next_trading_day'] = next_trading_day
+            return rtn

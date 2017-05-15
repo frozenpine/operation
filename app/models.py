@@ -226,26 +226,26 @@ class DatasourceModel(Enum):
 class ScriptType(Enum):
     Checker = 1
     Executor = 2
-    Confirmer = 4
+    Interactivator = 4
     Excute_Check = Executor|Checker
-    Confirm_Excute = Confirmer|Executor
-    Confirm_Excute_Check = Confirmer|Executor|Checker
+    Interactive_Excutor = Interactivator|Executor
+    Interactive_Excute_Checker = Interactivator|Executor|Checker
 
     def IsBatcher(self):
         return self.value & ScriptType.Excute_Check.value \
             == ScriptType.Excute_Check.value or \
-            self.value & ScriptType.Confirm_Excute.value \
-            == ScriptType.Confirm_Excute.value or \
-            self.value & ScriptType.Confirm_Excute_Check.value \
-            == ScriptType.Confirm_Excute_Check.value
+            self.value & ScriptType.Interactive_Excutor.value \
+            == ScriptType.Interactive_Excutor.value or \
+            self.value & ScriptType.Interactive_Excute_Checker.value \
+            == ScriptType.Interactive_Excute_Checker.value
 
     def IsChecker(self):
         return self.value & ScriptType.Checker.value \
             == ScriptType.Checker.value
 
-    def IsConfirmer(self):
-        return self.value & ScriptType.Confirmer.value \
-            == ScriptType.Confirmer.value
+    def IsInteractivator(self):
+        return self.value & ScriptType.Interactivator.value \
+            == ScriptType.Interactivator.value
 
 class PlatformType(Enum):
     Linux = 1

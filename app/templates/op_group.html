@@ -30,6 +30,21 @@
 											<span class="am-icon-pencil-square-o"></span> 执行
 										</button>
 									</div>
+									<div class="am-modal am-modal-loading am-modal-no-btn" ng-if="data.interactivator.isTrue" tabindex="-1" id="{{'interactive' + $index}}">
+										<div class="am-modal-dialog">
+											<div class="am-modal-hd">
+												交互操作
+												<span class="am-close am-fr" data-am-modal-cancel data-am-modal-close>&times;</span>
+											</div>
+											<div class="am-modal-bd">
+												<div ng-bind-html="data.interactivator.template | html_trust"></div>
+											</div>
+											<div class="am-modal-footer">
+												<span class="am-modal-btn" data-am-modal-cancel>取消</span>
+												<span class="am-modal-btn" data-am-modal-confirm>确定</span>
+											</div>
+										</div>
+									</div>
 								</td>
 								<td>
 									{{data.err_code | exe_result}}

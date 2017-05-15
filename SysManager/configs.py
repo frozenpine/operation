@@ -42,7 +42,7 @@ class RemoteConfig(object):
         self.remote_password = password
 
     @staticmethod
-    def CreateConfig(sub_class, params):
+    def Create(sub_class, params):
         return globals()[sub_class](**params)
 
 class SSHConfig(RemoteConfig):
@@ -61,12 +61,8 @@ class HttpConfig(RemoteConfig):
     def __init__(self, ip, user=None, password=None, port=8080, **kwargs):
         RemoteConfig.__init__(self, ip, user, password, port)
         self.web_version = kwargs.get('version', '1.3.6')
-        self.login_uri = kwargs.get('login_uri', 'quantdo/logon')
-        self.captcha = kwargs.get('captcha', False)
-        self.captcha_uri = kwargs.get('captcha_uri', 'quantdo/captcha')
-        self.ssh_user = kwargs.get('ssh_user', '')
-        self.ssh_pass = kwargs.get('ssh_pass', '')
-        self.ssh_port = kwargs.get('ssh_port', 22)
+        self.login_uri = kwargs.get('login_uri', '/quantdo/logon')
+        self.captcha_uri = kwargs.get('captcha_uri', '/quantdo/captcha')
 
 class Result:
     destination = None
