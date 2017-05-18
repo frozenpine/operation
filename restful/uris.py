@@ -6,9 +6,10 @@ from .handlers.SystemHandler import SystemApi, SystemListApi
 from .handlers.RoleHandler import RoleApi, RoleListApi
 from .handlers.UIDataHandler import UIDataApi
 from .handlers.OperationHandler import (
-    OperationListApi, OperationApi,
-    OperationCaptchaApi, OperationLoginApi
+    OperationListApi, OperationApi, OperationCaptchaApi,
+    OperationLoginApi, OperationExecuteApi, OperationUIApi
 )
+from .handlers.TradingDayHandler import NextTradingDayApi
 from .handlers.SysStaticsHandler import (
     ServerStaticListApi, SystemStaticListApi,
     ServerStaticApi, ProcStaticApi,
@@ -90,6 +91,13 @@ resources.add_resource(
 )
 
 resources.add_resource(
+    OperationUIApi,
+    '/operation/id/<int:id>/ui',
+    methods=['GET'],
+    endpoint='operation_ui'
+)
+
+resources.add_resource(
     OperationCaptchaApi,
     '/operation/id/<int:id>/captcha',
     methods=['GET'],
@@ -101,6 +109,20 @@ resources.add_resource(
     '/operation/id/<int:id>/login',
     methods=['POST'],
     endpoint='operation_login'
+)
+
+resources.add_resource(
+    OperationExecuteApi,
+    '/operation/id/<int:id>/execute',
+    methods=['GET', 'POST'],
+    endpoint='operation_execute'
+)
+
+resources.add_resource(
+    NextTradingDayApi,
+    '/nextTradingDay',
+    methods=['GET'],
+    endpoint='next_trading_day'
 )
 
 resources.add_resource(

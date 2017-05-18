@@ -26,20 +26,20 @@ class Executor():
         self.parser = parser
 
     @staticmethod
-    def Create(remote_config, parser=None):
+    def Create(remote_config, parser=None, session=None):
         if isinstance(remote_config, SSHConfig):
             return SSHExecutor(remote_config, parser)
         if isinstance(remote_config, WinRmConfig):
             return WinRmExecutor(remote_config, parser)
         if isinstance(remote_config, HttpConfig):
-            return HttpExecutor(remote_config, parser)
+            return HttpExecutor(remote_config, parser, session)
 
     def run(self, module):
         import_mod = 'import Libs.{} as mod'.format(module.get('name'))
         try:
             exec import_mod
         except ImportError:
-            raise ModuleNotFound
+            raise ModuleNotFound(module.get('name'))
         if not self.parser:
             import_parser = 'from Parsers.{0}Parser import {0}Parser as par'\
                 .format(module.get('name'))
@@ -119,61 +119,13 @@ class SSHExecutor(Executor):
         )
 
 class HttpExecutor(Executor):
-    def __init__(self, remote_config, parser=None):
+    def __init__(self, remote_config, parser=None, session=None):
         Executor.__init__(self, remote_config, parser)
+        self.session = session
         self.client = requests.Session()
 
-    def Captcha(self, http_config):
-        response = self.client.get(
-            "http://{}:{}/{}".format(
-                http_config.remote_host,
-                http_config.remote_port,
-                http_config.captcha_uri.lstrip('/')
-            )
-        )
-        return response
-
-    def Login(self, http_config):
-        ver = http_config.web_version.split('.')
-        maj = int(ver[0])
-        sub = int(ver[1])
-        if maj >= 1 and sub >= 3:
-            response = self.client.post(
-                "http://{}:{}/{}".format(
-                    http_config.remote_host,
-                    http_config.remote_port,
-                    http_config.login_uri.lstrip('/')
-                ),
-                data={
-                    'params': json.dumps({
-                        "userName": http_config.remote_user,
-                        "password": http_config.remote_password
-                    })
-                }
-            )
-        else:
-            response = self.client.post(
-                "http://{}:{}/{}".format(
-                    http_config.remote_host,
-                    http_config.remote_port,
-                    http_config.login_uri
-                ),
-                data={
-                    'params': '{{\
-                        userName: "{}", \
-                        password: "{}"\
-                    }}'.format(
-                        http_config.remote_user,
-                        http_config.remote_password
-                    )
-                }
-            )
-        if json.loads(response.text)['errorCode'] == 0:
-            logging.info(response.text)
-            return True
-        else:
-            logging.warning(response.text)
-            return False
+    def run(self, module):
+        pass
 
 if __name__ == '__main__':
     rtn = []

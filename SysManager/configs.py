@@ -60,9 +60,7 @@ class WinRmConfig(RemoteConfig):
 class HttpConfig(RemoteConfig):
     def __init__(self, ip, user=None, password=None, port=8080, **kwargs):
         RemoteConfig.__init__(self, ip, user, password, port)
-        self.web_version = kwargs.get('version', '1.3.6')
-        self.login_uri = kwargs.get('login_uri', '/quantdo/logon')
-        self.captcha_uri = kwargs.get('captcha_uri', '/quantdo/captcha')
+        self.cookies = kwargs.get('cookies')
 
 class Result:
     destination = None

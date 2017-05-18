@@ -26,11 +26,11 @@
 									<div class="am-btn-group am-btn-group-xs">
 										<button 
 											class="am-btn am-btn-default am-btn-xs am-text-secondary" 
-											ng-class="{true: '', false: 'am-disabled'}[data.enabled && data.re_enter]" ng-click="execute($index, data.id);data.err_code=-2;data.skip=false">
+											ng-class="{true: '', false: 'am-disabled'}[data.enabled && data.re_enter]" ng-click="execute($index, data.id)">
 											<span class="am-icon-pencil-square-o"></span> 执行
 										</button>
 									</div>
-									<div class="am-modal am-modal-loading am-modal-no-btn" ng-if="data.interactivator.isTrue" tabindex="-1" id="{{'interactive' + $index}}">
+									<div class="am-modal am-modal-loading am-modal-prompt" ng-if="data.interactivator.isTrue" tabindex="-1" id="{{'interactive' + data.id}}">
 										<div class="am-modal-dialog">
 											<div class="am-modal-hd">
 												交互操作
@@ -38,10 +38,6 @@
 											</div>
 											<div class="am-modal-bd">
 												<div ng-bind-html="data.interactivator.template | html_trust"></div>
-											</div>
-											<div class="am-modal-footer">
-												<span class="am-modal-btn" data-am-modal-cancel>取消</span>
-												<span class="am-modal-btn" data-am-modal-confirm>确定</span>
 											</div>
 										</div>
 									</div>
@@ -79,7 +75,7 @@
 														<span class="am-icon-terminal am-icon-sm am-monospace" style="white-space: pre; margin-left: 5px; margin-right: 5px"> {{line}}</span>
 													</li>
 												</ul>
-												<span ng-if="data.output_lines.length == 0">无操作回显。</span>
+												<span ng-if="data.output_lines.length == 0 || data.output_lines == null">无操作回显。</span>
 											</div>
 											<div class="am-modal-footer">
 												<span ng-show="!(data.checker.checked || !data.checker.isTrue)" class="am-modal-btn" data-am-modal-cancel>取消</span>
@@ -100,7 +96,7 @@
 														<span class="am-icon-terminal am-icon-sm am-monospace" style="white-space: pre; margin-left: 5px; margin-right: 5px"> {{line}}</span>
 													</li>
 												</ul>
-												<span ng-if="data.his_results.lines.length == 0">无操作回显。</span>
+												<span ng-if="data.his_results.lines.length == 0 || data.his_results.lines == null">无操作回显。</span>
 											</div>
 											<div class="am-modal-footer">
 												<span class="am-modal-btn">确定</span>

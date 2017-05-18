@@ -9,8 +9,8 @@ class ConfigInvalid(Exception):
         Exception.__init__(self, msg)
 
 class ModuleNotFound(ExecuteError):
-    def __init__(self, msg="Module not found."):
-        super(ModuleNotFound, self).__init__(msg)
+    def __init__(self, name=''):
+        super(ModuleNotFound, self).__init__("Module({}) not found.".format(name))
 
 class SSHConnNotEstablished(ExecuteError):
     def __init__(self, msg="No SSH connection."):

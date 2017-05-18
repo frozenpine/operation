@@ -307,30 +307,54 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', 'globalVar',
     };
     $scope.execute = function(index, id) {
         if ($scope.opList.details[index].interactivator.isTrue) {
-            $('#interactive' + index).find('img')[0].setAttribute('src', '');
-            $('#interactive' + index).find('img')[0].click();
-            $('#interactive' + index).modal({
-                relatedTarget: this,
-                onConfirm: function() {
-                    $scope.$apply(function() {
-                        if (index < $scope.opList.details.length - 1) {
-                            $scope.opList.details[index + 1].enabled = true;
+            $http.get('api/operation/id/' + id + '/ui')
+                .success(function(response) {
+                    $scope.opList.details[index].interactivator.template = response;
+                    $('#interactive' + id).bind('execute.quantdo', function(event, data) {
+                        $scope.$apply(function() {
+                            $scope.opList.details[index].err_code = -2;
+                            $scope.opList.details[index].skip = false;
+                        });
+                        $.post(
+                            "api/operation/id/" + id + "/execute",
+                            data = data,
+                            function(response) {
+                                console.log(response);
+                                if (globalVar.current_type == 'grpid') {
+                                    $scope.$apply(function() {
+                                        $scope.opList.details[index] = response;
+                                        if (index < $scope.opList.details.length - 1 && ($scope.opList.details[index].checker === undefined || !$scope.opList.details[index].checker.isTrue)) {
+                                            $scope.opList.details[index + 1].enabled = response.succeed;
+                                        }
+                                    });
+                                }
+                            }
+                        );
+                    });
+                    $('#interactive' + id).on('opened.modal.amui', function() {
+                        var imgElement = $('#interactive' + id).find('img')[0];
+                        if (imgElement !== null && imgElement !== undefined) {
+                            imgElement.click();
                         }
-                        $scope.opList.details[index].checker.checked = true;
                     });
-                },
-                onCancel: function() {
-                    $scope.$apply(function() {
-                        $scope.opList.details[index].err_code = -1;
+                    $('#interactive' + id).modal({
+                        relatedTarget: this,
+                        onCancel: function() {
+                            $scope.$apply(function() {
+                                $scope.opList.details[index].err_code = -1;
+                            });
+                        }
                     });
-                }
-            });
+                    console.log($('#interactive' + id).find('[data-am-modal-confirm]'));
+                });
         } else {
+            $scope.opList.details[index].err_code = -2;
+            $scope.opList.details[index].skip = false;
             $http.get('api/operation/id/' + id)
                 .success(function(response) {
                     if (globalVar.current_type == 'grpid') {
                         $scope.opList.details[index] = response;
-                        if (index < $scope.opList.details.length - 1 && !$scope.opList.details[index].checker.isTrue) {
+                        if (index < $scope.opList.details.length - 1 && ($scope.opList.details[index].checker === undefined || !$scope.opList.details[index].checker.isTrue)) {
                             $scope.opList.details[index + 1].enabled = response.succeed;
                         }
                     }
@@ -626,6 +650,7 @@ app.directive('idcmap', [function() {
                     }
                 }
             });
+            myChart.hideLoading();
 
             $(element[0]).resize(function() {
                 //chartResize();
@@ -666,7 +691,6 @@ app.directive('idcmap', [function() {
                         data: idcs
                     }]
                 });
-                myChart.hideLoading();
             });
         }
     }
