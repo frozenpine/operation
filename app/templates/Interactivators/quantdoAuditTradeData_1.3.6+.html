@@ -59,10 +59,12 @@
         $.post(
             "[[login_uri]]",
             data = {
-                userName: user,
-                password: pass,
-                verification_code: captcha
-            },
+				params: JSON.stringify({
+					userName: user,
+					password: pass,
+					verification_code: captcha
+				})
+			},
             function(response) {
                 console.log(response);
                 if (response.errorCode == 0) {

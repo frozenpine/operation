@@ -59,22 +59,11 @@ class OperationListApi(Resource):
                 }
                 if skip:
                     dtl['his_results'] = {
+                        'err_code': record.results[-1].error_code,
                         'operated_at': record.operated_at.humanize(),
                         'operator': record.operator.name,
-                        'lines': json.loads(record.results[-1].detail)
+                        'lines': record.results[-1].detail or []
                     }
-                '''
-                if op.type.IsInteractivator():
-                    dtl['interactivator']['template'] = render_template(
-                        'Interactivators/{}.html'.format(op.detail['mod']['name']),
-                        login_user=op.detail['remote']['params']['user'],
-                        login_password=op.detail['remote']['params']['password'],
-                        captcha=op.detail['remote']['params'].get('captcha', False),
-                        captcha_uri=url_for('api.operation_captcha', id=op.id),
-                        login_uri=url_for('api.operation_login', id=op.id),
-                        execute_uri=url_for('api.operation_execute', id=op.id)
-                    )
-                '''
                 self.rtn['details'].append(dtl)
             if len(self.rtn['details']) > 0:
                 self.rtn['details'][0]['enabled'] = True
@@ -126,11 +115,19 @@ class OperationApi(Resource):
         if op:
             self.ExecutionPrepare(op)
             try:
-                result = self.executor.run(op.detail['mod'])
-            except ExecuteError, err:
+                if isinstance(op.detail['mod'], dict):
+                    result = self.executor.run(op.detail['mod'])
+                elif isinstance(op.detail['mod'], list):
+                    result_list = []
+                    for module in op.detail['mod']:
+                        result_list.append(self.executor.run(module))
+                    result = result_list[-1]
+                else:
+                    raise Exception('invalid module configuration.')
+            except Exception, err:
                 self.op_result.record = self.op_record
                 self.op_result.error_code = 500
-                self.op_result.detail = json.dumps([err.message])
+                self.op_result.detail = [err.message]
                 self.rtn['err_code'] = 500
                 self.rtn['output_lines'] = [err.message]
                 return self.rtn, 500
@@ -142,7 +139,7 @@ class OperationApi(Resource):
                 self.rtn['output_lines'] = result.lines
                 self.op_result.op_rec_id = self.op_record.id
                 self.op_result.error_code = result.return_code
-                self.op_result.detail = json.dumps(result.lines)
+                self.op_result.detail = result.lines
                 return self.rtn
             finally:
                 self.executor.client.close()
@@ -201,7 +198,12 @@ class OperationUIApi(Resource):
                 params.get('port', '8080')
             )
             if session.has_key(key):
-                valid_session = True
+                if arrow.utcnow().timestamp >= \
+                    arrow.get(session[key].get('timeout')).timestamp:
+                    session.pop(key)
+                    valid_session = False
+                else:
+                    valid_session = session[key]['login']
             else:
                 valid_session = False
             return render_template(
@@ -230,10 +232,15 @@ class OperationCaptchaApi(Resource):
                     params.get('captcha_uri').lstrip('/')
                 )
             )
-            session['{}:{}'.format(
+            key = '{}:{}'.format(
                 params.get('ip'),
                 params.get('port', '8080')
-            )] = rsp.cookies.get_dict()
+            )
+            session[key] = {
+                'origin': rsp.cookies.get_dict(),
+                'timeout': arrow.utcnow().shift(minutes=+30).timestamp,
+                'login': False
+            }
             rtn = make_response(rsp.content)
             req.close()
             return rtn
@@ -247,13 +254,13 @@ class OperationLoginApi(Resource):
         op = Operation.find(id=id)
         if op:
             params = op.detail['remote']['params']
+            key = '{}:{}'.format(params.get('ip'), params.get('port', '8080'))
             req = requests.Session()
-            if session.has_key('{}:{}'.format(params.get('ip'), params.get('port', '8080'))):
-                cookie = session['{}:{}'.format(
-                    params.get('ip'),
-                    params.get('port', '8080'))]
+            if session.has_key(key):
+                cookies = session[key]
             else:
-                cookie = None
+                cookies = None
+            '''
             rsp = req.post(
                 'http://{}:{}/{}'.format(
                     params.get('ip'),
@@ -267,11 +274,24 @@ class OperationLoginApi(Resource):
                         'verification_code': request.values.get('verification_code')
                     })
                 },
-                cookies=cookie
+                cookies=cookies['origin']
+            )
+            '''
+            rsp = req.post(
+                'http://{}:{}/{}'.format(
+                    params.get('ip'),
+                    params.get('port') or '8080',
+                    params.get('login_uri')
+                ),
+                data=request.form,
+                cookies=cookies['origin']
             )
             rtn = rsp.json()
-            session['{}:{}'.format(params.get('ip'), params.get('port', '8080'))] = \
-                rsp.cookies.get_dict()
+            session[key] = {
+                'origin': rsp.cookies.get_dict(),
+                'timeout': arrow.utcnow().shift(minutes=+30).timestamp,
+                'login': rtn['errorCode'] == 0
+            }
             req.close()
             return rtn
         else:
@@ -280,9 +300,13 @@ class OperationLoginApi(Resource):
             }, 404
 
 class OperationExecuteApi(Resource):
+    def __init__(self):
+        super(OperationExecuteApi, self).__init__()
+        self.rtn = {}
+        self.res = OperateResult()
+
     def post(self, id):
         op = Operation.find(id=id)
-        rtn = {}
         if op:
             op_rec = OperateRecord()
             op_rec.operation_id = op.id
@@ -292,14 +316,12 @@ class OperationExecuteApi(Resource):
             db.session.commit()
             req = requests.Session()
             params = op.detail['remote']['params']
-            if session.has_key('{}:{}'.format(params.get('ip'), params.get('port', '8080'))):
-                cookie = session['{}:{}'.format(params.get('ip'), params.get('port', '8080'))]
+            key = '{}:{}'.format(params.get('ip'), params.get('port', '8080'))
+            if session.has_key(key):
+                cookies = session[key]
             else:
-                cookie = None
+                cookies = None
             try:
-                #data = dict(request.form)
-                #print data
-                print request.form
                 rsp = req.post(
                     'http://{}:{}/{}'.format(
                         params.get('ip'),
@@ -307,43 +329,52 @@ class OperationExecuteApi(Resource):
                         op.detail['mod']['request']['uri'].lstrip('/')
                     ),
                     data=request.form,
-                    cookies=cookie
+                    cookies=cookies['origin']
                 )
             except requests.HTTPError, err:
-                res = OperateResult()
-                res.op_rec_id = op_rec.id
-                res.error_code = 500
-                res.detail = json.dumps([err.message])
-                db.session.add(res)
-                db.session.commit()
+                self.res.error_code = 500
+                self.res.detail = [err.message]
                 return {
                     'message': err.message
                 }, 500
             else:
-                rsp_json = rsp.json()
-                rtn['id'] = op.id
-                rtn['op_name'] = op.name
-                rtn['op_desc'] = op.description
-                rtn['checker'] = {
+                try:
+                    rsp_json = rsp.json()
+                except Exception, err:
+                    self.rtn['err_code'] = 401
+                    self.rtn['output_lines'] = ['please login first.']
+                else:
+                    self.rtn['err_code'] = rsp_json['errorCode']
+                    self.rtn['output_lines'] = format2json(rsp_json['data'])
+            finally:
+                self.rtn['id'] = op.id
+                self.rtn['op_name'] = op.name
+                self.rtn['op_desc'] = op.description
+                self.rtn['checker'] = {
                     'isTrue': op.type.IsChecker(),
                     'checked': False
                 }
-                rtn['interactivator'] = {
+                self.rtn['interactivator'] = {
                     'isTrue': True
                 }
-                rtn['err_code'] = rsp_json['errorCode']
-                rtn['output_lines'] = rsp_json['data']
-                res = OperateResult()
-                res.op_rec_id = op_rec.id
-                res.error_code = rtn['err_code']
-                res.detail = json.dumps(rtn['output_lines'])
-                db.session.add(res)
+                self.res.op_rec_id = op_rec.id
+                self.res.error_code = self.rtn['err_code']
+                self.res.detail = self.rtn['output_lines']
+                db.session.add(self.res)
                 db.session.commit()
-                return rtn
-            finally:
                 req.close()
+                return self.rtn
         else:
             return {
                 'message': 'operation not found.'
             }, 404
 
+def format2json(list):
+    formater = u'{0:0>2d}. {1[name]:15}{1[flag]:3}'
+    rtn = []
+    if list:
+        i = 0
+        for each in json.loads(list):
+            i += 1
+            rtn.append(formater.format(i, each))
+    return rtn

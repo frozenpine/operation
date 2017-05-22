@@ -378,7 +378,7 @@ class TradeProcess(SQLModelMixin, db.Model):
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     svr_id = db.Column(db.Integer, db.ForeignKey('servers.id'), index=True)
     config_files = db.relationship('ConfigFile', backref='process', lazy='dynamic')
-    syslog_files = db.relationship('SyslogFile', backref='process', lazy='dynamic')
+    #syslog_files = db.relationship('SyslogFile', backref='process', lazy='dynamic')
     status = db.Column(JSONType, default={})
 
 class SystemType(SQLModelMixin, db.Model):
@@ -411,7 +411,7 @@ class TradeSystem(SQLModelMixin, db.Model):
         lazy='dynamic'
     )
     config_files = db.relationship('ConfigFile', backref='system', lazy='dynamic')
-    syslog_files = db.relationship('SyslogFile', backref='system', lazy='dynamic')
+    #syslog_files = db.relationship('SyslogFile', backref='system', lazy='dynamic')
     vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.id'), index=True)
     parent_sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     parent_system = db.relationship('TradeSystem', backref='child_systems', remote_side=[id])
@@ -464,6 +464,7 @@ class DataSource(SQLModelMixin, db.Model):
     src_model = db.Column(ChoiceType(DatasourceModel, impl=db.Integer()), nullable=False)
     source = db.Column(JSONType, nullable=False)
 
+'''
 class SyslogFile(SQLModelMixin, db.Model):
     __tablename__ = 'syslog_files'
     id = db.Column(db.Integer, primary_key=True)
@@ -473,6 +474,7 @@ class SyslogFile(SQLModelMixin, db.Model):
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     svr_id = db.Column(db.Integer, db.ForeignKey('servers.id'), index=True)
     proc_id = db.Column(db.Integer, db.ForeignKey('trade_processes.id'), index=True)
+'''
 
 class SystemVendor(SQLModelMixin, db.Model):
     __tablename__ = "vendors"
@@ -498,7 +500,7 @@ class Server(SQLModelMixin, db.Model):
     admin_pwd = db.Column(db.String)
     processes = db.relationship('TradeProcess', backref='server', lazy='dynamic')
     statics_records = db.relationship('StaticsRecord', backref='server', lazy='dynamic')
-    syslog_files = db.relationship('SyslogFile', backref='server', lazy='dynamic')
+    #syslog_files = db.relationship('SyslogFile', backref='server', lazy='dynamic')
     status = db.Column(JSONType, default={})
 
 class Operation(SQLModelMixin, db.Model):

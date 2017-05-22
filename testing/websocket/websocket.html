@@ -15,7 +15,7 @@
 				return false;
 			});
 			if ("WebSocket" in window) {
-				ws = new WebSocket("ws://10.9.101.39:5000/websocket");
+				ws = new WebSocket("ws://10.9.101.39:5000/webshell");
 				ws.onmessage = function (msg) {
 					console.log(msg.data);
 				};

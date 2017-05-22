@@ -6,6 +6,7 @@ from flask_login import login_required, current_user
 from . import main
 from MessageQueue.msgserver import MessageServer
 import json
+import wssh
 
 user = ""
 
@@ -42,3 +43,24 @@ def websocket():
                 MessageServer.parse_request(ws)
         else:
             abort(500)
+
+@main.route('/webshell')
+def webshell():
+    if request.environ.has_key('wsgi.websocket'):
+        ws = request.environ['wsgi.websocket']
+        if ws:
+            bridge = wssh.WSSHBridge(ws)
+            try:
+                bridge.open(
+                    hostname='192.168.92.26',
+                    username='root',
+                    password='Quantdo@SH2016!'
+                )
+            except Exception:
+                ws.send(json.dumps({
+                    'message': 'can not connect to server.'
+                }))
+            else:
+                bridge.shell()
+            finally:
+                return 'webshell closed.'

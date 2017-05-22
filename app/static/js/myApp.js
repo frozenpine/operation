@@ -66,6 +66,13 @@ app.config(['$routeProvider', function($routeProvider) {
         })
         .when('/statics/:sysid', {
             templateUrl: 'UI/views/statics',
+            resolve: {
+                menuItem: function() {
+                    return {
+                        sysid: sysid
+                    };
+                }
+            }
         })
         .when('/op_group/:grpid', {
             templateUrl: 'UI/views/op_group'
@@ -496,7 +503,6 @@ app.filter('KB2', function() {
             case "T":
                 return (num / (1024 * 1024 * 1024)).toFixed(2).toString() + " TB";
             default:
-                //return (num / 1024).toFixed(2).toString() + " MB";
                 if (num >= 1024) {
                     if (num >= 1048576) {
                         if (num >= 1073741824) {
@@ -556,7 +562,7 @@ app.filter('status', function() {
                 case 'R':
                     return '运行中';
                 case 'S':
-                    return '休眠';
+                    return '运行中';
                 case 'T':
                     return '已停止';
                 case 'Z':

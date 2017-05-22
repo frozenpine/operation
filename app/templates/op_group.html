@@ -48,15 +48,15 @@
 								<td>
 									<div class="am-btn-group am-btn-group-xs">
 										<button 
-											class="am-btn am-btn-default am-btn-xs am-text-secondary am-margin-right-xs" ng-if="data.checker.isTrue && data.err_code == 0 && !data.skip && !data.checker.checked" ng-click="confirm($index)" ng-class="{true: '',false: 'am-disabled'}[!data.checker.checked]">
+											class="am-btn am-btn-default am-btn-xs am-text-secondary am-margin-right-xs" ng-show="data.checker.isTrue && data.err_code == 0 && !data.skip && !data.checker.checked" ng-click="confirm($index)" ng-class="{true: '',false: 'am-disabled'}[!data.checker.checked]">
 											<span class="am-icon-pencil-square-o"></span> 确认结果
 										</button>
 										<button 
-											class="am-btn am-btn-default am-btn-xs am-text-secondary am-margin-right-xs" ng-if="(data.checker.checked || !data.checker.isTrue) && data.err_code >= 0" ng-click="check_result($index)">
+											class="am-btn am-btn-default am-btn-xs am-text-secondary am-margin-right-xs" ng-show="(data.checker.checked || !data.checker.isTrue) && data.err_code >= 0" ng-click="check_result($index)">
 											<span class="am-icon-pencil-square-o"></span> 查看结果
 										</button>
 										<button 
-											class="am-btn am-btn-default am-btn-xs am-text-secondary am-margin-right-xs" ng-if="data.hasOwnProperty('his_results')" ng-click="check_his_result($index)">
+											class="am-btn am-btn-default am-btn-xs am-text-secondary am-margin-right-xs" ng-show="data.hasOwnProperty('his_results')" ng-click="check_his_result($index)">
 											<span class="am-icon-pencil-square-o"></span> 查看历史结果
 										</button>
 										<button 
