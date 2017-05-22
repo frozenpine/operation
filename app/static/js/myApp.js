@@ -1,9 +1,6 @@
 var app = angular.module('myApp', ['ngRoute'], function($provide) {
     $provide.factory('globalVar', function() {
         return {
-            'sysid': 0,
-            'grpid': 0,
-            'current_type': 'sysid',
             'intervals': []
         };
     });
@@ -65,14 +62,7 @@ app.config(['$routeProvider', function($routeProvider) {
             controller: 'dashBoardControl'
         })
         .when('/statics/:sysid', {
-            templateUrl: 'UI/views/statics',
-            resolve: {
-                menuItem: function() {
-                    return {
-                        sysid: sysid
-                    };
-                }
-            }
+            templateUrl: 'UI/views/statics'
         })
         .when('/op_group/:grpid', {
             templateUrl: 'UI/views/op_group'
@@ -109,13 +99,14 @@ app.controller('userController', ['$scope', function($scope) {
         });
     };
 }]);
-app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval', function($scope, $http, globalVar, $interval) {
+app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval', '$routeParams', function($scope, $http, globalVar, $interval, $routeParams) {
+    console.log($routeParams.sysid);
     $scope.svrShowDetail = true;
     $scope.checkSvrStatics = function() {
         $scope.checking = true;
-        $http.get('api/system/id/' + globalVar.sysid + '/svr_statics/check')
+        $http.get('api/system/id/' + $routeParams.sysid + '/svr_statics/check')
             .success(function(response) {
-                if (response.sys_id == globalVar.sysid) {
+                if (response.sys_id == $routeParams.sysid) {
                     $scope.serverStatics = response.details;
                     $scope.serverStatics.showMountDetail = [];
                     angular.forEach(response.details.disks, function(value, index) {
@@ -129,37 +120,37 @@ app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
                 console.log(response);
             });
     };
-    $http.get('api/system/id/' + globalVar.sysid + '/svr_statics')
+    $http.get('api/system/id/' + $routeParams.sysid + '/svr_statics')
         .success(function(response) {
-            if (globalVar.current_type == 'sysid') {
-                if (response.sys_id == globalVar.sysid) {
-                    $scope.serverStatics = response.details;
-                    $scope.checkSvrStatics();
-                    var svrStaticInterval = $interval(function() { $scope.checkSvrStatics(); }, 60000);
-                    globalVar.intervals.push(svrStaticInterval);
-                }
+            if ($routeParams.hasOwnProperty('sysid') && response.sys_id == $routeParams.sysid) {
+                $scope.serverStatics = response.details;
+                $scope.checkSvrStatics();
+                var svrStaticInterval = $interval(function() { $scope.checkSvrStatics(); }, 60000);
+                globalVar.intervals.push(svrStaticInterval);
             }
         })
         .error(function(response) {
             console.log(response);
+            $scope.checking = false;
         });
 }]);
-app.controller('sysStaticsControl', ['$scope', '$http', 'globalVar', '$interval', function($scope, $http, globalVar, $interval) {
+app.controller('sysStaticsControl', ['$scope', '$http', 'globalVar', '$interval', '$routeParams', function($scope, $http, globalVar, $interval, $routeParams) {
     $scope.sysShowDetail = true;
     $scope.checkProc = function() {
         $scope.checking = true;
-        $http.get('api/system/id/' + globalVar.sysid + '/sys_statics/check')
+        $http.get('api/system/id/' + $routeParams.sysid + '/sys_statics/check')
             .success(function(response) {
                 $scope.systemStatics = response;
                 $scope.checking = false;
             })
             .error(function(response) {
                 console.log(response);
+                $scope.checking = false;
             });
     };
-    $http.get('api/system/id/' + globalVar.sysid + '/sys_statics')
+    $http.get('api/system/id/' + $routeParams.sysid + '/sys_statics')
         .success(function(response) {
-            if (globalVar.current_type == 'sysid') {
+            if ($routeParams.hasOwnProperty('sysid')) {
                 $scope.systemStatics = response;
                 $scope.checkProc();
                 var sysStaticInterval = $interval(function() { $scope.checkProc(); }, 30000);
@@ -169,9 +160,10 @@ app.controller('sysStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
         })
         .error(function(response) {
             console.log(response);
+            $scope.checking = false;
         });
 }]);
-app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', 'globalVar', '$rootScope', '$location', function($scope, $http, $timeout, globalVar, $rootScope, $location) {
+app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', '$rootScope', '$location', function($scope, $http, $timeout, $rootScope, $location) {
     $scope.tabList = [];
     var idList = [];
     $http.get('api/UI/sideBarCtrl')
@@ -182,8 +174,10 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', 'globalVar', '$roo
             console.log(response);
         });
     $scope.showListChild = function(id) {
+        /*
         globalVar.current_type = 'sysid';
         globalVar.sysid = id;
+        */
         angular.forEach($scope.listName, function(value, index) {
             if (value.id == id) {
                 $scope.listName[index].isShow = !$scope.listName[index].isShow;
@@ -194,8 +188,10 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', 'globalVar', '$roo
     };
     $scope.showListChange = function(id) {
         $rootScope.isShowSideList = true;
+        /*
         globalVar.current_type = 'sysid';
         globalVar.sysid = id;
+        */
         angular.forEach($scope.tabList, function(value, index) {
             value.active = "";
             if (idList.indexOf(value.id) == -1) {
@@ -226,7 +222,7 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', 'globalVar', '$roo
     };
     $scope.tabChangeActive = function(id) {
         $rootScope.isShowSideList = true;
-        globalVar.sysid = id;
+        //globalVar.sysid = id;
         angular.forEach($scope.tabList, function(value) {
             value.active = "";
             if (value.id == id) {
@@ -250,7 +246,7 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', 'globalVar', '$roo
             });
             if (set)
                 $scope.tabList[length - 1].active = "am-active";
-            globalVar.sysid = $scope.tabList[length - 1].id;
+            //globalVar.sysid = $scope.tabList[length - 1].id;
             var LocationUrl = $scope.tabList[length - 1].Url;
             LocationUrl = LocationUrl.substring(1, LocationUrl.length);
             LocationUrl = '/' + LocationUrl;
@@ -271,13 +267,15 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', 'globalVar', '$roo
         }
     };
     $scope.operateChange = function(id) {
+        /*
         globalVar.grpid = id;
         globalVar.current_type = 'grpid';
+        */
         $rootScope.isShowSideList = false;
     };
 }]);
-app.controller('opGroupController', ['$scope', '$http', '$timeout', 'globalVar', function($scope, $http, $timeout, globalVar) {
-    $http.get('api/op_group/id/' + globalVar.grpid)
+app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParams', function($scope, $http, $timeout, $routeParams) {
+    $http.get('api/op_group/id/' + $routeParams.grpid)
         .success(function(response) {
             $scope.opList = response;
         })
@@ -327,7 +325,7 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', 'globalVar',
                             data = data,
                             function(response) {
                                 console.log(response);
-                                if (globalVar.current_type == 'grpid') {
+                                if ($routeParams.hasOwnProperty('grpid')) {
                                     $scope.$apply(function() {
                                         $scope.opList.details[index] = response;
                                         if (index < $scope.opList.details.length - 1 && ($scope.opList.details[index].checker === undefined || !$scope.opList.details[index].checker.isTrue)) {
@@ -359,7 +357,7 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', 'globalVar',
             $scope.opList.details[index].skip = false;
             $http.get('api/operation/id/' + id)
                 .success(function(response) {
-                    if (globalVar.current_type == 'grpid') {
+                    if ($routeParams.hasOwnProperty('grpid')) {
                         $scope.opList.details[index] = response;
                         if (index < $scope.opList.details.length - 1 && ($scope.opList.details[index].checker === undefined || !$scope.opList.details[index].checker.isTrue)) {
                             $scope.opList.details[index + 1].enabled = response.succeed;
@@ -368,39 +366,39 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', 'globalVar',
                 })
                 .error(function(response) {
                     console.log(response);
-                    if (globalVar.current_type == 'grpid') {
+                    if ($routeParams.hasOwnProperty('grpid')) {
                         $scope.opList.details[index] = response;
                     }
                 });
         }
     };
 }]);
-app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootScope', '$interval', '$timeout', function($scope, $http, globalVar, $rootScope, $interval, $timeout) {
+app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootScope', '$interval', '$timeout', '$routeParams', function($scope, $http, globalVar, $rootScope, $interval, $timeout, $routeParams) {
     $scope.loginShowDetail = true;
     $scope.loginStaticsShow = false;
     $scope.$watch('$rootScope.LoginStatics', function(newValue, oldValue) {
         $timeout(function() {
-            $scope.loginStatics = $rootScope.LoginStatics[globalVar.sysid];
+            $scope.loginStatics = $rootScope.LoginStatics[$routeParams.sysid];
         }, 0);
     }, true);
     $scope.CheckLoginLog = function() {
         $scope.checking = true;
-        $http.get('api/system/id/' + globalVar.sysid + '/login_statics/check')
+        $http.get('api/system/id/' + $routeParams.sysid + '/login_statics/check')
             .success(function(response) {
-                if (globalVar.current_type == 'sysid') {
+                if ($routeParams.hasOwnProperty('sysid')) {
                     angular.forEach(response, function(value1, index1) {
-                        angular.forEach($rootScope.LoginStatics[globalVar.sysid], function(value2, index2) {
+                        angular.forEach($rootScope.LoginStatics[$routeParams.sysid], function(value2, index2) {
                             if (value1.seat_id == value2.seat_id) {
-                                $rootScope.LoginStatics[globalVar.sysid][index2].seat_status = value1.seat_status;
-                                $rootScope.LoginStatics[globalVar.sysid][index2].conn_count = value1.conn_count;
-                                $rootScope.LoginStatics[globalVar.sysid][index2].disconn_count = value1.disconn_count;
-                                $rootScope.LoginStatics[globalVar.sysid][index2].login_fail = value1.login_fail;
-                                $rootScope.LoginStatics[globalVar.sysid][index2].login_success = value1.login_success;
+                                $rootScope.LoginStatics[$routeParams.sysid][index2].seat_status = value1.seat_status;
+                                $rootScope.LoginStatics[$routeParams.sysid][index2].conn_count = value1.conn_count;
+                                $rootScope.LoginStatics[$routeParams.sysid][index2].disconn_count = value1.disconn_count;
+                                $rootScope.LoginStatics[$routeParams.sysid][index2].login_fail = value1.login_fail;
+                                $rootScope.LoginStatics[$routeParams.sysid][index2].login_success = value1.login_success;
                                 if (value1.hasOwnProperty('trading_day')) {
-                                    $rootScope.LoginStatics[globalVar.sysid][index2].trading_day = value1.trading_day;
+                                    $rootScope.LoginStatics[$routeParams.sysid][index2].trading_day = value1.trading_day;
                                 }
                                 if (value1.hasOwnProperty('login_time')) {
-                                    $rootScope.LoginStatics[globalVar.sysid][index2].login_time = value1.login_time;
+                                    $rootScope.LoginStatics[$routeParams.sysid][index2].login_time = value1.login_time;
                                 }
                             }
                         });
@@ -412,11 +410,11 @@ app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootSco
                 console.log(response);
             });
     };
-    $http.get('api/system/id/' + globalVar.sysid + '/login_statics')
+    $http.get('api/system/id/' + $routeParams.sysid + '/login_statics')
         .success(function(response) {
             $scope.loginStaticsShow = true;
-            $rootScope.LoginStatics[globalVar.sysid] = response;
-            $scope.loginStatics = $rootScope.LoginStatics[globalVar.sysid];
+            $rootScope.LoginStatics[$routeParams.sysid] = response;
+            $scope.loginStatics = $rootScope.LoginStatics[$routeParams.sysid];
             $scope.CheckLoginLog();
             var loginStaticInterval = $interval(function() { $scope.CheckLoginLog(); }, 30000);
             globalVar.intervals.push(loginStaticInterval);
@@ -425,12 +423,12 @@ app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootSco
             console.log(response);
         });
 }]);
-app.controller('clientStaticsControl', ['$scope', '$http', 'globalVar', function($scope, $http, globalVar) {
+app.controller('clientStaticsControl', ['$scope', '$http', '$routeParams', function($scope, $http, $routeParams) {
     $scope.clientShowDetail = true;
     $scope.userSessionShow = false;
     $scope.CheckClientSessions = function() {
         $scope.checking = true;
-        $http.get('api/system/id/' + globalVar.sysid + '/user_sessions')
+        $http.get('api/system/id/' + $routeParams.sysid + '/user_sessions')
             .success(function(response) {
                 $scope.userSessionShow = true;
                 $scope.checking = false;
