@@ -4,10 +4,6 @@ from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from settings import config
 from MessageQueue.msgserver import MessageQueues
-<<<<<<< HEAD
-
-db = SQLAlchemy()
-=======
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
@@ -41,7 +37,7 @@ logging.getLogger('').addHandler(Rthandler)
 
 db = SQLAlchemy()
 db_list = {}
->>>>>>> 4-qdiam-special
+
 msgQueues = MessageQueues
 
 from auth import auth as auth_blueprint, login_manager

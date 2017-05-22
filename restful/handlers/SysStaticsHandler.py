@@ -59,32 +59,6 @@ class ServerStaticListApi(Resource, ServerList):
         super(ServerStaticListApi, self).__init__()
 
     def get(self, **kwargs):
-<<<<<<< HEAD
-        svr = Server.find(**kwargs)
-        rtn = {}
-        if svr:
-            conf = SSHConfig(svr.manage_ip.exploded, svr.admin_user, svr.admin_pwd)
-            modlist = [
-                {'name': 'uptime'},
-                {'name': 'mpstat'},
-                {'name': 'df'},
-                {'name': 'free'}
-            ]
-            resultlist = []
-            for mod in modlist:
-                executor = Executor.Create(conf)
-                resultlist.append(executor.run(mod))
-            rtn['id'] = svr.id
-            rtn['server'] = svr.manage_ip.exploded
-            rtn['uptime'] = resultlist[0].data
-            rtn['cpu'] = resultlist[1].data
-            rtn['disks'] = resultlist[2].data
-            rtn['memory'] = resultlist[3].data['mem']
-            rtn['swap'] = resultlist[3].data['swap']
-        return rtn
-
-class SystemStaticListApi(Resource):
-=======
         sys = TradeSystem.find(**kwargs)
         if len(self.server_list) > 0:
             self.server_list = {}
@@ -99,7 +73,6 @@ class SystemStaticListApi(Resource):
             }, 404
 
 class ServerStaticApi(Resource, ServerList):
->>>>>>> 4-qdiam-special
     def __init__(self):
         super(ServerStaticApi, self).__init__()
         self.checker = []
@@ -218,22 +191,6 @@ class SystemStaticListApi(Resource, SystemList):
         super(SystemStaticListApi, self).__init__()
 
     def get(self, **kwargs):
-<<<<<<< HEAD
-        proc = TradeProcess.find(**kwargs)
-        rtn = {}
-        if proc:
-            rtn['id'] = proc.id
-            rtn['process'] = proc.name
-            rtn['proc_role'] = "{}".format(proc.type.name)
-            rtn['server'] = proc.server.name + "({})"\
-                .format(proc.server.manage_ip.exploded)
-            conf = SSHConfig(
-                proc.server.manage_ip.exploded,
-                proc.server.admin_user,
-                proc.server.admin_pwd
-            )
-            executor = Executor.Create(conf)
-=======
         sys = TradeSystem.find(**kwargs)
         if len(self.system_list) > 0:
             self.system_list = []
@@ -267,7 +224,6 @@ class ProcStaticApi(Resource, SystemList):
         )
         executor = Executor.Create(conf)
         for proc in processes:
->>>>>>> 4-qdiam-special
             mod = {
                 'name': 'psaux',
                 'args': {

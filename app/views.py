@@ -6,10 +6,7 @@ from flask_login import login_required, current_user
 from . import main
 from MessageQueue.msgserver import MessageServer
 import json
-<<<<<<< HEAD
-=======
 import wssh
->>>>>>> 4-qdiam-special
 
 user = ""
 
@@ -42,30 +39,6 @@ def websocket():
     if request.environ.has_key('wsgi.websocket'):
         ws = request.environ['wsgi.websocket']
         if ws:
-<<<<<<< HEAD
-            #msgQueues['public'].subscribe(ws)
-            '''
-            tmp = ws.receive()
-            print tmp
-            init_msg = json.loads(tmp)
-            try:
-                queue_key = init_msg['subscribe']
-            except KeyError:
-                msgQueues['public'].subscribe(ws)
-            else:
-                if msgQueues.has_key(queue_key):
-                    msgQueues[queue_key].subscribe(ws)
-                else:
-                    ws.send(json.dumps({
-                        'RspType': 'text',
-                        'Data': 'MessageQueue[{}] not exists.'.format(queue_key)
-                    }))
-            '''
-            while True:
-                MessageServer.parseRequest(ws)
-        else:
-            abort(500)
-=======
             while True:
                 MessageServer.parse_request(ws)
         else:
@@ -91,4 +64,3 @@ def webshell():
                 bridge.shell()
             finally:
                 return 'webshell closed.'
->>>>>>> 4-qdiam-special

@@ -8,24 +8,6 @@ from paramiko import (
 from paramiko.ssh_exception import NoValidConnectionsError
 import winrm
 sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
-<<<<<<< HEAD
-from SysManager import logging
-from excepts import ModuleNotFound
-from configs import (
-    RemoteConfig, SSHConfig, WinRmConfig,
-    Result, ErrorCode
-)
-from threading import Thread
-
-class Executor():
-    def __init__(self, remote_config, parser=None):
-        self.parser = parser
-        self.result = Result()
-        self.result.destination = remote_config.remote_host
-
-    @staticmethod
-    def Create(remote_config, parser=None):
-=======
 #from SysManager import logging
 import logging
 from excepts import ModuleNotFound, ImportRSAkeyFaild
@@ -45,16 +27,10 @@ class Executor():
 
     @staticmethod
     def Create(remote_config, parser=None, session=None):
->>>>>>> 4-qdiam-special
         if isinstance(remote_config, SSHConfig):
             return SSHExecutor(remote_config, parser)
         if isinstance(remote_config, WinRmConfig):
             return WinRmExecutor(remote_config, parser)
-<<<<<<< HEAD
-
-    def run(self, module):
-        pass
-=======
         if isinstance(remote_config, HttpConfig):
             return HttpExecutor(remote_config, parser, session)
 
@@ -86,7 +62,6 @@ class Executor():
         else:
             self.result.lines = [line.rstrip('\r\n') for line in stderr.readlines()]
         return self.result
->>>>>>> 4-qdiam-special
 
 class WinRmExecutor(Executor):
     def __init__(self, remote_config, parser=None):
@@ -96,10 +71,6 @@ class WinRmExecutor(Executor):
             (remote_config.remote_user, remote_config.remote_password)
         )
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 4-qdiam-special
 class SSHExecutor(Executor):
     def __init__(self, remote_config, parser=None):
         Executor.__init__(self, remote_config, parser)
@@ -157,8 +128,6 @@ class HttpExecutor(Executor):
         pass
 
 if __name__ == '__main__':
-<<<<<<< HEAD
-=======
     rtn = []
     result = {}
     '''
@@ -179,7 +148,6 @@ if __name__ == '__main__':
     result['disks'] = resultlist[2].data
     result['memory'] = resultlist[3].data['mem']
     result['swap'] = resultlist[3].data['swap']
->>>>>>> 4-qdiam-special
     conf = SSHConfig('192.168.101.100', 'qdam', 'qdam')
     executor = Executor.Create(conf)
     result = executor.run(
@@ -236,11 +204,5 @@ if __name__ == '__main__':
         password='1',
         version='1.0.3'
     )
-<<<<<<< HEAD
-    #print result.lines
-    logging.info(result.data)
-    print result.data
-=======
     exe = Executor.Create(conf)
     print exe.login
->>>>>>> 4-qdiam-special

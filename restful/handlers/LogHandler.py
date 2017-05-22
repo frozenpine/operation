@@ -4,10 +4,6 @@ from app import msgQueues
 
 class LogApi(Resource):
     def post(self):
-<<<<<<< HEAD
-        msg = request.form['msg']
-        msgQueues['public'].put_message(msg)
-=======
         msg = request.values['msg']
         #source = request.headers.get('src')
         #topic = request.headers.get('topic')
@@ -19,4 +15,3 @@ class LogApi(Resource):
         else:
         '''
         msgQueues['public'].send_message(msg.encode('utf-8'))
->>>>>>> 4-qdiam-special

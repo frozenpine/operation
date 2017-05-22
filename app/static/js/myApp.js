@@ -4,26 +4,7 @@ var app = angular.module('myApp', ['ngRoute'], function($provide) {
             'intervals': []
         };
     });
-<<<<<<< HEAD
-    $provide.factory('Message', function() {
-        var syslogs = [];
-        if ("WebSocket" in window) {
-            var ws = new WebSocket("ws://10.9.101.39:5000/websocket");
 
-            ws.onopen = function() {
-                console.log("conn success");
-                ws.send(JSON.stringify({
-                    subscribe: 'public'
-                }));
-            };
-
-            ws.onmessage = function(msg) {
-                console.log(msg.data);
-                syslogs.push(msg.data);
-            };
-        } else {
-            console.log('WebSocket not supported');
-=======
     $provide.factory('Message', function($rootScope, $location) {
         if ($rootScope.Messages === undefined) {
             $rootScope.Messages = {
@@ -45,7 +26,6 @@ var app = angular.module('myApp', ['ngRoute'], function($provide) {
             };
         } else {
             console.log("WebSocket not supported");
->>>>>>> 4-qdiam-special
         }
 
         window.onbeforeunload = function() {
@@ -55,15 +35,6 @@ var app = angular.module('myApp', ['ngRoute'], function($provide) {
             ws.close();
         };
 
-<<<<<<< HEAD
-        return {
-            send: function(message) {
-                if (angular.isString(message)) {
-                    ws.send(message);
-                } else if (angular.isObject(message)) {
-                    ws.send(JSON.stringify(message));
-                }
-=======
         var onMessage = function(msg) {
             switch (msg.topic) {
                 case "public":
@@ -81,7 +52,6 @@ var app = angular.module('myApp', ['ngRoute'], function($provide) {
         return {
             Send: function(msg) {
                 ws.send(JSON.stringify(msg));
->>>>>>> 4-qdiam-special
             }
         };
     });
@@ -117,12 +87,8 @@ app.run(function($rootScope, $interval, $location, globalVar, Message) {
         $rootScope.LoginStatics = {};
     }
 });
-<<<<<<< HEAD
 app.controller('dashBoardControl', ['$scope', 'Message', '$rootScope', function($scope, Message, $rootScope) {
     $rootScope.Message = Message;
-=======
-app.controller('dashBoardControl', ['$scope', '$rootScope', function($scope, $rootScope) {
-    $rootScope.isShowSideList = false;
 }]);
 app.controller('userController', ['$scope', function($scope) {
     $scope.ModifyPassword = function() {
@@ -133,14 +99,12 @@ app.controller('userController', ['$scope', function($scope) {
             }
         });
     };
->>>>>>> 4-qdiam-special
 }]);
 app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval', '$routeParams', function($scope, $http, globalVar, $interval, $routeParams) {
     console.log($routeParams.sysid);
     $scope.svrShowDetail = true;
     $scope.checkSvrStatics = function() {
         $scope.checking = true;
-<<<<<<< HEAD
         angular.forEach($scope.serverStatics, function(value, index) {
             $http.get('api/server/id/' + value.id + '/statics')
                 .success(function(data) {
@@ -148,7 +112,6 @@ app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
                     $scope.checking = false;
                 });
         });
-=======
         $http.get('api/system/id/' + $routeParams.sysid + '/svr_statics/check')
             .success(function(response) {
                 if (response.sys_id == $routeParams.sysid) {
@@ -164,7 +127,6 @@ app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
             .error(function(response) {
                 console.log(response);
             });
->>>>>>> 4-qdiam-special
     };
     $http.get('api/system/id/' + $routeParams.sysid + '/svr_statics')
         .success(function(response) {
@@ -183,28 +145,22 @@ app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
 app.controller('sysStaticsControl', ['$scope', '$http', 'globalVar', '$interval', '$routeParams', function($scope, $http, globalVar, $interval, $routeParams) {
     $scope.sysShowDetail = true;
     $scope.checkProc = function() {
-        $scope.checking = true;
-<<<<<<< HEAD
         angular.forEach($scope.systemStatics, function(value1, index1) {
             angular.forEach(value1.detail, function(value2, index2) {
                 $scope.systemStatics[index1].detail[index2].status.stat = "checking...";
-                $http.get('api/process/id/' + value2.id + '/statics')
-                    .success(function(data) {
-                        $scope.systemStatics[index1].detail[index2] = data;
+                $http.get('api/system/id/' + $routeParams.sysid + '/sys_statics/check')
+                    .success(function(response) {
+                        $scope.systemStatics = response;
+                        $scope.checking = false;
+                    })
+                    .error(function(response) {
+                        console.log(response);
                         $scope.checking = false;
                     });
-=======
-        $http.get('api/system/id/' + $routeParams.sysid + '/sys_statics/check')
-            .success(function(response) {
-                $scope.systemStatics = response;
-                $scope.checking = false;
-            })
-            .error(function(response) {
-                console.log(response);
-                $scope.checking = false;
->>>>>>> 4-qdiam-special
             });
+        });
     };
+
     $http.get('api/system/id/' + $routeParams.sysid + '/sys_statics')
         .success(function(response) {
             if ($routeParams.hasOwnProperty('sysid')) {
@@ -316,25 +272,7 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', '$rootScope', '$lo
         $rootScope.isShowSideList = false;
     };
 }]);
-<<<<<<< HEAD
-app.controller('opGroupController', ['$scope', '$http', '$timeout', 'globalVar', function($scope, $http, $timeout, globalVar) {
-    $http.get('api/op_group/id/' + globalVar.grpid).success(function(data) {
-        $scope.opList = data;
-    });
-    $scope.execute = function(index, id) {
-        $http.get('api/operation/id/' + id).success(function(data) {
-            if (globalVar.current_type == 'grpid') {
-                $scope.opList.details[index] = data;
-                if (index < $scope.opList.details.length - 1)
-                    $scope.opList.details[index + 1].enabled = data.succeed;
-                if ($scope.results === null || $scope.results === undefined) {
-                    $scope.results = data.output_lines;
-                } else {
-                    angular.forEach(data.output_lines, function(value, index) {
-                        $scope.results.push(value);
-                    });
-                }
-=======
+
 app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParams', function($scope, $http, $timeout, $routeParams) {
     $http.get('api/op_group/id/' + $routeParams.grpid)
         .success(function(response) {
@@ -353,7 +291,6 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
                     }
                     $scope.opList.details[index].checker.checked = true;
                 });
->>>>>>> 4-qdiam-special
             }
         });
     };
