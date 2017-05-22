@@ -174,10 +174,6 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', '$rootScope', '$lo
             console.log(response);
         });
     $scope.showListChild = function(id) {
-        /*
-        globalVar.current_type = 'sysid';
-        globalVar.sysid = id;
-        */
         angular.forEach($scope.listName, function(value, index) {
             if (value.id == id) {
                 $scope.listName[index].isShow = !$scope.listName[index].isShow;
@@ -188,10 +184,6 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', '$rootScope', '$lo
     };
     $scope.showListChange = function(id) {
         $rootScope.isShowSideList = true;
-        /*
-        globalVar.current_type = 'sysid';
-        globalVar.sysid = id;
-        */
         angular.forEach($scope.tabList, function(value, index) {
             value.active = "";
             if (idList.indexOf(value.id) == -1) {
@@ -222,7 +214,6 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', '$rootScope', '$lo
     };
     $scope.tabChangeActive = function(id) {
         $rootScope.isShowSideList = true;
-        //globalVar.sysid = id;
         angular.forEach($scope.tabList, function(value) {
             value.active = "";
             if (value.id == id) {
@@ -246,7 +237,6 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', '$rootScope', '$lo
             });
             if (set)
                 $scope.tabList[length - 1].active = "am-active";
-            //globalVar.sysid = $scope.tabList[length - 1].id;
             var LocationUrl = $scope.tabList[length - 1].Url;
             LocationUrl = LocationUrl.substring(1, LocationUrl.length);
             LocationUrl = '/' + LocationUrl;
@@ -262,15 +252,10 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', '$rootScope', '$lo
             $scope.tabList.splice(0, $scope.tabList.length);
             return false;
         } else {
-            //$rootScope.isShowSideList = true;
             return true;
         }
     };
     $scope.operateChange = function(id) {
-        /*
-        globalVar.grpid = id;
-        globalVar.current_type = 'grpid';
-        */
         $rootScope.isShowSideList = false;
     };
 }]);

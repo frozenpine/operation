@@ -128,6 +128,7 @@ class OperationApi(Resource):
                 self.op_result.record = self.op_record
                 self.op_result.error_code = 500
                 self.op_result.detail = [err.message]
+                self.rtn['checker']['checked'] = True
                 self.rtn['err_code'] = 500
                 self.rtn['output_lines'] = [err.message]
                 return self.rtn, 500

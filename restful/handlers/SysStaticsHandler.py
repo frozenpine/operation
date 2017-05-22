@@ -283,28 +283,25 @@ class LoginListApi(Resource):
                 DataSource.sys_id == sys.id
             ).first()
             if src:
-                #sys_db = db_list.get(src.source['uri'])
-                #if not sys_db:
                 try:
                     sys_db = create_engine(src.source['uri']).connect()
                 except Exception:
                     return {
                         'message': 'faild to connect to database.'
                     }, 404
-                    #else:
-                    #    db_list[src.source['uri']] = sys_db
-                results = sys_db.execute(text(src.source['sql'])).fetchall()
-                for result in results:
-                    tmp = {}
-                    for idx in xrange(len(src.source['formatter'])):
-                        try:
-                            tmp[src.source['formatter'][idx]['key']] = unicode(result[idx])
-                        except IndexError:
-                            tmp[src.source['formatter'][idx]['key']] = \
-                                src.source['formatter'][idx]['default']
-                    rtn.append(tmp)
-                sys_db.close()
-                return rtn
+                else:
+                    results = sys_db.execute(text(src.source['sql'])).fetchall()
+                    for result in results:
+                        tmp = {}
+                        for idx in xrange(len(src.source['formatter'])):
+                            try:
+                                tmp[src.source['formatter'][idx]['key']] = unicode(result[idx])
+                            except IndexError:
+                                tmp[src.source['formatter'][idx]['key']] = \
+                                    src.source['formatter'][idx]['default']
+                        rtn.append(tmp)
+                    sys_db.close()
+                    return rtn
             else:
                 return {
                     'message': 'no data source configured for system {}'.format(sys.name)
@@ -427,28 +424,25 @@ class UserSessionListApi(Resource):
                 DataSource.sys_id == sys.id
             ).first()
             if src:
-                #sys_db = db_list.get(src.source['uri'])
-                #if not sys_db:
                 try:
                     sys_db = create_engine(src.source['uri']).connect()
                 except Exception:
                     return {
                         'message': 'failed to connect to database.'
                     }, 404
-                    #else:
-                    #    db_list[src.source['uri']] = sys_db
-                results = sys_db.execute(text(src.source['sql'])).fetchall()
-                for result in results:
-                    tmp = {}
-                    for idx in xrange(len(src.source['formatter'])):
-                        try:
-                            tmp[src.source['formatter'][idx]['key']] = unicode(result[idx])
-                        except IndexError:
-                            tmp[src.source['formatter'][idx]['key']] = \
-                                src.source['formatter'][idx]['default']
-                    rtn.append(tmp)
-                sys_db.close()
-                return rtn
+                else:
+                    results = sys_db.execute(text(src.source['sql'])).fetchall()
+                    for result in results:
+                        tmp = {}
+                        for idx in xrange(len(src.source['formatter'])):
+                            try:
+                                tmp[src.source['formatter'][idx]['key']] = unicode(result[idx])
+                            except IndexError:
+                                tmp[src.source['formatter'][idx]['key']] = \
+                                    src.source['formatter'][idx]['default']
+                        rtn.append(tmp)
+                    sys_db.close()
+                    return rtn
             else:
                 return {
                     'message': 'no data source for system {}'.format(sys.name)
