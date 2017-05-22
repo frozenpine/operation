@@ -6,6 +6,10 @@ from flask_login import login_required, current_user
 from . import main
 from MessageQueue.msgserver import MessageServer
 import json
+<<<<<<< HEAD
+=======
+import wssh
+>>>>>>> 4-qdiam-special
 
 user = ""
 
@@ -21,7 +25,12 @@ def hello_world(**kwargs):
 @main.route('/index')
 @login_required
 def index():
-    return render_template("index.html", title='ITIL Test', user=current_user.name)
+    return render_template(
+        "index.html", title='ITIL Test',
+        user_name=current_user.name,
+        user_id=current_user.id,
+        user_login=current_user.login
+    )
 
 @main.route('/UI/views/<string:name>')
 @login_required
@@ -33,6 +42,7 @@ def websocket():
     if request.environ.has_key('wsgi.websocket'):
         ws = request.environ['wsgi.websocket']
         if ws:
+<<<<<<< HEAD
             #msgQueues['public'].subscribe(ws)
             '''
             tmp = ws.receive()
@@ -55,3 +65,30 @@ def websocket():
                 MessageServer.parseRequest(ws)
         else:
             abort(500)
+=======
+            while True:
+                MessageServer.parse_request(ws)
+        else:
+            abort(500)
+
+@main.route('/webshell')
+def webshell():
+    if request.environ.has_key('wsgi.websocket'):
+        ws = request.environ['wsgi.websocket']
+        if ws:
+            bridge = wssh.WSSHBridge(ws)
+            try:
+                bridge.open(
+                    hostname='192.168.92.26',
+                    username='root',
+                    password='Quantdo@SH2016!'
+                )
+            except Exception:
+                ws.send(json.dumps({
+                    'message': 'can not connect to server.'
+                }))
+            else:
+                bridge.shell()
+            finally:
+                return 'webshell closed.'
+>>>>>>> 4-qdiam-special

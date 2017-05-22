@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
 import shell
-from SysManager import logging
 
 def run(client, module):
     mod = {

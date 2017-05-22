@@ -6,8 +6,13 @@ from app import create_app, db
 from app.models import (
     Operator, OpRole, OpPrivilege, MethodType, SystemDependece,
     Server, TradeProcess, TradeSystem, HaType, SystemType,
-    OperationGroup, Operation
+    OperationGroup, Operation, OperateRecord, OperateResult,
+    DataSource, DataSourceType, DatasourceModel
 )
+<<<<<<< HEAD
+=======
+import arrow
+>>>>>>> 4-qdiam-special
 import json, re
 from flask.testing import EnvironBuilder
 
@@ -56,120 +61,184 @@ def init_auth():
 
 @manager.command
 def init_inventory():
+    '''
     qdp_type = SystemType(name='QDP')
     qdiam_type = SystemType(name='QDIAM')
     ctp_type = SystemType(name='CTP')
+    exchange_type = SystemType(name=u'大宗商品')
 
-    db.session.add_all([qdp_type, qdiam_type, ctp_type])
+    db.session.add_all([qdp_type, qdiam_type, ctp_type, exchange_type])
     db.session.commit()
 
     svr01 = Server(
-        name='qdp01.shsq',
-        manage_ip='10.47.55.21',
+        name='trade+web_bak',
+        manage_ip='192.168.101.100',
         admin_user='root',
         admin_pwd='quantdo123456'
     )
     svr02 = Server(
-        name='qmarket01.shsq',
-        manage_ip='10.47.55.22',
+        name='web',
+        manage_ip='192.168.101.102',
         admin_user='root',
         admin_pwd='quantdo123456'
     )
-    qdp01 = TradeSystem(
-        name=u'QDP上期1号',
-        manage_ip='10.47.55.21',
-        login_user='qdp',
-        login_pwd='qdp',
-        type_id=qdp_type.id
+    svr03 = Server(
+        name='front',
+        manage_ip='192.168.101.124',
+        admin_user='root',
+        admin_pwd='quantdo123456'
     )
-    qdiam01 = TradeSystem(
-        name=u'QDIAM上期1号',
-        manage_ip='10.47.55.22',
+    qdiam = TradeSystem(
+        name=u'QDIAM',
+        manage_ip='192.168.101.100',
         login_user='qdam',
         login_pwd='qdam',
         type_id=qdiam_type.id
     )
-    ctp01 = TradeSystem(
-        name='CTP主席',
-        manage_ip='10.47.55.23',
-        login_user='ctp',
-        login_pwd='ctp',
-        type_id=ctp_type.id
+    front = TradeSystem(
+        name=u'前置子系统',
+        manage_ip='192.168.101.124',
+        login_user='qdam',
+        login_pwd='qdam',
+        type_id=qdiam_type.id
     )
-    risk01 = TradeSystem(
-        name='risk01',
-        manage_ip='1.1.1.1',
-        login_user='risk',
-        login_pwd='risk'
+    risk = TradeSystem(
+        name=u'风控子系统',
+        manage_ip='192.168.101.100',
+        login_user='qdam',
+        login_pwd='qdam',
+        type_id=qdiam_type.id
     )
-    risk02 = TradeSystem(
-        name='risk02',
-        manage_ip='1.1.1.2',
-        login_user='risk',
-        login_pwd='risk'
+    web = TradeSystem(
+        name=u'柜台子系统',
+        manage_ip='192.168.101.102',
+        login_user='quantdo',
+        login_pwd='quantdo'
     )
 
-    db.session.add_all([qdp01, qdiam01, ctp01, risk01, risk02, svr01, svr02])
+    db.session.add_all([svr01, svr02, svr03, qdiam, front, risk, web])
     db.session.commit()
 
-    qtrade1 = TradeProcess(name='qtrade', type=HaType.master, sys_id=qdp01.id, svr_id=svr01.id)
-    qdata1 = TradeProcess(name='qdata', type=HaType.master, sys_id=qdp01.id, svr_id=svr01.id)
-    qmdb1 = TradeProcess(name='qmdb', type=HaType.master, sys_id=qdp01.id, svr_id=svr01.id)
-    qsdb1 = TradeProcess(name='qsdb', type=HaType.master, sys_id=qdp01.id, svr_id=svr01.id)
-    qmarket1 = TradeProcess(name='qmarket', type=HaType.master, sys_id=qdp01.id, svr_id=svr02.id)
-    risk01.parent_sys_id = qdiam01.id
-    risk02.parent_system = qdiam01
-    #sys_rel1 = SystemDependece(qdp01.id, qdiam01.id)
-    #sys_rel2 = SystemDependece(ctp01.id, qdiam01.id)
-    qdiam01.AddDependence(qdp01)
-    qdiam01.AddDependence(ctp01)
+    qtrade = TradeProcess(name=u'交易核心', type=HaType.Master, sys_id=qdiam.id, svr_id=svr01.id, exec_file='qtrade')
+    qquery = TradeProcess(name=u'查询核心', type=HaType.Master, sys_id=qdiam.id, svr_id=svr01.id, exec_file='qquery')
+    qdata = TradeProcess(name=u'数据上场', type=HaType.Master, sys_id=qdiam.id, svr_id=svr01.id, exec_file='qdata')
+    qmdb = TradeProcess(name=u'数据下场', type=HaType.Master, sys_id=qdiam.id, svr_id=svr01.id, exec_file='qmdb')
+    qsdb = TradeProcess(name=u'qsdb', type=HaType.Master, sys_id=qdiam.id, svr_id=svr01.id, exec_file='qsdb')
+    qmarket = TradeProcess(name=u'行情核心', type=HaType.Master, sys_id=qdiam.id, svr_id=svr01.id, exec_file='qmarket')
+    qicegateway1 = TradeProcess(name=u'风控进程 1', type=HaType.Master, sys_id=risk.id, svr_id=svr01.id, exec_file='qicegateway', param='1')
+    qicegateway2 = TradeProcess(name=u'风控进程 2', type=HaType.Slave, sys_id=risk.id, svr_id=svr01.id, exec_file='qicegateway', param='2')
+    qmarket1 = TradeProcess(name=u'行情核心 1', type=HaType.Master, sys_id=front.id, svr_id=svr03.id, exec_file='qmarket', param='1')
+    qmarket2 = TradeProcess(name=u'行情核心 2', type=HaType.Slave, sys_id=front.id, svr_id=svr02.id, exec_file='qmarket', param='2')
+    mysql = TradeProcess(name=u'后台数据库', type=HaType.Master, sys_id=web.id, svr_id=svr02.id, exec_file='mysqld')
+    web1 = TradeProcess(name=u'柜台进程 1', type=HaType.Master, sys_id=web.id, svr_id=svr02.id, exec_file='java', param='tomcat')
+    web2 = TradeProcess(name=u'柜台进程 2', type=HaType.Slave, sys_id=web.id, svr_id=svr01.id, exec_file='java', param='tomcat')
 
-    #db.session.add_all([qtrade1, qdata1, qmdb1, qsdb1, qmarket1, sys_rel1, sys_rel2, risk01, risk02])
-    db.session.add_all([qtrade1, qdata1, qmdb1, qsdb1, qmarket1, risk01, risk02])
+    risk.parent_system = qdiam
+    front.parent_system = qdiam
+    web.parent_system = qdiam
+
+    db.session.add_all([
+        qtrade, qquery, qdata, qmdb, qsdb, qmarket, qicegateway1, qicegateway2,
+        qmarket1, qmarket2, mysql, web1, web2, risk, front, web
+    ])
+    db.session.commit()
+    '''
+    sys = TradeSystem.find(id=1)
+    db_src = DataSource(name=u'席位上场表')
+    db_src.system = sys
+    db_src.src_model = DatasourceModel.DbSeat
+    db_src.source = {
+        'uri': 'mysql+pymysql://qdam:qdam@192.168.101.100:3306/qdam?charset=utf8',
+        'sql': """
+            SELECT seat.seat_name, sync.tradingday, sync.frontaddr, sync.seatid 
+            FROM t_seat seat, t_sync_seat sync , t_capital_account 
+            WHERE seat.seat_id = t_capital_account.seat_id 
+                AND sync.seatid=t_capital_account.account_id 
+                AND sync.isactive = TRUE
+        """,
+        'formatter': [
+            {'key': 'seat_name', 'default': ''},
+            {'key': 'trading_day', 'default': ''},
+            {'key': 'front_addr', 'default': ''},
+            {'key': 'seat_id', 'default': ''},
+            {'key': 'seat_status', 'default': u'未连接'},
+            {'key': 'conn_count', 'default': 0},
+            {'key': 'login_success', 'default': 0},
+            {'key': 'login_fail', 'default': 0},
+            {'key': 'disconn_count', 'default': 0}
+        ]
+    }
+    db_session = DataSource(name=u'用户Session表')
+    db_session.system = sys
+    db_session.src_model = DatasourceModel.DbSession
+    db_session.source = {
+        'uri': 'mysql+pymysql://qdam:qdam@192.168.101.100:3306/qdam?charset=utf8',
+        'sql': """
+            SELECT a.brokerid, a.userid, a.usertype, a.sessionid, a.frontid, a.logintime,
+                   a.ipaddress, a.macaddress, a.userproductinfo, a.interfaceproductinfo,
+                   COUNT(a.id) AS total
+            FROM (SELECT * FROM t_oper_usersession ORDER BY id DESC) a
+            GROUP BY userid
+        """,
+        'formatter': [
+            {'key': 'broker_id', 'default': ''},
+            {'key': 'user_id', 'default': ''},
+            {'key': 'user_type', 'default': ''},
+            {'key': 'session_id', 'default': ''},
+            {'key': 'front_id', 'default': ''},
+            {'key': 'login_time', 'default': ''},
+            {'key': 'ip_address', 'default': ''},
+            {'key': 'mac_address', 'default': ''},
+            {'key': 'prod_info', 'default': ''},
+            {'key': 'inter_info', 'default': ''},
+            {'key': 'total_login', 'default': 0}
+        ]
+    }
+
+    log_seat = DataSource(name=u'交易系统Syslog')
+    log_seat.system = sys
+    log_seat.src_type = DataSourceType.FILE
+    log_seat.src_model = DatasourceModel.LogSeat
+    log_seat.source = {
+        'formatter': [
+            {"key": "seat_id", "default": ""},
+            {"key": "seat_status", "default": ""},
+            {"key": "conn_count", "default": 0},
+            {"key": "login_success", "default": 0},
+            {"key": "login_fail", "default": 0},
+            {"key": "disconn_count", "default": 0}
+        ],
+        'uri': 'ssh://qdam:qdam@192.168.101.100:22/#/home/qdam/qtrade/bin/Syslog.log',
+        'grep': 'OnFrontConnected|OnRspUserLogin|OnFrontDisConnected',
+        'parser': {
+            "pattern": r"^(.+us) .+EXID:([^,]+),SeatID:([^,]+),.+Main:\d+:(.+)$",
+            "key_list": [
+                "timestamp",
+                "exid",
+                "seatid",
+                "message"
+            ],
+            "primary_key": "seatid",
+            "skip_headline": True
+        }
+    }
+
+    db.session.add_all([db_src, db_session, log_seat])
     db.session.commit()
 
 @manager.command
 def init_operation():
     sys1 = TradeSystem.find(id=1)
-    grp1 = OperationGroup(name=u'早盘操作')
-    grp2 = OperationGroup(name=u'夜盘操作')
-    grp3 = OperationGroup(name=u'周操作')
+    grp1 = OperationGroup(name=u'早盘开盘操作')
+    grp2 = OperationGroup(name=u'早盘收盘操作')
+    grp3 = OperationGroup(name=u'夜盘开盘操作')
+    grp4 = OperationGroup(name=u'夜盘收盘操作')
     sys1.operation_groups.append(grp1)
     sys1.operation_groups.append(grp2)
     sys1.operation_groups.append(grp3)
+    sys1.operation_groups.append(grp4)
 
-    db.session.add_all([grp1, grp2, grp3])
-    db.session.commit()
-
-    oper1 = Operation()
-    oper1.name = "hello"
-    oper1.order = 10
-    oper1.detail = {
-        'name': 'shell',
-        'shell': 'echo hello!'
-    }
-    oper1.group = grp1
-    oper2 = Operation()
-    oper2.name = "world"
-    oper2.order = 20
-    oper2.detail = {
-        'name': 'shell',
-        'shell': 'echo world!'
-    }
-    oper2.group = grp1
-
-    db.session.add_all([oper1, oper2])
-    db.session.commit()
-
-    sys2 = TradeSystem.find(id=2)
-    grp11 = OperationGroup(name=u'早盘操作')
-    grp12 = OperationGroup(name=u'夜盘操作')
-    grp13 = OperationGroup(name=u'周操作')
-    sys2.operation_groups.append(grp11)
-    sys2.operation_groups.append(grp12)
-    sys2.operation_groups.append(grp13)
-
-    db.session.add_all([grp11, grp12, grp13])
+    db.session.add_all([grp1, grp2, grp3, grp4])
     db.session.commit()
 
 @manager.command
@@ -180,7 +249,6 @@ def printurl():
 
 @manager.command
 def printuser():
-    #user = Operator.find(login='admin')
     for user in Operator.query.all():
         print "username:", user.name
         for role in user.roles:
@@ -218,15 +286,40 @@ def printsys():
 @manager.command
 def modeltest():
     sys = TradeSystem.find(id=1)
-    svr = Server.find(id=1)
-    proc = TradeProcess.find(id=1)
-    usr = Operator.find(id=1)
+    #svr = Server.find(id=1)
+    #proc = TradeProcess.find(id=1)
+    #usr = Operator.find(id=1)
     print sys.to_json()
-    from SysManager.Parsers import ymlParser
-    print ymlParser.Dump(sys.to_json())
+    #from SysManager.Parsers import ymlParser
+    #print ymlParser.Dump(sys.to_json())
     #print svr.to_json()
     #print proc.to_json()
     #print usr.to_json()
+    '''
+    op = Operation.find(id=6)
+    records = OperateRecord.query\
+        .filter(OperateRecord.operation_id==op.id)\
+            .order_by(OperateRecord.operated_at.desc())
+    print records.first().operated_at
+    '''
+
+@manager.command
+def route_test():
+    #print dir(test_app)
+    '''
+    urls = test_app.url_map.bind('localhost')
+    a = urls.match('api/user/id/1')
+    print a
+    rsp = test_app.view_functions[a[0]](**a[1])
+    print json.dumps(rsp.response)
+    '''
+    urls = test_app.url_map.bind('localhost')
+    match = urls.match('api/user/id/1')
+    with test_app.request_context(
+        EnvironBuilder().get_environ()
+    ):
+        rsp = test_app.view_functions[match[0]](**match[1])
+        print json.dumps(rsp.response)
 
 @manager.command
 def route_test():

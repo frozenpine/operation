@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 from flask_login import LoginManager, current_user
-from app.models import User, Operator
+from app.models import Operator
 
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'

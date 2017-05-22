@@ -4,7 +4,7 @@ from .forms import LoginForm, RegisterForm
 from flask import flash, request, redirect, url_for, render_template
 from flask_login import login_required, login_user, current_user, logout_user
 from app import db
-from app.models import User, Operator
+from app.models import Operator
 
 @auth.route('/')
 def index():

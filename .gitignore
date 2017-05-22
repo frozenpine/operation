@@ -23,3 +23,7 @@ project.lock.json
 
 # Build outputs
 build/target/
+
+*.pyc
+*.log
+.idea

@@ -54,7 +54,7 @@ a:hover {
 .am-topbar-inverse .am-topbar-nav>li>a {
     height: 75px;
     line-height: 75px;
-    padding: 0 12px;
+    padding: 0 3px;
 }
 
 .am-topbar-inverse .am-topbar-nav>li>a:focus,
@@ -138,10 +138,14 @@ ul.am-dropdown-content>li>a {
     background-color: #8E44AD!important;
 }
 
+.tpl-badge-secondary {
+    background-color: #F1C40F!important;
+}
+
 .tpl-header-list li {
     color: #999;
     border-bottom: 1px solid #F1F4F7;
-    padding: 3px;
+    padding: 5px;
 }
 
 .tpl-header-list li:last-child {
@@ -494,20 +498,20 @@ ul.tpl-dropdown-content li>a.tpl-dropdown-content-message:last-child {
 }
 
 .tpl-left-nav {
-    min-height: 560px;
+    min-height: 540px;
     width: 235px;
     float: left;
     background: #fff;
     border-radius: 6px;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
     padding-bottom: 20px;
-    margin-top: -20px;
-    margin-left: 5px;
+    margin-top: -0.7rem;
+    margin-left: 3px;
 }
 
 .tpl-left-nav-title {
-    height: 50px;
-    padding: 25px 15px 10px;
+    height: 40px;
+    padding: 10px 15px;
     color: #5C9ACF;
     font-size: 13px;
     font-weight: 600;
@@ -615,7 +619,7 @@ ul.tpl-dropdown-content li>a.tpl-dropdown-content-message:last-child {
 .tpl-left-nav-sub-menu a {
     display: block;
     margin: 0;
-    padding: 4px 14px 9px 30px;
+    padding: 10px 14px 10px 40px;
     text-decoration: none;
     font-size: 14px;
     font-weight: 400;
@@ -781,6 +785,7 @@ ul.tpl-dropdown-content li>a.tpl-dropdown-content-message:last-child {
 
 .row {
     overflow: hidden;
+    padding: 0px 10px 0px 10px;
 }
 
 .row-mb {
@@ -889,7 +894,7 @@ ul.tpl-dropdown-content li>a.tpl-dropdown-content-message:last-child {
 }
 
 .tpl-portlet {
-    overflow: hidden;
+    /*overflow: hidden;*/
     padding: 12px 20px 15px;
     background-color: #fff;
     border-radius: 4px;
@@ -1440,10 +1445,10 @@ ul.tpl-dropdown-content li>a.tpl-dropdown-content-message:last-child {
 
 .tpl-portlet-components {
     border: 1px solid #e7ecf1;
-    padding: 15px;
+    padding: 10px;
+    margin: 0px 0px 10px 0px;
     background-color: #fff;
-    margin: 10px;
-    overflow: hidden;
+    /*overflow: hidden;*/
 }
 
 .tpl-portlet-components .portlet-title {
@@ -1493,6 +1498,12 @@ ul.tpl-dropdown-content li>a.tpl-dropdown-content-message:last-child {
 
 .am-selected-btn.am-btn-default {
     border-radius: 3px;
+}
+
+.am-icon-close {
+    cursor: pointer;
+    font-size: 60%;
+    z-index: 200;
 }
 
 .am-input-group {
@@ -2007,4 +2018,63 @@ div#cmdBorder {
     .tpl-content-wrapper {
         padding-left: 0;
     }
+}
+
+.am-dropdown-content_l {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 1020;
+    display: none;
+    float: left;
+    min-width: 160px;
+    padding: 15px;
+    margin: 9px 0 0;
+    text-align: left;
+    line-height: 1.6;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 0;
+    -webkit-background-clip: padding-box;
+    background-clip: padding-box;
+    -webkit-animation-duration: .15s;
+    animation-duration: .15s
+}
+
+.am-dropdown-content_l:after,
+.am-dropdown-content_l:before {
+    position: absolute;
+    display: block;
+    content: "";
+    width: 0;
+    height: 0;
+    border: 8px dashed transparent;
+    z-index: 1
+}
+
+.am-dropdown-content_l:after,
+.am-dropdown-content_l:before {
+    border-bottom-style: solid;
+    border-width: 0 8px 8px
+}
+
+.am-dropdown-content_l:before {
+    border-bottom-color: #ddd;
+    bottom: 0
+}
+
+.am-dropdown-content_l:after {
+    border-bottom-color: #fff;
+    bottom: -1px
+}
+
+.am-dropdown-content_l:after,
+.am-dropdown-content_l:before {
+    right: 10px;
+    top: -8px;
+    pointer-events: none
+}
+
+.am-dropdown-content_l:after {
+    top: -7px
 }

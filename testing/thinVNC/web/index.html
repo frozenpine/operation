@@ -1,0 +1,175 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1">
+<link rel="ThinVnc" href="favicon.ico"/>
+<link rel="stylesheet" href="css/main.css" type="text/css"/>  
+<link rel="stylesheet" href="css/jquery-ui.css" type="text/css"/>  
+
+<!-- JS LIBRARIES-->
+<script src="jquery/jquery-1.4.2.js" type="text/javascript"></script>
+<script lang="JavaScript" type="text/javascript">
+var CFInstall;
+</script>
+<!--[if IE]>
+<script type="text/javascript" 
+     src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js"></script>
+<![endif]-->
+<script src="jquery/jquery-ui.js" type="text/javascript"></script>
+<script src="jquery/jquery.ajaxq.js" type="text/javascript"></script>
+<title>ThinVNC</title>
+
+<!-- JS SCRIPTS-->
+<script src="js/thinvnc.sdk.js" type="text/javascript"></script>
+<script src="js/thinvnc.app.js" type="text/javascript"></script>
+<script type="text/javascript">
+
+			
+		$(document).ready(function(){			
+			function gup( name ){
+			  name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+			  var regexS = "[\\?&]"+name+"=([^&#]*)";
+			  var regex = new RegExp( regexS );
+			  var results = regex.exec( window.location.href );
+			  if( results == null )
+				return "";
+			  else
+				return results[1];
+			}
+
+			function onChromeFrameMissing() {
+			    alert("Internet Explorer doesnt support HTML5.\nIf you want to use ThinVNC with Internet Explorer, install Google ChromeFrame.");
+			    window.location.href = "http://google.com/chromeframe";
+			}
+
+		    if (CFInstall != undefined) {
+		        CFInstall.check({
+		              preventPrompt : true,
+		              onmissing: onChromeFrameMissing
+		        });
+		    }
+			$(window).bind("serverDisconnect", function(){
+				window.location.href = "/";		
+			});
+
+			$("#connect").click(function(){			
+			 if (document.getElementById("pnltwitter")!=null){	
+			 	document.getElementById("pnltwitter").innerHTML = "";
+			 }
+			 if (document.getElementById("pnlfacebook")!=null){	
+				 document.getElementById("pnlfacebook").innerHTML = "";
+			 }
+			 connect();			
+			});
+			
+			$("#computer").keydown(function(event) {
+				if (event.keyCode == "13") {
+					 connect();
+				}
+			});
+			function connect(){					
+				var inputComputer = document.getElementById("computer");
+				var inputFullColor = document.getElementById("fullColor");
+				var inputControlMode = document.getElementById("controlMode");
+				var fullColor = !!inputFullColor.checked;
+				var mouseControl = !!inputControlMode.checked;
+				
+				var fcQ = 85;
+				var fcPF = 0;
+				if (!fullColor) {
+				  fcQ = 50;
+				  fcPF = 1;
+				}	
+				if(mythinvnc) delete mythinvnc;			
+				try{						
+					var mythinvnc = new ThinVNCApp({
+						divId:"desk",
+						scaled : true,
+						mouseControl:inputControlMode.checked,
+						address: inputComputer.value,
+						pixelFormat: fcPF,
+						quality: fcQ  
+					});
+					var cb = document.getElementById("connect");			
+					cb.disabled = true;
+				}catch(e){
+					alert(e.message);
+				}			
+			}
+			
+		});
+</script>
+
+</head>
+
+<body>
+    <div id="desk">
+    </div>    
+<div id="connect-page">
+    <div style="text-align:center;width:400px; margin:0 auto 0 auto">
+    <br />
+    <br />
+    <br/>
+    <fieldset id="Group1">
+    <br>
+    <img height="94" src="images/ThinVnc.png" width="289" alt="" /><br />
+        <br />
+        <hr>
+        <br />
+        <table width="100%" style="text-align:left">
+        <tr>
+            <td style="width: 111px" class="machine"><span id="machine-t">Machine:</span>&nbsp;&nbsp; </td>
+            <td class="options"><input id="computer" type="text" value="" class="options" style="width: 210px" /></td>
+        </tr>
+        <tr>
+            <td style="width: 111px">&nbsp;</td>
+            <td class="options">&nbsp;</td>
+        </tr>
+        <tr>
+            <td style="width: 111px" align="left">&nbsp;</td>
+            <td class="options"><input id="fullColor" type="checkbox" checked="checked" />&nbsp;<span id="full-color-t">Full Color</span></td>
+        </tr>
+        <tr>
+            <td style="width: 111px" align="left">&nbsp;</td>
+            <td class="options"><input id="controlMode" type="checkbox" checked="checked" />&nbsp;<span id="mouse-control-t">Mouse Control</span></td>
+        </tr>
+        <tr>
+            <td style="width: 111px">&nbsp;</td>
+            <td class="options">&nbsp;</td>
+        </tr>
+        <tr>
+            <td style="width: 111px">&nbsp;</td>
+            <td align="Left">
+            	<input id="connect" type="button" value="Connect" class="style1" style="width: 171px; height: 31px" />
+            </td>
+        </tr>
+    </table>
+    <br />
+    </fieldset>
+    </div>
+
+    <div id="footer">
+        <div class="wrapper">
+        	<span id="pnlfacebook" style="left:10px;position:absolute">
+		    <iframe src="https://www.facebook.com/plugins/like.php?href=http%3A%2F%2Fwww.facebook.com%2Fpages%2FThinVNC%2F141280635902128&amp;layout=button_count&amp;show_faces=true&amp;width=450&amp;action=like&amp;font=verdana&amp;colorscheme=light&amp;height=21" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:450px; height:21px;" allowTransparency="true"></iframe>
+            </span>
+        	<span id="pnltwitter" style="left:150px;position:absolute">
+			<script>
+			if (location.protocol=="https:") {
+				document.getElementById("pnltwitter").style.display="none";
+			} else {
+				document.write('<a href="http://twitter.com/share" class="twitter-share-button" data-url="http://www.supportsmith.com/ThinVNC/HTML5-VNC.aspx" data-text="I am using ThinVNC, the HTML5 Remote Desktop Access, check it out!" data-count="horizontal" data-via="CSDevTeam">Tweet<a>');
+			}
+			</script>
+			<script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
+            </span>
+            <span class="copyright">
+            Copyright&copy; 2010 Cybele Software, Inc.
+            </span>
+        </div>
+    </div>     
+</div>    
+    
+</body>
+</html>

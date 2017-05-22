@@ -1,8 +1,6 @@
 # -*- coding: UTF-8 -*-
-import logging
-from logging.handlers import TimedRotatingFileHandler
-from enum import Enum
 
+<<<<<<< HEAD
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s %(filename)s-%(funcName)s[line:%(lineno)d] %(levelname)s %(message)s',
@@ -30,3 +28,5 @@ formatter = logging.Formatter(
 )
 Rthandler.setFormatter(formatter)
 logging.getLogger('').addHandler(Rthandler)
+=======
+>>>>>>> 4-qdiam-special

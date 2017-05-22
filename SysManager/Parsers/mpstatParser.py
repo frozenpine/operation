@@ -12,5 +12,5 @@ class mpstatParser(OutputParser):
             key_list=[
                 'name', 'usr', 'nice', 'sys', 'iowait', 'irq',
                 'soft', 'steal', 'guest', 'gnice', 'idle'
-            ],
+            ]
         )

@@ -5,19 +5,23 @@ from .handlers.DeviceHandler import DeviceApi, DeviceListApi
 from .handlers.SystemHandler import SystemApi, SystemListApi
 from .handlers.RoleHandler import RoleApi, RoleListApi
 from .handlers.UIDataHandler import UIDataApi
-from .handlers.OperationHandler import OperationListApi, OperationApi
+from .handlers.OperationHandler import (
+    OperationListApi, OperationApi, OperationCaptchaApi,
+    OperationLoginApi, OperationExecuteApi, OperationUIApi
+)
+from .handlers.TradingDayHandler import NextTradingDayApi
 from .handlers.SysStaticsHandler import (
     ServerStaticListApi, SystemStaticListApi,
-    ServerStaticApi, ProcStaticApi
+    ServerStaticApi, ProcStaticApi,
+    LoginListApi, LoginCheckApi, UserSessionListApi
 )
-from .handlers.LoginLogHandler import LoginLogApi
 from .handlers.LogHandler import LogApi
 
 resources.add_resource(
     UserApi,
     '/user/login/<string:login>',
     '/user/id/<int:id>',
-    methods=['GET'], endpoint='user'
+    methods=['GET', 'PUT'], endpoint='user'
 )
 resources.add_resource(
     UserListApi,
@@ -87,6 +91,41 @@ resources.add_resource(
 )
 
 resources.add_resource(
+    OperationUIApi,
+    '/operation/id/<int:id>/ui',
+    methods=['GET'],
+    endpoint='operation_ui'
+)
+
+resources.add_resource(
+    OperationCaptchaApi,
+    '/operation/id/<int:id>/captcha',
+    methods=['GET'],
+    endpoint='operation_captcha'
+)
+
+resources.add_resource(
+    OperationLoginApi,
+    '/operation/id/<int:id>/login',
+    methods=['POST'],
+    endpoint='operation_login'
+)
+
+resources.add_resource(
+    OperationExecuteApi,
+    '/operation/id/<int:id>/execute',
+    methods=['GET', 'POST'],
+    endpoint='operation_execute'
+)
+
+resources.add_resource(
+    NextTradingDayApi,
+    '/nextTradingDay',
+    methods=['GET'],
+    endpoint='next_trading_day'
+)
+
+resources.add_resource(
     ServerStaticListApi,
     '/system/id/<int:id>/svr_statics',
     '/system/id/<int:id>/svr_statics/',
@@ -96,8 +135,8 @@ resources.add_resource(
 
 resources.add_resource(
     ServerStaticApi,
-    '/server/id/<int:id>/statics',
-    '/server/id/<int:id>/statics/',
+    '/system/id/<int:id>/svr_statics/check',
+    '/system/id/<int:id>/svr_statics/check/',
     methods=['GET'],
     endpoint='svr_statics'
 )
@@ -112,18 +151,34 @@ resources.add_resource(
 
 resources.add_resource(
     ProcStaticApi,
-    '/process/id/<int:id>/statics',
-    '/process/id/<int:id>/statics/',
+    '/system/id/<int:id>/sys_statics/check',
+    '/system/id/<int:id>/sys_statics/check/',
     methods=['GET'],
     endpoint='proc_statics'
 )
 
 resources.add_resource(
-    LoginLogApi,
-    '/system/id/<int:id>/login_logs',
-    '/system/id/<int:id>/login_logs/',
+    LoginListApi,
+    '/system/id/<int:id>/login_statics',
+    '/system/id/<int:id>/login_statics/',
     methods=['GET'],
-    endpoint='login_logs'
+    endpoint='login_statics_list'
+)
+
+resources.add_resource(
+    LoginCheckApi,
+    '/system/id/<int:id>/login_statics/check',
+    '/system/id/<int:id>/login_statics/check/',
+    methods=['GET'],
+    endpoint='login_statics'
+)
+
+resources.add_resource(
+    UserSessionListApi,
+    '/system/id/<int:id>/user_sessions',
+    '/system/id/<int:id>/user_sessions/',
+    methods=['GET'],
+    endpoint='user_sessions'
 )
 
 resources.add_resource(LogApi, '/logs', methods=['POST'])
