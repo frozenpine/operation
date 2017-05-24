@@ -1,0 +1,27 @@
+POST http://10.100.60.10:8080/quantdo/logon HTTP/1.1
+Host: 10.100.60.10:8080
+Connection: keep-alive
+Content-Length: 109
+Accept: text/plain, */*; q=0.01
+Origin: http://10.100.60.10:8080
+X-Requested-With: XMLHttpRequest
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36
+Content-Type: application/x-www-form-urlencoded; charset=UTF-8
+Referer: http://10.100.60.10:8080/quantdo_page/pages/login/login.html
+Accept-Encoding: gzip, deflate
+Accept-Language: zh-CN,zh;q=0.8
+Cookie: token=; expire_time=
+
+params=%7B%22userName%22%3A%22user%22%2C%22password%22%3A%2212345678%22%2C%22verification_code%22%3A%22%22%7D
+HTTP/1.1 200 OK
+Pragma: No-cache
+Cache-Control: no-cache
+Expires: Thu, 01 Jan 1970 00:00:00 GMT
+Content-Type: text/plain;charset=UTF-8
+Set-Cookie: token=8c4f8619-faa5-445e-bc85-7c32570fd552;Path=/quantdo;HttpOnly
+Set-Cookie: expire_time=20170522194304;Path=/quantdo;HttpOnly
+error_code: 200
+Content-Length: 57
+Server: Jetty(9.2.14.v20151106)
+
+{"version":"1.0","errorCode":0,"errorMsg":null,"data":""}

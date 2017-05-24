@@ -1,0 +1,4 @@
+Users:
+  - login: admin  #登录名
+    name: administrator #用户全名
+    password: admin

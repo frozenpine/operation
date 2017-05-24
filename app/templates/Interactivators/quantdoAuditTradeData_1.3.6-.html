@@ -26,7 +26,10 @@
 {% endif %}
 <fieldset class="am-center module-form" id="auditTradeData_TradingDayPicker" style="{% if not session %}display: none;{% endif %}width: 350px">
     <div>
-        <button type="submit" class="am-btn am-btn-default" style="width: 100%" onclick="auditTradeData()" data-am-modal-close>上场数据稽核</button>
+        <button type="submit" class="am-btn am-btn-default" style="width: 100%" onclick="auditTradeData()">
+            上场数据稽核
+            <i class="am-icon-spinner am-icon-pulse" id="auditTradeData_Spinner" style="display:none"></i>
+        </button>
     </div>
 </fieldset>
 <script type="text/javascript">
@@ -76,10 +79,17 @@
     };
 
     function auditTradeData() {
-        data = [];
         var prompt = $('#auditTradeData_TradingDayPicker').closest('.am-modal-prompt');
-        prompt.trigger('execute.quantdo', [{
-            params: JSON.stringify(data)
-        }]);
+        $('#auditTradeData_Spinner').toggle();
+        $.post(
+            "[[execute_uri]]",
+            data = {
+                params: JSON.stringify([])
+            },
+            function(response) {
+                prompt.modal('close');
+                prompt.trigger('results.quantdo', [response]);
+            }
+        );
     }
 </script>

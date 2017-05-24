@@ -314,6 +314,7 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
             $http.get('api/operation/id/' + id + '/ui')
                 .success(function(response) {
                     $scope.opList.details[index].interactivator.template = response;
+                    /*
                     $('#interactive' + id).bind('execute.quantdo', function(event, data) {
                         $scope.$apply(function() {
                             $scope.opList.details[index].err_code = -2;
@@ -334,6 +335,17 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
                                 }
                             }
                         );
+                    });
+                    */
+                    $('#interactive' + id).bind('results.quantdo', function(event, data) {
+                        $scope.$apply(function() {
+                            if ($routeParams.hasOwnProperty('grpid')) {
+                                $scope.opList.details[index] = data;
+                                if (index < $scope.opList.details.length - 1 && ($scope.opList.details[index].checker === undefined || !$scope.opList.details[index].checker.isTrue)) {
+                                    $scope.opList.details[index + 1].enabled = data.err_code === 0;
+                                }
+                            }
+                        });
                     });
                     $('#interactive' + id).on('opened.modal.amui', function() {
                         var imgElement = $('#interactive' + id).find('img')[0];
@@ -359,7 +371,7 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
                     if ($routeParams.hasOwnProperty('grpid')) {
                         $scope.opList.details[index] = response;
                         if (index < $scope.opList.details.length - 1 && ($scope.opList.details[index].checker === undefined || !$scope.opList.details[index].checker.isTrue)) {
-                            $scope.opList.details[index + 1].enabled = response.succeed;
+                            $scope.opList.details[index + 1].enabled = response.err_code === 0;
                         }
                     }
                 })

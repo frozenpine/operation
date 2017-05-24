@@ -30,7 +30,10 @@
         <input type="text" class="am-form-field am-modal-prompt-input" id="genTradeData_NextTradingDay" style="height: 40px" placeholder="请输入交易日" value="" />
     </div>
     <div>
-        <button type="submit" class="am-btn am-btn-default" style="width: 100%" onclick="genTradeData()" data-am-modal-close>数据上场</button>
+        <button type="submit" class="am-btn am-btn-default" style="width: 100%" onclick="genTradeData()">
+            数据上场
+            <i class="am-icon-spinner am-icon-pulse" id="genTradeData_Spinner" style="display: none"></i>
+        </button>
     </div>
 </fieldset>
 <script type="text/javascript">
@@ -65,12 +68,12 @@
         $.post(
             "[[login_uri]]",
             data = {
-				params: JSON.stringify({
-					userName: user,
-					password: pass,
-					verification_code: captcha
-				})
-			},
+                params: JSON.stringify({
+                    userName: user,
+                    password: pass,
+                    verification_code: captcha
+                })
+            },
             function(response) {
                 console.log(response);
                 if (response.errorCode == 0) {
@@ -95,10 +98,17 @@
     };
 
     function genTradeData() {
-        data = [$('#genTradeData_NextTradingDay').val()];
         var prompt = $('#genTradeData_TradingDayPicker').closest('.am-modal-prompt');
-        prompt.trigger('execute.quantdo', [{
-            params: JSON.stringify(data)
-        }]);
+        $('#genTradeData_Spinner').toggle()
+        $.post(
+            "[[execute_uri]]",
+            data = {
+                params: JSON.stringify([$('#genTradeData_NextTradingDay').val()])
+            },
+            function(response) {
+                prompt.modal('close');
+                prompt.trigger('results.quantdo', [response]);
+            }
+        );
     }
 </script>

@@ -218,10 +218,9 @@ class DataSourceType(Enum):
     SQL = 1
     FILE = 2
 
-class DatasourceModel(Enum):
-    DbSeat = 1
-    DbSession = 2
-    LogSeat = 3
+class DataSourceModel(Enum):
+    Seat = 1
+    Session = 2
 
 class ScriptType(Enum):
     Checker = 1
@@ -371,7 +370,7 @@ class TradeProcess(SQLModelMixin, db.Model):
     )
     name = db.Column(db.String, nullable=False, index=True)
     description = db.Column(db.String)
-    type = db.Column(ChoiceType(HaType, impl=db.Integer()))
+    type = db.Column(ChoiceType(HaType, impl=db.Integer()), default=HaType.Master)
     base_dir = db.Column(db.String)
     exec_file = db.Column(db.String, nullable=False)
     param = db.Column(db.String)
@@ -461,7 +460,7 @@ class DataSource(SQLModelMixin, db.Model):
         default=DataSourceType.SQL,
         nullable=False
     )
-    src_model = db.Column(ChoiceType(DatasourceModel, impl=db.Integer()), nullable=False)
+    src_model = db.Column(ChoiceType(DataSourceModel, impl=db.Integer()), nullable=False)
     source = db.Column(JSONType, nullable=False)
 
 '''
@@ -494,7 +493,7 @@ class Server(SQLModelMixin, db.Model):
     name = db.Column(db.String, unique=True, index=True)
     survey = db.Column(JSONType, default={})
     description = db.Column(db.String)
-    platform = db.Column(ChoiceType(PlatformType, impl=db.Integer()))
+    platform = db.Column(ChoiceType(PlatformType, impl=db.Integer()), default=PlatformType.Linux)
     manage_ip = db.Column(IPAddressType, index=True)
     admin_user = db.Column(db.String, index=True)
     admin_pwd = db.Column(db.String)

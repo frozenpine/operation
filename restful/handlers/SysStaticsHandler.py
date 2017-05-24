@@ -3,7 +3,7 @@ from flask import abort
 from flask_restful import Resource
 from app.models import (
     TradeSystem, TradeProcess, Server,
-    DataSource, DatasourceModel, DataSourceType
+    DataSource, DataSourceModel, DataSourceType
 )
 #from SysManager import logging
 import logging
@@ -279,7 +279,7 @@ class LoginListApi(Resource):
         if sys:
             src = DataSource.query.filter(
                 DataSource.src_type == DataSourceType.SQL,
-                DataSource.src_model == DatasourceModel.DbSeat,
+                DataSource.src_model == DataSourceModel.Seat,
                 DataSource.sys_id == sys.id
             ).first()
             if src:
@@ -321,7 +321,7 @@ class LoginCheckApi(Resource):
     def find_syslog(self, sys):
         log_srcs = DataSource.query.filter(
             DataSource.src_type == DataSourceType.FILE,
-            DataSource.src_model == DatasourceModel.LogSeat,
+            DataSource.src_model == DataSourceModel.Seat,
             DataSource.sys_id == sys.id
         ).all()
         for src in log_srcs:
@@ -420,7 +420,7 @@ class UserSessionListApi(Resource):
         if sys:
             src = DataSource.query.filter(
                 DataSource.src_type == DataSourceType.SQL,
-                DataSource.src_model == DatasourceModel.DbSession,
+                DataSource.src_model == DataSourceModel.Session,
                 DataSource.sys_id == sys.id
             ).first()
             if src:

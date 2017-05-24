@@ -1,0 +1,32 @@
+Request：
+POST http://192.168.100.151:8080/quantdo/service/busAuditService/auditAfterToTrade HTTP/1.1
+Host: 192.168.100.151:8080
+Connection: keep-alive
+Content-Length: 13
+Origin: http://192.168.100.151:8080
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.81 Safari/537.36
+Content-Type: application/x-www-form-urlencoded; charset=UTF-8
+Accept: text/plain, */*; q=0.01
+X-Requested-With: XMLHttpRequest
+DNT: 1
+Referer: http://192.168.100.151:8080/quantdo_page/pages/index.html
+Accept-Encoding: gzip, deflate
+Accept-Language: zh-CN,zh;q=0.8
+Cookie: token=0f12f33f-05f3-4060-ba51-5bcccc6c0e11; expire_time=20170515102415
+
+params=%5B%5D
+
+Response：
+HTTP/1.1 200 OK
+Server: Apache-Coyote/1.1
+Pragma: No-cache
+Cache-Control: no-cache
+Expires: Thu, 01 Jan 1970 00:00:00 GMT
+error_code: 200
+Set-Cookie: token=0f12f33f-05f3-4060-ba51-5bcccc6c0e11; Path=/quantdo; HttpOnly
+Set-Cookie: expire_time=20170515102808; Path=/quantdo; HttpOnly
+Content-Type: text/plain;charset=UTF-8
+Content-Length: 490
+Date: Mon, 15 May 2017 01:58:08 GMT
+
+{"version":"1.0","errorCode":0,"errorMsg":null,"data":"[{\"flag\":true,\"name\":\"交易员/风控员上场检查\",\"spanNum\":1,\"details\":null},{\"flag\":true,\"name\":\"工作流用户上场检查\",\"spanNum\":1,\"details\":null},{\"flag\":true,\"name\":\"交易通道上场检查\",\"spanNum\":1,\"details\":null},{\"flag\":true,\"name\":\"交易编码上场检查\",\"spanNum\":1,\"details\":null},{\"flag\":true,\"name\":\"保证金上场检查\",\"spanNum\":1,\"details\":null}]"}

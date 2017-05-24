@@ -1,9 +1,10 @@
 # -*- coding: UTF-8 -*-
 import logging
+from os import path
 from app import db
 from sqlalchemy import text
 from flask import (
-    render_template, url_for,
+    render_template, url_for, current_app,
     make_response, request, session
 )
 from flask_login import current_user
@@ -215,7 +216,8 @@ class OperationUIApi(Resource):
                 captcha=op.detail['remote']['params'].get('captcha', False),
                 captcha_uri=url_for('api.operation_captcha', id=op.id),
                 login_uri=url_for('api.operation_login', id=op.id),
-                execute_uri=url_for('api.operation_execute', id=op.id)
+                execute_uri=url_for('api.operation_execute', id=op.id),
+                csv_uri=url_for('api.operation_csv', id=op.id)
             )
         else:
             return "<h1>no ui template found</h1>"
@@ -225,8 +227,7 @@ class OperationCaptchaApi(Resource):
         op = Operation.find(id=id)
         if op:
             params = op.detail['remote']['params']
-            req = requests.Session()
-            rsp = req.get(
+            rsp = requests.get(
                 'http://{}:{}/{}'.format(
                     params.get('ip'),
                     params.get('port', '8080'),
@@ -243,7 +244,6 @@ class OperationCaptchaApi(Resource):
                 'login': False
             }
             rtn = make_response(rsp.content)
-            req.close()
             return rtn
         else:
             return {
@@ -256,45 +256,32 @@ class OperationLoginApi(Resource):
         if op:
             params = op.detail['remote']['params']
             key = '{}:{}'.format(params.get('ip'), params.get('port', '8080'))
-            req = requests.Session()
             if session.has_key(key):
-                cookies = session[key]
+                cookies = session[key]['origin']
             else:
                 cookies = None
-            '''
-            rsp = req.post(
+            rsp = requests.post(
                 'http://{}:{}/{}'.format(
                     params.get('ip'),
                     params.get('port') or '8080',
-                    params.get('login_uri')
-                ),
-                data={
-                    'params': json.dumps({
-                        'userName': request.values.get('userName'),
-                        'password': request.values.get('password'),
-                        'verification_code': request.values.get('verification_code')
-                    })
-                },
-                cookies=cookies['origin']
-            )
-            '''
-            rsp = req.post(
-                'http://{}:{}/{}'.format(
-                    params.get('ip'),
-                    params.get('port') or '8080',
-                    params.get('login_uri')
+                    params.get('login_uri').lstrip('/')
                 ),
                 data=request.form,
-                cookies=cookies['origin']
+                cookies=cookies
             )
-            rtn = rsp.json()
-            session[key] = {
-                'origin': rsp.cookies.get_dict(),
-                'timeout': arrow.utcnow().shift(minutes=+30).timestamp,
-                'login': rtn['errorCode'] == 0
-            }
-            req.close()
-            return rtn
+            if rsp.ok:
+                rtn = rsp.json()
+                session[key] = {
+                    'origin': rsp.cookies.get_dict(),
+                    'timeout': arrow.utcnow().shift(minutes=+30).timestamp,
+                    'login': rtn['errorCode'] == 0
+                }
+                return rtn
+            else:
+                rtn = {}
+                rtn['errorCode'] = rsp.status_code
+                rtn['errorMsg'] = rsp.reason
+                return rtn
         else:
             return {
                 'message': 'operation not found.'
@@ -315,22 +302,21 @@ class OperationExecuteApi(Resource):
             op_rec.operated_at = arrow.utcnow().to("Asia/Shanghai")
             db.session.add(op_rec)
             db.session.commit()
-            req = requests.Session()
             params = op.detail['remote']['params']
             key = '{}:{}'.format(params.get('ip'), params.get('port', '8080'))
             if session.has_key(key):
-                cookies = session[key]
+                cookies = session[key]['origin']
             else:
                 cookies = None
             try:
-                rsp = req.post(
+                rsp = requests.post(
                     'http://{}:{}/{}'.format(
                         params.get('ip'),
                         params.get('port', 8080),
                         op.detail['mod']['request']['uri'].lstrip('/')
                     ),
                     data=request.form,
-                    cookies=cookies['origin']
+                    cookies=cookies
                 )
             except requests.HTTPError, err:
                 self.res.error_code = 500
@@ -339,14 +325,18 @@ class OperationExecuteApi(Resource):
                     'message': err.message
                 }, 500
             else:
-                try:
-                    rsp_json = rsp.json()
-                except Exception, err:
-                    self.rtn['err_code'] = 401
-                    self.rtn['output_lines'] = ['please login first.']
+                if rsp.ok:
+                    try:
+                        rsp_json = rsp.json()
+                    except Exception, err:
+                        self.rtn['err_code'] = 401
+                        self.rtn['output_lines'] = ['please login first.']
+                    else:
+                        self.rtn['err_code'] = rsp_json['errorCode']
+                        self.rtn['output_lines'] = format2json(rsp_json['data'])
                 else:
-                    self.rtn['err_code'] = rsp_json['errorCode']
-                    self.rtn['output_lines'] = format2json(rsp_json['data'])
+                    self.rtn['err_code'] = rsp.status_code
+                    self.rtn['output_lines'] = [rsp.reason]
             finally:
                 self.rtn['id'] = op.id
                 self.rtn['op_name'] = op.name
@@ -363,7 +353,6 @@ class OperationExecuteApi(Resource):
                 self.res.detail = self.rtn['output_lines']
                 db.session.add(self.res)
                 db.session.commit()
-                req.close()
                 return self.rtn
         else:
             return {
@@ -379,3 +368,87 @@ def format2json(list):
             i += 1
             rtn.append(formater.format(i, each))
     return rtn
+
+class OperationCSVApi(Resource):
+    def __init__(self):
+        super(OperationCSVApi, self).__init__()
+        self.rtn = {}
+        self.res = OperateResult()
+
+    def post(self, id):
+        op = Operation.find(id=id)
+        if op:
+            op_rec = OperateRecord()
+            op_rec.operation_id = op.id
+            op_rec.operator_id = current_user.id
+            op_rec.operated_at = arrow.utcnow().to("Asia/Shanghai")
+            db.session.add(op_rec)
+            db.session.commit()
+            params = op.detail['remote']['params']
+            key = '{}:{}'.format(params.get('ip'), params.get('port', '8080'))
+            if session.has_key(key):
+                cookies = session[key]['origin']
+            else:
+                cookies = None
+            file = request.files['market_csv']
+            if file:
+                file_path = path.join(current_app.config['UPLOAD_DIR'], 'csv', file.filename)
+                file.save(file_path)
+                try:
+                    file_list = [
+                        ('file', (
+                            'marketDataCSV.csv',
+                            open(file_path, 'rb'),
+                            'application/vnd.ms-excel'
+                        ))
+                    ]
+                    rsp = requests.post(
+                        'http://{}:{}/{}'.format(
+                            params.get('ip'),
+                            params.get('port', 8080),
+                            op.detail['mod']['request']['uri'].lstrip('/')
+                        ),
+                        files=file_list,
+                        cookies=cookies
+                    )
+                except Exception, err:
+                    self.rtn['err_code'] = 500
+                    self.rtn['output_lines'] = [err.message]
+                else:
+                    if rsp.ok:
+                        try:
+                            rsp_json = rsp.json()
+                        except Exception, err:
+                            self.rtn['err_code'] = 401
+                            self.rtn['output_lines'] = ['please login first.']
+                        else:
+                            self.rtn['err_code'] = rsp_json['errorCode']
+                            self.rtn['output_lines'] = format2json(rsp_json['data'])
+                    else:
+                        self.rtn['err_code'] = rsp.status_code
+                        self.rtn['output_lines'] = [rsp.reason]
+                finally:
+                    self.rtn['id'] = op.id
+                    self.rtn['op_name'] = op.name
+                    self.rtn['op_desc'] = op.description
+                    self.rtn['checker'] = {
+                        'isTrue': op.type.IsChecker(),
+                        'checked': False
+                    }
+                    self.rtn['interactivator'] = {
+                        'isTrue': True
+                    }
+                    self.res.op_rec_id = op_rec.id
+                    self.res.error_code = self.rtn['err_code']
+                    self.res.detail = self.rtn['output_lines']
+                    db.session.add(self.res)
+                    db.session.commit()
+                    return self.rtn
+            else:
+                return {
+                    'message': 'no file found.'
+                }, 412
+        else:
+            return {
+                'message': 'operation not found.'
+            }

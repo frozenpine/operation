@@ -7,7 +7,8 @@ from .handlers.RoleHandler import RoleApi, RoleListApi
 from .handlers.UIDataHandler import UIDataApi
 from .handlers.OperationHandler import (
     OperationListApi, OperationApi, OperationCaptchaApi,
-    OperationLoginApi, OperationExecuteApi, OperationUIApi
+    OperationLoginApi, OperationExecuteApi, OperationUIApi,
+    OperationCSVApi
 )
 from .handlers.TradingDayHandler import NextTradingDayApi
 from .handlers.SysStaticsHandler import (
@@ -116,6 +117,13 @@ resources.add_resource(
     '/operation/id/<int:id>/execute',
     methods=['GET', 'POST'],
     endpoint='operation_execute'
+)
+
+resources.add_resource(
+    OperationCSVApi,
+    '/operation/id/<int:id>/csv',
+    methods=['POST'],
+    endpoint='operation_csv'
 )
 
 resources.add_resource(

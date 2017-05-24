@@ -1,0 +1,201 @@
+Servers:
+  - name: &svr01 trade+web_bak
+    description: 交易系统及线下系统备份  #可选配置
+    manage_ip: 192.168.101.100
+    admin_user: root
+    admin_pwd: quantdo123456
+    platform: PlatformType.Linux  #可选配置，默认平台即为Linux，其余可选项： Windows，Unix，BSD，Embedded
+  - name: &svr02 web
+    manage_ip: 192.168.101.102
+    admin_user: root
+    admin_pwd: quantdo123456
+  - name: &svr03 front
+    manage_ip: 192.168.101.124
+    admin_user: root
+    admin_pwd: quantdo123456
+Systems:
+  - name: &parent1 QDIAM
+    description: QDIAM测试系统  #可选配置
+    manage_ip: 192.168.101.100
+    login_user: qdam
+    login_pwd: qdam
+    type: QDIAM #可选配置，系统类型定义在system_types表内，此处配置system_types.name，初始化表内类型：QDP，QDIAM，CTP
+    version: 1.3.6  #可选配置，系统版本号
+  - name: &child1_1 前置子系统
+    manage_ip: 192.168.101.124
+    login_user: qdam
+    login_pwd: qdam
+    type: QDIAM
+  - name: &child1_2 风控子系统
+    manage_ip: 192.168.101.100
+    login_user: qdam
+    login_pwd: qdam
+    type: QDIAM
+  - name: &child1_3 柜台子系统
+    manage_ip: 192.168.101.102
+    login_user: quantdo
+    login_pwd: quantdo
+Processes:
+  - name: 交易核心
+    type: HaType.Master #可选配置，默认为Master，可配置项：HaType.Master，HaType.Slave
+    system: *parent1
+    server: *svr01
+    exec_file: qtrade #实际的可执行文件名
+  - name: 查询核心
+    system: *parent1
+    server: *svr01
+    exec_file: qquery
+  - name: 数据上场
+    system: *parent1
+    server: *svr01
+    exec_file: qdata
+  - name: 数据下场
+    system: *parent1
+    server: *svr01
+    exec_file: qdata
+  - name: QSDB
+    system: *parent1
+    server: *svr01
+    exec_file: qsdb
+  - name: 行情核心
+    system: QDIAM
+    server: *svr01
+    exec_file: qmarket
+  - name: 风控进程 1
+    system: *child1_2
+    server: *svr01
+    exec_file: qicegateway
+    param: 1  #可选配置，可执行文件的第一个参数，此处用于标识主备进程
+  - name: 风控进程 2
+    type: HaType.Slave
+    system: *child1_2
+    server: *svr01
+    exec_file: qicegateway
+    param: 2
+  - name: 行情前置 1
+    system: *child1_1
+    server: *svr03
+    exec_file: qicegateway
+    param: 1
+  - name: 行情前置 2
+    type: HaType.Slave
+    system: *child1_1
+    server: *svr02
+    exec_file: qicegateway
+    param: 2
+  - name: 柜台进程 1
+    system: *child1_3
+    server: *svr02
+    exec_file: java
+    param: tomcat
+  - name: 柜台进程 2
+    type: HaType.Slave
+    system: *child1_3
+    server: *svr01
+    exec_file: java
+    param: tomcat
+  - name: 业务数据库
+    system: *child1_3
+    server: *svr02
+    exec_file: mysqld
+Relations:
+  Parents:
+    *parent1: 
+      - *child1_1
+      - *child1_2
+      - *child1_3
+  Dependencies:
+DataSources:
+  - name: 席位上场表
+    description: 从业务数据库获取席位上场表信息 #可选配置
+    system: *parent1
+    src_type: DataSourceType.SQL  #数据源类型，默认SQL，其他可配置项：FILE
+    src_model: DataSourceModel.Seat #数据源模型，可配置项：Seat，Session
+    source:
+      uri: mysql+pymysql://qdam:qdam@192.168.101.100:3306/qdam?charset=utf8 #db+driver://user:pass@host:port/database?charset=utf8
+      sql: SELECT seat.seat_name, sync.tradingday, sync.frontaddr, sync.seatid 
+           FROM t_seat seat, t_sync_seat sync, t_capital_account 
+           WHERE seat.seat_id = t_capital_account.seat_id 
+           AND sync.seatid=t_capital_account.account_id 
+           AND sync.isactive = TRUE
+      formatter:
+        - key: seat_name
+          default: ''
+        - key: trading_day
+          default: ''
+        - key: front_addr
+          default: ''
+        - key: seat_id
+          default: ''
+        - key: seat_status
+          default: 未连接
+        - key: conn_count
+          default: !!int 0
+        - key: login_success
+          default: !!int 0
+        - key: login_fail
+          default: !!int 0
+        - key: disconn_count
+          default: !!int 0
+  - name: 用户Session表
+    system: *parent1
+    src_type: DataSourceType.SQL
+    src_model: DataSourceModel.Session
+    source:
+      uri: mysql+pymysql://qdam:qdam@192.168.101.100:3306/qdam?charset=utf8
+      sql: SELECT a.brokerid, a.userid, a.usertype, a.sessionid, a.frontid, a.logintime, a.ipaddress, 
+                  a.macaddress, a.userproductinfo, a.interfaceproductinfo, COUNT(a.id) AS total
+           FROM (SELECT * FROM t_oper_usersession ORDER BY id DESC) a
+           GROUP BY userid
+      formatter:
+        - key: broker_id
+          default: ''
+        - key: user_id
+          default: ''
+        - key: user_type
+          default: ''
+        - key: session_id
+          default: ''
+        - key: front_id
+          default: ''
+        - key: login_tim
+          default: ''
+        - key: ip_address
+          default: ''
+        - key: mac_address
+          default: ''
+        - key: prod_info
+          default: ''
+        - key: inter_info
+          default: ''
+        - key: total_login
+          default: !!int 0
+  - name: 交易系统Syslog
+    system: *parent1
+    src_type: DataSourceType.FILE
+    src_model: DataSourceModel.Seat
+    source:
+      uri: ssh://qdam:qdam@192.168.101.100:22/#/home/qdam/qtrade/bin/Syslog.log #ssh://user:pass@host:port/#file_path
+      grep: OnFrontConnected|OnRspUserLogin|OnFrontDisConnected
+      parser:
+        pattern: ^(.+us) .+EXID:([^,]+),SeatID:([^,]+),.+Main:\d+:(.+)$
+        key_list:
+          - timestamp
+          - exid
+          - seatid
+          - message
+        primary_key: seatid
+        skip_headline: True
+      formatter:
+        - key: seat_id
+          default: ''
+        - key: seat_status
+          default: ''
+        - key: conn_count
+          default: !!int 0
+        - key: login_success
+          default: !!int 0
+        - key: login_fail
+          default: !!int 0
+        - key: disconn_count
+          default: !!int 0
