@@ -88,7 +88,8 @@ app.run(function($rootScope, $interval, $location, globalVar, Message) {
     }
 });
 app.controller('dashBoardControl', ['$scope', 'Message', '$rootScope', function($scope, Message, $rootScope) {
-    $rootScope.Message = Message;
+    //$rootScope.Message = Message;
+    $rootScope.isShowSideList = false;
 }]);
 app.controller('userController', ['$scope', function($scope) {
     $scope.ModifyPassword = function() {
@@ -101,17 +102,9 @@ app.controller('userController', ['$scope', function($scope) {
     };
 }]);
 app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval', '$routeParams', function($scope, $http, globalVar, $interval, $routeParams) {
-    console.log($routeParams.sysid);
     $scope.svrShowDetail = true;
     $scope.checkSvrStatics = function() {
         $scope.checking = true;
-        angular.forEach($scope.serverStatics, function(value, index) {
-            $http.get('api/server/id/' + value.id + '/statics')
-                .success(function(data) {
-                    $scope.serverStatics[index] = data;
-                    $scope.checking = false;
-                });
-        });
         $http.get('api/system/id/' + $routeParams.sysid + '/svr_statics/check')
             .success(function(response) {
                 if (response.sys_id == $routeParams.sysid) {
@@ -128,6 +121,7 @@ app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
                 console.log(response);
             });
     };
+
     $http.get('api/system/id/' + $routeParams.sysid + '/svr_statics')
         .success(function(response) {
             if ($routeParams.hasOwnProperty('sysid') && response.sys_id == $routeParams.sysid) {
@@ -314,29 +308,6 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
             $http.get('api/operation/id/' + id + '/ui')
                 .success(function(response) {
                     $scope.opList.details[index].interactivator.template = response;
-                    /*
-                    $('#interactive' + id).bind('execute.quantdo', function(event, data) {
-                        $scope.$apply(function() {
-                            $scope.opList.details[index].err_code = -2;
-                            $scope.opList.details[index].skip = false;
-                        });
-                        $.post(
-                            "api/operation/id/" + id + "/execute",
-                            data = data,
-                            function(response) {
-                                console.log(response);
-                                if ($routeParams.hasOwnProperty('grpid')) {
-                                    $scope.$apply(function() {
-                                        $scope.opList.details[index] = response;
-                                        if (index < $scope.opList.details.length - 1 && ($scope.opList.details[index].checker === undefined || !$scope.opList.details[index].checker.isTrue)) {
-                                            $scope.opList.details[index + 1].enabled = response.succeed;
-                                        }
-                                    });
-                                }
-                            }
-                        );
-                    });
-                    */
                     $('#interactive' + id).bind('results.quantdo', function(event, data) {
                         $scope.$apply(function() {
                             if ($routeParams.hasOwnProperty('grpid')) {
@@ -419,8 +390,10 @@ app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootSco
             })
             .error(function(response) {
                 console.log(response);
+                $scope.checking = false;
             });
     };
+
     $http.get('api/system/id/' + $routeParams.sysid + '/login_statics')
         .success(function(response) {
             $scope.loginStaticsShow = true;

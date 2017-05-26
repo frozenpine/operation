@@ -1,6 +1,10 @@
 # -*- coding: UTF-8 -*-
 from . import db
-from sqlalchemy_utils.types import ChoiceType, JSONType, IPAddressType, ArrowType
+from sqlalchemy_utils.types import (
+    ChoiceType, JSONType, IPAddressType, ArrowType,
+    DateTimeRangeType
+)
+from sqlalchemy_utils import observes
 from flask_login import UserMixin
 '''
 from neomodel import (
@@ -17,6 +21,7 @@ from arrow import Arrow
 import re
 import json
 from uuid import uuid4
+from datetime import time, datetime
 
 '''
 class NodeMixin(StructuredNode):
@@ -226,17 +231,14 @@ class ScriptType(Enum):
     Checker = 1
     Executor = 2
     Interactivator = 4
-    Excute_Check = Executor|Checker
-    Interactive_Excutor = Interactivator|Executor
-    Interactive_Excute_Checker = Interactivator|Executor|Checker
+    Excute_Checker = Executor|Checker
+    Interactive_Checker = Interactivator|Checker
 
     def IsBatcher(self):
-        return self.value & ScriptType.Excute_Check.value \
-            == ScriptType.Excute_Check.value or \
-            self.value & ScriptType.Interactive_Excutor.value \
-            == ScriptType.Interactive_Excutor.value or \
-            self.value & ScriptType.Interactive_Excute_Checker.value \
-            == ScriptType.Interactive_Excute_Checker.value
+        return self.value & ScriptType.Excute_Checker.value \
+            == ScriptType.Excute_Checker.value or \
+            self.value & ScriptType.Interactive_Checker.value \
+            == ScriptType.Interactive_Checker.value
 
     def IsChecker(self):
         return self.value & ScriptType.Checker.value \
@@ -263,7 +265,7 @@ class StaticsType(Enum):
 
 class OperateRecord(SQLModelMixin, db.Model):
     __tablename__ = 'operate_records'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     operation_id = db.Column(db.Integer, db.ForeignKey('operations.id'), index=True)
     operator_id = db.Column(db.Integer, db.ForeignKey('operators.id'), index=True)
     operated_at = db.Column(ArrowType, index=True)
@@ -282,7 +284,7 @@ class Operator(UserMixin, SQLModelMixin, db.Model):
         super(Operator, self).__init__(**kwargs)
 
     __tablename__ = 'operators'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     login = db.Column(db.String, unique=True, index=True)
     name = db.Column(db.String, index=True)
     password_hash = db.Column(db.String, nullable=False)
@@ -330,7 +332,7 @@ class Operator(UserMixin, SQLModelMixin, db.Model):
 
 class OpRole(SQLModelMixin, db.Model):
     __tablename__ = 'roles'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String, unique=True, index=True)
     privileges = db.relationship(
         'OpPrivilege',
@@ -347,7 +349,7 @@ class OpRole(SQLModelMixin, db.Model):
 
 class OpPrivilege(SQLModelMixin, db.Model):
     __tablename__ = 'privileges'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     @property
     def name(self):
         return '{}.{}'.format(self.uri, self.bit.name)
@@ -363,7 +365,7 @@ class TradeProcess(SQLModelMixin, db.Model):
         super(TradeProcess, self).__init__(**kwargs)
 
     __tablename__ = 'trade_processes'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     uuid = db.Column(
         db.String, index=True,
         default=lambda: unicode(uuid4()).lower()
@@ -377,19 +379,18 @@ class TradeProcess(SQLModelMixin, db.Model):
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     svr_id = db.Column(db.Integer, db.ForeignKey('servers.id'), index=True)
     config_files = db.relationship('ConfigFile', backref='process', lazy='dynamic')
-    #syslog_files = db.relationship('SyslogFile', backref='process', lazy='dynamic')
     status = db.Column(JSONType, default={})
 
 class SystemType(SQLModelMixin, db.Model):
     __tablename__ = 'system_types'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String, unique=True, index=True)
     description = db.Column(db.String)
     systems = db.relationship('TradeSystem', backref='type', lazy='dynamic')
 
 class TradeSystem(SQLModelMixin, db.Model):
     __tablename__ = 'trade_systems'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     uuid = db.Column(
         db.String, index=True,
         default=lambda: unicode(uuid4()).lower()
@@ -410,7 +411,6 @@ class TradeSystem(SQLModelMixin, db.Model):
         lazy='dynamic'
     )
     config_files = db.relationship('ConfigFile', backref='system', lazy='dynamic')
-    #syslog_files = db.relationship('SyslogFile', backref='system', lazy='dynamic')
     vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.id'), index=True)
     parent_sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     parent_system = db.relationship('TradeSystem', backref='child_systems', remote_side=[id])
@@ -451,7 +451,7 @@ class TradeSystem(SQLModelMixin, db.Model):
 
 class DataSource(SQLModelMixin, db.Model):
     __tablename__ = "data_sources"
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String, unique=True, index=True)
     description = db.Column(db.String)
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
@@ -463,21 +463,9 @@ class DataSource(SQLModelMixin, db.Model):
     src_model = db.Column(ChoiceType(DataSourceModel, impl=db.Integer()), nullable=False)
     source = db.Column(JSONType, nullable=False)
 
-'''
-class SyslogFile(SQLModelMixin, db.Model):
-    __tablename__ = 'syslog_files'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, unique=True, index=True)
-    description = db.Column(db.String)
-    file_path = db.Column(db.String)
-    sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
-    svr_id = db.Column(db.Integer, db.ForeignKey('servers.id'), index=True)
-    proc_id = db.Column(db.Integer, db.ForeignKey('trade_processes.id'), index=True)
-'''
-
 class SystemVendor(SQLModelMixin, db.Model):
     __tablename__ = "vendors"
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String, unique=True, index=True)
     description = db.Column(db.String)
     contactors = db.Column(JSONType, default={})
@@ -485,7 +473,7 @@ class SystemVendor(SQLModelMixin, db.Model):
 
 class Server(SQLModelMixin, db.Model):
     __tablename__ = 'servers'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     uuid = db.Column(
         db.String, index=True,
         default=lambda: unicode(uuid4()).lower()
@@ -499,18 +487,56 @@ class Server(SQLModelMixin, db.Model):
     admin_pwd = db.Column(db.String)
     processes = db.relationship('TradeProcess', backref='server', lazy='dynamic')
     statics_records = db.relationship('StaticsRecord', backref='server', lazy='dynamic')
-    #syslog_files = db.relationship('SyslogFile', backref='server', lazy='dynamic')
     status = db.Column(JSONType, default={})
 
 class Operation(SQLModelMixin, db.Model):
     __tablename__ = 'operations'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String, index=True)
     description = db.Column(db.String)
     type = db.Column(ChoiceType(ScriptType, impl=db.Integer()))
-    earliest = db.Column(ArrowType)
-    latest = db.Column(ArrowType)
+    earliest = db.Column(db.String)
+    latest = db.Column(db.String)
+    @property
+    def time_range(self):
+        early_hour, early_minute = (None, None)
+        if self.earliest:
+            early_hour, early_minute = self.earliest.split(':')
+        late_hour, late_minute = (None, None)
+        if self.latest:
+            late_hour, late_minute = self.latest.split(':')
+        if early_hour and late_hour:
+            return time(int(early_hour), int(early_minute)), time(int(late_hour), int(late_minute))
+        elif early_hour:
+            return time(int(early_hour), int(early_minute)), None
+        elif late_hour:
+            return None, time(int(late_hour), int(late_minute))
+        else:
+            return None, None
+
+    def InTimeRange(self):
+        now = datetime.now().time()
+        lower, upper = self.time_range
+        if lower and upper:
+            return lower <= now and now <= upper
+        elif lower:
+            return lower <= now
+        elif upper:
+            return now <= upper
+        else:
+            return True
+
     detail = db.Column(JSONType, nullable=False, default={})
+    @observes('sys_id')
+    def remoteConfigObserver(self, sys_id):
+        sys = TradeSystem.find(id=sys_id)
+        if sys:
+            params = self.detail['remote']['params']
+            params['ip'] = sys.manage_ip.exploded
+            if not (self.type & ScriptType.Interactivator.value
+                    == ScriptType.Interactivator.value):
+                params['user'] = sys.login_user
+                params['password'] = sys.login_pwd
     order = db.Column(db.Integer)
     op_group_id = db.Column(db.Integer, db.ForeignKey('operation_groups.id'))
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
@@ -523,7 +549,7 @@ class Operation(SQLModelMixin, db.Model):
 
 class OperationGroup(SQLModelMixin, db.Model):
     __tablename__ = 'operation_groups'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String, index=True)
     description = db.Column(db.String)
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
@@ -531,14 +557,14 @@ class OperationGroup(SQLModelMixin, db.Model):
 
 class OperateResult(SQLModelMixin, db.Model):
     __tablename__ = 'operate_results'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     op_rec_id = db.Column(db.Integer, db.ForeignKey('operate_records.id'), index=True)
     error_code = db.Column(db.Integer, default=0)
     detail = db.Column(JSONType, nullable=False, default=[])
 
 class StaticsRecord(SQLModelMixin, db.Model):
     __tablename__ = 'statics_records'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     svr_id = db.Column(db.Integer, db.ForeignKey('servers.id'), index=True)
     operator_id = db.Column(db.Integer, db.ForeignKey('operators.id'), index=True)
     operated_at = db.Column(ArrowType, index=True)
@@ -547,7 +573,7 @@ class StaticsRecord(SQLModelMixin, db.Model):
 
 class ConfigFile(SQLModelMixin, db.Model):
     __tablename__ = 'config_files'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String, index=True)
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     proc_id = db.Column(db.Integer, db.ForeignKey('trade_processes.id'), index=True)

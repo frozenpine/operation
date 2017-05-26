@@ -8,6 +8,8 @@ import arrow
 import json, re
 from flask.testing import EnvironBuilder
 import yaml
+from datetime import time
+import intervals
 
 import sys
 reload(sys)
@@ -22,12 +24,13 @@ manager = Manager(test_app)
 @manager.command
 def create_db():
     db.create_all()
-
+    '''
     qdp_type = SystemType(name='QDP')
     qdiam_type = SystemType(name='QDIAM')
     ctp_type = SystemType(name='CTP')
     db.session.add_all([qdp_type, qdiam_type, ctp_type])
     db.session.commit()
+    '''
 
 @manager.command
 def drop_db():
@@ -102,17 +105,31 @@ def init_inventory():
 
 @manager.command
 def init_operation():
-    sys1 = TradeSystem.find(id=1)
-    grp1 = OperationGroup(name=u'早盘开盘操作')
-    grp2 = OperationGroup(name=u'早盘收盘操作')
-    grp3 = OperationGroup(name=u'夜盘开盘操作')
-    grp4 = OperationGroup(name=u'夜盘收盘操作')
-    sys1.operation_groups.append(grp1)
-    sys1.operation_groups.append(grp2)
-    sys1.operation_groups.append(grp3)
-    sys1.operation_groups.append(grp4)
+    f = open('operations.yml')
+    opers = yaml.load(f)
 
-    db.session.add_all([grp1, grp2, grp3, grp4])
+    groups = {}
+    for grp in opers['OperationGroups']:
+        groups[grp['name']] = OperationGroup(**grp)
+    db.session.add_all([grp for grp in groups.values()])
+    db.session.commit()
+
+    operations = []
+    for op in opers['Operations']:
+        typ, cat = op['type'].split('.')
+        op['type'] = getattr(globals()[typ], cat).value
+        if op.has_key('op_group_id') and op.has_key('group'):
+            op.pop('group')
+        elif op.has_key('group'):
+            op['op_group_id'] = groups[op.pop('group')].id
+        if op.has_key('sys_id') and op.has_key('system'):
+            op.pop('system')
+        elif op.has_key('system'):
+            sys = TradeSystem.find(name=op.pop('system'))
+            if sys:
+                op['sys_id'] = sys.id
+        operations.append(Operation(**op))
+    db.session.add_all(operations)
     db.session.commit()
 
 @manager.command
@@ -194,6 +211,35 @@ def route_test():
     ):
         rsp = test_app.view_functions[match[0]](**match[1])
         print json.dumps(rsp.response)
+
+@manager.command
+def time_range():
+    op = Operation.find(id=3)
+    print op.time_range
+    print op.InTimeRange()
+    #op.time_range = [time(8), time(9)]
+    #db.session.add(op)
+    #db.session.commit()
+    #print op.time_range
+
+@manager.command
+def observer():
+    op = Operation()
+    op.name = 'test'
+    op.type = ScriptType.Checker
+    op.detail = {
+        'remote': {
+            'name': 'SSHConfig',
+            'params': {}
+        },
+        'mod': {
+            'name': 'shell',
+            'shell': 'echo "Hello World."'
+        }
+    }
+    op.sys_id = 1
+    db.session.add(op)
+    db.session.commit()
 
 if __name__ == '__main__':
     manager.run()

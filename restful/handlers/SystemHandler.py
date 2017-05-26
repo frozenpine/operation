@@ -13,6 +13,13 @@ class SystemApi(Resource):
         else:
             return {'message': 'system not found'}, 404
 
+    def put(self, **kwargs):
+        sys = TradeSystem.find(**kwargs)
+        if sys:
+            pass
+        else:
+            return {'message': 'system not found'}, 404
+
 class SystemListApi(Resource):
     def get(self):
         systems = TradeSystem.query.filter(TradeSystem.parent_sys_id==None).all()

@@ -31,7 +31,8 @@ class OperationListApi(Resource):
                 .order_by(OperateRecord.operated_at.desc()).first()
         if record:
             return record.operated_at.timestamp > \
-                arrow.get(arrow.now().strftime('%Y-%m-%d')).timestamp, record
+                arrow.get(arrow.now().strftime('%Y-%m-%d')).timestamp and \
+                record.results[-1].error_code == 0, record
         else:
             return False, None
 
@@ -40,8 +41,10 @@ class OperationListApi(Resource):
         if op_group:
             self.rtn['name'] = op_group.name
             self.rtn['details'] = []
+            self.rtn['system_name'] = op_group.system.name
             for op in op_group.operations:
                 skip, record = self.find_op_results(op)
+                lower, upper = op.time_range
                 dtl = {
                     'id': op.id,
                     'op_name': op.name,
@@ -56,9 +59,15 @@ class OperationListApi(Resource):
                     'interactivator': {
                         'isTrue': op.type.IsInteractivator()
                     },
+                    'time_range': {
+                        'lower': unicode(lower),
+                        'upper': unicode(upper)
+                    },
                     'skip': skip
                 }
                 if skip:
+                    dtl['enabled'] = True
+                    dtl['re_enter'] = op.type.IsChecker() and not op.type.IsBatcher()
                     dtl['his_results'] = {
                         'err_code': record.results[-1].error_code,
                         'operated_at': record.operated_at.humanize(),
@@ -86,9 +95,11 @@ class OperationApi(Resource):
     def ExecutionPrepare(self, operation):
         self.op_record.operation_id = operation.id
         self.op_record.operator_id = current_user.id
-        self.op_record.operated_at = arrow.utcnow().to("Asia/Shanghai")
+        self.op_record.operated_at = arrow.now()
         db.session.add(self.op_record)
         db.session.commit()
+        self.op_result.record = self.op_record
+        lower, upper = operation.time_range
         self.rtn['id'] = operation.id
         self.rtn['op_name'] = operation.name
         self.rtn['op_desc'] = operation.description
@@ -99,16 +110,18 @@ class OperationApi(Resource):
         self.rtn['interactivator'] = {
             'isTrue': operation.type.IsInteractivator(),
         }
+        self.rtn['time_range'] = {
+            'lower': unicode(lower),
+            'upper': unicode(upper)
+        }
         params = operation.detail['remote']['params']
-        conf = RemoteConfig.Create(
-            sub_class=operation.detail['remote']['name'],
-            params=params
+        conf = RemoteConfig.Create(operation.detail['remote']['name'], params)
+        key = '{}:{}'.format(
+            params.get('ip'),
+            params.get('port', '8080')
         )
-        if session.has_key('{}:{}'.format(params.get('ip'), params.get('port'))):
-            conf['session'] = session['{}:{}'.format(
-                params.get('ip'),
-                params.get('port')
-            )]
+        if session.has_key(key):
+            self.session = session[key]['origin']
         self.executor = Executor.Create(conf)
 
     def get(self, **kwargs):
@@ -116,6 +129,12 @@ class OperationApi(Resource):
         if op:
             self.ExecutionPrepare(op)
             try:
+                if not op.InTimeRange():
+                    raise Exception(
+                        'execution time out of range[{range[0]} ~ {range[1]}].'.format(
+                            range=op.time_range
+                        )
+                    )
                 if isinstance(op.detail['mod'], dict):
                     result = self.executor.run(op.detail['mod'])
                 elif isinstance(op.detail['mod'], list):
@@ -126,65 +145,19 @@ class OperationApi(Resource):
                 else:
                     raise Exception('invalid module configuration.')
             except Exception, err:
-                self.op_result.record = self.op_record
                 self.op_result.error_code = 500
                 self.op_result.detail = [err.message]
-                self.rtn['checker']['checked'] = True
-                self.rtn['err_code'] = 500
-                self.rtn['output_lines'] = [err.message]
-                return self.rtn, 500
             else:
-                if result.return_code == 0:
-                    self.rtn['err_code'] = 0
-                else:
-                    self.rtn['err_code'] = 10
-                self.rtn['output_lines'] = result.lines
-                self.op_result.op_rec_id = self.op_record.id
                 self.op_result.error_code = result.return_code
                 self.op_result.detail = result.lines
-                return self.rtn
             finally:
                 self.executor.client.close()
                 db.session.add(self.op_result)
                 db.session.commit()
-        else:
-            return {
-                'message': 'operation not found'
-            }, 404
-
-    def post(self, **kwargs):
-        op = Operation.find(**kwargs)
-        if op:
-            self.ExecutionPrepare(op)
-            params = op.detail['remote']['params']
-            conf = RemoteConfig.Create(
-                sub_class=op.detail['remote']['name'],
-                params=params
-            )
-            executor = Executor.Create(conf)
-            try:
-                result = executor.run(op.detail['mod'])
-            except ExecuteError, err:
-                self.op_result.record = self.op_record
-                self.op_result.error_code = 500
-                self.op_result.detail = json.dumps([err.message])
-                self.rtn['err_code'] = 500
-                self.rtn['output_lines'] = [err.message]
-                return self.rtn, 500
-            else:
-                if result.return_code == 0:
-                    self.rtn['err_code'] = 0
-                else:
-                    self.rtn['err_code'] = 10
-                self.rtn['output_lines'] = result.lines
-                self.op_result.op_rec_id = self.op_record.id
-                self.op_result.error_code = result.return_code
-                self.op_result.detail = json.dumps(result.lines)
+                self.rtn['err_code'] = self.op_result.error_code
+                self.rtn['output_lines'] = self.op_result.detail
+                self.rtn['re_enter'] = op.type.IsChecker() and not op.type.IsBatcher()
                 return self.rtn
-            finally:
-                executor.client.close()
-                db.session.add(self.op_result)
-                db.session.commit()
         else:
             return {
                 'message': 'operation not found'
@@ -287,28 +260,22 @@ class OperationLoginApi(Resource):
                 'message': 'operation not found.'
             }, 404
 
-class OperationExecuteApi(Resource):
-    def __init__(self):
-        super(OperationExecuteApi, self).__init__()
-        self.rtn = {}
-        self.res = OperateResult()
-
+class OperationExecuteApi(OperationApi):
     def post(self, id):
         op = Operation.find(id=id)
         if op:
-            op_rec = OperateRecord()
-            op_rec.operation_id = op.id
-            op_rec.operator_id = current_user.id
-            op_rec.operated_at = arrow.utcnow().to("Asia/Shanghai")
-            db.session.add(op_rec)
-            db.session.commit()
+            self.ExecutionPrepare(op)
             params = op.detail['remote']['params']
             key = '{}:{}'.format(params.get('ip'), params.get('port', '8080'))
             if session.has_key(key):
-                cookies = session[key]['origin']
-            else:
-                cookies = None
+                self.session = session[key]['origin']
             try:
+                if not op.InTimeRange():
+                    raise Exception(
+                        'execution time out of range[{range[0]} ~ {range[1]}].'.format(
+                            range=op.time_range
+                        )
+                    )
                 rsp = requests.post(
                     'http://{}:{}/{}'.format(
                         params.get('ip'),
@@ -316,43 +283,30 @@ class OperationExecuteApi(Resource):
                         op.detail['mod']['request']['uri'].lstrip('/')
                     ),
                     data=request.form,
-                    cookies=cookies
+                    cookies=self.session
                 )
-            except requests.HTTPError, err:
-                self.res.error_code = 500
-                self.res.detail = [err.message]
-                return {
-                    'message': err.message
-                }, 500
+            except Exception, err:
+                self.op_result.error_code = 500
+                self.op_result.detail = [err.message]
             else:
                 if rsp.ok:
                     try:
                         rsp_json = rsp.json()
                     except Exception, err:
-                        self.rtn['err_code'] = 401
-                        self.rtn['output_lines'] = ['please login first.']
+                        self.op_result.err_code = 401
+                        self.op_result.detail = ['please login first.']
                     else:
-                        self.rtn['err_code'] = rsp_json['errorCode']
-                        self.rtn['output_lines'] = format2json(rsp_json['data'])
+                        self.op_result.error_code = rsp_json['errorCode']
+                        self.op_result.detail = format2json(rsp_json['data'])
                 else:
-                    self.rtn['err_code'] = rsp.status_code
-                    self.rtn['output_lines'] = [rsp.reason]
+                    self.op_result.error_code = rsp.status_code
+                    self.op_result.detail = [rsp.reason]
             finally:
-                self.rtn['id'] = op.id
-                self.rtn['op_name'] = op.name
-                self.rtn['op_desc'] = op.description
-                self.rtn['checker'] = {
-                    'isTrue': op.type.IsChecker(),
-                    'checked': False
-                }
-                self.rtn['interactivator'] = {
-                    'isTrue': True
-                }
-                self.res.op_rec_id = op_rec.id
-                self.res.error_code = self.rtn['err_code']
-                self.res.detail = self.rtn['output_lines']
-                db.session.add(self.res)
+                db.session.add(self.op_result)
                 db.session.commit()
+                self.rtn['err_code'] = self.op_result.error_code
+                self.rtn['output_lines'] = self.op_result.detail
+                self.rtn['re_enter'] = op.type.IsChecker() and not op.type.IsBatcher()
                 return self.rtn
         else:
             return {
@@ -369,32 +323,26 @@ def format2json(list):
             rtn.append(formater.format(i, each))
     return rtn
 
-class OperationCSVApi(Resource):
-    def __init__(self):
-        super(OperationCSVApi, self).__init__()
-        self.rtn = {}
-        self.res = OperateResult()
-
+class OperationCSVApi(OperationApi):
     def post(self, id):
         op = Operation.find(id=id)
         if op:
-            op_rec = OperateRecord()
-            op_rec.operation_id = op.id
-            op_rec.operator_id = current_user.id
-            op_rec.operated_at = arrow.utcnow().to("Asia/Shanghai")
-            db.session.add(op_rec)
-            db.session.commit()
+            self.ExecutionPrepare(op)
             params = op.detail['remote']['params']
             key = '{}:{}'.format(params.get('ip'), params.get('port', '8080'))
             if session.has_key(key):
-                cookies = session[key]['origin']
-            else:
-                cookies = None
+                self.session = session[key]['origin']
             file = request.files['market_csv']
             if file:
                 file_path = path.join(current_app.config['UPLOAD_DIR'], 'csv', file.filename)
                 file.save(file_path)
                 try:
+                    if not op.InTimeRange():
+                        raise Exception(
+                            'execution time out of range[{range[0]} ~ {range[1]}].'.format(
+                                range=op.time_range
+                            )
+                        )
                     file_list = [
                         ('file', (
                             'marketDataCSV.csv',
@@ -409,40 +357,30 @@ class OperationCSVApi(Resource):
                             op.detail['mod']['request']['uri'].lstrip('/')
                         ),
                         files=file_list,
-                        cookies=cookies
+                        cookies=self.session
                     )
                 except Exception, err:
-                    self.rtn['err_code'] = 500
-                    self.rtn['output_lines'] = [err.message]
+                    self.op_result.error_code = 500
+                    self.op_result.detail = [err.message]
                 else:
                     if rsp.ok:
                         try:
                             rsp_json = rsp.json()
                         except Exception, err:
-                            self.rtn['err_code'] = 401
-                            self.rtn['output_lines'] = ['please login first.']
+                            self.op_result.error_code = 401
+                            self.op_result.detail = ['please login first.']
                         else:
-                            self.rtn['err_code'] = rsp_json['errorCode']
-                            self.rtn['output_lines'] = format2json(rsp_json['data'])
+                            self.op_result.error_code = rsp_json['errorCode']
+                            self.op_result.detail = [u'CSV导入成功']
                     else:
-                        self.rtn['err_code'] = rsp.status_code
-                        self.rtn['output_lines'] = [rsp.reason]
+                        self.op_result.error_code = rsp.status_code
+                        self.op_result.detail = [rsp.reason]
                 finally:
-                    self.rtn['id'] = op.id
-                    self.rtn['op_name'] = op.name
-                    self.rtn['op_desc'] = op.description
-                    self.rtn['checker'] = {
-                        'isTrue': op.type.IsChecker(),
-                        'checked': False
-                    }
-                    self.rtn['interactivator'] = {
-                        'isTrue': True
-                    }
-                    self.res.op_rec_id = op_rec.id
-                    self.res.error_code = self.rtn['err_code']
-                    self.res.detail = self.rtn['output_lines']
-                    db.session.add(self.res)
+                    db.session.add(self.op_result)
                     db.session.commit()
+                    self.rtn['err_code'] = self.op_result.error_code
+                    self.rtn['output_lines'] = self.op_result.detail
+                    self.rtn['re_enter'] = op.type.IsChecker() and not op.type.IsBatcher()
                     return self.rtn
             else:
                 return {
@@ -451,4 +389,4 @@ class OperationCSVApi(Resource):
         else:
             return {
                 'message': 'operation not found.'
-            }
+            }, 404

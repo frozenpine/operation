@@ -207,7 +207,7 @@
             </div>
         </div>
 
-        <div class="row" ng-if="clearTabList()">
+        <div class="row" ng-show="clearTabList()">
             <ul class="am-tabs-nav am-nav am-nav-tabs">
                 <li ng-repeat="data in tabList" class="{{data.active}}" style="margin-right: 5px">
                     <span class="am-icon-close" style="position: absolute;left: 77%" ng-click="tabDelete(data.id)"></span>
