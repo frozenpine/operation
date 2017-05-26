@@ -6,6 +6,8 @@ from sqlalchemy_utils.types import (
 )
 from sqlalchemy_utils import observes
 from flask_login import UserMixin
+from flask import current_app
+from  SysManager.Common import AESCrypto
 '''
 from neomodel import (
     StructuredNode, RelationshipTo, RelationshipFrom, Relationship,
@@ -400,8 +402,41 @@ class TradeSystem(SQLModelMixin, db.Model):
     type_id = db.Column(db.Integer, db.ForeignKey('system_types.id'), index=True)
     version = db.Column(db.String)
     manage_ip = db.Column(IPAddressType, index=True)
+    @property
+    def ip(self):
+        return self.manage_ip.exploded
+    @ip.setter
+    def ip(self, addr):
+        self.manage_ip = addr
+
     login_user = db.Column(db.String, index=True)
+    @property
+    def user(self):
+        return self.login_user
+    @user.setter
+    def user(self, username):
+        self.login_user = username
+
     login_pwd = db.Column(db.String)
+    @property
+    def password(self):
+        if current_app.config['GLOBAL_ENCRYPT']:
+            return AESCrypto.decrypt(
+                self.login_pwd,
+                current_app.config['SECRET_KEY']
+            )
+        else:
+            return self.login_pwd
+    @password.setter
+    def password(self, password):
+        if current_app.config['GLOBAL_ENCRYPT']:
+            self.login_pwd = AESCrypto.encrypt(
+                password,
+                current_app.config['SECRET_KEY']
+            )
+        else:
+            self.login_pwd = password
+
     base_dir = db.Column(db.String)
     processes = db.relationship('TradeProcess', backref='system')
     servers = db.relationship(
@@ -483,8 +518,41 @@ class Server(SQLModelMixin, db.Model):
     description = db.Column(db.String)
     platform = db.Column(ChoiceType(PlatformType, impl=db.Integer()), default=PlatformType.Linux)
     manage_ip = db.Column(IPAddressType, index=True)
+    @property
+    def ip(self):
+        return self.manage_ip.exploded
+    @ip.setter
+    def ip(self, addr):
+        self.manage_ip = addr
+
     admin_user = db.Column(db.String, index=True)
+    @property
+    def user(self):
+        return self.admin_user
+    @user.setter
+    def user(self, username):
+        self.admin_user = username
+
     admin_pwd = db.Column(db.String)
+    @property
+    def password(self):
+        if current_app.config['GLOBAL_ENCRYPT']:
+            return AESCrypto.decrypt(
+                self.admin_pwd,
+                current_app.config['SECRET_KEY']
+            )
+        else:
+            return self.admin_pwd
+    @password.setter
+    def password(self, password):
+        if current_app.config['GLOBAL_ENCRYPT']:
+            self.admin_pwd = AESCrypto.encrypt(
+                password,
+                current_app.config['SECRET_KEY']
+            )
+        else:
+            self.admin_pwd = password
+
     processes = db.relationship('TradeProcess', backref='server', lazy='dynamic')
     statics_records = db.relationship('StaticsRecord', backref='server', lazy='dynamic')
     status = db.Column(JSONType, default={})
@@ -532,7 +600,7 @@ class Operation(SQLModelMixin, db.Model):
         sys = TradeSystem.find(id=sys_id)
         if sys:
             params = self.detail['remote']['params']
-            params['ip'] = sys.manage_ip.exploded
+            params['ip'] = sys.ip
             if not (self.type & ScriptType.Interactivator.value
                     == ScriptType.Interactivator.value):
                 params['user'] = sys.login_user

@@ -19,6 +19,7 @@ import requests
 from SysManager.configs import Result, RemoteConfig, SSHConfig
 from SysManager.executor import Executor, HttpExecutor
 from SysManager.excepts import ExecuteError
+from SysManager.Common import AESCrypto
 
 class OperationListApi(Resource):
     def __init__(self):
@@ -185,7 +186,10 @@ class OperationUIApi(Resource):
                 'Interactivators/{}.html'.format(op.detail['mod']['name']),
                 session=valid_session,
                 login_user=op.detail['remote']['params']['user'],
-                login_password=op.detail['remote']['params']['password'],
+                login_password=AESCrypto.decrypt(
+                    op.detail['remote']['params']['password'],
+                    current_app.config['SECRET_KEY']
+                ),
                 captcha=op.detail['remote']['params'].get('captcha', False),
                 captcha_uri=url_for('api.operation_captcha', id=op.id),
                 login_uri=url_for('api.operation_login', id=op.id),

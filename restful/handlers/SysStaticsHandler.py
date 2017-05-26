@@ -1,20 +1,27 @@
 # -*- coding: UTF-8 -*-
-from flask import abort
+from flask import abort, current_app
 from flask_restful import Resource
 from app.models import (
     TradeSystem, TradeProcess, Server,
     DataSource, DataSourceModel, DataSourceType
 )
-#from SysManager import logging
 import logging
 from SysManager.configs import SSHConfig
 from SysManager.executor import Executor
+from SysManager.Common import AESCrypto
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
 import re
 import threading
 import json
-#from app import db_list
+
+def _decrypt(match):
+    return match.group(1) + \
+        AESCrypto.decrypt(
+            match.group(2),
+            current_app.config['SECRET_KEY']
+        ) + \
+        match.group(3)
 
 class ServerList(object):
     def __init__(self):
@@ -23,10 +30,10 @@ class ServerList(object):
 
     def find_servers(self, sys):
         for svr in sys.servers:
-            if self.server_list.has_key(svr.manage_ip.exploded):
+            if self.server_list.has_key(svr.ip):
                 continue
             else:
-                self.server_list[svr.manage_ip.exploded] = svr
+                self.server_list[svr.ip] = svr
         if len(sys.child_systems) > 0:
             for child_sys in sys.child_systems:
                 self.find_servers(child_sys)
@@ -36,7 +43,7 @@ class ServerList(object):
             try:
                 self.rtn['details'].append({
                     'id': svr.id,
-                    'server': svr.manage_ip.exploded,
+                    'server': svr.ip,
                     'uptime': svr.status.get('uptime'),
                     'cpu': svr.status.get('cpu'),
                     'disks': svr.status.get('disks'),
@@ -46,7 +53,7 @@ class ServerList(object):
             except Exception:
                 self.rtn['details'].append({
                     'id': svr.id,
-                    'server': svr.manage_ip.exploded,
+                    'server': svr.ip,
                     'uptime': None,
                     'cpu': None,
                     'disks': None,
@@ -98,7 +105,7 @@ class ServerStaticApi(Resource, ServerList):
 
     def check_svr(self, svr):
         result = {}
-        conf = SSHConfig(svr.manage_ip.exploded, svr.admin_user, svr.admin_pwd)
+        conf = SSHConfig(svr.ip, svr.admin_user, svr.admin_pwd)
         modlist = [
             {'name': 'uptime'},
             {'name': 'mpstat'},
@@ -110,7 +117,7 @@ class ServerStaticApi(Resource, ServerList):
         for mod in modlist:
             resultlist.append(executor.run(mod))
         result['id'] = svr.id
-        result['server'] = svr.manage_ip.exploded
+        result['server'] = svr.ip
         result['uptime'] = resultlist[0].data
         result['cpu'] = resultlist[1].data
         result['disks'] = resultlist[2].data
@@ -155,7 +162,7 @@ class SystemList(object):
                                 'command': proc.status.get('command')
                             },
                             'server':
-                                proc.server.name + "({})".format(proc.server.manage_ip.exploded)
+                                proc.server.name + "({})".format(proc.server.ip)
                         } for proc in each_sys.processes]
                     }
                 )
@@ -181,7 +188,7 @@ class SystemList(object):
                                 'command': None
                             },
                             'server':
-                                proc.server.name + "({})".format(proc.server.manage_ip.exploded)
+                                proc.server.name + "({})".format(proc.server.ip)
                         } for proc in each_sys.processes]
                     }
                 )
@@ -218,7 +225,7 @@ class ProcStaticApi(Resource, SystemList):
 
     def check_proc(self, svr, processes):
         conf = SSHConfig(
-            svr.manage_ip.exploded,
+            svr.ip,
             svr.admin_user,
             svr.admin_pwd
         )
@@ -284,7 +291,15 @@ class LoginListApi(Resource):
             ).first()
             if src:
                 try:
-                    sys_db = create_engine(src.source['uri']).connect()
+                    if current_app.config['GLOBAL_ENCRYPT']:
+                        uri = re.sub(
+                            '^(.+://[^:]+:)([^@]+)(@.+)$',
+                            _decrypt,
+                            src.source['uri']
+                        )
+                    else:
+                        uri = src.source['uri']
+                    sys_db = create_engine(uri).connect()
                 except Exception:
                     return {
                         'message': 'faild to connect to database.'
@@ -325,7 +340,15 @@ class LoginCheckApi(Resource):
             DataSource.sys_id == sys.id
         ).all()
         for src in log_srcs:
-            uri = src.source['uri'].split('#')
+            if current_app.config['GLOBAL_ENCRYPT']:
+                uri = re.sub(
+                    '^(.+://[^:]+:)([^@]+)(@.+)$',
+                    _decrypt,
+                    src.source['uri']
+                )
+            else:
+                uri = src.source['uri']
+            uri = uri.split('#')
             svr = uri[0].rstrip('/')
             log = uri[1]
             if not self.syslog_list.has_key(svr):
@@ -425,7 +448,15 @@ class UserSessionListApi(Resource):
             ).first()
             if src:
                 try:
-                    sys_db = create_engine(src.source['uri']).connect()
+                    if current_app.config['GLOBAL_ENCRYPT']:
+                        uri = re.sub(
+                            '^(.+://[^:]+:)([^@]+)(@.+)$',
+                            _decrypt,
+                            src.source['uri']
+                        )
+                    else:
+                        uri = src.source['uri']
+                    sys_db = create_engine(uri).connect()
                 except Exception:
                     return {
                         'message': 'failed to connect to database.'

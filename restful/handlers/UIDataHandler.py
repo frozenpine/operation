@@ -80,7 +80,7 @@ class UIDataApi(Resource):
                 }))
                 nodes.add(json.dumps({
                     'name': proc.server.uuid,
-                    'value': [proc.server.name, proc.server.manage_ip.exploded],
+                    'value': [proc.server.name, proc.server.ip],
                     'category': 'Server',
                     'symbolSize': 30
                 }))
@@ -100,7 +100,7 @@ class UIDataApi(Resource):
             for child in sys.child_systems:
                 nodes.add(json.dumps({
                     'name': child.uuid,
-                    'value': [child.name, child.manage_ip.exploded],
+                    'value': [child.name, child.ip],
                     'category': 'System',
                     'symbolSize': (len(child.child_systems) + 1) * 30
                 }))
@@ -118,7 +118,7 @@ class UIDataApi(Resource):
                 series[root.name]['relations'] = set()
             series[root.name]['nodes'].add(json.dumps({
                 'name': root.uuid,
-                'value': [root.name, root.manage_ip.exploded],
+                'value': [root.name, root.ip],
                 'category': 'System',
                 'symbolSize': (len(root.child_systems) + 1) * 15
             }))

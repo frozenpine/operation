@@ -1,13 +1,16 @@
 # -*- coding: UTF-8 -*-
-#import logging
+import logging
 import sys
-from os import path
+from os import path, environ
 import ConfigParser
 from enum import Enum
 sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
-#from SysManager import logging
-import logging
 from excepts import ConfigInvalid
+from flask import current_app
+from Common import AESCrypto
+import re
+
+SECRET_KEY = environ.get('FLASK_SECRET_KEY') or 'SOMEthing-you-WILL-never-Guess'
 
 class GlobalConfig:
     default_ssh_user = None
@@ -36,10 +39,17 @@ class GlobalConfig:
 
 class RemoteConfig(object):
     def __init__(self, ip, user, password, port):
+        self._reg = re.compile('^[0-9a-f]{32}$')
         self.remote_host = ip
         self.remote_port = port
         self.remote_user = user
-        self.remote_password = password
+        if self._reg.match(password):
+            self.remote_password = AESCrypto.decrypt(
+                password,
+                SECRET_KEY
+            )
+        else:
+            self.remote_password = password
 
     @staticmethod
     def Create(sub_class, params):

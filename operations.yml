@@ -1,9 +1,11 @@
 OperationGroups:
   - name: &group1 早盘开盘
     description: 早盘开盘操作组  #可选项
-    sys_id: !!int 1 #此处配置主系统id，非目标系统id
+    system: QDIAM #此处配置主系统名，trade_systems.name,如无命名冲突的情况下，建议使用系统名进行配置关联
+    #sys_id: !!int 1 #此处配置主系统id，非目标系统id
   - name: &group2 交互式操作
-    sys_id: !!int 1
+    system: QDIAM
+    #sys_id: !!int 1
 Operations:
   - name: Echo Ping
     description: echo "ping" on remote server.  #可选配置
@@ -53,7 +55,7 @@ Operations:
         params: #HttpConfig的user，password不会被系统配置刷新，必须手工配置
           ip:
           user: caozuo
-          password: 123456
+          password: '123456'
           captcha: True #可选配置，标识Http登录是否需要验证码
           captcha_uri: /quantdo/captcha #可选配置，验证码接口uri，当captcha配置不存在或为False时，该配置项无效
           login_uri: /quantdo/logon #登录接口uri
@@ -74,7 +76,7 @@ Operations:
         params:
           ip:
           user: caozuo
-          password: 123456
+          password: '123456'
           captcha: True
           captcha_uri: /quantdo/captcha
           login_uri: /quantdo/logon
@@ -96,7 +98,7 @@ Operations:
         params:
           ip:
           user: user
-          password: 12345678
+          password: '12345678'
           login_uri: /quantdo/logon
       mod:
         name: quantdoMarketCSV_1.3.6+

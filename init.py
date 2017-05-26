@@ -9,7 +9,7 @@ import json, re
 from flask.testing import EnvironBuilder
 import yaml
 from datetime import time
-import intervals
+from SysManager.Common import AESCrypto
 
 import sys
 reload(sys)
@@ -21,16 +21,17 @@ codecs.register(lambda name: name == 'cp65001' and codecs.lookup('utf-8') or Non
 test_app = create_app('development')
 manager = Manager(test_app)
 
+def _encrypt(match):
+    return match.group(1) + \
+        AESCrypto.encrypt(
+            match.group(2),
+            current_app.config['SECRET_KEY']
+        ) + \
+        match.group(3)
+
 @manager.command
 def create_db():
     db.create_all()
-    '''
-    qdp_type = SystemType(name='QDP')
-    qdiam_type = SystemType(name='QDIAM')
-    ctp_type = SystemType(name='CTP')
-    db.session.add_all([qdp_type, qdiam_type, ctp_type])
-    db.session.commit()
-    '''
 
 @manager.command
 def drop_db():
@@ -61,8 +62,13 @@ def init_inventory():
     db.session.add_all([svr for svr in servers.values()])
     db.session.commit()
 
-    systems = {}
     sys_types = {}
+    for typ in inventory['SystemTypes']:
+        sys_types[typ['name']] = SystemType(**typ)
+    db.session.add_all([typ for typ in sys_types.values()])
+    db.session.commit()
+
+    systems = {}
     for sys in inventory['Systems']:
         if sys.has_key('type'):
             if sys_types.has_key(sys['type']):
@@ -99,6 +105,12 @@ def init_inventory():
         ds['src_type'] = getattr(globals()[typ], cat).value
         typ, cat = ds['src_model'].split('.')
         ds['src_model'] = getattr(globals()[typ], cat).value
+        if test_app.config['GLOBAL_ENCRYPT']:
+            ds['source']['uri'] = re.sub(
+                '^(.+://[^:]+:)([^@]+)(@.+)$',
+                _encrypt,
+                ds['source']['uri']
+            )
         datasources.append(DataSource(**ds))
     db.session.add_all(datasources)
     db.session.commit()
@@ -110,6 +122,9 @@ def init_operation():
 
     groups = {}
     for grp in opers['OperationGroups']:
+        if grp.has_key('system'):
+            sys = TradeSystem.find(name=grp.pop('system'))
+            grp['sys_id'] = sys.id
         groups[grp['name']] = OperationGroup(**grp)
     db.session.add_all([grp for grp in groups.values()])
     db.session.commit()
@@ -118,6 +133,12 @@ def init_operation():
     for op in opers['Operations']:
         typ, cat = op['type'].split('.')
         op['type'] = getattr(globals()[typ], cat).value
+        if ScriptType(op['type']).IsInteractivator():
+            op['detail']['remote']['params']['password'] = \
+                AESCrypto.encrypt(
+                    op['detail']['remote']['params']['password'],
+                    test_app.config['SECRET_KEY']
+                )
         if op.has_key('op_group_id') and op.has_key('group'):
             op.pop('group')
         elif op.has_key('group'):

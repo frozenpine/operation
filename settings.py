@@ -8,6 +8,7 @@ class Config:
     SECRET_KEY = os.environ.get('FLASK_SECRET_KEY') or 'SOMEthing-you-WILL-never-Guess'
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    GLOBAL_ENCRYPT = True   #全局开启密码加密，注：密码长度不能超过16位
     '''
     NEO4J_DATABASE_URI = 'bolt://{0}:{1}@{2}:{3}'
     NEO4J_HOST = os.environ.get('NEO4J_HOST')
