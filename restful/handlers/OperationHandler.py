@@ -280,28 +280,46 @@ class OperationExecuteApi(OperationApi):
                             range=op.time_range
                         )
                     )
-                rsp = requests.post(
-                    'http://{}:{}/{}'.format(
-                        params.get('ip'),
-                        params.get('port', 8080),
-                        op.detail['mod']['request']['uri'].lstrip('/')
-                    ),
-                    data=request.form,
-                    cookies=self.session
-                )
+                module = op.detail['mod']['request']
+                if isinstance(module, dict):
+                    rsp = getattr(requests, module['method'])(
+                        'http://{}:{}/{}'.format(
+                            params.get('ip'),
+                            params.get('port', 8080),
+                            module['uri'].lstrip('/')
+                        ),
+                        data=request.form,
+                        cookies=self.session
+                    )
+                elif isinstance(module, list):
+                    rsp_list = []
+                    for mod in module:
+                        if mod.has_key('params'):
+                            data = mod['params']
+                        else:
+                            data = request.form
+                        rsp = getattr(requests, mod['method'])(
+                            'http://{}:{}/{}'.format(
+                                params.get('ip'),
+                                params.get('port', 8080),
+                                mod['uri'].lstrip('/')
+                            ),
+                            data=data,
+                            cookies=self.session
+                        )
+                        if rsp.ok:
+                            rsp_list.append(rsp)
+                        else:
+                            raise Exception('execution failed')
+                    rsp = rsp_list[-1]
             except Exception, err:
                 self.op_result.error_code = 500
                 self.op_result.detail = [err.message]
             else:
                 if rsp.ok:
-                    try:
-                        rsp_json = rsp.json()
-                    except Exception, err:
-                        self.op_result.err_code = 401
-                        self.op_result.detail = ['please login first.']
-                    else:
-                        self.op_result.error_code = rsp_json['errorCode']
-                        self.op_result.detail = format2json(rsp_json['data'])
+                    rsp_json = rsp.json()
+                    self.op_result.error_code = rsp_json['errorCode']
+                    self.op_result.detail = format2json(rsp_json['data'])
                 else:
                     self.op_result.error_code = rsp.status_code
                     self.op_result.detail = [rsp.reason]
@@ -317,14 +335,18 @@ class OperationExecuteApi(OperationApi):
                 'message': 'operation not found.'
             }, 404
 
-def format2json(list):
+def format2json(data):
     formater = u'{0:0>2d}. {1[name]:15}{1[flag]:3}'
     rtn = []
-    if list:
+    if data:
         i = 0
-        for each in json.loads(list):
-            i += 1
-            rtn.append(formater.format(i, each))
+        js_data = json.loads(data)
+        if isinstance(js_data, list):
+            for each in json.loads(data):
+                i += 1
+                rtn.append(formater.format(i, each))
+        else:
+            rtn.append(data)
     return rtn
 
 class OperationCSVApi(OperationApi):
