@@ -18,3 +18,6 @@ class NextTradingDayApi(Resource):
             )
         ).first()[0]
         return next_trading_day
+
+class CurrentTradingDayApi(Resource):
+    pass

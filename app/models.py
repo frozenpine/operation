@@ -8,6 +8,7 @@ from sqlalchemy_utils import observes
 from flask_login import UserMixin
 from flask import current_app
 from  SysManager.Common import AESCrypto
+import re
 '''
 from neomodel import (
     StructuredNode, RelationshipTo, RelationshipFrom, Relationship,
@@ -204,22 +205,16 @@ class HaType(Enum):
     Master = 1
     Slave = 2
 
+class SocketType(Enum):
+    TCP = 1
+    UDP = 2
+
 class MethodType(Enum):
-    Get = 1
-    Put = 2
-    Post = 4
-    Delete = 8
-    Get_Post = Get|Post
-    Get_Put = Get|Put
-    Get_Delete = Get|Delete
-    Put_Post = Put|Post
-    Put_Delete = Put|Delete
-    Post_Delete = Post|Delete
-    Get_Put_Post = Get_Put|Post
-    Get_Put_Delete = Get_Put|Delete
-    Get_Post_Delete = Get_Post|Delete
-    Put_Post_Delete = Put_Post|Delete
-    All = Get|Put|Post|Delete
+    Check = 1
+    Execute = 2
+    ReExecute = 4
+    Authorize = 8
+    All = Check|Execute|ReExecute|Authorize
 
 class DataSourceType(Enum):
     SQL = 1
@@ -233,12 +228,12 @@ class ScriptType(Enum):
     Checker = 1
     Executor = 2
     Interactivator = 4
-    Excute_Checker = Executor|Checker
+    Execute_Checker = Executor|Checker
     Interactive_Checker = Interactivator|Checker
 
     def IsBatcher(self):
-        return self.value & ScriptType.Excute_Checker.value \
-            == ScriptType.Excute_Checker.value or \
+        return self.value & ScriptType.Execute_Checker.value \
+            == ScriptType.Execute_Checker.value or \
             self.value & ScriptType.Interactive_Checker.value \
             == ScriptType.Interactive_Checker.value
 
@@ -358,6 +353,9 @@ class OpPrivilege(SQLModelMixin, db.Model):
     uri = db.Column(db.String, nullable=False, index=True)
     bit = db.Column(ChoiceType(MethodType, impl=db.Integer()))
 
+    def HasMethod(self, method):
+        return self.bit.value & method.value == method.value
+
 class TradeProcess(SQLModelMixin, db.Model):
     def __init__(self, name, sys_id, svr_id, type=HaType.Master, **kwargs):
         self.name = name
@@ -382,6 +380,18 @@ class TradeProcess(SQLModelMixin, db.Model):
     svr_id = db.Column(db.Integer, db.ForeignKey('servers.id'), index=True)
     config_files = db.relationship('ConfigFile', backref='process', lazy='dynamic')
     status = db.Column(JSONType, default={})
+    sockets = db.relationship('Socket', backref='process')
+
+class Socket(SQLModelMixin, db.Model):
+    __tablename__ = 'sockets'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String, unique=True, index=True)
+    description = db.Column(db.String)
+    socket_type = db.Column(ChoiceType(SocketType, impl=db.Integer()), default=SocketType.TCP)
+    socket_uri = db.Column(db.String)
+    listening_address = db.Column(IPAddressType, nullable=False)
+    bind_port = db.Column(db.Integer, nullable=False)
+    proc_id = db.Column(db.Integer, db.ForeignKey('trade_processes.id'), index=True)
 
 class SystemType(SQLModelMixin, db.Model):
     __tablename__ = 'system_types'
@@ -449,7 +459,11 @@ class TradeSystem(SQLModelMixin, db.Model):
     vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.id'), index=True)
     parent_sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     parent_system = db.relationship('TradeSystem', backref='child_systems', remote_side=[id])
-    operation_groups = db.relationship('OperationGroup', backref='system')
+    operation_groups = db.relationship(
+        'OperationGroup',
+        backref='system',
+        order_by='OperationGroup.order'
+    )
     operations = db.relationship('Operation', backref='system', lazy='dynamic')
     data_sources = db.relationship('DataSource', backref='system', lazy='dynamic')
 
@@ -569,10 +583,18 @@ class Operation(SQLModelMixin, db.Model):
     def time_range(self):
         early_hour, early_minute = (None, None)
         if self.earliest:
-            early_hour, early_minute = self.earliest.split(':')
+            count = self.earliest.count(':')
+            if count > 0 and count < 2:
+                early_hour, early_minute = self.earliest.split(':')
+            elif count == 2:
+                early_hour, early_minute, early_second = self.earliest.split(':')
         late_hour, late_minute = (None, None)
         if self.latest:
-            late_hour, late_minute = self.latest.split(':')
+            count = self.latest.count(':')
+            if count == 2:
+                late_hour, late_minute, late_second = self.latest.split(':')
+            elif count > 0 and count < 2:
+                late_hour, late_minute = self.latest.split(':')
         if early_hour and late_hour:
             return time(int(early_hour), int(early_minute)), time(int(late_hour), int(late_minute))
         elif early_hour:
@@ -620,6 +642,7 @@ class OperationGroup(SQLModelMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String, index=True)
     description = db.Column(db.String)
+    order = db.Column(db.Integer)
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     operations = db.relationship('Operation', backref='group', order_by='Operation.order')
 

@@ -35,33 +35,7 @@ class Executor():
             return HttpExecutor(remote_config, parser, session)
 
     def run(self, module):
-        import_mod = 'import Libs.{} as mod'.format(module.get('name'))
-        try:
-            exec import_mod
-        except ImportError:
-            raise ModuleNotFound(module.get('name'))
-        if not self.parser:
-            import_parser = 'from Parsers.{0}Parser import {0}Parser as par'\
-                .format(module.get('name'))
-            try:
-                exec import_parser
-            except ImportError:
-                logging.info("Trying import with({}) failed.".format(import_parser))
-            else:
-                self.parser = par
-        stdin, stdout, stderr = mod.run(client=self.client, module=module)
-        self.result = Result()
-        self.result.destination = self.remote_config.remote_host
-        self.result.return_code = stdout.channel.recv_exit_status()
-        self.result.module = module
-        if self.result.return_code == 0:
-            self.result.lines = [line.rstrip('\r\n') for line in stdout.readlines()]
-            if self.parser:
-                self.result.data = self.parser(self.result.lines).format2json()
-                self.parser = None
-        else:
-            self.result.lines = [line.rstrip('\r\n') for line in stderr.readlines()]
-        return self.result
+        pass
 
 class WinRmExecutor(Executor):
     def __init__(self, remote_config, parser=None):
@@ -117,6 +91,35 @@ class SSHExecutor(Executor):
             username=ssh_config.remote_user,
             password=ssh_config.remote_password
         )
+
+    def run(self, module):
+        import_mod = 'import Libs.{} as mod'.format(module.get('name'))
+        try:
+            exec import_mod
+        except ImportError:
+            raise ModuleNotFound(module.get('name'))
+        if not self.parser:
+            import_parser = 'from Parsers.{0}Parser import {0}Parser as par'\
+                .format(module.get('name'))
+            try:
+                exec import_parser
+            except ImportError:
+                logging.info("Trying import with({}) failed.".format(import_parser))
+            else:
+                self.parser = par
+        stdin, stdout, stderr = mod.run(client=self.client, module=module)
+        self.result = Result()
+        self.result.destination = self.remote_config.remote_host
+        self.result.return_code = stdout.channel.recv_exit_status()
+        self.result.module = module
+        if self.result.return_code == 0:
+            self.result.lines = [line.rstrip('\r\n') for line in stdout.readlines()]
+            if self.parser:
+                self.result.data = self.parser(self.result.lines).format2json()
+                self.parser = None
+        else:
+            self.result.lines = [line.rstrip('\r\n') for line in stderr.readlines()]
+        return self.result
 
 class HttpExecutor(Executor):
     def __init__(self, remote_config, parser=None, session=None):

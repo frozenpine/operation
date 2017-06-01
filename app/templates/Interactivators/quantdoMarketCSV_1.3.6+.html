@@ -91,12 +91,11 @@
     };
 
     //function importCSV() {
-    var prompt = $('#marketCSV_ImportFile').closest('.am-modal-prompt');
+    var prompt = $('#marketCSV_ImportFile').closest('.am-modal-loading');
     $('#market_csv').ajaxfileupload({
         action: '[[csv_uri]]',
         valid_extensions: ['csv', 'txt'],
         onComplete: function(response) {
-            console.log(response);
             prompt.trigger('results.quantdo', [response]);
             prompt.modal('close')
         },

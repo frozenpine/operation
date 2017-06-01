@@ -79,17 +79,13 @@
     };
 
     function auditTradeData() {
-        var prompt = $('#auditTradeData_TradingDayPicker').closest('.am-modal-prompt');
+        var prompt = $('#auditTradeData_TradingDayPicker').closest('.am-modal-loading');
         $('#auditTradeData_Spinner').toggle();
-        $.post(
-            "[[execute_uri]]",
-            data = {
-                params: JSON.stringify([])
-            },
-            function(response) {
-                prompt.modal('close');
-                prompt.trigger('results.quantdo', [response]);
-            }
-        );
+        $.post("[[execute_uri]]", {
+            params: JSON.stringify([])
+        }, function(response) {
+            prompt.trigger('results.quantdo', [response]);
+            prompt.modal('close');
+        });
     }
 </script>

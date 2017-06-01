@@ -1,4 +1,21 @@
+Roles:
+  - name: &admin administrators
+  - name: &first operators
+  - name: &second authorizors
 Users:
   - login: admin  #登录名
     name: administrator #用户全名
     password: admin
+    roles:
+      - *admin
+  - login: sonny
+    name: Yuan Yang
+    password: 022010144blue
+    roles:
+      - *first
+      - *second
+  - login: test
+    name: Test
+    password: test
+    roles:
+      - *first

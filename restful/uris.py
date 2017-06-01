@@ -87,7 +87,7 @@ resources.add_resource(
 resources.add_resource(
     OperationApi,
     '/operation/id/<int:id>',
-    methods=['GET'],
+    methods=['POST'],
     endpoint='operation'
 )
 
@@ -115,7 +115,7 @@ resources.add_resource(
 resources.add_resource(
     OperationExecuteApi,
     '/operation/id/<int:id>/execute',
-    methods=['GET', 'POST'],
+    methods=['POST'],
     endpoint='operation_execute'
 )
 

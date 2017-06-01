@@ -15,11 +15,47 @@
                                 <th>操作描述</th>
                                 <th>时间范围</th>
                                 <th>操作</th>
-                                <th>操作结果</th>
+                                <th>本次操作结果</th>
                                 <th>查看/确认/跳过</th>
                             </tr>
                         </thead>
                         <tbody>
+                            <div class="am-modal am-modal-loading" tabindex="-1" id="authorizor">
+                                <div class="am-modal-dialog">
+                                    <div class="am-modal-hd">
+                                        该操作需要授权
+                                        <span class="am-close am-fr" data-am-modal-cancel data-am-modal-close>&times;</span>
+                                    </div>
+                                    <div class="am-modal-bd">
+										<div>
+											<fieldset class="am-center login-form" id="authorizeLoginForm" style="width: 350px">
+												<div class="am-form-group am-form-icon" style="margin-bottom: 3px">
+													<i class="am-icon-user"></i>
+													<input type="text" class="am-form-field" id="authorizeUser" placeholder="请输入用户名" />
+												</div>
+												<div class="am-form-group am-form-icon" style="margin-bottom: 3px">
+													<i class="am-icon-lock"></i>
+													<input type="password" class="am-form-field" id="authorizePassword" placeholder="请输入密码" />
+												</div>
+												<div>
+													<button type="submit" class="am-btn am-btn-default" style="width: 100%" onclick="authorize()">授权</button>
+												</div>
+												<script type="text/javascript">
+													function authorize() {
+														$('#authorizor').trigger('authorize.quantdo', [{
+															authorizor: $('#authorizeUser').val(),
+															password: $('#authorizePassword').val()
+														}]);
+														$('#authorizeUser').val('');
+														$('#authorizePassword').val('');
+														$('#authorizor').modal('close');
+													}
+												</script>
+											</fieldset>
+										</div>
+                                    </div>
+                                </div>
+                            </div>
                             <tr ng-repeat="data in opList.details track by $index">
                                 <td>{{data.op_name}}</td>
                                 <td>{{data.op_desc}}</td>
@@ -30,7 +66,7 @@
                                             <span class="am-icon-pencil-square-o"></span> 执行
                                         </button>
                                     </div>
-                                    <div class="am-modal am-modal-loading am-modal-prompt" ng-if="data.interactivator.isTrue" tabindex="-1" id="{{'interactive' + data.id}}">
+                                    <div class="am-modal am-modal-loading" ng-if="data.interactivator.isTrue" tabindex="-1" id="{{'interactive' + data.id}}">
                                         <div class="am-modal-dialog">
                                             <div class="am-modal-hd">
                                                 交互操作
@@ -53,7 +89,8 @@
                                         <button class="am-btn am-btn-default am-btn-xs am-text-secondary am-margin-right-xs" ng-show="data.checker.isTrue && data.err_code == 0 && !data.skip && !data.checker.checked" ng-click="confirm($index)" ng-class="{true: '',false: 'am-disabled'}[!data.checker.checked]">
                                             <span class="am-icon-pencil-square-o"></span> 确认结果
                                         </button>
-                                        <button class="am-btn am-btn-default am-btn-xs am-text-secondary am-margin-right-xs" ng-show="(data.checker.isTrue && data.checker.checked && data.err_code==0) || (data.checker.isTrue && data.err_code>0) || (!data.checker.isTrue && data.err_code>=0)" ng-click="check_result($index)">
+                                        <button class="am-btn am-btn-default am-btn-xs am-text-secondary am-margin-right-xs" ng-show="(data.checker.isTrue && data.checker.checked && data.err_code==0) || (data.checker.isTrue && data.err_code>0) || (!data.checker.isTrue && data.err_code>=0)"
+                                            ng-click="check_result($index)">
                                             <span class="am-icon-pencil-square-o"></span> 查看结果
                                         </button>
                                         <button class="am-btn am-btn-default am-btn-xs am-text-secondary am-margin-right-xs" ng-show="data.hasOwnProperty('his_results')" ng-click="check_his_result($index)">
@@ -69,7 +106,7 @@
                                             <div class="am-modal-bd">
                                                 <span ng-if="!(data.checker.checked || !data.checker.isTrue) && data.err_code==0">操作结果是否正确？</span>
                                                 <ul class="am-list am-list-static">
-                                                    <li style="text-align: left; padding: 0px 5px" ng-repeat="line in data.output_lines track by $index">
+                                                    <li style="text-align: left; padding: 0px 5px; overflow-x: auto" ng-repeat="line in data.output_lines track by $index">
                                                         <span class="am-icon-terminal am-icon-sm am-monospace" style="white-space: pre; margin-left: 5px; margin-right: 5px"> {{line}}</span>
                                                     </li>
                                                 </ul>
@@ -91,7 +128,7 @@
                                                     <span class="am-text-danger" ng-show="data.his_results.err_code!=0">{{data.his_results.err_code | exe_result}}</span>
                                                 </span>
                                                 <ul class="am-list am-list-static">
-                                                    <li style="text-align: left; padding: 0px 5px" ng-repeat="line in data.his_results.lines track by $index">
+                                                    <li style="text-align: left; padding: 0px 5px; overflow-x: auto" ng-repeat="line in data.his_results.lines track by $index">
                                                         <span class="am-icon-terminal am-icon-sm am-monospace" style="white-space: pre; margin-left: 5px; margin-right: 5px"> {{line}}</span>
                                                     </li>
                                                 </ul>

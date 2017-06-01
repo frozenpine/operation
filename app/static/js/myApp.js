@@ -267,7 +267,15 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', '$rootScope', '$lo
     };
 }]);
 
-app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParams', function($scope, $http, $timeout, $routeParams) {
+app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParams', '$location', function($scope, $http, $timeout, $routeParams, $location) {
+    $scope.$on('$routeChangeStart', function(evt, next, current) {
+        var last = $scope.opList.details[$scope.opList.details.length - 1];
+        if (last.err_code != -1 && last.checker.isTrue && !last.checker.checked) {
+            $location.url('/op_group/' + current.params.grpid);
+            alert('还有未确认的操作结果！');
+        }
+    });
+
     $http.get('api/op_group/id/' + $routeParams.grpid)
         .success(function(response) {
             $scope.opList = response;
@@ -335,23 +343,58 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
                     console.log($('#interactive' + id).find('[data-am-modal-confirm]'));
                 });
         } else {
-            $scope.opList.details[index].err_code = -2;
-            $scope.opList.details[index].skip = false;
-            $http.get('api/operation/id/' + id)
-                .success(function(response) {
-                    if ($routeParams.hasOwnProperty('grpid')) {
-                        $scope.opList.details[index] = response;
-                        if (index < $scope.opList.details.length - 1 && ($scope.opList.details[index].checker === undefined || !$scope.opList.details[index].checker.isTrue)) {
-                            $scope.opList.details[index + 1].enabled = response.err_code === 0;
-                        }
-                    }
-                })
-                .error(function(response) {
-                    console.log(response);
-                    if ($routeParams.hasOwnProperty('grpid')) {
-                        $scope.opList.details[index] = response;
+            if ($scope.opList.details[index].need_authorized) {
+                $('#authorizor').bind('authorize.quantdo', function(event, data) {
+                    $scope.opList.details[index].err_code = -2;
+                    $scope.opList.details[index].skip = false;
+                    $http.post('api/operation/id/' + id, data = data)
+                        .success(function(response) {
+                            if ($routeParams.hasOwnProperty('grpid')) {
+                                $scope.opList.details[index] = response;
+                                if (index < $scope.opList.details.length - 1 && ($scope.opList.details[index].checker === undefined || !$scope.opList.details[index].checker.isTrue)) {
+                                    $scope.opList.details[index + 1].enabled = response.err_code === 0;
+                                }
+                            }
+                        })
+                        .error(function(response) {
+                            console.log(response);
+                            if ($routeParams.hasOwnProperty('grpid')) {
+                                $scope.opList.details[index] = response;
+                            }
+                        });
+                });
+                var err_code = $scope.opList.details[index].err_code;
+                $('#authorizor').modal({
+                    relatedTarget: this,
+                    onCancel: function() {
+                        $('#authorizeUser').val('');
+                        $('#authorizePassword').val('');
+                        /*
+                        $scope.$apply(function() {
+                            $scope.opList.details[index].err_code = err_code;
+                        });
+                        */
                     }
                 });
+            } else {
+                $scope.opList.details[index].err_code = -2;
+                $scope.opList.details[index].skip = false;
+                $http.post('api/operation/id/' + id)
+                    .success(function(response) {
+                        if ($routeParams.hasOwnProperty('grpid')) {
+                            $scope.opList.details[index] = response;
+                            if (index < $scope.opList.details.length - 1 && ($scope.opList.details[index].checker === undefined || !$scope.opList.details[index].checker.isTrue)) {
+                                $scope.opList.details[index + 1].enabled = response.err_code === 0;
+                            }
+                        }
+                    })
+                    .error(function(response) {
+                        console.log(response);
+                        if ($routeParams.hasOwnProperty('grpid')) {
+                            $scope.opList.details[index] = response;
+                        }
+                    });
+            }
         }
     };
 }]);

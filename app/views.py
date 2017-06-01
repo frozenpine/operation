@@ -52,9 +52,9 @@ def webshell():
             bridge = wssh.WSSHBridge(ws)
             try:
                 bridge.open(
-                    hostname='192.168.92.26',
-                    username='root',
-                    password='Quantdo@SH2016!'
+                    hostname='192.168.101.126',
+                    username='qdam',
+                    password='qdam'
                 )
             except Exception:
                 ws.send(json.dumps({

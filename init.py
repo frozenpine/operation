@@ -42,10 +42,30 @@ def init_auth():
     f = open('auth.yml')
     auth = yaml.load(f)
 
+    roles = {}
+    for role in auth['Roles']:
+        roles[role['name']] = OpRole(role['name'])
+    db.session.add_all(roles.values())
+    db.session.commit()
+
     users = {}
+    user_role_relation = {}
     for user in auth['Users']:
+        if user.has_key('roles'):
+            for role in user['roles']:
+                if roles.has_key(role):
+                    if not user_role_relation.has_key(role):
+                        user_role_relation[role] = []
+                    user_role_relation[role].append(user['login'])
+            user.pop('roles')
         users[user['login']] = Operator(**user)
     db.session.add_all([usr for usr in users.values()])
+    db.session.commit()
+
+    for role, usernames in user_role_relation.iteritems():
+        for usr in usernames:
+            roles[role].users.append(users[usr])
+    db.session.add_all(roles.values())
     db.session.commit()
 
 @manager.command
@@ -59,13 +79,13 @@ def init_inventory():
             typ, cat = svr['platform'].split('.')
             svr['platform'] = getattr(globals()[typ], cat).value
         servers[svr['name']] = Server(**svr)
-    db.session.add_all([svr for svr in servers.values()])
+    db.session.add_all(servers.values())
     db.session.commit()
 
     sys_types = {}
     for typ in inventory['SystemTypes']:
         sys_types[typ['name']] = SystemType(**typ)
-    db.session.add_all([typ for typ in sys_types.values()])
+    db.session.add_all(sys_types.values())
     db.session.commit()
 
     systems = {}
@@ -78,7 +98,7 @@ def init_inventory():
                 sys_types[typ.name] = typ
             sys['type_id'] = typ.id
         systems[sys['name']] = TradeSystem(**sys)
-    db.session.add_all([sys for sys in systems.values()])
+    db.session.add_all(systems.values())
     db.session.commit()
 
     processes = {}
@@ -89,13 +109,13 @@ def init_inventory():
         proc['sys_id'] = systems[proc.pop('system')].id
         proc['svr_id'] = servers[proc.pop('server')].id
         processes[proc['name']] = TradeProcess(**proc)
-    db.session.add_all([proc for proc in processes.values()])
+    db.session.add_all(processes.values())
     db.session.commit()
 
     for parent, childs in inventory['Relations']['Parents'].iteritems():
         for child in childs:
             systems[parent].child_systems.append(systems[child])
-    db.session.add_all([sys for sys in systems.values()])
+    db.session.add_all(systems.values())
     db.session.commit()
 
     datasources = []
@@ -126,14 +146,14 @@ def init_operation():
             sys = TradeSystem.find(name=grp.pop('system'))
             grp['sys_id'] = sys.id
         groups[grp['name']] = OperationGroup(**grp)
-    db.session.add_all([grp for grp in groups.values()])
+    db.session.add_all(groups.values())
     db.session.commit()
 
     operations = []
     for op in opers['Operations']:
         typ, cat = op['type'].split('.')
         op['type'] = getattr(globals()[typ], cat).value
-        if ScriptType(op['type']).IsInteractivator():
+        if test_app.config['GLOBAL_ENCRYPT'] and ScriptType(op['type']).IsInteractivator():
             op['detail']['remote']['params']['password'] = \
                 AESCrypto.encrypt(
                     op['detail']['remote']['params']['password'],

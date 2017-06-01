@@ -3,13 +3,21 @@ OperationGroups:
     description: 早盘开盘操作组  #可选项
     system: QDIAM #此处配置主系统名，trade_systems.name,如无命名冲突的情况下，建议使用系统名进行配置关联
     #sys_id: !!int 1 #此处配置主系统id，非目标系统id
-  - name: &group2 交互式操作
+    order: !!int 10
+  - name: &group2 早盘收盘
     system: QDIAM
+    order: !!int 20
     #sys_id: !!int 1
+  - name: &group3 夜盘开盘
+    system: QDIAM
+    order: !!int 30
+  - name: &group4 夜盘收盘
+    system: QDIAM
+    order: !!int 40
 Operations:
-  - name: Echo Ping
-    description: echo "ping" on remote server.  #可选配置
-    type: ScriptType.Executor #操作类型，其余可配置项：Checker，Interactivator，Excute_Checker，Interactive_Checker
+  - name: 启动前准备
+    description: 防止下场表未清理干净  #可选配置
+    type: ScriptType.Executor #操作类型，其余可配置项：Checker，Interactivator，Execute_Checker，Interactive_Checker
     earliest: '7:30'  #可选项，操作不得早于该时间执行
     latest: '8:55'  #可选项，操作不得晚于该时间执行
     detail:
@@ -22,16 +30,31 @@ Operations:
           password: root #远程连接密码，其余同ip
       mod:  #远程执行模块配置，不同模块的定义不同，详见SysManager模块说明
         name: shell #模块名称，可用模块详见SysManager模块说明
-        shell: echo ping  #shell模块需要执行的程序/脚本名
+        shell: callone dbaction.sh clear ../list/list.db  #shell模块需要执行的程序/脚本名
         args: #shell模块可选配置，用于指定脚本的启动路径
-          chdir: ~/bin
+          chdir: bin
     order: !!int 10 #操作组内的操作排序，建议以10为单位步进
     group: *group1  #如op_group_id配置同时存在，以op_group_id优先
     #op_group_id: !!int 1  #操作组id
     system: QDIAM #如sys_id配置同时存在，以sys_id优先
     #sys_id: !!int 1 #操作目标系统id，如操作目标为子系统，此处需关联子系统id，非主系统id
-  - name: start-show
-    type: ScriptType.Excute_Checker
+  - name: 检查进程情况
+    type: ScriptType.Checker
+    detail:
+      remote:
+        name: SSHConfig
+        params: #如全为默认项，配置留空即可，但必须预留字段
+          ip:
+          user:
+          password:
+      mod:  #支持定义为模块列表，列表内容为需顺序执行的各模块定义，ScriptType必须为组合类型
+        name: shell
+        shell: showall
+    order: !!int 20
+    group: *group1
+    system: QDIAM
+  - name: 启动并检查进程
+    type: ScriptType.Execute_Checker
     detail:
       remote:
         name: SSHConfig
@@ -44,10 +67,59 @@ Operations:
           shell: startall
         - name: shell
           shell: showall
+    order: !!int 30
+    group: *group1
+    system: QDIAM
+  - name: 检查进程情况
+    type: ScriptType.Checker
+    detail:
+      remote:
+        name: SSHConfig
+        params: #如全为默认项，配置留空即可，但必须预留字段
+          ip:
+          user:
+          password:
+      mod:  #支持定义为模块列表，列表内容为需顺序执行的各模块定义，ScriptType必须为组合类型
+        name: shell
+        shell: showall
+    order: !!int 10
+    group: *group2
+    system: QDIAM
+  - name: 停止并检查进程
+    type: ScriptType.Execute_Checker
+    detail:
+      remote:
+        name: SSHConfig
+        params: #如全为默认项，配置留空即可，但必须预留字段
+          ip:
+          user:
+          password:
+      mod:  #支持定义为模块列表，列表内容为需顺序执行的各模块定义，ScriptType必须为组合类型
+        - name: shell
+          shell: stopall
+        - name: shell
+          shell: showall
     order: !!int 20
-    op_group_id: !!int 1
-    sys_id: !!int 1
-  - name: 数据上场
+    group: *group2
+    system: QDIAM
+  - name: 数据库全备份
+    type: ScriptType.Executor
+    detail:
+      remote:
+        name: SSHConfig
+        params: #如全为默认项，配置留空即可，但必须预留字段
+          ip:
+          user:
+          password:
+      mod:  #支持定义为模块列表，列表内容为需顺序执行的各模块定义，ScriptType必须为组合类型
+        name: shell
+        shell: callone mc_batch backupdb ../list/list.db.user
+        args:
+          chdir: bin
+    order: !!int 50
+    group: *group2
+    system: QDIAM
+  - name: 上场数据生成
     type: ScriptType.Interactivator
     detail:
       remote:
@@ -62,12 +134,17 @@ Operations:
       mod:
         name: quantdoGenTradeData_1.3.6+  #预开发的交互式操作模块界面名，其余可配置项：quantdoGenTradeData_1.3.6-，quantdoAuditTradeData_1.3.6-，quantdoAuditTradeData_1.3.6+，quantdoMarketCSV_1.3.6+，模块功能详见说明
         request:
-          method: post  #交互请求提交方式，其余可配置项：get，put，delete
-          uri: /quantdo/service/dataToTradeService/generateTradeData  #数据上场接口
-    order: 10
+          - method: post  #交互请求提交方式
+            uri: /quantdo/service/dataToTradeService/generateTradeData  #数据上场接口
+          - method: post
+            uri: /quantdo/service/sysCalendarService/getCurrDate  #获取当前交易日接口
+            params: #可选项，支持定义需要提交的参数，如无定义，则从request.form中获取
+              params:
+                -
+    order: 60
     group: *group2
-    system: 前置子系统
-    sys_id: !!int 1
+    system: 柜台子系统
+    #sys_id: !!int 1
   - name: 上场数据稽核
     type: ScriptType.Interactive_Checker
     detail:
@@ -85,26 +162,211 @@ Operations:
         request:
           method: post
           uri: /quantdo/service/busAuditService/auditAfterToTrade  #上场数据稽核接口
-    order: 20
-    group: *group1
-    op_group_id: !!int 2
-    sys_id: 1
-  - name: 行情CSV导入
-    description: QuantFair大宗商品交易系统专用接口
-    type: ScriptType.Interactivator
+    order: 70
+    group: *group2
+    system: 柜台子系统
+  - name: 备份系统流水
+    type: ScriptType.Execute_Checker
     detail:
       remote:
-        name: HttpConfig
-        params:
+        name: SSHConfig
+        params: #如全为默认项，配置留空即可，但必须预留字段
           ip:
-          user: user
-          password: '12345678'
-          login_uri: /quantdo/logon
-      mod:
-        name: quantdoMarketCSV_1.3.6+
-        request:
-          method: post
-          uri: /quantdo/upload/operateTestService/uploadMarketDataCsv?params=["sdasd",null]  #行情CSV导入接口
-    order: 30
+          user:
+          password:
+      mod:  #支持定义为模块列表，列表内容为需顺序执行的各模块定义，ScriptType必须为组合类型
+        name: shell
+        shell: callone mc_batch backlog ../list/list.user
+        args:
+          chdir: bin
+    order: !!int 80
     group: *group2
     system: QDIAM
+  - name: 清理系统流水
+    type: ScriptType.Execute_Checker
+    detail:
+      remote:
+        name: SSHConfig
+        params: #如全为默认项，配置留空即可，但必须预留字段
+          ip:
+          user:
+          password:
+      mod:  #支持定义为模块列表，列表内容为需顺序执行的各模块定义，ScriptType必须为组合类型
+        name: shell
+        shell: callone mc_batch clearlog ../list/list.user
+        args:
+          chdir: bin
+    order: !!int 90
+    group: *group2
+    system: QDIAM
+  - name: 检查系统状态
+    type: ScriptType.Execute_Checker
+    detail:
+      remote:
+        name: SSHConfig
+        params: #如全为默认项，配置留空即可，但必须预留字段
+          ip:
+          user:
+          password:
+      mod:  #支持定义为模块列表，列表内容为需顺序执行的各模块定义，ScriptType必须为组合类型
+        name: shell
+        shell: dball chksystemstatus
+        args:
+          chdir: bin
+    order: !!int 10
+    group: *group3
+    system: QDIAM
+  - name: 启动前准备
+    description: 防止下场表未清理干净
+    type: ScriptType.Executor
+    detail:
+      remote:
+        name: SSHConfig #使用SSH方式进行操作，其余可配置项：WinRMConfig，HttpConfig
+        params:
+          ip:
+          user:
+          password:
+      mod:  
+        name: shell
+        shell: callone dbaction.sh clear ../list/list.db
+        args:
+          chdir: bin
+    order: !!int 20
+    group: *group3
+    system: QDIAM
+  - name: 启动并检查进程
+    type: ScriptType.Execute_Checker
+    detail:
+      remote:
+        name: SSHConfig
+        params: #如全为默认项，配置留空即可，但必须预留字段
+          ip:
+          user:
+          password:
+      mod:  #支持定义为模块列表，列表内容为需顺序执行的各模块定义，ScriptType必须为组合类型
+        - name: shell
+          shell: startall
+        - name: shell
+          shell: showall
+    order: !!int 30
+    group: *group3
+    system: QDIAM
+  - name: 检查盘前数据
+    type: ScriptType.Checker
+    detail:
+      remote:
+        name: SSHConfig
+        params: #如全为默认项，配置留空即可，但必须预留字段
+          ip:
+          user:
+          password:
+      mod:  #支持定义为模块列表，列表内容为需顺序执行的各模块定义，ScriptType必须为组合类型
+        name: shell
+        shell: callone mc_batch qdamcheckphase2 ../list/list.db.user
+        args:
+          chdir: bin
+    order: !!int 40
+    group: *group3
+    system: QDIAM
+  - name: 检查进程情况
+    type: ScriptType.Checker
+    detail:
+      remote:
+        name: SSHConfig
+        params: #如全为默认项，配置留空即可，但必须预留字段
+          ip:
+          user:
+          password:
+      mod:  #支持定义为模块列表，列表内容为需顺序执行的各模块定义，ScriptType必须为组合类型
+        name: shell
+        shell: showall
+    order: !!int 10
+    group: *group4
+    system: QDIAM
+  - name: 停止并检查进程
+    type: ScriptType.Execute_Checker
+    detail:
+      remote:
+        name: SSHConfig
+        params: #如全为默认项，配置留空即可，但必须预留字段
+          ip:
+          user:
+          password:
+      mod:  #支持定义为模块列表，列表内容为需顺序执行的各模块定义，ScriptType必须为组合类型
+        - name: shell
+          shell: stopall
+        - name: shell
+          shell: showall
+    order: !!int 20
+    group: *group4
+    system: QDIAM
+  - name: 数据库全备份
+    type: ScriptType.Executor
+    detail:
+      remote:
+        name: SSHConfig
+        params: #如全为默认项，配置留空即可，但必须预留字段
+          ip:
+          user:
+          password:
+      mod:  #支持定义为模块列表，列表内容为需顺序执行的各模块定义，ScriptType必须为组合类型
+        name: shell
+        shell: callone mc_batch backupdb ../list/list.db.user
+        args:
+          chdir: bin
+    order: !!int 50
+    group: *group4
+    system: QDIAM
+  - name: 备份系统流水
+    type: ScriptType.Execute_Checker
+    detail:
+      remote:
+        name: SSHConfig
+        params: #如全为默认项，配置留空即可，但必须预留字段
+          ip:
+          user:
+          password:
+      mod:  #支持定义为模块列表，列表内容为需顺序执行的各模块定义，ScriptType必须为组合类型
+        name: shell
+        shell: callone mc_batch backlog ../list/list.user
+        args:
+          chdir: bin
+    order: !!int 60
+    group: *group4
+    system: QDIAM
+  - name: 清理系统流水
+    type: ScriptType.Execute_Checker
+    detail:
+      remote:
+        name: SSHConfig
+        params: #如全为默认项，配置留空即可，但必须预留字段
+          ip:
+          user:
+          password:
+      mod:  #支持定义为模块列表，列表内容为需顺序执行的各模块定义，ScriptType必须为组合类型
+        name: shell
+        shell: callone mc_batch clearlog ../list/list.user
+        args:
+          chdir: bin
+    order: !!int 70
+    group: *group4
+    system: QDIAM
+#  - name: 行情CSV导入
+#    description: QuantFair大宗商品交易系统专用接口
+#    type: ScriptType.Interactivator
+#    detail:
+#      remote:
+#        name: HttpConfig
+#        params:
+#          ip:
+#          user: user
+#          password: '12345678'
+#          login_uri: /quantdo/logon
+#      mod:
+#        name: quantdoMarketCSV_1.3.6+
+#        request:
+#          method: post
+#          uri: /quantdo/upload/operateTestService/uploadMarketDataCsv?params=["sdasd",null]  #行情CSV导入接口
+#    order: 30
+#    group: *group2
+#    system: QDIAM
