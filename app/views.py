@@ -63,4 +63,6 @@ def webshell():
             else:
                 bridge.shell()
             finally:
-                return 'webshell closed.'
+                return {
+                    'message': 'webshell closed.'
+                }

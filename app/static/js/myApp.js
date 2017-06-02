@@ -115,7 +115,6 @@ app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
                     });
                 }
                 $scope.checking = false;
-                console.log(response);
             })
             .error(function(response) {
                 console.log(response);
@@ -139,6 +138,7 @@ app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
 app.controller('sysStaticsControl', ['$scope', '$http', 'globalVar', '$interval', '$routeParams', function($scope, $http, globalVar, $interval, $routeParams) {
     $scope.sysShowDetail = true;
     $scope.checkProc = function() {
+        $scope.checking = true;
         angular.forEach($scope.systemStatics, function(value1, index1) {
             angular.forEach(value1.detail, function(value2, index2) {
                 $scope.systemStatics[index1].detail[index2].status.stat = "checking...";
@@ -162,7 +162,6 @@ app.controller('sysStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
                 $scope.checkProc();
                 var sysStaticInterval = $interval(function() { $scope.checkProc(); }, 30000);
                 globalVar.intervals.push(sysStaticInterval);
-                $scope.checking = false;
             }
         })
         .error(function(response) {
@@ -173,6 +172,20 @@ app.controller('sysStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
 app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', '$rootScope', '$location', function($scope, $http, $timeout, $rootScope, $location) {
     $scope.tabList = [];
     var idList = [];
+    $scope.$on('$routeChangeStart', function(evt, next, current) {
+        if (next.params.hasOwnProperty('sysid')) {
+            if ($scope.listName === undefined) {
+                var watch_onece = $scope.$watch('listName', function() {
+                    if ($scope.listName !== undefined) {
+                        $scope.showListChange(next.params.sysid);
+                        watch_onece(); //取消监听
+                    }
+                });
+            } else {
+                $scope.showListChange(next.params.sysid);
+            }
+        }
+    });
     $http.get('api/UI/sideBarCtrl')
         .success(function(response) {
             $scope.listName = response;

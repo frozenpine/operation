@@ -161,7 +161,7 @@
                     <li class="tpl-left-nav-item am-dropdown" ng-repeat="data in listName" ng-mouseover="showListIcon = true" ng-mouseleave="showListIcon = false" data-am-dropdown>
                         <div>
                             <a href="{{data.Url}}" class="nav-link am-dropdown-toggle" data-am-dropdown-toggle>
-                                <i class="{{data.icon}}" ng-click="showListChange(data.id)"></i>
+                                <i class="{{data.icon}}"></i>
                             </a>
                             <ul class="am-dropdown-content" id="second{{data.id}}" ng-if="data.isSecond" style="display: block" ng-show="showListIcon">
                                 <li style="margin-left: 15px; font-size: 10pt; font-weight: bold; color: #7FB0DA;">
@@ -186,7 +186,7 @@
                 <ul class="tpl-left-nav-menu">
                     <li class="tpl-left-nav-item" ng-repeat="data in listName">
                         <div class="nav-link tpl-left-nav-link-list">
-                            <a href="{{data.Url}}" ng-click="showListChange(data.id)">
+                            <a href="{{data.Url}}">
                                 <i class="{{data.icon}} am-icon-fw"></i>
                                 <span ng-bind="data.name"></span>
                             </a>
