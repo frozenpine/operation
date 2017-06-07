@@ -89,6 +89,10 @@ WSSHClient.prototype.connect = function(options) {
         } else {
             options.onData(data.data);
         }
+        if (data.decoder !== undefined) {
+            console.log(data.decoder);
+            options.onDecoder(data.decoder);
+        }
     };
 
     this._connection.onclose = function(evt) {
@@ -98,4 +102,12 @@ WSSHClient.prototype.connect = function(options) {
 
 WSSHClient.prototype.send = function(data) {
     this._connection.send(JSON.stringify({ 'data': data }));
+};
+
+WSSHClient.prototype.changeCodec = function(codec) {
+    this._connection.send(JSON.stringify({ 'codec': codec }));
+};
+
+WSSHClient.prototype.resize = function(cols, rows) {
+    this._connection.send(JSON.stringify({ resize: { width: cols, height: rows } }));
 };

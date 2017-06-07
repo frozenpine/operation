@@ -8,7 +8,6 @@ from paramiko import (
 from paramiko.ssh_exception import NoValidConnectionsError
 import winrm
 sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
-#from SysManager import logging
 import logging
 from excepts import ModuleNotFound, ImportRSAkeyFaild
 from configs import (
@@ -201,11 +200,15 @@ if __name__ == '__main__':
     for line in result.lines:
         print line
     '''
-    conf = HttpConfig(
-        ip='10.100.10.10',
-        user='yw',
-        password='1',
-        version='1.0.3'
-    )
+    conf = SSHConfig('192.168.101.126', 'qdam', 'qdam')
     exe = Executor.Create(conf)
-    print exe.login
+    mod = {
+        'name': 'netstat'
+    }
+    result = exe.run(mod)
+    for line in result.lines:
+        print line
+    for state, details in result.data.iteritems():
+        print state
+        for dtl in details:
+            print dtl

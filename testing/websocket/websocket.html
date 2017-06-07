@@ -13,12 +13,15 @@
     <script type="text/javascript" charset="utf-8">
         function openTerminal(options) {
             var client = new WSSHClient();
-            var term = new Terminal(80, 24, function(key) {
+            var term = new Terminal(120, 24, function(key) {
                 client.send(key);
             });
             term.open();
             $('.terminal').detach().appendTo('#term');
-            term.resize(80, 24);
+            $('.terminal').bind('changeCodec', function(event, data) {
+                client.changeCodec(data);
+            });
+            term.resize(120, 24);
             term.write('Connecting...');
             client.connect($.extend(options, {
                 onError: function(error) {
@@ -27,12 +30,17 @@
                 onConnect: function() {
                     // Erase our connecting message
                     term.write('\r');
+                    client.resize(120, 24);
                 },
                 onClose: function() {
                     term.write('Connection Reset By Peer');
+
                 },
                 onData: function(data) {
                     term.write(data);
+                },
+                onDecoder: function(data) {
+                    $('#decoder').text(data)
                 }
             }));
         }
@@ -42,30 +50,31 @@
                 port: 5000
             });
         });
+
+        function changeCodec(codec) {
+            var term = $('.terminal');
+            term.trigger('changeCodec', [codec]);
+        }
     </script>
 </head>
 
 <body>
     <div class="header container">
-        <h1>实时消息</h1>
-        <ul class="tabs">
-            <li class="active">
-                <a href="/">DEMO</a>
-            </li>
-        </ul>
+        <h1>Web Shell</h1>
     </div>
-    <div class="container"> Pls check your Chrome console.
-        <div class="span10">
-            <div class="clearfix">
-                <label for="chat_content">消息</label>
-                <div id="term"></div>
+    <div class="container">
+        <div class="clearfix">
+            <div>
+                <label style="display: inline-block">切换编码：</label>
+                <!--<button id="term_encoder" style="width: 3.5em; height: 3.5em" onclick="changeCodec()">GBK</button>-->
+                <select onchange="changeCodec(this.value)" id="term_codec" style="display: inline-block">
+                    <option value="utf-8">UTF-8</option>
+                    <option value="gbk">GBK</option>
+                </select>
+                <label style="display: inline-block"> 当前可能的编码：</label>
+                <span class="text-primary" id="decoder"></span>
             </div>
-            <!--
-                <div class="well align-center">
-                    <input type="submit" class="btn primary" value="发布" /> &nbsp;
-                    <input type="reset" class="btn" value="清空" />
-                </div>
-				-->
+            <div id="term"></div>
         </div>
     </div>
     <div class="footer container">

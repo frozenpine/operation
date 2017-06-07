@@ -217,11 +217,11 @@ def printsys():
 
 @manager.command
 def modeltest():
-    sys = TradeSystem.find(id=1)
+    #sys = TradeSystem.find(id=1)
     #svr = Server.find(id=1)
     #proc = TradeProcess.find(id=1)
     #usr = Operator.find(id=1)
-    print sys.to_json()
+    #print sys.to_json()
     #from SysManager.Parsers import ymlParser
     #print ymlParser.Dump(sys.to_json())
     #print svr.to_json()
@@ -234,6 +234,13 @@ def modeltest():
             .order_by(OperateRecord.operated_at.desc())
     print records.first().operated_at
     '''
+    conf = ConfigFile(
+        dir='/home/qdp/qtrade/bin',
+        file='qtrade.ini',
+        active=True
+    )
+    db.session.add(conf)
+    db.session.commit()
 
 @manager.command
 def route_test():

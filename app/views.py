@@ -1,12 +1,14 @@
 # -*- coding: UTF-8 -*-
 import logging
 from geventwebsocket import WebSocketError
-from flask import render_template, request, abort
+from flask import render_template, request, abort, current_app
 from flask_login import login_required, current_user
 from . import main
+from models import Operator
+from common.cmdbuffer import CommandBuffer
 from MessageQueue.msgserver import MessageServer
+from common import wssh
 import json
-import wssh
 
 user = ""
 
@@ -35,6 +37,7 @@ def UIView(name):
     return render_template("{}.html".format(name))
 
 @main.route('/websocket')
+@login_required
 def websocket():
     if request.environ.has_key('wsgi.websocket'):
         ws = request.environ['wsgi.websocket']
@@ -49,7 +52,12 @@ def webshell():
     if request.environ.has_key('wsgi.websocket'):
         ws = request.environ['wsgi.websocket']
         if ws:
-            bridge = wssh.WSSHBridge(ws)
+            cmdbuffer = CommandBuffer(
+                '192.168.101.126', 'qdam',
+                Operator.find(login='test'),
+                current_app, ws
+            )
+            bridge = wssh.WSSHBridge(ws, cmdbuffer)
             try:
                 bridge.open(
                     hostname='192.168.101.126',

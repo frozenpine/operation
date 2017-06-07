@@ -2,8 +2,8 @@
 import re
 
 class OutputParser(object):
-    def __init__(self, output_lines, re_str="", 
-        key_list=None, primary_key=None, skip_headline=True):
+    def __init__(self, output_lines, re_str="",
+                 key_list=None, primary_key=None, skip_headline=True):
         self.primary_key = primary_key
         self.skip_headline = skip_headline
         self.pattern = re.compile(re_str)

@@ -379,8 +379,11 @@ class OperationExecuteApi(OperationApi):
             else:
                 if rsp.ok:
                     rsp_json = rsp.json()
-                    self.op_result.error_code = rsp_json['errorCode']
-                    self.op_result.detail = format2json(rsp_json['data'])
+                    if rsp_json['errorCode'] != 0:
+                        self.op_result.error_code = 10
+                    else:
+                        self.op_result.error_code = 0
+                    self.op_result.detail = _format2json(rsp_json['data'])
                 else:
                     self.op_result.error_code = rsp.status_code
                     self.op_result.detail = [rsp.reason]
@@ -403,7 +406,7 @@ class OperationExecuteApi(OperationApi):
                 'message': 'operation not found.'
             }, 404
 
-def format2json(data):
+def _format2json(data):
     formater = u'{0:0>2d}. {1[name]:15}{1[flag]:3}'
     rtn = []
     if data:
@@ -464,8 +467,11 @@ class OperationCSVApi(OperationApi):
                             self.op_result.error_code = 401
                             self.op_result.detail = ['please login first.']
                         else:
-                            self.op_result.error_code = rsp_json['errorCode']
-                            self.op_result.detail = [u'CSV导入成功']
+                            if rsp_json['errorCode'] != 0:
+                                self.op_result.error_code = 10
+                            else:
+                                self.op_result.error_code = 0
+                            self.op_result.detail = _format2json(rsp_json['data'])
                     else:
                         self.op_result.error_code = rsp.status_code
                         self.op_result.detail = [rsp.reason]

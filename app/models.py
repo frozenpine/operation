@@ -315,6 +315,7 @@ class Operator(UserMixin, SQLModelMixin, db.Model):
         foreign_keys=[OperateRecord.authorizor_id],
         lazy='dynamic'
     )
+    history_commands = db.relationship('CommandHistory', backref='operator')
 
     @property
     def password(self):
@@ -652,6 +653,16 @@ class OperateResult(SQLModelMixin, db.Model):
     op_rec_id = db.Column(db.Integer, db.ForeignKey('operate_records.id'), index=True)
     error_code = db.Column(db.Integer, default=0)
     detail = db.Column(JSONType, nullable=False, default=[])
+
+class CommandHistory(SQLModelMixin, db.Model):
+    __tablename__ = 'command_histories'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    command_line = db.Column(db.String, nullable=False)
+    host = db.Column(db.String, nullable=False)
+    username = db.Column(db.String, nullable=False)
+    operator_id = db.Column(db.Integer, db.ForeignKey('operators.id'), index=True)
+    operated_at = db.Column(ArrowType, index=True)
+    skip = db.Column(db.Boolean, nullable=False)
 
 class StaticsRecord(SQLModelMixin, db.Model):
     __tablename__ = 'statics_records'

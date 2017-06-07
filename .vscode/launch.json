@@ -121,9 +121,7 @@
                 "FLASK_APP": "${workspaceRoot}/quickstart/app.py"
             },
             "args": [
-                "development",
-                "--no-debugger",
-                "--no-reload"
+                "development"
             ],
             "envFile": "${workspaceRoot}/.env",
             "debugOptions": [

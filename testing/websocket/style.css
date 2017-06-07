@@ -5,16 +5,19 @@ body {
 
 .terminal {
     border: #000 solid 5px;
-    font-family: "Monaco", "DejaVu Sans Mono", "Liberation Mono", monospace;
-    font-size: 11px;
+    font-family: "Consolas", "Liberation Mono", monospace;
+    font-size: 14px;
     color: #f0f0f0;
     background: #000;
-    width: 600px;
     box-shadow: rgba(0, 0, 0, 0.8) 2px 2px 20px;
+    overflow: hidden;
+}
+
+.terminal div {
+    white-space: nowrap;
 }
 
 .reverse-video {
     color: #000;
     background: #f0f0f0;
 }
-
