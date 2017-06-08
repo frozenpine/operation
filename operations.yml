@@ -120,7 +120,7 @@ Operations:
     group: *group2
     system: QDIAM
   - name: 上场数据生成
-    type: ScriptType.Interactivator
+    type: ScriptType.Interactive_Checker
     detail:
       remote:
         name: HttpConfig

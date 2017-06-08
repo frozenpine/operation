@@ -7,6 +7,10 @@ from app.auth.errors import (
     AuthError, InvalidUsernameOrPassword, NoPrivilege,
     LoopAuthorization
 )
+from restful.errors import (
+    ApiError, ExecuteTimeOutOfRange, InvalidParams,
+    ExecuteError, ProxyExecuteError
+)
 from sqlalchemy import text
 from flask import (
     render_template, url_for, current_app,
@@ -150,11 +154,7 @@ class OperationApi(Resource):
             self.ExecutionPrepare(op)
             try:
                 if not op.InTimeRange():
-                    raise Exception(
-                        'execution time out of range[{range[0]} ~ {range[1]}].'.format(
-                            range=op.time_range
-                        )
-                    )
+                    raise ExecuteTimeOutOfRange(op.time_range)
                 if request.json:
                     if request.json['authorizor'] == current_user.login:
                         raise LoopAuthorization
@@ -177,17 +177,17 @@ class OperationApi(Resource):
                 if isinstance(op.detail['mod'], dict):
                     result = self.executor.run(op.detail['mod'])
                 elif isinstance(op.detail['mod'], list):
-                    result_list = []
                     for module in op.detail['mod']:
-                        result_list.append(self.executor.run(module))
-                    result = result_list[-1]
+                        result = self.executor.run(module)
+                        if result.return_code != 0:
+                            break
                 else:
-                    raise Exception('invalid module configuration.')
+                    raise ApiError('invalid module configuration.')
             except AuthError, err:
-                self.op_result.error_code = err.statu_code
+                self.op_result.error_code = err.status_code
                 self.op_result.detail = [err.message]
-            except Exception, err:
-                self.op_result.error_code = 500
+            except ApiError, err:
+                self.op_result.error_code = err.status_code
                 self.op_result.detail = [err.message]
             else:
                 self.op_result.error_code = result.return_code
@@ -336,11 +336,7 @@ class OperationExecuteApi(OperationApi):
                 self.session = session[key]['origin']
             try:
                 if not op.InTimeRange():
-                    raise Exception(
-                        'execution time out of range[{range[0]} ~ {range[1]}].'.format(
-                            range=op.time_range
-                        )
-                    )
+                    raise ExecuteTimeOutOfRange(op.time_range)
                 module = op.detail['mod']['request']
                 if isinstance(module, dict):
                     rsp = getattr(requests, module['method'])(
@@ -352,8 +348,8 @@ class OperationExecuteApi(OperationApi):
                         data=request.form,
                         cookies=self.session
                     )
+                    result = _handlerJsonResponse(rsp)
                 elif isinstance(module, list):
-                    rsp_list = []
                     for mod in module:
                         if mod.has_key('params'):
                             data = mod['params']
@@ -368,25 +364,18 @@ class OperationExecuteApi(OperationApi):
                             data=data,
                             cookies=self.session
                         )
-                        if rsp.ok:
-                            rsp_list.append(rsp)
-                        else:
-                            raise Exception('execution failed')
-                    rsp = rsp_list[-1]
-            except Exception, err:
-                self.op_result.error_code = 500
+                        result = _handlerJsonResponse(rsp)
+                        if result['errorCode'] != 0:
+                            break
+            except ApiError, err:
+                self.op_result.error_code = err.status_code
                 self.op_result.detail = [err.message]
             else:
-                if rsp.ok:
-                    rsp_json = rsp.json()
-                    if rsp_json['errorCode'] != 0:
-                        self.op_result.error_code = 10
-                    else:
-                        self.op_result.error_code = 0
-                    self.op_result.detail = _format2json(rsp_json['data'])
+                if result['errorCode'] != 0:
+                    self.op_result.error_code = 10
                 else:
-                    self.op_result.error_code = rsp.status_code
-                    self.op_result.detail = [rsp.reason]
+                    self.op_result.error_code = 0
+                self.op_result.detail = _format2json(result['data'])
             finally:
                 db.session.add(self.op_result)
                 db.session.commit()
@@ -405,6 +394,20 @@ class OperationExecuteApi(OperationApi):
             return {
                 'message': 'operation not found.'
             }, 404
+
+def _handlerJsonResponse(response):
+    if response.ok:
+        try:
+            rsp_json = response.json()
+        except:
+            raise InvalidParams
+        else:
+            if rsp_json['errorCode'] != 0:
+                raise ProxyExecuteError
+            else:
+                return rsp_json
+    else:
+        raise ApiError('request failed.')
 
 def _format2json(data):
     formater = u'{0:0>2d}. {1[name]:15}{1[flag]:3}'

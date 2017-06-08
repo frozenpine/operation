@@ -3,12 +3,12 @@
 class AuthError(Exception):
     def __init__(self, msg):
         Exception.__init__(self, msg)
-        self.statu_code = 500
+        self.status_code = 500
 
 class AuthenticationError(AuthError):
     def __init__(self, msg='authentication error.'):
         super(AuthenticationError, self).__init__(msg)
-        self.statu_code = 401
+        self.status_code = 401
 
 class InvalidUsernameOrPassword(AuthError):
     def __init__(self, msg='Invalid username or password.'):
@@ -17,7 +17,7 @@ class InvalidUsernameOrPassword(AuthError):
 class AuthorizationError(Exception):
     def __init__(self, msg='authorization error.'):
         super(AuthorizationError, self).__init__(msg)
-        self.statu_code = 403
+        self.status_code = 403
 
 class NoPrivilege(AuthorizationError):
     def __init__(self, msg='no privilege found.'):
