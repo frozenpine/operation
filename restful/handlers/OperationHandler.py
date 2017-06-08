@@ -370,6 +370,8 @@ class OperationExecuteApi(OperationApi):
             except ApiError, err:
                 self.op_result.error_code = err.status_code
                 self.op_result.detail = [err.message]
+                if op.detail.get('skip'):
+                    self.rtn['skip'] = True
             else:
                 if result['errorCode'] != 0:
                     self.op_result.error_code = 10
@@ -463,6 +465,8 @@ class OperationCSVApi(OperationApi):
                 except ApiError, err:
                     self.op_result.error_code = err.status_code
                     self.op_result.detail = [err.message]
+                    if op.detail.get('skip'):
+                        self.rtn['skip'] = True
                 else:
                     if result['errorCode'] != 0:
                         self.op_result.error_code = 10

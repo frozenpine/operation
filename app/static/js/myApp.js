@@ -316,6 +316,9 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
         $('#his_result' + index).modal({ relatedTarget: this });
     };
     $scope.skip = function(index) {
+        if ($scope.opList.details[index].err_code == -1) {
+            $scope.opList.details[index].err_code = -3;
+        }
         if (index < $scope.opList.details.length - 1) {
             $scope.opList.details[index + 1].enabled = true;
         }
@@ -353,7 +356,6 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
                             });
                         }
                     });
-                    console.log($('#interactive' + id).find('[data-am-modal-confirm]'));
                 });
         } else {
             if ($scope.opList.details[index].need_authorized) {

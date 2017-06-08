@@ -27,32 +27,32 @@
                                         <span class="am-close am-fr" data-am-modal-cancel data-am-modal-close>&times;</span>
                                     </div>
                                     <div class="am-modal-bd">
-										<div>
-											<fieldset class="am-center login-form" id="authorizeLoginForm" style="width: 350px">
-												<div class="am-form-group am-form-icon" style="margin-bottom: 3px">
-													<i class="am-icon-user"></i>
-													<input type="text" class="am-form-field" id="authorizeUser" placeholder="请输入用户名" />
-												</div>
-												<div class="am-form-group am-form-icon" style="margin-bottom: 3px">
-													<i class="am-icon-lock"></i>
-													<input type="password" class="am-form-field" id="authorizePassword" placeholder="请输入密码" />
-												</div>
-												<div>
-													<button type="submit" class="am-btn am-btn-default" style="width: 100%" onclick="authorize()">授权</button>
-												</div>
-												<script type="text/javascript">
-													function authorize() {
-														$('#authorizor').trigger('authorize.quantdo', [{
-															authorizor: $('#authorizeUser').val(),
-															password: $('#authorizePassword').val()
-														}]);
-														$('#authorizeUser').val('');
-														$('#authorizePassword').val('');
-														$('#authorizor').modal('close');
-													}
-												</script>
-											</fieldset>
-										</div>
+                                        <div>
+                                            <fieldset class="am-center login-form" id="authorizeLoginForm" style="width: 350px">
+                                                <div class="am-form-group am-form-icon" style="margin-bottom: 3px">
+                                                    <i class="am-icon-user"></i>
+                                                    <input type="text" class="am-form-field" id="authorizeUser" placeholder="请输入用户名" />
+                                                </div>
+                                                <div class="am-form-group am-form-icon" style="margin-bottom: 3px">
+                                                    <i class="am-icon-lock"></i>
+                                                    <input type="password" class="am-form-field" id="authorizePassword" placeholder="请输入密码" />
+                                                </div>
+                                                <div>
+                                                    <button type="submit" class="am-btn am-btn-default" style="width: 100%" onclick="authorize()">授权</button>
+                                                </div>
+                                                <script type="text/javascript">
+                                                    function authorize() {
+                                                        $('#authorizor').trigger('authorize.quantdo', [{
+                                                            authorizor: $('#authorizeUser').val(),
+                                                            password: $('#authorizePassword').val()
+                                                        }]);
+                                                        $('#authorizeUser').val('');
+                                                        $('#authorizePassword').val('');
+                                                        $('#authorizor').modal('close');
+                                                    }
+                                                </script>
+                                            </fieldset>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -89,14 +89,14 @@
                                         <button class="am-btn am-btn-default am-btn-xs am-text-secondary am-margin-right-xs" ng-show="data.checker.isTrue && data.err_code == 0 && !data.skip && !data.checker.checked" ng-click="confirm($index)" ng-class="{true: '',false: 'am-disabled'}[!data.checker.checked]">
                                             <span class="am-icon-pencil-square-o"></span> 确认结果
                                         </button>
-                                        <button class="am-btn am-btn-default am-btn-xs am-text-secondary am-margin-right-xs" ng-show="(data.checker.isTrue && data.checker.checked && data.err_code==0) || (data.checker.isTrue && data.err_code>0) || (!data.checker.isTrue && data.err_code>=0)"
+                                        <button class="am-btn am-btn-default am-btn-xs am-text-secondary am-margin-right-xs" ng-show="(data.checker.isTrue && data.checker.checked && data.err_code==0) || (data.checker.isTrue && data.err_code>0) || (data.hasOwnProperty('skip') && data.err_code>0) || (!data.checker.isTrue && data.err_code>=0)"
                                             ng-click="check_result($index)">
                                             <span class="am-icon-pencil-square-o"></span> 查看结果
                                         </button>
                                         <button class="am-btn am-btn-default am-btn-xs am-text-secondary am-margin-right-xs" ng-show="data.hasOwnProperty('his_results')" ng-click="check_his_result($index)">
                                             <span class="am-icon-pencil-square-o"></span> 查看历史结果
                                         </button>
-                                        <button class="am-btn am-btn-default am-btn-xs am-text-secondary" ng-if="data.skip" ng-click="skip($index);data.err_code=-3">
+                                        <button class="am-btn am-btn-default am-btn-xs am-text-secondary" ng-show="data.skip" ng-click="skip($index)">
                                             <span class="am-icon-pencil-square-o"></span> 跳过执行
                                         </button>
                                     </div>

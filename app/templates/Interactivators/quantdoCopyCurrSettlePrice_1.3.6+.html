@@ -73,7 +73,7 @@
                 if (response.errorCode == 0) {
                     showMessage("登录成功", true);
                     $('#copyCurrSettlePrice_LoginForm').hide();
-                    $('#copyCurrSettlePrice_TradingDayPicker').show();
+                    $('#copyCurrSettlePrice_Form').show();
                 } else {
                     showMessage(response.errorMsg, false);
                     $('#copyCurrSettlePrice_LoginForm').find('img')[0].click();

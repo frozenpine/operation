@@ -95,16 +95,18 @@
 
     function genTradeData() {
         var prompt = $('#genTradeData_TradingDayPicker').closest('.am-modal-loading');
-        $('#genTradeData_Spinner').toggle();
-        alert($('#genTradeData_NextTradingDay').val());
-        $.post(
-            "[[execute_uri]]",
-            data = {
-                params: JSON.stringify([$('#genTradeData_NextTradingDay').val()])
-            },
-            function(response) {
-                prompt.trigger('results.quantdo', [response]);
-                prompt.modal('close');
-            });
+        if (confirm("请确认上场交易日期为：" + $('#genTradeData_NextTradingDay').val())) {
+            $('#genTradeData_Spinner').toggle();
+            $.post(
+                "[[execute_uri]]",
+                data = {
+                    params: JSON.stringify([$('#genTradeData_NextTradingDay').val()])
+                },
+                function(response) {
+                    prompt.trigger('results.quantdo', [response]);
+                    prompt.modal('close');
+                }
+            );
+        }
     }
 </script>
