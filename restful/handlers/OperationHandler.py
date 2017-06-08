@@ -403,7 +403,7 @@ def _handlerJsonResponse(response):
             raise InvalidParams
         else:
             if rsp_json['errorCode'] != 0:
-                raise ProxyExecuteError
+                raise ProxyExecuteError(rsp_json['errorMsg'])
             else:
                 return rsp_json
     else:
@@ -459,25 +459,16 @@ class OperationCSVApi(OperationApi):
                         files=file_list,
                         cookies=self.session
                     )
-                except Exception, err:
-                    self.op_result.error_code = 500
+                    result = _handlerJsonResponse(rsp)
+                except ApiError, err:
+                    self.op_result.error_code = err.status_code
                     self.op_result.detail = [err.message]
                 else:
-                    if rsp.ok:
-                        try:
-                            rsp_json = rsp.json()
-                        except Exception, err:
-                            self.op_result.error_code = 401
-                            self.op_result.detail = ['please login first.']
-                        else:
-                            if rsp_json['errorCode'] != 0:
-                                self.op_result.error_code = 10
-                            else:
-                                self.op_result.error_code = 0
-                            self.op_result.detail = _format2json(rsp_json['data'])
+                    if result['errorCode'] != 0:
+                        self.op_result.error_code = 10
                     else:
-                        self.op_result.error_code = rsp.status_code
-                        self.op_result.detail = [rsp.reason]
+                        self.op_result.error_code = 0
+                    self.op_result.detail = _format2json(result['data'])
                 finally:
                     db.session.add(self.op_result)
                     db.session.commit()

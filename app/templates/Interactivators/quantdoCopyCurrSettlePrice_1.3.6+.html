@@ -1,0 +1,95 @@
+<div id="copyCurrSettlePrice_Alert"></div>
+{% if not session %}
+<fieldset class="am-center login-form" id="copyCurrSettlePrice_LoginForm" style="width: 350px">
+    <div class="am-form-group am-form-icon" style="margin-bottom: 3px">
+        <i class="am-icon-user am-icon-fw"></i>
+        <input type="text" class="am-form-field" id="copyCurrSettlePrice_User" style="height: 40px" placeholder="请输入用户名" value="[[login_user]]" />
+    </div>
+    <div class="am-form-group am-form-icon" style="margin-bottom: 3px">
+        <i class="am-icon-lock am-icon-fw"></i>
+        <input type="password" class="am-form-field" id="copyCurrSettlePrice_Password" style="height: 40px" placeholder="请输入密码" value="[[login_password]]" />
+    </div>
+    {% if captcha %}
+    <div>
+        <input type="text" class="am-form-field" id="copyCurrSettlePrice_Captcha" style="width: 248px; height: 40px" placeholder="请输入验证码" />
+        <img src="javascript: void(0)" style="width: 100px; position: relative; right: -117px; top: -40px" onclick="if(!$('#copyCurrSettlePrice_LoginForm').is(':hidden')) this.src='[[captcha_uri]]?d='+Date.parse(new Date())"></img>
+    </div>
+    <div style="margin-top: -35px">
+        <button type="submit" class="am-btn am-btn-default" style="width: 100%" onclick="login()">登录</button>
+    </div>
+    {% else %}
+    <div>
+        <button type="submit" class="am-btn am-btn-default" style="width: 100%" onclick="login()">登录</button>
+    </div>
+    {% endif %}
+</fieldset>
+{% endif %}
+<fieldset class="am-center module-form" id="copyCurrSettlePrice_Form" style="{% if not session %}display: none;{% endif %}width: 350px">
+    <div>
+        <button type="submit" class="am-btn am-btn-default" style="width: 100%" onclick="copyCurrSettlePrice()">
+            获取结算价
+            <i class="am-icon-spinner am-icon-pulse" id="copyCurrSettlePrice_Spinner" style="display: none"></i>
+        </button>
+    </div>
+</fieldset>
+<script type="text/javascript">
+    $('.am-alert').on('closed.alert.amui', function() {
+        $('.am-alert').removeClass('am-alert-success am-alert-danger');
+    });
+
+    function showMessage(message, success) {
+        $('#copyCurrSettlePrice_Alert').html('\
+            \<div class="am-alert" style="margin-top: 0px; display: none"\>\
+                \<span type="button" class="am-close am-fr">&times;\</span\>\
+                \<p class="am-text-center">' + message + '\</p>\
+            \</div>\
+        ')
+        $('.am-alert').alert();
+        if (success) {
+            $('.am-alert').addClass('am-alert-success').show();
+        } else {
+            $('.am-alert').addClass('am-alert-danger').show();
+        }
+        setTimeout(function() {
+            $('.am-alert').alert('close');
+        }, 3000);
+    }
+
+    function login() {
+        var user = $("#copyCurrSettlePrice_User").val();
+        var pass = $("#copyCurrSettlePrice_Password").val();
+        var captcha = $("#copyCurrSettlePrice_Captcha").val();
+        $.post(
+            "[[login_uri]]",
+            data = {
+                params: JSON.stringify({
+                    userName: user,
+                    password: pass,
+                    verification_code: captcha
+                })
+            },
+            function(response) {
+                console.log(response);
+                if (response.errorCode == 0) {
+                    showMessage("登录成功", true);
+                    $('#copyCurrSettlePrice_LoginForm').hide();
+                    $('#copyCurrSettlePrice_TradingDayPicker').show();
+                } else {
+                    showMessage(response.errorMsg, false);
+                    $('#copyCurrSettlePrice_LoginForm').find('img')[0].click();
+                }
+            }
+        );
+    };
+
+    function copyCurrSettlePrice() {
+        var prompt = $('#copyCurrSettlePrice_Form').closest('.am-modal-loading');
+        $('#copyCurrSettlePrice_Spinner').toggle();
+        $.post("[[execute_uri]]", {
+            params: JSON.stringify([])
+        }, function(response) {
+            prompt.trigger('results.quantdo', [response]);
+            prompt.modal('close');
+        });
+    }
+</script>
