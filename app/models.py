@@ -4,6 +4,7 @@ from sqlalchemy_utils.types import (
     ChoiceType, JSONType, IPAddressType, ArrowType,
     DateTimeRangeType
 )
+from ipaddress import ip_address
 from sqlalchemy_utils import observes
 from flask_login import UserMixin
 from flask import current_app
@@ -418,7 +419,7 @@ class TradeSystem(SQLModelMixin, db.Model):
         return self.manage_ip.exploded
     @ip.setter
     def ip(self, addr):
-        self.manage_ip = addr
+        self.manage_ip = ip_address(addr)
 
     login_user = db.Column(db.String, index=True)
     @property
@@ -624,10 +625,11 @@ class Operation(SQLModelMixin, db.Model):
         if sys:
             params = self.detail['remote']['params']
             params['ip'] = sys.ip
-            if not (self.type & ScriptType.Interactivator.value
+            if not (self.type.value & ScriptType.Interactivator.value
                     == ScriptType.Interactivator.value):
                 params['user'] = sys.login_user
                 params['password'] = sys.login_pwd
+
     order = db.Column(db.Integer)
     op_group_id = db.Column(db.Integer, db.ForeignKey('operation_groups.id'))
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)

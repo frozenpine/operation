@@ -2,7 +2,7 @@
 from os import path
 from sys import argv
 from app.models import Server, TradeSystem, SystemType
-from flask import url_for, request, redirect
+from flask import url_for, request, redirect, render_template
 from flask_restful import Resource
 import json
 

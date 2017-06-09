@@ -289,6 +289,16 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
         }
     });
 
+    $scope.openshell = function(sys_id) {
+        $http.get('api/webshell/system/id/' + sys_id)
+            .success(function(response) {
+                $scope.opList.webshell = response;
+                $('#webshell').modal({
+                    relatedTarget: this
+                });
+            });
+    };
+
     $http.get('api/op_group/id/' + $routeParams.grpid)
         .success(function(response) {
             $scope.opList = response;

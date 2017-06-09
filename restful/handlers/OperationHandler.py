@@ -53,6 +53,8 @@ class OperationListApi(Resource):
             self.rtn['name'] = op_group.name
             self.rtn['details'] = []
             self.rtn['system_name'] = op_group.system.name
+            self.rtn['grp_id'] = op_group.id
+            self.rtn['sys_id'] = op_group.system.id
             for op in op_group.operations:
                 skip, record = self.find_op_record(op)
                 lower, upper = op.time_range

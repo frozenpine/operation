@@ -1,6 +1,9 @@
 # -*- coding: UTF-8 -*-
-from flask_restful import Resource, reqparse, request
+from flask_restful import Resource, request
+from app import db
 from app.models import TradeSystem
+from werkzeug.exceptions import BadRequest
+import json
 
 class SystemApi(Resource):
     def get(self, **kwargs):
@@ -16,7 +19,33 @@ class SystemApi(Resource):
     def put(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
         if sys:
-            pass
+            try:
+                data = request.get_json(force=True)
+            except BadRequest:
+                return {'message': 'Invalid JSON data'}, 400
+            else:
+                sys.name = data.get('name', sys.name)
+                sys.user = data.get('username', sys.user)
+                sys.password = data.get('password', sys.password)
+                sys.ip = data.get('ip', sys.ip)
+                sys.description = data.get('description', sys.description)
+                sys.version = data.get('version', sys.version)
+                for op in sys.operations:
+                    details = json.loads(json.dumps(op.detail))
+                    params = details['remote']['params']
+                    params['ip'] = sys.ip
+                    params['user'] = sys.user
+                    params['password'] = sys.password
+                    op.detail = details
+                db.session.add_all(sys.operations)
+                db.session.add(sys)
+                db.session.commit()
+                '''
+                return {
+                    'message': 'system ({}) updated successfully.'.format(sys.name),
+                    'data': sys.to_json()
+                }, 200
+                '''
         else:
             return {'message': 'system not found'}, 404
 

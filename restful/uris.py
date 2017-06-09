@@ -10,6 +10,7 @@ from .handlers.OperationHandler import (
     OperationLoginApi, OperationExecuteApi, OperationUIApi,
     OperationCSVApi
 )
+from .handlers.WebshellHandler import WebshellUIApi
 from .handlers.TradingDayHandler import NextTradingDayApi
 from .handlers.SysStaticsHandler import (
     ServerStaticListApi, SystemStaticListApi,
@@ -51,7 +52,7 @@ resources.add_resource(
     '/system/name/<string:name>',
     '/system/id/<int:id>',
     '/system/ip/<string:manage_ip>',
-    methods=['GET'],
+    methods=['GET', 'PUT'],
     endpoint='system'
 )
 resources.add_resource(
@@ -188,6 +189,8 @@ resources.add_resource(
     methods=['GET'],
     endpoint='user_sessions'
 )
+
+resources.add_resource(WebshellUIApi, '/webshell/system/id/<int:id>', methods=['GET'])
 
 resources.add_resource(LogApi, '/logs', methods=['POST'])
 

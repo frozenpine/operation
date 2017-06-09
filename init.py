@@ -14,6 +14,7 @@ from SysManager.Common import AESCrypto
 import sys
 reload(sys)
 sys.setdefaultencoding("utf-8")
+import os
 
 import codecs
 codecs.register(lambda name: name == 'cp65001' and codecs.lookup('utf-8') or None)
@@ -24,6 +25,14 @@ manager = Manager(test_app)
 def _encrypt(match):
     return match.group(1) + \
         AESCrypto.encrypt(
+            match.group(2),
+            current_app.config['SECRET_KEY']
+        ) + \
+        match.group(3)
+
+def _decrypt(match):
+    return match.group(1) + \
+        AESCrypto.decrypt(
             match.group(2),
             current_app.config['SECRET_KEY']
         ) + \
@@ -136,6 +145,16 @@ def init_inventory():
     db.session.commit()
 
 @manager.command
+def modify_operation():
+    operations = Operation.query.filter(Operation.sys_id == 3).all()
+    for op in operations:
+        params = op.detail['remote']['params']
+        params['ip'] = '192.168.56.1'
+        params['password'] = 'qdamqdam'
+    db.session.add_all(operations)
+    db.session.commit()
+
+@manager.command
 def init_operation():
     f = open('operations.yml')
     opers = yaml.load(f)
@@ -172,6 +191,45 @@ def init_operation():
         operations.append(Operation(**op))
     db.session.add_all(operations)
     db.session.commit()
+
+@manager.command
+def global_encrypt():
+    pass
+
+@manager.command
+def modify_system(option_file):
+    if os.path.exists(option_file):
+        try:
+            f = open(option_file)
+            options = yaml.load(f)
+        except Exception, err:
+            print err.message
+        else:
+            if isinstance(options, dict):
+                sys = TradeSystem.find(id=options['id'])
+                if sys:
+                    if options.has_key('ip'):
+                        sys.ip = options['ip']
+                    if options.has_key('username'):
+                        sys.user = options['username']
+                    if options.has_key('password'):
+                        sys.password = options['password']
+                    db.session.add(sys)
+                    db.session.commit()
+            elif isinstance(options, list):
+                for config in options:
+                    sys = TradeSystem.find(id=config['id'])
+                    if sys:
+                        if config.has_key('ip'):
+                            sys.ip = config['ip']
+                        if config.has_key('username'):
+                            sys.user = config['username']
+                        if config.has_key('password'):
+                            sys.password = config['password']
+                        db.session.add(sys)
+                db.session.commit()
+    else:
+        print "file({}) not exists.".format(option_file)
 
 @manager.command
 def printurl():     
@@ -259,35 +317,6 @@ def route_test():
     ):
         rsp = test_app.view_functions[match[0]](**match[1])
         print json.dumps(rsp.response)
-
-@manager.command
-def time_range():
-    op = Operation.find(id=3)
-    print op.time_range
-    print op.InTimeRange()
-    #op.time_range = [time(8), time(9)]
-    #db.session.add(op)
-    #db.session.commit()
-    #print op.time_range
-
-@manager.command
-def observer():
-    op = Operation()
-    op.name = 'test'
-    op.type = ScriptType.Checker
-    op.detail = {
-        'remote': {
-            'name': 'SSHConfig',
-            'params': {}
-        },
-        'mod': {
-            'name': 'shell',
-            'shell': 'echo "Hello World."'
-        }
-    }
-    op.sys_id = 1
-    db.session.add(op)
-    db.session.commit()
 
 if __name__ == '__main__':
     manager.run()

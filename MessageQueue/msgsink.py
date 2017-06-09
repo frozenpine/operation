@@ -24,7 +24,6 @@ class BaseSinker(threading.Thread):
                     "Flows/{0}_{1}.out".format(filename, create_date)
                 )
 
-
     def run(self):
         while True:
             current_date = time.strftime("%Y-%m-%d")
