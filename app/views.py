@@ -1,7 +1,10 @@
 # -*- coding: UTF-8 -*-
 import logging
 from geventwebsocket import WebSocketError
-from flask import render_template, request, abort, current_app
+from flask import (
+    render_template, request, Response,
+    abort, current_app
+)
 from flask_login import login_required, current_user
 from . import main
 from models import Operator
@@ -9,6 +12,7 @@ from common.cmdbuffer import CommandBuffer
 from MessageQueue.msgserver import MessageServer
 from common import wssh
 import json
+from time import time
 
 user = ""
 
@@ -35,6 +39,27 @@ def index():
 @login_required
 def UIView(name):
     return render_template("{}.html".format(name))
+
+class Camera():
+    def __init__(self):
+        self.frames = [open('app/static/img/a{}.png'.format(f+1), 'rb').read() for f in xrange(10)]
+
+    def get_frame(self):
+        return self.frames[int(time()) % 10]
+
+def _flowTest(camera):
+    while True:
+        yield (b'--frame\r\n'
+               b'Content-Type: image/png\r\n\r\n'
+               + camera.get_frame()
+               + b'\r\n')
+
+@main.route('/flow')
+def flow():
+    return Response(
+        _flowTest(Camera()),
+        mimetype='multipart/x-mixed-replace; boundary=frame'
+    )
 
 @main.route('/websocket')
 @login_required
