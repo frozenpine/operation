@@ -1,35 +1,29 @@
 # -*- coding: UTF-8 -*-
+import json
 import logging
 from os import path
-from app import db
-from app.auth.privileged import CheckPrivilege
-from app.auth.errors import (
-    AuthError, InvalidUsernameOrPassword, NoPrivilege,
-    LoopAuthorization
-)
-from restful.errors import (
-    ApiError, ExecuteTimeOutOfRange, InvalidParams,
-    ExecuteError, ProxyExecuteError
-)
-from sqlalchemy import text
-from flask import (
-    render_template, url_for, current_app,
-    make_response, request, session
-)
+
+import arrow
+import requests
+from flask import (current_app, make_response, render_template, request,
+                   session, url_for)
 from flask_login import current_user
 from flask_restful import Resource
-from app.models import (
-    OperationGroup, Operation, ScriptType, Operator,
-    OperateRecord, OperateResult, MethodType
-)
+from sqlalchemy import text
+
+from app import db
+from app.auth.errors import (AuthError, InvalidUsernameOrPassword,
+                             LoopAuthorization, NoPrivilege)
 from app.auth.privileged import CheckPrivilege
-import arrow
-import json
-import requests
-from SysManager.configs import Result, RemoteConfig, SSHConfig
-from SysManager.executor import Executor, HttpExecutor
-from SysManager.excepts import ExecuteError
+from app.models import (MethodType, OperateRecord, OperateResult, Operation,
+                        OperationGroup, Operator, ScriptType)
+from restful.errors import (ApiError, ExecuteError, ExecuteTimeOutOfRange,
+                            InvalidParams, ProxyExecuteError)
 from SysManager.Common import AESCrypto
+from SysManager.configs import RemoteConfig, Result, SSHConfig
+from SysManager.excepts import ExecuteError
+from SysManager.executor import Executor, HttpExecutor
+
 
 class OperationListApi(Resource):
     def __init__(self):

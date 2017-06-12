@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-import logging
 import json
+import logging
+import re
+
+import arrow
 from enum import Enum
 from sqlalchemy import create_engine
-from app.models import CommandHistory
-import arrow
-import re
+
 
 class CommandBuffer(object):
     def __init__(self, host, user, operator, app, websocket=None):

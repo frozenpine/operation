@@ -1,13 +1,15 @@
 # -*- coding: UTF-8 -*-
 from flask_restful import Resource, reqparse, request
+
 from app.models import OpRole
+
 
 class RoleApi(Resource):
     def get(self, **kwargs):
         role = OpRole.find(**kwargs)
         if role:
             return {
-                "message": 'role({}) found succeefully.'.format(role.name.encode('utf-8')), 
+                "message": 'role({}) found succeefully.'.format(role.name.encode('utf-8')),
                 "data": role.to_json()
             }
         else:

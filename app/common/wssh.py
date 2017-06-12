@@ -6,25 +6,24 @@ wssh.server
 This module provides server capabilities of wssh
 """
 
-import gevent
-from gevent.socket import wait_read, wait_write
-from gevent.select import select
-from gevent.event import Event
+import socket
+from StringIO import StringIO
 
+import gevent
 import paramiko
+from gevent.event import Event
+from gevent.select import select
+from gevent.socket import wait_read, wait_write
 from paramiko import PasswordRequiredException
 from paramiko.dsskey import DSSKey
 from paramiko.rsakey import RSAKey
 from paramiko.ssh_exception import SSHException
-
-import socket
 
 try:
     import simplejson as json
 except ImportError:
     import json
 
-from StringIO import StringIO
 
 
 class WSSHBridge(object):

@@ -1,19 +1,20 @@
 # -*- coding: UTF-8 -*-
-from flask import abort, current_app
-from flask_restful import Resource
-from app.models import (
-    TradeSystem, TradeProcess, Server,
-    DataSource, DataSourceModel, DataSourceType
-)
+import json
 import logging
-from SysManager.configs import SSHConfig
-from SysManager.executor import Executor
-from SysManager.Common import AESCrypto
-from sqlalchemy import create_engine
-from sqlalchemy.sql import text
 import re
 import threading
-import json
+
+from flask import abort, current_app
+from flask_restful import Resource
+from sqlalchemy import create_engine
+from sqlalchemy.sql import text
+
+from app.models import (DataSource, DataSourceModel, DataSourceType, Server,
+                        TradeProcess, TradeSystem)
+from SysManager.Common import AESCrypto
+from SysManager.configs import SSHConfig
+from SysManager.executor import Executor
+
 
 def _decrypt(match):
     return match.group(1) + \

@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
-import re
 import json
+import re
+
 
 class OutputParser(object):
     def __init__(self, output_lines):

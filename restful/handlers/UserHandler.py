@@ -1,8 +1,11 @@
 # -*- coding: UTF-8 -*-
-import logging
-from flask_restful import Resource, reqparse, request
+#import logging
+
+from flask_restful import Resource, reqparse
+
 from app import db
 from app.models import Operator
+
 
 class UserApi(Resource):
     def get(self, **kwargs):

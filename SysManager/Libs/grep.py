@@ -1,6 +1,8 @@
 # -*- coding: UTF-8 -*-
-import shell
 import re
+
+import shell
+
 
 def run(client, module):
     dest = module.get('grep')

@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
-from neomodel import (StructuredRel,
-                      StringProperty, IntegerProperty, DateTimeProperty)
+from neomodel import (DateTimeProperty, IntegerProperty, StringProperty,
+                      StructuredRel)
+
 
 class Authorization(StructuredRel):
     authorizer = StringProperty(required=True)

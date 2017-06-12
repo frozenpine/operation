@@ -1,7 +1,9 @@
 # -*- coding: UTF-8 -*-
 from flask import render_template
 from flask_restful import Resource
+
 from app.models import TradeSystem
+
 
 class WebshellUIApi(Resource):
     def get(self, id):

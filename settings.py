@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 import os
+
 #from neomodel import config as neoconfig
 base_dir = os.path.abspath(os.path.dirname(__file__))
 

@@ -1,7 +1,8 @@
 # -*- coding: UTF-8 -*-
-from app import task_queue
 from flask_restful import Resource, reqparse, request
-from app.models import OperationGroup, Operation, OperateRecord, OperateResult
+
+from app.models import OperateRecord, OperateResult, Operation, OperationGroup
+
 
 class TaskApi(Resource):
     def get(self, **kwargs):

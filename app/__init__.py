@@ -1,11 +1,12 @@
+# -*- coding: utf-8 -*-
 import logging
+from logging.handlers import TimedRotatingFileHandler
 from flask import Flask, Blueprint
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from settings import config
 from MessageQueue.msgserver import MessageQueues
-import logging
-from logging.handlers import TimedRotatingFileHandler
+
 
 logging.basicConfig(
     level=logging.DEBUG,

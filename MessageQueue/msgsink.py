@@ -1,9 +1,10 @@
 # coding=utf-8
-from Queue import Queue
 import os
 import shutil
 import threading
 import time
+from Queue import Queue
+
 
 class BaseSinker(threading.Thread):
     def __init__(self, filename, timer=10):

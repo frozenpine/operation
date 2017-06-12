@@ -1,10 +1,13 @@
 # -*- coding: UTF-8 -*-
+import json
 from os import path
 from sys import argv
-from app.models import Server, TradeSystem, SystemType
-from flask import url_for, request, redirect, render_template
+
+from flask import redirect, render_template, request, url_for
 from flask_restful import Resource
-import json
+
+from app.models import Server, SystemType, TradeSystem
+
 
 class UIDataApi(Resource):
     def get(self, name):

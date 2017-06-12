@@ -1,14 +1,14 @@
 # -*- coding: UTF-8 -*-
-import logging
-import sys
-from os import path, environ
 import ConfigParser
-from enum import Enum
-sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
-from excepts import ConfigInvalid
-from flask import current_app
-from Common import AESCrypto
+import logging
 import re
+import sys
+from os import environ, path
+
+from Common import AESCrypto
+from excepts import ConfigInvalid
+
+sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
 
 SECRET_KEY = environ.get('FLASK_SECRET_KEY') or 'SOMEthing-you-WILL-never-Guess'
 

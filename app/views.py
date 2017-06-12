@@ -1,18 +1,18 @@
 # -*- coding: UTF-8 -*-
+import json
 import logging
+from time import time
+
+from flask import Response, abort, current_app, render_template, request
+from flask_login import current_user, login_required
 from geventwebsocket import WebSocketError
-from flask import (
-    render_template, request, Response,
-    abort, current_app
-)
-from flask_login import login_required, current_user
-from . import main
-from models import Operator
+
+from common import wssh
 from common.cmdbuffer import CommandBuffer
 from MessageQueue.msgserver import MessageServer
-from common import wssh
-import json
-from time import time
+from models import Operator
+
+from . import main
 
 user = ""
 

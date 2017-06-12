@@ -1,8 +1,10 @@
 # -*- coding: UTF-8 -*-
-from app import db
-from sqlalchemy import text
 import arrow
 from flask_restful import Resource
+from sqlalchemy import text
+
+from app import db
+
 
 class NextTradingDayApi(Resource):
     def get(self):

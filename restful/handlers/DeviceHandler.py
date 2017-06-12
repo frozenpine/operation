@@ -1,6 +1,8 @@
 # -*- coding: UTF-8 -*-
 from flask_restful import Resource, reqparse, request
+
 from app.models import Server
+
 
 class DeviceApi(Resource):
     def get(self, **kwargs):

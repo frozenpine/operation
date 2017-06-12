@@ -1,9 +1,12 @@
 # -*- coding: UTF-8 -*-
+import json
+
 from flask_restful import Resource, request
+from werkzeug.exceptions import BadRequest
+
 from app import db
 from app.models import TradeSystem
-from werkzeug.exceptions import BadRequest
-import json
+
 
 class SystemApi(Resource):
     def get(self, **kwargs):

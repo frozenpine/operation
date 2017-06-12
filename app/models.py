@@ -1,15 +1,24 @@
 # -*- coding: UTF-8 -*-
-from . import db
-from sqlalchemy_utils.types import (
-    ChoiceType, JSONType, IPAddressType, ArrowType,
-    DateTimeRangeType
-)
-from ipaddress import ip_address
-from sqlalchemy_utils import observes
-from flask_login import UserMixin
-from flask import current_app
-from  SysManager.Common import AESCrypto
+import json
 import re
+from datetime import datetime, time
+from uuid import uuid4
+
+from arrow import Arrow
+from enum import Enum
+from flask import current_app
+from flask_login import UserMixin
+from ipaddress import IPv4Address, ip_address
+from sqlalchemy_utils import observes
+from sqlalchemy_utils.types import (ArrowType, ChoiceType, DateTimeRangeType,
+                                    IPAddressType, JSONType)
+from werkzeug.security import check_password_hash, generate_password_hash
+
+from SysManager.Common import AESCrypto
+
+from . import db
+
+
 '''
 from neomodel import (
     StructuredNode, RelationshipTo, RelationshipFrom, Relationship,
@@ -18,14 +27,6 @@ from neomodel import (
 )
 from .relations import *
 '''
-from werkzeug.security import generate_password_hash, check_password_hash
-from enum import Enum
-from ipaddress import IPv4Address
-from arrow import Arrow
-import re
-import json
-from uuid import uuid4
-from datetime import time, datetime
 
 '''
 class NodeMixin(StructuredNode):

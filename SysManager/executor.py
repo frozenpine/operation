@@ -1,23 +1,19 @@
 # -*- coding: UTF-8 -*-
-import sys
-from os import path
-from paramiko import (
-    SSHClient, AutoAddPolicy, RSAKey,
-    PasswordRequiredException
-)
-from paramiko.ssh_exception import NoValidConnectionsError
-import winrm
-sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
 import logging
-from excepts import ModuleNotFound, ImportRSAkeyFaild
-from configs import (
-    RemoteConfig, SSHConfig, WinRmConfig, HttpConfig,
-    Result
-)
+import sys
 import urllib
+from os import path
+
 import requests
-import re
-import json
+import winrm
+from paramiko import (AutoAddPolicy, PasswordRequiredException, RSAKey,
+                      SSHClient)
+from paramiko.ssh_exception import NoValidConnectionsError
+
+from configs import HttpConfig, RemoteConfig, Result, SSHConfig, WinRmConfig
+from excepts import ImportRSAkeyFaild, ModuleNotFound
+
+sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
 
 class Executor():
     def __init__(self, remote_config, parser=None):

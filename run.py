@@ -1,10 +1,14 @@
-from os import environ
+# -*- coding: UTF-8 -*-
 import sys
-from geventwebsocket.handler import WebSocketHandler
-from gevent.pywsgi import WSGIServer
+from os import environ
+
 from gevent import monkey
-monkey.patch_all()
+from gevent.pywsgi import WSGIServer
+from geventwebsocket.handler import WebSocketHandler
+
 from app import create_app
+
+monkey.patch_all()
 
 host = environ.get('FLASK_HOST') or '0.0.0.0'
 port = environ.get('FLASK_PORT') or 5000

@@ -1,6 +1,8 @@
 # -*- coding: UTF-8 -*-
 import re
+
 from listParser import OutputParser
+
 
 class quantdoLoginParser(OutputParser):
     def __init__(self, output_lines):

@@ -1,10 +1,12 @@
 # -*- coding: UTF-8 -*-
-from . import auth
-from .forms import LoginForm, RegisterForm
-from flask import flash, request, redirect, url_for, render_template
-from flask_login import login_required, login_user, current_user, logout_user
+from flask import flash, redirect, render_template, request, url_for
+from flask_login import current_user, login_required, login_user, logout_user
+
 from app import db
 from app.models import Operator
+
+from . import auth
+from .forms import LoginForm, RegisterForm
 
 @auth.route('/')
 def index():

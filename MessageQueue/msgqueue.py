@@ -1,9 +1,10 @@
 # coding=utf-8
-from Queue import Queue
 import os
 import shutil
-from threading import Thread
 import time
+from Queue import Queue
+from threading import Thread
+
 
 class MessageQueue(Thread):
     def __init__(self, filename, timer=10):

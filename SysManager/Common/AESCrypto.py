@@ -1,6 +1,8 @@
 # -*- coding: UTF-8 -*-
-from binascii import b2a_hex, a2b_hex
+from binascii import a2b_hex, b2a_hex
+
 from Crypto.Cipher import AES
+
 
 #加密函数，如果text不足16位就用空格补足为16位，
 #如果大于16当时不是16的倍数，那就补足为16的倍数。

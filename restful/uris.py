@@ -1,23 +1,22 @@
 # -*- coding: UTF-8 -*-
 from . import resources
-from .handlers.UserHandler import UserApi, UserListApi
 from .handlers.DeviceHandler import DeviceApi, DeviceListApi
-from .handlers.SystemHandler import SystemApi, SystemListApi
-from .handlers.RoleHandler import RoleApi, RoleListApi
-from .handlers.UIDataHandler import UIDataApi
-from .handlers.OperationHandler import (
-    OperationListApi, OperationApi, OperationCaptchaApi,
-    OperationLoginApi, OperationExecuteApi, OperationUIApi,
-    OperationCSVApi
-)
-from .handlers.WebshellHandler import WebshellUIApi
-from .handlers.TradingDayHandler import NextTradingDayApi
-from .handlers.SysStaticsHandler import (
-    ServerStaticListApi, SystemStaticListApi,
-    ServerStaticApi, ProcStaticApi,
-    LoginListApi, LoginCheckApi, UserSessionListApi
-)
 from .handlers.LogHandler import LogApi
+from .handlers.OperationHandler import (OperationApi, OperationCaptchaApi,
+                                        OperationCSVApi, OperationExecuteApi,
+                                        OperationListApi, OperationLoginApi,
+                                        OperationUIApi)
+from .handlers.RoleHandler import RoleApi, RoleListApi
+from .handlers.SysStaticsHandler import (LoginCheckApi, LoginListApi,
+                                         ProcStaticApi, ServerStaticApi,
+                                         ServerStaticListApi,
+                                         SystemStaticListApi,
+                                         UserSessionListApi)
+from .handlers.SystemHandler import SystemApi, SystemListApi
+from .handlers.TradingDayHandler import NextTradingDayApi
+from .handlers.UIDataHandler import UIDataApi
+from .handlers.UserHandler import UserApi, UserListApi
+from .handlers.WebshellHandler import WebshellUIApi
 
 resources.add_resource(
     UserApi,

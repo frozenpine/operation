@@ -1,8 +1,11 @@
 # -*- coding: UTF-8 -*-
-from geventwebsocket import WebSocketError
-from msgsink import LogSinker
 import json
 import time
+
+from geventwebsocket import WebSocketError
+
+from msgsink import LogSinker
+
 
 def req_subscribe(request):
     try:

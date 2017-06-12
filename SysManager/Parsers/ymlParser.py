@@ -1,4 +1,5 @@
-from yaml import load, dump, dump_all, YAMLError
+from yaml import YAMLError, dump, dump_all, load
+
 try:
     from yaml import CLoader as Loader, CDumper as Dumper
 except ImportError:
