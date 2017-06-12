@@ -26,7 +26,7 @@ class CommandBuffer(object):
         self.skip = False
         self._tab = False
         self.filter_keyword = [
-            'stopall'
+            'stopall', 'history'
         ]
         self._interactive_commands = [
             'vim', 'vi', 'nano', 'view'

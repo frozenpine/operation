@@ -141,22 +141,27 @@ class SQLModelMixin(object):
         'metadata',
         'query',
         'filter_keyword',
-        'level'
+        'ip',
+        'user'
     ]
-    level = 0
 
     @classmethod
     def find(cls, **kwargs):
-        return cls.query.filter_by(**kwargs).first()
+        if hasattr(cls, "disabled"):
+            return cls.query.filter_by(disabled=False, **kwargs).first()
+        else:
+            return cls.query.filter_by(**kwargs).first()
 
-    def to_json(self, depth=1):
+    def to_json(self):
         results = {}
         for field in [x for x in dir(self) if not re.match(
-            r'^_|\w*p(?:ass)?w(?:or)?d|\w+_id$', x, re.I
-        ) and x not in self.filter_keyword]:
+                r'^_|\w*p(?:ass)?w(?:or)?d|\w+_id$', x, re.I
+            ) and x not in self.filter_keyword]:
             data = getattr(self, field)
             if not callable(data):
-                if isinstance(data, list) or isinstance(data, dict):
+                if isinstance(data, list):
+                    results[field] = [x.name for x in data]
+                elif isinstance(data, dict):
                     results[field] = json.dumps(data)
                 elif isinstance(data, db.Query):
                     results[field] = [x.name for x in data.all()]
@@ -173,25 +178,29 @@ class SQLModelMixin(object):
 operator_role = db.Table(
     'operator_role',
     db.Column('operator_id', db.Integer, db.ForeignKey('operators.id'), index=True),
-    db.Column('role_id',db.Integer, db.ForeignKey('roles.id'), index=True)
+    db.Column('role_id', db.Integer, db.ForeignKey('roles.id'), index=True),
+    db.Column('disabled', db.Boolean, default=False)
 )
 
 role_privilege = db.Table(
     'role_privilege',
     db.Column('role_id', db.Integer, db.ForeignKey('roles.id'), index=True),
-    db.Column('privilege_id', db.Integer, db.ForeignKey('privileges.id'), index=True)
+    db.Column('privilege_id', db.Integer, db.ForeignKey('privileges.id'), index=True),
+    db.Column('disabled', db.Boolean, default=False)
 )
 
 operator_system = db.Table(
     'operator_system',
     db.Column('operator_id', db.Integer, db.ForeignKey('operators.id'), index=True),
     db.Column('system_id', db.Integer, db.ForeignKey('trade_systems.id'), index=True),
+    db.Column('disabled', db.Boolean, default=False)
 )
 
 operator_server = db.Table(
     'operator_server',
     db.Column('operator_id', db.Integer, db.ForeignKey('operators.id'), index=True),
     db.Column('system_id', db.Integer, db.ForeignKey('servers.id'), index=True),
+    db.Column('disabled', db.Boolean, default=False)
 )
 
 class SystemDependece(db.Model):
@@ -287,9 +296,12 @@ class Operator(UserMixin, SQLModelMixin, db.Model):
     login = db.Column(db.String, unique=True, index=True)
     name = db.Column(db.String, index=True)
     password_hash = db.Column(db.String, nullable=False)
+    disabled = db.Column(db.Boolean, default=False)
     roles = db.relationship(
         'OpRole',
         secondary=operator_role,
+        primaryjoin="and_(Operator.id==operator_role.c.operator_id,"
+                    "operator_role.c.disabled==False)",
         backref=db.backref('users', lazy='dynamic'),
         lazy='dynamic'
     )
@@ -337,6 +349,8 @@ class OpRole(SQLModelMixin, db.Model):
     privileges = db.relationship(
         'OpPrivilege',
         secondary=role_privilege,
+        primaryjoin="and_(OpRole.id==role_privilege.c.role_id,"
+                    "role_privilege.c.disabled==False)",
         backref=db.backref('roles', lazy='dynamic'),
         lazy='dynamic'
     )
@@ -461,14 +475,25 @@ class TradeSystem(SQLModelMixin, db.Model):
     config_files = db.relationship('ConfigFile', backref='system', lazy='dynamic')
     vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.id'), index=True)
     parent_sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
-    parent_system = db.relationship('TradeSystem', backref='child_systems', remote_side=[id])
-    operation_groups = db.relationship(
-        'OperationGroup',
-        backref='system',
-        order_by='OperationGroup.order'
+    parent_system = db.relationship(
+        'TradeSystem', backref='child_systems', remote_side=[id]
     )
-    operations = db.relationship('Operation', backref='system', lazy='dynamic')
-    data_sources = db.relationship('DataSource', backref='system', lazy='dynamic')
+    operation_groups = db.relationship(
+        'OperationGroup', backref='system',
+        order_by='OperationGroup.order', lazy="dynamic",
+        primaryjoin="and_(OperationGroup.sys_id == TradeSystem.id,"
+                    "OperationGroup.disabled == False)"
+    )
+    operations = db.relationship(
+        'Operation', backref='system', lazy='dynamic',
+        primaryjoin="and_(Operation.sys_id == TradeSystem.id,"
+                    "Operation.disabled == False)"
+    )
+    data_sources = db.relationship(
+        'DataSource', backref='system', lazy='dynamic',
+        primaryjoin="and_(DataSource.sys_id == TradeSystem.id,"
+                    "DataSource.disabled == False)"
+    )
 
     @property
     def up_systems(self):
@@ -514,6 +539,7 @@ class DataSource(SQLModelMixin, db.Model):
     )
     src_model = db.Column(ChoiceType(DataSourceModel, impl=db.Integer()), nullable=False)
     source = db.Column(JSONType, nullable=False)
+    disabled = db.Column(db.Boolean, default=False)
 
 class SystemVendor(SQLModelMixin, db.Model):
     __tablename__ = "vendors"
@@ -582,6 +608,7 @@ class Operation(SQLModelMixin, db.Model):
     type = db.Column(ChoiceType(ScriptType, impl=db.Integer()))
     earliest = db.Column(db.String)
     latest = db.Column(db.String)
+
     @property
     def time_range(self):
         early_hour, early_minute = (None, None)
@@ -620,6 +647,7 @@ class Operation(SQLModelMixin, db.Model):
             return True
 
     detail = db.Column(JSONType, nullable=False, default={})
+
     @observes('sys_id')
     def remoteConfigObserver(self, sys_id):
         sys = TradeSystem.find(id=sys_id)
@@ -634,6 +662,7 @@ class Operation(SQLModelMixin, db.Model):
     order = db.Column(db.Integer)
     op_group_id = db.Column(db.Integer, db.ForeignKey('operation_groups.id'))
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
+    disabled = db.Column(db.Boolean, default=False)
     records = db.relationship(
         'OperateRecord',
         backref='operation',
@@ -648,7 +677,12 @@ class OperationGroup(SQLModelMixin, db.Model):
     description = db.Column(db.String)
     order = db.Column(db.Integer)
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
-    operations = db.relationship('Operation', backref='group', order_by='Operation.order')
+    disabled = db.Column(db.Boolean, default=False)
+    operations = db.relationship(
+        'Operation', backref='group', order_by='Operation.order',
+        primaryjoin="and_(Operation.op_group_id==OperationGroup.id,"
+                    "Operation.disabled==False)"
+    )
 
 class OperateResult(SQLModelMixin, db.Model):
     __tablename__ = 'operate_results'

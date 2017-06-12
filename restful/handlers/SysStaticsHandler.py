@@ -445,7 +445,8 @@ class UserSessionListApi(Resource):
             src = DataSource.query.filter(
                 DataSource.src_type == DataSourceType.SQL,
                 DataSource.src_model == DataSourceModel.Session,
-                DataSource.sys_id == sys.id
+                DataSource.sys_id == sys.id,
+                DataSource.disabled == False
             ).first()
             if src:
                 try:

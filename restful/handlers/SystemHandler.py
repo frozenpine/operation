@@ -1,11 +1,12 @@
 # -*- coding: UTF-8 -*-
 import json
+import re
 
 from flask_restful import Resource, request
 from werkzeug.exceptions import BadRequest
 
 from app import db
-from app.models import TradeSystem
+from app.models import DataSource, DataSourceType, Operation, TradeSystem
 
 
 class SystemApi(Resource):
@@ -33,22 +34,35 @@ class SystemApi(Resource):
                 sys.ip = data.get('ip', sys.ip)
                 sys.description = data.get('description', sys.description)
                 sys.version = data.get('version', sys.version)
-                for op in sys.operations:
+                for op in Operation.query.filter(
+                        Operation.sys_id == sys.id
+                    ):
                     details = json.loads(json.dumps(op.detail))
                     params = details['remote']['params']
                     params['ip'] = sys.ip
                     params['user'] = sys.user
-                    params['password'] = sys.password
+                    params['password'] = sys.login_pwd
                     op.detail = details
-                db.session.add_all(sys.operations)
+                    db.session.add(op)
+                for ds in DataSource.query.filter(
+                        DataSource.src_type == DataSourceType.FILE
+                    ):
+                    source = json.loads(json.dumps(ds.source))
+                    source['uri'] = re.sub(
+                        '^(?P<header>[^:]+)://([^:]+):([^@]+)@([^:]+):(?P<tailer>.+)$',
+                        lambda matchs: matchs.group('header') + \
+                            "://" + sys.user + ":" + sys.login_pwd + \
+                            "@" + sys.ip + ":" + matchs.group('tailer'),
+                        source['uri']
+                    )
+                    ds.source = source
+                    db.session.add(ds)
                 db.session.add(sys)
                 db.session.commit()
-                '''
                 return {
                     'message': 'system ({}) updated successfully.'.format(sys.name),
                     'data': sys.to_json()
                 }, 200
-                '''
         else:
             return {'message': 'system not found'}, 404
 
