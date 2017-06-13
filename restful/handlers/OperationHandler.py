@@ -294,28 +294,29 @@ class OperationLoginApi(Resource):
                 cookies = session[key]['origin']
             else:
                 cookies = None
-            rsp = requests.post(
-                'http://{}:{}/{}'.format(
-                    params.get('ip'),
-                    params.get('port') or '8080',
-                    params.get('login_uri').lstrip('/')
-                ),
-                data=request.form,
-                cookies=cookies
-            )
-            if rsp.ok:
-                rtn = rsp.json()
+            try:
+                rsp = requests.post(
+                    'http://{}:{}/{}'.format(
+                        params.get('ip'),
+                        params.get('port') or '8080',
+                        params.get('login_uri').lstrip('/')
+                    ),
+                    data=request.form,
+                    cookies=cookies
+                )
+                result = _handlerJsonResponse(rsp)
+            except ApiError, err:
+                return {
+                    'errorCode': err.status_code,
+                    'errorMsg': err.message
+                }   # 模拟HTTP接口的返回数据，用于前端UI模块正确显示数据。
+            else:
                 session[key] = {
                     'origin': rsp.cookies.get_dict(),
                     'timeout': arrow.utcnow().shift(minutes=+30).timestamp,
-                    'login': rtn['errorCode'] == 0
+                    'login': result['errorCode'] == 0
                 }
-                return rtn
-            else:
-                rtn = {}
-                rtn['errorCode'] = rsp.status_code
-                rtn['errorMsg'] = rsp.reason
-                return rtn
+                return result
         else:
             return {
                 'message': 'operation not found.'

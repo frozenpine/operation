@@ -25,7 +25,7 @@ class UIDataApi(Resource):
                 'icon': 'am-icon-table',
                 'name': sys.name,
                 'desc': sys.description,
-                'isSecond': len(sys.operation_groups) > 0,
+                'isSecond': len(sys.operation_groups.all()) > 0,
                 'isShow': False,
                 'Url': '#statics/{}'.format(sys.id),
                 'secondName': [
