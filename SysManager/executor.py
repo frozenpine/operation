@@ -9,6 +9,9 @@ import winrm
 from paramiko import (AutoAddPolicy, PasswordRequiredException, RSAKey,
                       SSHClient)
 from paramiko.ssh_exception import NoValidConnectionsError
+from winrm import Response
+from winrm.exceptions import (WinRMError, WinRMOperationTimeoutError,
+                              WinRMTransportError)
 
 from configs import HttpConfig, RemoteConfig, Result, SSHConfig, WinRmConfig
 from excepts import ImportRSAkeyFaild, ModuleNotFound
@@ -30,15 +33,54 @@ class Executor():
             return HttpExecutor(remote_config, parser, session)
 
     def run(self, module):
-        pass
+        import_mod = 'import Libs.{} as mod'.format(module.get('name'))
+        try:
+            exec import_mod
+        except ImportError:
+            raise ModuleNotFound(module.get('name'))
+        if not self.parser:
+            import_parser = 'from Parsers.{0}Parser import {0}Parser as par'\
+                .format(module.get('name'))
+            try:
+                exec import_parser
+            except ImportError:
+                logging.info("Trying import with({}) failed.".format(import_parser))
+            else:
+                self.parser = par
+        stdout, stderr = mod.run(client=self.client, module=module)
+        self.result = Result()
+        self.result.destination = self.remote_config.remote_host
+        self.result.return_code = stdout.channel.recv_exit_status()
+        self.result.module = module
+        if self.result.return_code == 0:
+            self.result.lines = [line for line in stdout.readlines()]
+            if self.parser:
+                self.result.data = self.parser(self.result.lines).format2json()
+                self.parser = None
+        else:
+            self.result.lines = [line for line in stderr.readlines()]
+        return self.result
 
 class WinRmExecutor(Executor):
     def __init__(self, remote_config, parser=None):
         Executor.__init__(self, remote_config, parser)
-        self.client = winrm.Session(
-            remote_config.remote_host,
-            (remote_config.remote_user, remote_config.remote_password)
-        )
+        self.client = self._connect(remote_config)
+        self.parser = parser
+        self.result = None
+
+    def _connect(self, remote_config):
+        if remote_config.encryption:
+            return winrm.Session(
+                ':'.join([remote_config.remote_host, str(remote_config.remote_port)]),
+                auth=(remote_config.remote_user, remote_config.remote_password),
+                transport='ssl',
+                server_cert_validation='ignore'
+            )
+        else:
+            return winrm.Session(
+                ':'.join([remote_config.remote_host, str(remote_config.remote_port)]),
+                auth=(remote_config.remote_user, remote_config.remote_password)
+            )
 
 class SSHExecutor(Executor):
     def __init__(self, remote_config, parser=None):
@@ -87,35 +129,6 @@ class SSHExecutor(Executor):
             password=ssh_config.remote_password
         )
 
-    def run(self, module):
-        import_mod = 'import Libs.{} as mod'.format(module.get('name'))
-        try:
-            exec import_mod
-        except ImportError:
-            raise ModuleNotFound(module.get('name'))
-        if not self.parser:
-            import_parser = 'from Parsers.{0}Parser import {0}Parser as par'\
-                .format(module.get('name'))
-            try:
-                exec import_parser
-            except ImportError:
-                logging.info("Trying import with({}) failed.".format(import_parser))
-            else:
-                self.parser = par
-        stdin, stdout, stderr = mod.run(client=self.client, module=module)
-        self.result = Result()
-        self.result.destination = self.remote_config.remote_host
-        self.result.return_code = stdout.channel.recv_exit_status()
-        self.result.module = module
-        if self.result.return_code == 0:
-            self.result.lines = [line.rstrip('\r\n') for line in stdout.readlines()]
-            if self.parser:
-                self.result.data = self.parser(self.result.lines).format2json()
-                self.parser = None
-        else:
-            self.result.lines = [line.rstrip('\r\n') for line in stderr.readlines()]
-        return self.result
-
 class HttpExecutor(Executor):
     def __init__(self, remote_config, parser=None, session=None):
         Executor.__init__(self, remote_config, parser)
@@ -126,85 +139,17 @@ class HttpExecutor(Executor):
         pass
 
 if __name__ == '__main__':
-    rtn = []
     result = {}
-    '''
-    conf = SSHConfig('192.168.92.26', 'root', 'Quantdo@SH2016!')
-    modlist = [
-            {'name': 'uptime'},
-            {'name': 'mpstat'},
-            {'name': 'df'},
-            {'name': 'free'}
-    ]
-    resultlist = []
-    executor = Executor.Create(conf)
-    for mod in modlist:
-        resultlist.append(executor.run(mod))
-    result['server'] = conf.remote_host
-    result['uptime'] = resultlist[0].data
-    result['cpu'] = resultlist[1].data
-    result['disks'] = resultlist[2].data
-    result['memory'] = resultlist[3].data['mem']
-    result['swap'] = resultlist[3].data['swap']
-    conf = SSHConfig('192.168.101.100', 'qdam', 'qdam')
-    executor = Executor.Create(conf)
-    result = executor.run(
-        {
-            'name': 'quantdoLogin',
-            'quantdoLogin': '/home/qdam/qtrade/bin/Syslog.log'
-        }
-    )
-    for (k, v) in result.data.iteritems():
-        data = {
-            'seat_id': k,
-            'seat_status': u"",
-            'conn_count': 0,
-            'login_success': 0,
-            'login_fail': 0,
-            'disconn_count': 0
-        }
-        for each in v:
-            print type(each.get('message'))
-            print each.get('message')
-            if each.get('message').find('连接成功') >= 0:
-                data['seat_status'] = u'连接成功'
-                data['conn_count'] += 1
-            elif each['message'].find('登录成功') >= 0:
-                data['seat_status'] = u'登录成功'
-                data['login_success'] += 1
-            elif each['message'].find('登录失败') >= 0:
-                data['seat_status'] = u'登录失败'
-                data['login_fail'] += 1
-            elif each['message'].find('断开') >= 0:
-                data['seat_status'] = u'连接断开'
-                data['disconn_count'] += 1
-            else:
-                data['seat_status'] = u'未连接'
-        rtn.append(data)
-    print rtn
-    conf = SSHConfig('192.168.101.102', 'quantdo', 'quantdo')
-    mod = {
-        'name': 'shell',
-        'shell': """
-            grep ".CaptchaController \[" catalina.out | tail -1 | awk '{print $9}'
-        """,
-        'args': {
-            'chdir': 'apache-tomcat*/logs'
-        }
-    }
-    result = Executor.Create(conf).run(mod)
-    for line in result.lines:
-        print line
-    '''
-    conf = SSHConfig('192.168.101.126', 'qdam', 'qdam')
+    conf = WinRmConfig('192.168.56.2', 'administrator', '022010blue@safe')
     exe = Executor.Create(conf)
     mod = {
-        'name': 'netstat'
+        'name': 'ps_grep',
+        'grep': 'c:\\mapSyslog.log',
+        'args': {
+            'pattern': 'OnConnected|OnRspUserLogin',
+            'reverse_match': True
+        }
     }
     result = exe.run(mod)
     for line in result.lines:
         print line
-    for state, details in result.data.iteritems():
-        print state
-        for dtl in details:
-            print dtl

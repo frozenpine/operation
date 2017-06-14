@@ -15,11 +15,17 @@ def run(client, module):
         else:
             pattern = ' -E "{}"'.format(pattern)
         ignoreCase = args.get('ignore_case')
-        if ignoreCase and re.match(r'[y|Y](es)?|[T|t]rue', ignoreCase):
-            param += " -i"
+        if ignoreCase:
+            if (isinstance(ignoreCase, str) and
+                    re.match(r'[y|Y](es)?|[T|t]rue', ignoreCase)) or \
+                (isinstance(ignoreCase, bool) and ignoreCase):
+                param += " -i"
         revers = args.get('reverse_match')
-        if revers and re.match(r'[y|Y](es)?|[T|t]rue', revers):
-            param += " -v"
+        if revers:
+            if (isinstance(revers, str) and
+                    re.match(r'[y|Y](es)?|[T|t]rue', revers)) or \
+                (isinstance(revers, bool) and revers):
+                param += " -v"
         mod = {
             'shell': 'grep{0} {1} {2}'.format(param, pattern, dest)
         }

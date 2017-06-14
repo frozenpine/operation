@@ -64,8 +64,9 @@ class SSHConfig(RemoteConfig):
         RemoteConfig.__init__(self, ip, user, password, port)
 
 class WinRmConfig(RemoteConfig):
-    def __init__(self, ip, user, password, port=5986):
+    def __init__(self, ip, user, password, encryption=True, port=5986):
         RemoteConfig.__init__(self, ip, user, password, port)
+        self.encryption = encryption
 
 class HttpConfig(RemoteConfig):
     def __init__(self, ip, user=None, password=None, port=8080, **kwargs):

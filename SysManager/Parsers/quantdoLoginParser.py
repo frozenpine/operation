@@ -10,7 +10,7 @@ class quantdoLoginParser(OutputParser):
             self,
             output_lines=output_lines,
             re_str=
-            r'^(.+us) .+EXID:([^,]+),SeatID:([^,]+),.+Main:\d+:(.+)$',
+            r'^(.+us) .+EXID:([^,]+),SeatID:([^,]*),.+Main:\d+:(.+)$',
             key_list=[
                 'timestamp', 'exid', 'seatid', 'message'
             ],

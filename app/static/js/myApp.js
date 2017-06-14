@@ -120,14 +120,25 @@ app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
                 console.log(response);
             });
     };
+    $scope.autoRefresh = function(auto) {
+        if (auto) {
+            $scope.svrStaticInterval = $interval(function() { $scope.checkSvrStatics(); }, 60000);
+            scope.checkSvrStatics();
+            globalVar.intervals.push($scope.svrStaticInterval);
+        } else {
+            $interval.cancel($scope.svrStaticInterval);
+        }
+    };
 
     $http.get('api/system/id/' + $routeParams.sysid + '/svr_statics')
         .success(function(response) {
             if ($routeParams.hasOwnProperty('sysid') && response.sys_id == $routeParams.sysid) {
                 $scope.serverStatics = response.details;
                 $scope.checkSvrStatics();
-                var svrStaticInterval = $interval(function() { $scope.checkSvrStatics(); }, 60000);
-                globalVar.intervals.push(svrStaticInterval);
+                /*
+                $scope.svrStaticInterval = $interval(function() { $scope.checkSvrStatics(); }, 60000);
+                globalVar.intervals.push($scope.svrStaticInterval);
+                */
             }
         })
         .error(function(response) {
@@ -142,17 +153,26 @@ app.controller('sysStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
         angular.forEach($scope.systemStatics, function(value1, index1) {
             angular.forEach(value1.detail, function(value2, index2) {
                 $scope.systemStatics[index1].detail[index2].status.stat = "checking...";
-                $http.get('api/system/id/' + $routeParams.sysid + '/sys_statics/check')
-                    .success(function(response) {
-                        $scope.systemStatics = response;
-                        $scope.checking = false;
-                    })
-                    .error(function(response) {
-                        console.log(response);
-                        $scope.checking = false;
-                    });
             });
         });
+        $http.get('api/system/id/' + $routeParams.sysid + '/sys_statics/check')
+            .success(function(response) {
+                $scope.systemStatics = response;
+                $scope.checking = false;
+            })
+            .error(function(response) {
+                console.log(response);
+                $scope.checking = false;
+            });
+    };
+    $scope.autoRefresh = function(auto) {
+        if (auto) {
+            $scope.sysStaticInterval = $interval(function() { $scope.checkProc(); }, 30000);
+            $scope.checkProc();
+            globalVar.intervals.push($scope.sysStaticInterval);
+        } else {
+            $interval.cancel($scope.sysStaticInterval);
+        }
     };
 
     $http.get('api/system/id/' + $routeParams.sysid + '/sys_statics')
@@ -160,8 +180,10 @@ app.controller('sysStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
             if ($routeParams.hasOwnProperty('sysid')) {
                 $scope.systemStatics = response;
                 $scope.checkProc();
-                var sysStaticInterval = $interval(function() { $scope.checkProc(); }, 30000);
-                globalVar.intervals.push(sysStaticInterval);
+                /*
+                $scope.sysStaticInterval = $interval(function() { $scope.checkProc(); }, 30000);
+                globalVar.intervals.push($scope.sysStaticInterval);
+                */
             }
         })
         .error(function(response) {
@@ -461,6 +483,15 @@ app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootSco
                 $scope.checking = false;
             });
     };
+    $scope.autoRefresh = function(auto) {
+        if (auto) {
+            $scope.loginStaticInterval = $interval(function() { $scope.CheckLoginLog(); }, 30000);
+            $scope.CheckLoginLog();
+            globalVar.intervals.push($scope.loginStaticInterval);
+        } else {
+            $interval.cancel($scope.loginStaticInterval);
+        }
+    };
 
     $http.get('api/system/id/' + $routeParams.sysid + '/login_statics')
         .success(function(response) {
@@ -468,8 +499,10 @@ app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootSco
             $rootScope.LoginStatics[$routeParams.sysid] = response;
             $scope.loginStatics = $rootScope.LoginStatics[$routeParams.sysid];
             $scope.CheckLoginLog();
-            var loginStaticInterval = $interval(function() { $scope.CheckLoginLog(); }, 30000);
-            globalVar.intervals.push(loginStaticInterval);
+            /*
+            $scope.loginStaticInterval = $interval(function() { $scope.CheckLoginLog(); }, 30000);
+            globalVar.intervals.push($scope.loginStaticInterval);
+            */
         })
         .error(function(response) {
             console.log(response);

@@ -3,6 +3,7 @@ import json
 import logging
 import re
 import threading
+import arrow
 
 from flask import abort, current_app
 from flask_restful import Resource
@@ -12,7 +13,7 @@ from sqlalchemy.sql import text
 from app.models import (DataSource, DataSourceModel, DataSourceType, Server,
                         TradeProcess, TradeSystem)
 from SysManager.Common import AESCrypto
-from SysManager.configs import SSHConfig
+from SysManager.configs import SSHConfig, WinRmConfig
 from SysManager.executor import Executor
 
 
@@ -45,6 +46,7 @@ class ServerList(object):
                 self.rtn['details'].append({
                     'id': svr.id,
                     'server': svr.ip,
+                    'updated_time': arrow.now().format('HH:mm:ss'),
                     'uptime': svr.status.get('uptime'),
                     'cpu': svr.status.get('cpu'),
                     'disks': svr.status.get('disks'),
@@ -55,6 +57,7 @@ class ServerList(object):
                 self.rtn['details'].append({
                     'id': svr.id,
                     'server': svr.ip,
+                    'updated_time': arrow.now().format('HH:mm:ss'),
                     'uptime': None,
                     'cpu': None,
                     'disks': None,
@@ -145,6 +148,7 @@ class SystemList(object):
                 self.rtn.append(
                     {
                         'name': each_sys.name,
+                        'updated_time': arrow.now().format('HH:mm:ss'),
                         'detail': [{
                             'id': proc.id,
                             'process': proc.name,
@@ -171,6 +175,7 @@ class SystemList(object):
                 self.rtn.append(
                     {
                         'name': each_sys.name,
+                        'updated_time': arrow.now().format('HH:mm:ss'),
                         'detail': [{
                             'id': proc.id,
                             'process': proc.name,
@@ -315,6 +320,7 @@ class LoginListApi(Resource):
                             except IndexError:
                                 tmp[src.source['formatter'][idx]['key']] = \
                                     src.source['formatter'][idx]['default']
+                            tmp['updated_time'] = arrow.now().format('HH:mm:ss')
                         rtn.append(tmp)
                     sys_db.close()
                     return rtn
@@ -338,7 +344,8 @@ class LoginCheckApi(Resource):
         log_srcs = DataSource.query.filter(
             DataSource.src_type == DataSourceType.FILE,
             DataSource.src_model == DataSourceModel.Seat,
-            DataSource.sys_id == sys.id
+            DataSource.sys_id == sys.id,
+            DataSource.disabled == False
         ).all()
         for src in log_srcs:
             if current_app.config['GLOBAL_ENCRYPT']:
@@ -353,10 +360,15 @@ class LoginCheckApi(Resource):
             svr = uri[0].rstrip('/')
             log = uri[1]
             if not self.syslog_list.has_key(svr):
-                self.syslog_list[svr] = []
-            self.syslog_list[svr].append(log)
+                self.syslog_list[svr] = {
+                    'formatter': src.source['formatter'],
+                    'msg_pattern': src.source['pattern'],
+                    'key_words': src.source['key_words'],
+                    'logs': []
+                }
+            self.syslog_list[svr]['logs'].append(log)
 
-    def check_log(self, svr, logs):
+    def check_log(self, svr, datas):
         reg = re.compile(
             r'^(?P<method>[^:]+)://(?P<user>[^:]+):(?P<pass>[^@]+)@(?P<ip>[^:]+):(?P<port>\d+)$'
         )
@@ -369,36 +381,36 @@ class LoginCheckApi(Resource):
                 port=int(pars['port'])
             )
         else:
-            conf = SSHConfig(
+            conf = WinRmConfig(
                 ip=pars['ip'],
                 user=pars['user'],
                 password=pars['pass'],
                 port=int(pars['port'])
             )
         executor = Executor.Create(conf)
-        for log in logs:
-            mod = {
-                'name': 'quantdoLogin',
-                'quantdoLogin': log
-            }
+        for log in datas['logs']:
+            logfile, module = log.split('?')
+            mod = {}
+            mod['name'] = module
+            mod[module] = logfile.rstrip('/')
             result = executor.run(mod)
-            for (k, v) in result.data.iteritems():
-                pattern = re.compile(
-                    r'.+TradeDate=\[(?P<trade_date>[^]]+)\]\s+TradeTime=\[(?P<trade_time>[^]]+)\]'
-                )
-                data = {
-                    'seat_id': k,
-                    'seat_status': u"",
-                    'conn_count': 0,
-                    'login_success': 0,
-                    'login_fail': 0,
-                    'disconn_count': 0
-                }
+            for k, v in result.data.iteritems():
+                pattern = re.compile(datas['msg_pattern'])
+                data = {}
+                for idx in xrange(len(datas['formatter'])):
+                    data[datas['formatter'][idx]['key']] = \
+                        datas['formatter'][idx]['default']
+                data['seat_id'] = k
+                data['updated_time'] = arrow.now().format('HH:mm:ss')
                 for each in v:
-                    if each.get('message').find('连接成功') >= 0:
+                    try:
+                        message = each.get('message').decode('utf-8')
+                    except UnicodeDecodeError:
+                        message = each.get('mesage').decode('gbk')
+                    if datas['key_words']['conn'] in message:
                         data['seat_status'] = u'连接成功'
                         data['conn_count'] += 1
-                    elif each.get('message').find('登录成功') >= 0:
+                    elif datas['key_words']['login'] in message:
                         try:
                             pars_message = pattern.match(each.get('message'))\
                                 .groupdict()
@@ -409,10 +421,10 @@ class LoginCheckApi(Resource):
                             data['login_time'] = pars_message.get('trade_time')
                         data['seat_status'] = u'登录成功'
                         data['login_success'] += 1
-                    elif each.get('message').find('登录失败') >= 0:
+                    elif datas['key_words']['logout'] in message:
                         data['seat_status'] = u'登录失败'
                         data['login_fail'] += 1
-                    elif each.get('message').find('断开') >= 0:
+                    elif datas['key_words']['disconn'] in message:
                         data['seat_status'] = u'连接断开'
                         data['disconn_count'] += 1
                     else:
