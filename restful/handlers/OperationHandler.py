@@ -70,8 +70,7 @@ class OperationListApi(Resource):
                         'lower': unicode(lower or 'anytime'),
                         'upper': unicode(upper or 'anytime')
                     },
-                    'need_authorized': op.operate_define.detail.has_key('need_authorized') and \
-                        op.operate_define.detail['need_authorized'],
+                    'need_authorized': op.need_authorization,
                     'skip': skip
                 }
                 if record:
@@ -132,8 +131,7 @@ class OperationApi(Resource):
             'lower': unicode(lower or 'anytime'),
             'upper': unicode(upper or 'anytime')
         }
-        self.rtn['need_authorized'] = operation.operate_define.detail\
-            .has_key('need_authorized') and operation.operate_define.detail['need_authorized']
+        self.rtn['need_authorized'] = operation.need_authorization
         params = operation.operate_define.detail['remote']['params']
         conf = RemoteConfig.Create(operation.operate_define.detail['remote']['name'], params)
         key = '{}:{}'.format(

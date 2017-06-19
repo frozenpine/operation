@@ -27,8 +27,6 @@
             <div class="am-modal-bd am-vertical-align">
                 <form class="am-center am-vertical-align-middle am-form" style="width: 400px">
                     <fieldset>
-                        <input type="hidden" name="user_id" value="[[user_id]]" />
-                        <input type="hidden" name="user_login" value="[[user_login]]" />
                         <div class="am-input-group" style="padding: 3px">
                             <span class="am-input-group-label"><i class="am-icon-lock am-icon-fw"></i></span>
                             <input id="oldPwd" type="password" class="am-form-field" placeholder=" 原始密码" required/>
@@ -130,7 +128,7 @@
                             </a>
                         </li>
                         <li>
-                            <a ng-click="ModifyPassword()">
+                            <a ng-click="ModifyPassword([[user_id]])">
                                 <i class="am-icon-cog  am-icon-fw"></i>
                                 <span style="margin-left: 3px">修改密码</span>
                             </a>

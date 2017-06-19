@@ -1,12 +1,15 @@
 # -*- coding: UTF-8 -*-
 from . import resources
 from .handlers.DeviceHandler import DeviceApi, DeviceListApi
+from .handlers.EmergeOpHandler import (EmergeOpApi, EmergeOpCaptchaApi,
+                                       EmergeOpCSVApi, EmergeOpExecuteApi,
+                                       EmergeOpListApi, EmergeOpLoginApi,
+                                       EmergeOpUIApi)
 from .handlers.LogHandler import LogApi
 from .handlers.OperationHandler import (OperationApi, OperationCaptchaApi,
                                         OperationCSVApi, OperationExecuteApi,
                                         OperationListApi, OperationLoginApi,
                                         OperationUIApi)
-from .handlers.EmergeOpHandler import EmergeOpListApi, EmergeOpApi
 from .handlers.RoleHandler import RoleApi, RoleListApi
 from .handlers.SysStaticsHandler import (LoginCheckApi, LoginListApi,
                                          ProcStaticApi, ServerStaticApi,
@@ -139,6 +142,41 @@ resources.add_resource(
     '/emerge_ops/id/<int:id>',
     methods=['POST'],
     endpoint='emerge_op'
+)
+
+resources.add_resource(
+    EmergeOpUIApi,
+    '/emerge_ops/id/<int:id>/ui',
+    methods=['GET'],
+    endpoint='emergeop_ui'
+)
+
+resources.add_resource(
+    EmergeOpCaptchaApi,
+    '/emerge_ops/id/<int:id>/captcha',
+    methods=['GET'],
+    endpoint='emergeop_captcha'
+)
+
+resources.add_resource(
+    EmergeOpLoginApi,
+    '/emerge_ops/id/<int:id>/login',
+    methods=['POST'],
+    endpoint='emergeop_login'
+)
+
+resources.add_resource(
+    EmergeOpExecuteApi,
+    '/emerge_ops/id/<int:id>/execute',
+    methods=['POST'],
+    endpoint='emergeop_execute'
+)
+
+resources.add_resource(
+    EmergeOpCSVApi,
+    '/emerge_ops/id/<int:id>/csv',
+    methods=['POST'],
+    endpoint='emergeop_csv'
 )
 
 resources.add_resource(

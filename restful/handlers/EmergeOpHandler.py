@@ -27,10 +27,16 @@ class  EmergeOpListApi(Resource):
     def __init__(self):
         super(EmergeOpListApi, self).__init__()
         self.emerge_groups = {}
+        self.system_list = []
 
-    def find_operations(self, sys):
+    def find_systems(self, sys):
+        self.system_list.append(sys.id)
+        for child_sys in sys.child_systems:
+            self.find_systems(child_sys)
+
+    def find_operations(self):
         emerge_ops = OperationBook.query.filter(
-            OperationBook.sys_id == sys.id,
+            OperationBook.sys_id.in_((self.system_list)),
             OperationBook.is_emergecy == True
         ).order_by(OperationBook.order).all()
         for op in emerge_ops:
@@ -68,7 +74,8 @@ class  EmergeOpListApi(Resource):
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
         if sys:
-            self.find_operations(sys)
+            self.find_systems(sys)
+            self.find_operations()
             return [
                 self.emerge_groups[key] for key in sorted(
                     self.emerge_groups.keys(), key=lambda key: key.order
@@ -89,7 +96,7 @@ class EmergeOpApi(Resource):
         self.executor = None
 
     def ExecutionPrepare(self, emerge_op):
-        self.op_record.operation_id = emerge_op.id
+        self.op_record.emergeop_id = emerge_op.id
         self.op_record.operator_id = current_user.id
         self.op_record.operated_at = arrow.now()
         db.session.add(self.op_record)
@@ -131,6 +138,291 @@ class EmergeOpApi(Resource):
                 self.rtn['err_code'] = self.op_result.error_code
                 self.rtn['output_lines'] = self.op_result.detail
                 return self.rtn
+        else:
+            return {
+                'message': 'operation not found.'
+            }, 404
+
+class EmergeOpUIApi(Resource):
+    def get(self, id):
+        op = OperationBook.find(id=id)
+        if op:
+            params = op.detail['remote']['params']
+            key = '{}:{}'.format(
+                params.get('ip'),
+                params.get('port', '8080')
+            )
+            if session.has_key(key):
+                if arrow.utcnow().timestamp >= \
+                    arrow.get(session[key].get('timeout')).timestamp:
+                    session.pop(key)
+                    valid_session = False
+                else:
+                    valid_session = session[key]['login']
+            else:
+                valid_session = False
+            if current_app.config['GLOBAL_ENCRYPT']:
+                return render_template(
+                    'Interactivators/{}.html'.format(op.detail['mod']['name']),
+                    session=valid_session,
+                    login_user=op.detail['remote']['params']['user'],
+                    login_password=AESCrypto.decrypt(
+                        op.detail['remote']['params']['password'],
+                        current_app.config['SECRET_KEY']
+                    ),
+                    captcha=op.detail['remote']['params'].get('captcha', False),
+                    captcha_uri=url_for('api.emergeop_captcha', id=op.id),
+                    login_uri=url_for('api.emergeop_login', id=op.id),
+                    execute_uri=url_for('api.emergeop_execute', id=op.id),
+                    csv_uri=url_for('api.emergeop_csv', id=op.id)
+                )
+            else:
+                return render_template(
+                    'Interactivators/{}.html'.format(op.detail['mod']['name']),
+                    session=valid_session,
+                    login_user=op.detail['remote']['params']['user'],
+                    login_password=op.detail['remote']['params']['password'],
+                    captcha=op.detail['remote']['params'].get('captcha', False),
+                    captcha_uri=url_for('api.emergeop_captcha', id=op.id),
+                    login_uri=url_for('api.emergeop_login', id=op.id),
+                    execute_uri=url_for('api.emergeop_execute', id=op.id),
+                    csv_uri=url_for('api.emergeop_csv', id=op.id)
+                )
+        else:
+            return "<h1>no ui template found</h1>"
+
+class EmergeOpCaptchaApi(Resource):
+    def get(self, id):
+        op = OperationBook.find(id=id)
+        if op:
+            params = op.detail['remote']['params']
+            rsp = requests.get(
+                'http://{}:{}/{}'.format(
+                    params.get('ip'),
+                    params.get('port', '8080'),
+                    params.get('captcha_uri').lstrip('/')
+                )
+            )
+            key = '{}:{}'.format(
+                params.get('ip'),
+                params.get('port', '8080')
+            )
+            session[key] = {
+                'origin': rsp.cookies.get_dict(),
+                'timeout': arrow.utcnow().shift(minutes=+30).timestamp,
+                'login': False
+            }
+            rtn = make_response(rsp.content)
+            return rtn
+        else:
+            return {
+                'message': 'operation not found.'
+            }, 404
+
+class EmergeOpLoginApi(Resource):
+    def post(self, id):
+        op = OperationBook.find(id=id)
+        if op:
+            params = op.detail['remote']['params']
+            key = '{}:{}'.format(params.get('ip'), params.get('port', '8080'))
+            if session.has_key(key):
+                cookies = session[key]['origin']
+            else:
+                cookies = None
+            try:
+                rsp = requests.post(
+                    'http://{}:{}/{}'.format(
+                        params.get('ip'),
+                        params.get('port') or '8080',
+                        params.get('login_uri').lstrip('/')
+                    ),
+                    data=request.form,
+                    cookies=cookies
+                )
+                result = _handlerJsonResponse(rsp)
+            except ApiError, err:
+                return {
+                    'errorCode': err.status_code,
+                    'errorMsg': err.message
+                }   # 模拟HTTP接口的返回数据，用于前端UI模块正确显示数据。
+            else:
+                session[key] = {
+                    'origin': rsp.cookies.get_dict(),
+                    'timeout': arrow.utcnow().shift(minutes=+30).timestamp,
+                    'login': result['errorCode'] == 0
+                }
+                return result
+        else:
+            return {
+                'message': 'operation not found.'
+            }, 404
+
+class EmergeOpExecuteApi(EmergeOpListApi):
+    def post(self, id):
+        op = OperationBook.find(id=id)
+        if op:
+            self.ExecutionPrepare(op)
+            params = op.detail['remote']['params']
+            key = '{}:{}'.format(params.get('ip'), params.get('port', '8080'))
+            if session.has_key(key):
+                self.session = session[key]['origin']
+            try:
+                if not op.InTimeRange():
+                    raise ExecuteTimeOutOfRange(op.time_range)
+                module = op.detail['mod']['request']
+                if isinstance(module, dict):
+                    rsp = getattr(requests, module['method'])(
+                        'http://{}:{}/{}'.format(
+                            params.get('ip'),
+                            params.get('port', 8080),
+                            module['uri'].lstrip('/')
+                        ),
+                        data=request.form,
+                        cookies=self.session
+                    )
+                    result = _handlerJsonResponse(rsp)
+                elif isinstance(module, list):
+                    for mod in module:
+                        if mod.has_key('params'):
+                            data = mod['params']
+                        else:
+                            data = request.form
+                        rsp = getattr(requests, mod['method'])(
+                            'http://{}:{}/{}'.format(
+                                params.get('ip'),
+                                params.get('port', 8080),
+                                mod['uri'].lstrip('/')
+                            ),
+                            data=data,
+                            cookies=self.session
+                        )
+                        result = _handlerJsonResponse(rsp)
+                        if result['errorCode'] != 0:
+                            break
+            except ApiError, err:
+                self.op_result.error_code = err.status_code
+                self.op_result.detail = [err.message]
+                if op.detail.get('skip'):
+                    self.rtn['skip'] = True
+            else:
+                if result['errorCode'] != 0:
+                    self.op_result.error_code = 10
+                else:
+                    self.op_result.error_code = 0
+                self.op_result.detail = _format2json(result['data'])
+            finally:
+                db.session.add(self.op_result)
+                db.session.commit()
+                self.rtn['err_code'] = self.op_result.error_code
+                self.rtn['output_lines'] = self.op_result.detail
+                self.rtn['re_enter'] = (
+                    op.type.IsChecker() and \
+                        not op.type.IsBatcher()
+                ) or CheckPrivilege(
+                    current_user,
+                    '/api/operation/id/',
+                    MethodType.ReExecute
+                )
+                return self.rtn
+        else:
+            return {
+                'message': 'operation not found.'
+            }, 404
+
+def _handlerJsonResponse(response):
+    if response.ok:
+        try:
+            rsp_json = response.json()
+        except:
+            raise InvalidParams
+        else:
+            if rsp_json['errorCode'] != 0:
+                raise ProxyExecuteError(rsp_json['errorMsg'])
+            else:
+                return rsp_json
+    else:
+        raise ApiError('request failed.')
+
+def _format2json(data):
+    formater = u'{0:0>2d}. {1[name]:15}{1[flag]:3}'
+    rtn = []
+    if data:
+        i = 0
+        js_data = json.loads(data)
+        if isinstance(js_data, list):
+            for each in json.loads(data):
+                i += 1
+                rtn.append(formater.format(i, each))
+        else:
+            rtn.append(data)
+    return rtn
+
+class EmergeOpCSVApi(EmergeOpListApi):
+    def post(self, id):
+        op = OperationBook.find(id=id)
+        if op:
+            self.ExecutionPrepare(op)
+            params = op.detail['remote']['params']
+            key = '{}:{}'.format(params.get('ip'), params.get('port', '8080'))
+            if session.has_key(key):
+                self.session = session[key]['origin']
+            file = request.files['market_csv']
+            if file:
+                file_path = path.join(current_app.config['UPLOAD_DIR'], 'csv', file.filename)
+                file.save(file_path)
+                try:
+                    if not op.InTimeRange():
+                        raise Exception(
+                            'execution time out of range[{range[0]} ~ {range[1]}].'.format(
+                                range=op.time_range
+                            )
+                        )
+                    file_list = [
+                        ('file', (
+                            'marketDataCSV.csv',
+                            open(file_path, 'rb'),
+                            'application/vnd.ms-excel'
+                        ))
+                    ]
+                    rsp = requests.post(
+                        'http://{}:{}/{}'.format(
+                            params.get('ip'),
+                            params.get('port', 8080),
+                            op.detail['mod']['request']['uri'].lstrip('/')
+                        ),
+                        files=file_list,
+                        cookies=self.session
+                    )
+                    result = _handlerJsonResponse(rsp)
+                except ApiError, err:
+                    self.op_result.error_code = err.status_code
+                    self.op_result.detail = [err.message]
+                    if op.detail.get('skip'):
+                        self.rtn['skip'] = True
+                else:
+                    if result['errorCode'] != 0:
+                        self.op_result.error_code = 10
+                    else:
+                        self.op_result.error_code = 0
+                    self.op_result.detail = _format2json(result['data'])
+                finally:
+                    db.session.add(self.op_result)
+                    db.session.commit()
+                    self.rtn['err_code'] = self.op_result.error_code
+                    self.rtn['output_lines'] = self.op_result.detail
+                    self.rtn['re_enter'] = (
+                        op.type.IsChecker() and \
+                            not op.type.IsBatcher()
+                    ) or CheckPrivilege(
+                        current_user,
+                        '/api/operation/id/',
+                        MethodType.ReExecute
+                    )
+                    return self.rtn
+            else:
+                return {
+                    'message': 'no file found.'
+                }, 412
         else:
             return {
                 'message': 'operation not found.'

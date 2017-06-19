@@ -141,7 +141,7 @@ class CommandBuffer(object):
                         host=self._host,
                         username=self._user,
                         operator_id=self._operator.id,
-                        operated_at=arrow.now(),
+                        operated_at=arrow.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f'),
                         skip=self.skip and 1 or 0
                     )
                 self._db.execute(command)

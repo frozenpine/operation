@@ -44,6 +44,17 @@
                                             <span class="am-icon-pencil-square-o"></span> 执行
                                         </button>
                                     </div>
+                                    <div class="am-modal am-modal-loading" ng-if="dtl.interactivator.isTrue" tabindex="-1" id="{{'interactive' + dtl.id}}">
+                                        <div class="am-modal-dialog">
+                                            <div class="am-modal-hd">
+                                                交互操作
+                                                <span class="am-close am-fr" data-am-modal-cancel data-am-modal-close>&times;</span>
+                                            </div>
+                                            <div class="am-modal-bd">
+                                                <div ng-bind-html="dtl.interactivator.template | html_trust"></div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td>
                                     <span ng-class="{'am-text-success': dtl.err_code==0, 'am-text-danger': dtl.err_code>0, 'am-text-warning': dtl.err_code==-3 }">

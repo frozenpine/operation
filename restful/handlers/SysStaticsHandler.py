@@ -362,7 +362,7 @@ class LoginCheckApi(Resource):
             if not self.syslog_list.has_key(svr):
                 self.syslog_list[svr] = {
                     'formatter': src.source['formatter'],
-                    'msg_pattern': src.source['pattern'],
+                    'pattern': src.source['pattern'],
                     'key_words': src.source['key_words'],
                     'logs': []
                 }
@@ -395,7 +395,7 @@ class LoginCheckApi(Resource):
             mod[module] = logfile.rstrip('/')
             result = executor.run(mod)
             for k, v in result.data.iteritems():
-                pattern = re.compile(datas['msg_pattern'])
+                pattern = re.compile(datas['pattern'])
                 data = {}
                 for idx in xrange(len(datas['formatter'])):
                     data[datas['formatter'][idx]['key']] = \

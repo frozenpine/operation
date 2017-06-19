@@ -94,12 +94,21 @@ app.controller('dashBoardControl', ['$scope', 'Message', '$rootScope', function(
     //$rootScope.Message = Message;
     $rootScope.isShowSideList = false;
 }]);
-app.controller('userController', ['$scope', function($scope) {
-    $scope.ModifyPassword = function() {
+app.controller('userController', ['$scope', '$http', function($scope, $http) {
+    $scope.ModifyPassword = function(usr_id) {
         $('#modifyPassword').modal({
             relatedTarget: this,
             onConfirm: function() {
-                alert('test');
+                $http.put('api/user/id/' + usr_id, data = {
+                    old_password: $('#oldPwd').val(),
+                    password: $('#newPwd').val()
+                }).success(function(response) {
+                    console.log(response);
+                }).error(function(response) {
+                    console.log(response);
+                });
+                $('#oldPwd').val('');
+                $('#newPwd').val('');
             }
         });
     };
@@ -395,12 +404,14 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
                                     $scope.opList.details[index + 1].enabled = response.err_code === 0;
                                 }
                             }
+                            $('#authorizor').unbind('authorize.quantdo');
                         })
                         .error(function(response) {
                             console.log(response);
                             if ($routeParams.hasOwnProperty('grpid')) {
                                 $scope.opList.details[index] = response;
                             }
+                            $('#authorizor').unbind('authorize.quantdo');
                         });
                 });
                 var err_code = $scope.opList.details[index].err_code;
@@ -476,7 +487,7 @@ app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', functi
             return;
         }
         if (group.details[op_idx].interactivator.isTrue) {
-            $http.get('api/operation/id/' + id + '/ui')
+            $http.get('api/emerge_ops/id/' + id + '/ui')
                 .success(function(response) {
                     group.details[op_idx].interactivator.template = response;
                     $('#interactive' + id).bind('results.quantdo', function(event, data) {

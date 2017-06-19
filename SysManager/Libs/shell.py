@@ -24,9 +24,9 @@ def run(client, module):
         """.format(command)
     stdin, stdout, stderr = client.exec_command(command)
     stdout.read = change_read_encoding(stdout.read())
-    stdout.readlines = change_readlines_encoding(stdout.read)
-    stderr.read = change_read_encoding(stderr.read)
-    stderr.readlines = change_readlines_encoding(stderr.read)
+    stdout.readlines = change_readlines_encoding(stdout.read())
+    stderr.read = change_read_encoding(stderr.read())
+    stderr.readlines = change_readlines_encoding(stderr.read())
     return stdout, stderr
 
 def change_read_encoding(cache):
@@ -37,9 +37,9 @@ def change_read_encoding(cache):
             return cache.decode('gbk', 'ignore').encode('utf-8').replace('\r\n', '\n')
     return _read
 
-def change_readlines_encoding(func):
+def change_readlines_encoding(cache):
     def _readlines():
-        for line in func().split('\n'):
+        for line in cache.split('\n'):
             if line != "":
                 yield line
     return _readlines

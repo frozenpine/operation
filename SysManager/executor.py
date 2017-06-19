@@ -139,6 +139,7 @@ class HttpExecutor(Executor):
         pass
 
 if __name__ == '__main__':
+    '''
     result = {}
     conf = WinRmConfig('192.168.56.2', 'administrator', '022010blue@safe')
     exe = Executor.Create(conf)
@@ -153,3 +154,14 @@ if __name__ == '__main__':
     result = exe.run(mod)
     for line in result.lines:
         print line
+    '''
+    conf = SSHConfig('192.168.101.126', 'qdam', 'qdam')
+    exe = Executor.Create(conf)
+    mod = {
+        'name': 'uftLogin',
+        'uftLogin': '/home/qdam/uftSyslog.log'
+    }
+    result = exe.run(mod)
+    for line in result.lines:
+        print line
+    print result.data

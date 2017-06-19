@@ -619,6 +619,7 @@ class Operation(SQLModelMixin, db.Model):
     earliest = db.Column(db.String)
     latest = db.Column(db.String)
     book_id = db.Column(db.Integer, db.ForeignKey('operation_book.id'), index=True)
+    need_authorization = db.Column(db.Boolean, default=False)
     order = db.Column(db.Integer)
     op_group_id = db.Column(db.Integer, db.ForeignKey('operation_groups.id'))
     disabled = db.Column(db.Boolean, default=False)
