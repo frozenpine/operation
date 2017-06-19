@@ -281,6 +281,14 @@ class OperateRecord(SQLModelMixin, db.Model):
     authorized_at = db.Column(ArrowType, index=True)
     results = db.relationship('OperateResult', backref='record')
 
+class EmergeOpRecord(SQLModelMixin, db.Model):
+    __tablename__ = 'emergeop_records'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    operation_id = db.Column(db.Integer, db.ForeignKey('operation_book.id'), index=True)
+    operator_id = db.Column(db.Integer, db.ForeignKey('operators.id'), index=True)
+    operated_at = db.Column(ArrowType, index=True)
+    results = db.relationship('EmergeOpResult', backref='record')
+
 class Operator(UserMixin, SQLModelMixin, db.Model):
     def __init__(self, login, password, name=None, **kwargs):
         self.login = login
@@ -321,6 +329,12 @@ class Operator(UserMixin, SQLModelMixin, db.Model):
         'OperateRecord',
         backref='operator',
         foreign_keys=[OperateRecord.operator_id],
+        lazy='dynamic'
+    )
+    emergeop_records = db.relationship(
+        'EmergeOpRecord',
+        backref='operator',
+        foreign_keys=[EmergeOpRecord.operator_id],
         lazy='dynamic'
     )
     authorization_records = db.relationship(
@@ -484,10 +498,8 @@ class TradeSystem(SQLModelMixin, db.Model):
         primaryjoin="and_(OperationGroup.sys_id == TradeSystem.id,"
                     "OperationGroup.disabled == False)"
     )
-    operations = db.relationship(
-        'Operation', backref='system', lazy='dynamic',
-        primaryjoin="and_(Operation.sys_id == TradeSystem.id,"
-                    "Operation.disabled == False)"
+    operation_book = db.relationship(
+        'OperationBook', backref='system', lazy="dynamic"
     )
     data_sources = db.relationship(
         'DataSource', backref='system', lazy='dynamic',
@@ -597,7 +609,6 @@ class Server(SQLModelMixin, db.Model):
             self.admin_pwd = password
 
     processes = db.relationship('TradeProcess', backref='server', lazy='dynamic')
-    statics_records = db.relationship('StaticsRecord', backref='server', lazy='dynamic')
     status = db.Column(JSONType, default={})
 
 class Operation(SQLModelMixin, db.Model):
@@ -605,9 +616,18 @@ class Operation(SQLModelMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String, index=True)
     description = db.Column(db.String)
-    type = db.Column(ChoiceType(ScriptType, impl=db.Integer()))
     earliest = db.Column(db.String)
     latest = db.Column(db.String)
+    book_id = db.Column(db.Integer, db.ForeignKey('operation_book.id'), index=True)
+    order = db.Column(db.Integer)
+    op_group_id = db.Column(db.Integer, db.ForeignKey('operation_groups.id'))
+    disabled = db.Column(db.Boolean, default=False)
+    records = db.relationship(
+        'OperateRecord',
+        backref='operation',
+        order_by='OperateRecord.operated_at.desc()',
+        lazy='dynamic'
+    )
 
     @property
     def time_range(self):
@@ -646,7 +666,30 @@ class Operation(SQLModelMixin, db.Model):
         else:
             return True
 
+class OperationCatalog(SQLModelMixin, db.Model):
+    __tablename__ = 'operation_catalogs'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String, index=True)
+    description = db.Column(db.String)
+    order = db.Column(db.Integer)
+    operations = db.relationship('OperationBook', backref='catalog')
+
+class OperationBook(SQLModelMixin, db.Model):
+    __tablename = 'operation_book'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String, index=True)
+    description = db.Column(db.String)
+    type = db.Column(ChoiceType(ScriptType, impl=db.Integer()))
+    catalog_id = db.Column(db.Integer, db.ForeignKey('operation_catalogs.id'), index=True)
     detail = db.Column(JSONType, nullable=False, default={})
+    sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
+    is_emergecy = db.Column(db.Boolean, default=False)
+    order = db.Column(db.Integer)
+    operations = db.relationship(
+        'Operation', backref='operate_define',
+        primaryjoin="and_(Operation.book_id==OperationBook.id,"
+                    "Operation.disabled==False)"
+    )
 
     @observes('sys_id')
     def remoteConfigObserver(self, sys_id):
@@ -659,16 +702,6 @@ class Operation(SQLModelMixin, db.Model):
                 params['user'] = sys.login_user
                 params['password'] = sys.login_pwd
 
-    order = db.Column(db.Integer)
-    op_group_id = db.Column(db.Integer, db.ForeignKey('operation_groups.id'))
-    sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
-    disabled = db.Column(db.Boolean, default=False)
-    records = db.relationship(
-        'OperateRecord',
-        backref='operation',
-        order_by='OperateRecord.operated_at.desc()',
-        lazy='dynamic'
-    )
 
 class OperationGroup(SQLModelMixin, db.Model):
     __tablename__ = 'operation_groups'
@@ -691,6 +724,13 @@ class OperateResult(SQLModelMixin, db.Model):
     error_code = db.Column(db.Integer, default=0)
     detail = db.Column(JSONType, nullable=False, default=[])
 
+class EmergeOpResult(SQLModelMixin, db.Model):
+    __tablename__ = 'emergeop_results'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    op_rec_id = db.Column(db.Integer, db.ForeignKey('emergeop_records.id'), index=True)
+    error_code = db.Column(db.Integer, default=0)
+    detail = db.Column(JSONType, nullable=False, default=[])
+
 class CommandHistory(SQLModelMixin, db.Model):
     __tablename__ = 'command_histories'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -700,15 +740,6 @@ class CommandHistory(SQLModelMixin, db.Model):
     operator_id = db.Column(db.Integer, db.ForeignKey('operators.id'), index=True)
     operated_at = db.Column(ArrowType, index=True)
     skip = db.Column(db.Boolean, nullable=False)
-
-class StaticsRecord(SQLModelMixin, db.Model):
-    __tablename__ = 'statics_records'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    svr_id = db.Column(db.Integer, db.ForeignKey('servers.id'), index=True)
-    operator_id = db.Column(db.Integer, db.ForeignKey('operators.id'), index=True)
-    operated_at = db.Column(ArrowType, index=True)
-    type = db.Column(ChoiceType(StaticsType, impl=db.Integer()))
-    detail = db.Column(JSONType, nullable=False, default={})
 
 class ConfigFile(SQLModelMixin, db.Model):
     __tablename__ = 'config_files'

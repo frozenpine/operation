@@ -60,25 +60,25 @@ class OperationListApi(Resource):
                     'enabled': False,
                     're_enter': True,
                     'checker': {
-                        'isTrue': op.type.IsChecker(),
+                        'isTrue': op.operate_define.type.IsChecker(),
                         'checked': False
                     },
                     'interactivator': {
-                        'isTrue': op.type.IsInteractivator()
+                        'isTrue': op.operate_define.type.IsInteractivator()
                     },
                     'time_range': {
                         'lower': unicode(lower or 'anytime'),
                         'upper': unicode(upper or 'anytime')
                     },
-                    'need_authorized': op.detail.has_key('need_authorized') and \
-                        op.detail['need_authorized'],
+                    'need_authorized': op.operate_define.detail.has_key('need_authorized') and \
+                        op.operate_define.detail['need_authorized'],
                     'skip': skip
                 }
                 if record:
                     dtl['enabled'] = True
                     dtl['re_enter'] = (
-                        op.type.IsChecker() and \
-                            not op.type.IsBatcher()
+                        op.operate_define.type.IsChecker() and \
+                            not op.operate_define.type.IsBatcher()
                     ) or not skip \
                         or CheckPrivilege(
                             current_user,
@@ -122,20 +122,20 @@ class OperationApi(Resource):
         self.rtn['op_desc'] = operation.description
         self.rtn['enabled'] = True
         self.rtn['checker'] = {
-            'isTrue': operation.type.IsChecker(),
+            'isTrue': operation.operate_define.type.IsChecker(),
             'checked': False
         }
         self.rtn['interactivator'] = {
-            'isTrue': operation.type.IsInteractivator(),
+            'isTrue': operation.operate_define.type.IsInteractivator(),
         }
         self.rtn['time_range'] = {
             'lower': unicode(lower or 'anytime'),
             'upper': unicode(upper or 'anytime')
         }
-        self.rtn['need_authorized'] = operation.detail.has_key('need_authorized') and \
-            operation.detail['need_authorized']
-        params = operation.detail['remote']['params']
-        conf = RemoteConfig.Create(operation.detail['remote']['name'], params)
+        self.rtn['need_authorized'] = operation.operate_define.detail\
+            .has_key('need_authorized') and operation.operate_define.detail['need_authorized']
+        params = operation.operate_define.detail['remote']['params']
+        conf = RemoteConfig.Create(operation.operate_define.detail['remote']['name'], params)
         key = '{}:{}'.format(
             params.get('ip'),
             params.get('port', '8080')
@@ -170,10 +170,10 @@ class OperationApi(Resource):
                                 db.session.commit()
                         else:
                             raise InvalidUsernameOrPassword
-                if isinstance(op.detail['mod'], dict):
-                    result = self.executor.run(op.detail['mod'])
-                elif isinstance(op.detail['mod'], list):
-                    for module in op.detail['mod']:
+                if isinstance(op.operate_define.detail['mod'], dict):
+                    result = self.executor.run(op.operate_define.detail['mod'])
+                elif isinstance(op.operate_define.detail['mod'], list):
+                    for module in op.operate_define.detail['mod']:
                         result = self.executor.run(module)
                         if result.return_code != 0:
                             break
@@ -195,8 +195,8 @@ class OperationApi(Resource):
                 self.rtn['err_code'] = self.op_result.error_code
                 self.rtn['output_lines'] = self.op_result.detail
                 self.rtn['re_enter'] = (
-                    op.type.IsChecker() and \
-                        not op.type.IsBatcher() or self.op_result.error_code != 0
+                    op.operate_define.type.IsChecker() and \
+                        not op.operate_define.type.IsBatcher() or self.op_result.error_code != 0
                 ) or CheckPrivilege(
                     current_user,
                     '/api/operation/id/',
@@ -212,7 +212,7 @@ class OperationUIApi(Resource):
     def get(self, id):
         op = Operation.find(id=id)
         if op:
-            params = op.detail['remote']['params']
+            params = op.operate_define.detail['remote']['params']
             key = '{}:{}'.format(
                 params.get('ip'),
                 params.get('port', '8080')
@@ -228,14 +228,14 @@ class OperationUIApi(Resource):
                 valid_session = False
             if current_app.config['GLOBAL_ENCRYPT']:
                 return render_template(
-                    'Interactivators/{}.html'.format(op.detail['mod']['name']),
+                    'Interactivators/{}.html'.format(op.operate_define.detail['mod']['name']),
                     session=valid_session,
-                    login_user=op.detail['remote']['params']['user'],
+                    login_user=op.operate_define.detail['remote']['params']['user'],
                     login_password=AESCrypto.decrypt(
-                        op.detail['remote']['params']['password'],
+                        op.operate_define.detail['remote']['params']['password'],
                         current_app.config['SECRET_KEY']
                     ),
-                    captcha=op.detail['remote']['params'].get('captcha', False),
+                    captcha=op.operate_define.detail['remote']['params'].get('captcha', False),
                     captcha_uri=url_for('api.operation_captcha', id=op.id),
                     login_uri=url_for('api.operation_login', id=op.id),
                     execute_uri=url_for('api.operation_execute', id=op.id),
@@ -243,11 +243,11 @@ class OperationUIApi(Resource):
                 )
             else:
                 return render_template(
-                    'Interactivators/{}.html'.format(op.detail['mod']['name']),
+                    'Interactivators/{}.html'.format(op.operate_define.detail['mod']['name']),
                     session=valid_session,
-                    login_user=op.detail['remote']['params']['user'],
-                    login_password=op.detail['remote']['params']['password'],
-                    captcha=op.detail['remote']['params'].get('captcha', False),
+                    login_user=op.operate_define.detail['remote']['params']['user'],
+                    login_password=op.operate_define.detail['remote']['params']['password'],
+                    captcha=op.operate_define.detail['remote']['params'].get('captcha', False),
                     captcha_uri=url_for('api.operation_captcha', id=op.id),
                     login_uri=url_for('api.operation_login', id=op.id),
                     execute_uri=url_for('api.operation_execute', id=op.id),
@@ -260,7 +260,7 @@ class OperationCaptchaApi(Resource):
     def get(self, id):
         op = Operation.find(id=id)
         if op:
-            params = op.detail['remote']['params']
+            params = op.operate_define.detail['remote']['params']
             rsp = requests.get(
                 'http://{}:{}/{}'.format(
                     params.get('ip'),
@@ -288,7 +288,7 @@ class OperationLoginApi(Resource):
     def post(self, id):
         op = Operation.find(id=id)
         if op:
-            params = op.detail['remote']['params']
+            params = op.operate_define.detail['remote']['params']
             key = '{}:{}'.format(params.get('ip'), params.get('port', '8080'))
             if session.has_key(key):
                 cookies = session[key]['origin']
@@ -327,14 +327,14 @@ class OperationExecuteApi(OperationApi):
         op = Operation.find(id=id)
         if op:
             self.ExecutionPrepare(op)
-            params = op.detail['remote']['params']
+            params = op.operate_define.detail['remote']['params']
             key = '{}:{}'.format(params.get('ip'), params.get('port', '8080'))
             if session.has_key(key):
                 self.session = session[key]['origin']
             try:
                 if not op.InTimeRange():
                     raise ExecuteTimeOutOfRange(op.time_range)
-                module = op.detail['mod']['request']
+                module = op.operate_define.detail['mod']['request']
                 if isinstance(module, dict):
                     rsp = getattr(requests, module['method'])(
                         'http://{}:{}/{}'.format(
@@ -367,7 +367,7 @@ class OperationExecuteApi(OperationApi):
             except ApiError, err:
                 self.op_result.error_code = err.status_code
                 self.op_result.detail = [err.message]
-                if op.detail.get('skip'):
+                if op.operate_define.detail.get('skip'):
                     self.rtn['skip'] = True
             else:
                 if result['errorCode'] != 0:
@@ -381,8 +381,8 @@ class OperationExecuteApi(OperationApi):
                 self.rtn['err_code'] = self.op_result.error_code
                 self.rtn['output_lines'] = self.op_result.detail
                 self.rtn['re_enter'] = (
-                    op.type.IsChecker() and \
-                        not op.type.IsBatcher()
+                    op.operate_define.type.IsChecker() and \
+                        not op.operate_define.type.IsBatcher()
                 ) or CheckPrivilege(
                     current_user,
                     '/api/operation/id/',
@@ -427,7 +427,7 @@ class OperationCSVApi(OperationApi):
         op = Operation.find(id=id)
         if op:
             self.ExecutionPrepare(op)
-            params = op.detail['remote']['params']
+            params = op.operate_define.detail['remote']['params']
             key = '{}:{}'.format(params.get('ip'), params.get('port', '8080'))
             if session.has_key(key):
                 self.session = session[key]['origin']
@@ -453,7 +453,7 @@ class OperationCSVApi(OperationApi):
                         'http://{}:{}/{}'.format(
                             params.get('ip'),
                             params.get('port', 8080),
-                            op.detail['mod']['request']['uri'].lstrip('/')
+                            op.operate_define.detail['mod']['request']['uri'].lstrip('/')
                         ),
                         files=file_list,
                         cookies=self.session
@@ -462,7 +462,7 @@ class OperationCSVApi(OperationApi):
                 except ApiError, err:
                     self.op_result.error_code = err.status_code
                     self.op_result.detail = [err.message]
-                    if op.detail.get('skip'):
+                    if op.operate_define.detail.get('skip'):
                         self.rtn['skip'] = True
                 else:
                     if result['errorCode'] != 0:
@@ -476,8 +476,8 @@ class OperationCSVApi(OperationApi):
                     self.rtn['err_code'] = self.op_result.error_code
                     self.rtn['output_lines'] = self.op_result.detail
                     self.rtn['re_enter'] = (
-                        op.type.IsChecker() and \
-                            not op.type.IsBatcher()
+                        op.operate_define.type.IsChecker() and \
+                            not op.operate_define.type.IsBatcher()
                     ) or CheckPrivilege(
                         current_user,
                         '/api/operation/id/',

@@ -7,10 +7,11 @@ from flask import Response, abort, current_app, render_template, request
 from flask_login import current_user, login_required
 from geventwebsocket import WebSocketError
 
+from app.auth.privileged import CheckPrivilege
 from common import wssh
 from common.cmdbuffer import CommandBuffer
 from MessageQueue.msgserver import MessageServer
-from models import Operator
+from models import MethodType, Operator
 
 from . import main
 
@@ -38,6 +39,9 @@ def index():
 @main.route('/UI/views/<string:name>')
 @login_required
 def UIView(name):
+    if name == 'emerge_ops' and \
+        not CheckPrivilege(current_user, '/api/emerge_ops', MethodType.Authorize):
+        return render_template("errors/403.html")
     return render_template("{}.html".format(name))
 
 class Camera():

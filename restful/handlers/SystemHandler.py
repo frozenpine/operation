@@ -34,9 +34,7 @@ class SystemApi(Resource):
                 sys.ip = data.get('ip', sys.ip)
                 sys.description = data.get('description', sys.description)
                 sys.version = data.get('version', sys.version)
-                for op in Operation.query.filter(
-                        Operation.sys_id == sys.id
-                    ):
+                for op in sys.operation_book:
                     details = json.loads(json.dumps(op.detail))
                     params = details['remote']['params']
                     params['ip'] = sys.ip

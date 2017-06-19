@@ -23,18 +23,18 @@ def run(client, module):
             {}
         """.format(command)
     stdin, stdout, stderr = client.exec_command(command)
-    stdout.read = change_read_encoding(stdout.read)
+    stdout.read = change_read_encoding(stdout.read())
     stdout.readlines = change_readlines_encoding(stdout.read)
     stderr.read = change_read_encoding(stderr.read)
     stderr.readlines = change_readlines_encoding(stderr.read)
     return stdout, stderr
 
-def change_read_encoding(func):
+def change_read_encoding(cache):
     def _read():
         try:
-            return func().decode('utf-8').encode('utf-8').replace('\r\n', '\n')
+            return cache.decode('utf-8').encode('utf-8').replace('\r\n', '\n')
         except UnicodeDecodeError:
-            return func().decode('gbk', 'ignore').encode('utf-8').replace('\r\n', '\n')
+            return cache.decode('gbk', 'ignore').encode('utf-8').replace('\r\n', '\n')
     return _read
 
 def change_readlines_encoding(func):

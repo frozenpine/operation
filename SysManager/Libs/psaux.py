@@ -23,7 +23,7 @@ def run(client, module):
         else:
             paramlist = ""
         mod = {
-            'shell': "ps aux | awk 'FNR==1{{print;next}}$1 ~/{0}/ && $11 ~/{1}/ && $12 ~/{2}/{{print}}'"\
+            'shell': "ps aux | awk 'FNR==1{{print;next}}$1 ~/{0}/ && $11 ~/{1}/ && $0 ~/{2}/{{print}}'"\
                 .format(userlist, proclist, paramlist)
         }
     else:

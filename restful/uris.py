@@ -6,6 +6,7 @@ from .handlers.OperationHandler import (OperationApi, OperationCaptchaApi,
                                         OperationCSVApi, OperationExecuteApi,
                                         OperationListApi, OperationLoginApi,
                                         OperationUIApi)
+from .handlers.EmergeOpHandler import EmergeOpListApi, EmergeOpApi
 from .handlers.RoleHandler import RoleApi, RoleListApi
 from .handlers.SysStaticsHandler import (LoginCheckApi, LoginListApi,
                                          ProcStaticApi, ServerStaticApi,
@@ -124,6 +125,20 @@ resources.add_resource(
     '/operation/id/<int:id>/csv',
     methods=['POST'],
     endpoint='operation_csv'
+)
+
+resources.add_resource(
+    EmergeOpListApi,
+    '/emerge_ops/system/id/<int:id>',
+    methods=['GET'],
+    endpoint='emerge_ops'
+)
+
+resources.add_resource(
+    EmergeOpApi,
+    '/emerge_ops/id/<int:id>',
+    methods=['POST'],
+    endpoint='emerge_op'
 )
 
 resources.add_resource(

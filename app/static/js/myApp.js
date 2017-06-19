@@ -68,6 +68,9 @@ app.config(['$routeProvider', function($routeProvider) {
         .when('/op_group/:grpid', {
             templateUrl: 'UI/views/op_group'
         })
+        .when('/emerge_ops/system/:sysid', {
+            templateUrl: 'UI/views/emerge_ops'
+        })
         .otherwise({
             redirectTo: '/dashboard'
         });
@@ -311,16 +314,6 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
         }
     });
 
-    $scope.openshell = function(sys_id) {
-        $http.get('api/webshell/system/id/' + sys_id)
-            .success(function(response) {
-                $scope.opList.webshell = response;
-                $('#webshell').modal({
-                    relatedTarget: this
-                });
-            });
-    };
-
     $http.get('api/op_group/id/' + $routeParams.grpid)
         .success(function(response) {
             $scope.opList = response;
@@ -442,6 +435,86 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
                         }
                     });
             }
+        }
+    };
+}]);
+app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', function($scope, $http, $routeParams) {
+    $http.get('api/emerge_ops/system/id/' + $routeParams.sysid)
+        .success(function(response) {
+            $scope.emergeopList = response;
+        })
+        .error(function(response) {
+            console.log(response);
+        });
+
+    $scope.openshell = function(sys_id) {
+        $http.get('api/webshell/system/id/' + sys_id)
+            .success(function(response) {
+                $scope.emergeopList.webshell = response;
+                $('#webshell').modal({
+                    relatedTarget: this
+                });
+            });
+    };
+
+    $scope.check_result = function(id) {
+        $('#result' + id).modal({ relatedTarget: this });
+    };
+    $scope.check_his_result = function(id) {
+        $('#his_result' + id).modal({ relatedTarget: this });
+    };
+
+    $scope.execute = function(grp_name, op_idx, id) {
+        var group = null;
+        angular.forEach($scope.emergeopList, function(value, index) {
+            if (grp_name == value.name) {
+                group = value;
+            }
+        });
+        if (group === null || group === undefined) {
+            console.log('Operation group found with name ' + grp_name);
+            return;
+        }
+        if (group.details[op_idx].interactivator.isTrue) {
+            $http.get('api/operation/id/' + id + '/ui')
+                .success(function(response) {
+                    group.details[op_idx].interactivator.template = response;
+                    $('#interactive' + id).bind('results.quantdo', function(event, data) {
+                        $scope.$apply(function() {
+                            if ($routeParams.hasOwnProperty('grpid')) {
+                                group.details[op_idx] = data;
+                            }
+                        });
+                    });
+                    $('#interactive' + id).on('opened.modal.amui', function() {
+                        var imgElement = $('#interactive' + id).find('img')[0];
+                        if (imgElement !== null && imgElement !== undefined) {
+                            imgElement.click();
+                        }
+                    });
+                    $('#interactive' + id).modal({
+                        relatedTarget: this,
+                        onCancel: function() {
+                            $scope.$apply(function() {
+                                group.details[op_idx].err_code = -1;
+                            });
+                        }
+                    });
+                })
+                .error(function(response) {
+                    console.log(response);
+                });
+        } else {
+            group.details[op_idx].err_code = -2;
+            $http.post('api/emerge_ops/id/' + id)
+                .success(function(response) {
+                    if ($routeParams.hasOwnProperty('sysid')) {
+                        group.details[op_idx] = response;
+                    }
+                })
+                .error(function(response) {
+                    console.log(response);
+                });
         }
     };
 }]);

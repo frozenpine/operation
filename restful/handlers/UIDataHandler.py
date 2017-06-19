@@ -4,9 +4,11 @@ from os import path
 from sys import argv
 
 from flask import redirect, render_template, request, url_for
+from flask_login import current_user
 from flask_restful import Resource
 
-from app.models import Server, SystemType, TradeSystem
+from app.auth.privileged import CheckPrivilege
+from app.models import MethodType, Server, SystemType, TradeSystem
 
 
 class UIDataApi(Resource):
@@ -19,13 +21,14 @@ class UIDataApi(Resource):
     def sideBarCtrl(self):
         systems = TradeSystem.query.filter(TradeSystem.parent_sys_id == None).all()
         rtn = []
+        privileged = CheckPrivilege(current_user, '/api/emerge_ops', MethodType.Authorize)
         for sys in systems:
             system = {
                 'id': sys.id,
                 'icon': 'am-icon-table',
                 'name': sys.name,
                 'desc': sys.description,
-                'isSecond': len(sys.operation_groups.all()) > 0,
+                'isSecond': len(sys.operation_groups.all()) > 0 or privileged,
                 'isShow': False,
                 'Url': '#statics/{}'.format(sys.id),
                 'secondName': [
@@ -35,6 +38,11 @@ class UIDataApi(Resource):
                         'Url': '#op_group/{}'.format(group.id)
                     } for group in sys.operation_groups]
             }
+            if privileged:
+                system['secondName'].append({
+                    'name': u'系统应急操作',
+                    'Url': '#emerge_ops/system/{}'.format(sys.id)
+                })
             rtn.append(system)
         return rtn
 
