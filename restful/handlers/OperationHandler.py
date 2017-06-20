@@ -181,7 +181,7 @@ class OperationApi(Resource):
                 self.op_result.error_code = err.status_code
                 self.op_result.detail = [err.message]
             except ApiError, err:
-                self.op_result.error_code = err.status_code
+                self.op_result.error_code = err.error_code
                 self.op_result.detail = [err.message]
             else:
                 self.op_result.error_code = result.return_code
@@ -305,7 +305,7 @@ class OperationLoginApi(Resource):
                 result = _handlerJsonResponse(rsp)
             except ApiError, err:
                 return {
-                    'errorCode': err.status_code,
+                    'errorCode': err.error_code,
                     'errorMsg': err.message
                 }   # 模拟HTTP接口的返回数据，用于前端UI模块正确显示数据。
             else:

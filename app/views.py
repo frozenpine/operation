@@ -40,7 +40,7 @@ def index():
 @login_required
 def UIView(name):
     if name == 'emerge_ops' and \
-        not CheckPrivilege(current_user, '/api/emerge_ops', MethodType.Authorize):
+        not CheckPrivilege(current_user, '/api/emerge_ops', MethodType.Execute):
         return render_template("errors/403.html")
     return render_template("{}.html".format(name))
 

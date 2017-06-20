@@ -21,7 +21,7 @@ class UIDataApi(Resource):
     def sideBarCtrl(self):
         systems = TradeSystem.query.filter(TradeSystem.parent_sys_id == None).all()
         rtn = []
-        privileged = CheckPrivilege(current_user, '/api/emerge_ops', MethodType.Authorize)
+        privileged = CheckPrivilege(current_user, '/api/emerge_ops', MethodType.Execute)
         for sys in systems:
             system = {
                 'id': sys.id,

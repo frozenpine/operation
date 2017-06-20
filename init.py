@@ -1,22 +1,26 @@
 # -*- coding: UTF-8 -*-
 from __future__ import unicode_literals
-from flask import url_for
-from flask_script import Manager
-from app import create_app, db
-from app.models import *
-import arrow
-import json, re
-from flask.testing import EnvironBuilder
-import yaml
-from datetime import time
-from SysManager.Common import AESCrypto
-
-import sys
-reload(sys)
-sys.setdefaultencoding("utf-8")
-import os
 
 import codecs
+import json
+import os
+import re
+import sys
+from datetime import time
+
+import arrow
+import yaml
+from flask import url_for
+from flask.testing import EnvironBuilder
+from flask_script import Manager
+
+from app import create_app, db
+from app.models import *
+from SysManager.Common import AESCrypto
+
+reload(sys)
+sys.setdefaultencoding("utf-8")
+
 codecs.register(lambda name: name == 'cp65001' and codecs.lookup('utf-8') or None)
 
 test_app = create_app('development')
@@ -74,6 +78,28 @@ def init_auth():
     for role, usernames in user_role_relation.iteritems():
         for usr in usernames:
             roles[role].users.append(users[usr])
+    db.session.add_all(roles.values())
+    db.session.commit()
+
+    privileges = {}
+    role_privilege_relation = {}
+    for pri in auth['Privileges']:
+        typ, cat = pri['bit'].split('.')
+        pri['bit'] = getattr(globals()[typ], cat).value
+        if pri.has_key('roles'):
+            for role in pri.pop('roles'):
+                if not role_privilege_relation.has_key(role):
+                    role_privilege_relation[role] = []
+                role_privilege_relation[role].append(
+                    "{uri}#{bit}".format(uri=pri['uri'], bit=pri['bit'])
+                )
+        privileges["{uri}#{bit}".format(uri=pri['uri'], bit=pri['bit'])] = OpPrivilege(**pri)
+    db.session.add_all(privileges.values())
+    db.session.commit()
+
+    for role, pris in role_privilege_relation.iteritems():
+        for pri in pris:
+            roles[role].privileges.append(privileges[pri])
     db.session.add_all(roles.values())
     db.session.commit()
 
@@ -144,8 +170,7 @@ def init_inventory():
     db.session.add_all(datasources)
     db.session.commit()
 
-@manager.command
-def modify_operation():
+
     operations = Operation.query.filter(Operation.sys_id == 3).all()
     for op in operations:
         params = op.detail['remote']['params']
@@ -159,10 +184,50 @@ def init_operation():
     f = open('operations.yml')
     opers = yaml.load(f)
 
+    catalogs = {}
+    for cata in opers['OperationCatalog']:
+        catalog = OperationCatalog(**cata)
+        catalogs[catalog.name] = catalog
+    db.session.add_all(catalogs.values())
+    db.session.commit()
+
+    operation_book = {}
+    for bk in opers['OperationBook']:
+        typ, cat = bk['type'].split('.')
+        bk['type'] = getattr(globals()[typ], cat).value
+        if test_app.config['GLOBAL_ENCRYPT'] and ScriptType(bk['type']).IsInteractivator():
+            bk['detail']['remote']['params']['password'] = \
+                AESCrypto.encrypt(
+                    bk['detail']['remote']['params']['password'],
+                    test_app.config['SECRET_KEY']
+                )
+        if bk.has_key('sys_id') and bk.has_key('system'):
+            bk.pop('system')
+        elif bk.has_key('system'):
+            name = bk.pop('system')
+            if re.match(r'[\da-zA-Z]{8}-(?:[\da-zA-Z]{4}-){3}[\da-zA-Z]{12}', name):
+                sys = TradeSystem.find(uuid=name)
+            else:
+                sys = TradeSystem.find(name=name)
+            bk['sys_id'] = sys.id
+        if bk.has_key('catalog_id') and bk.has_key('catalog'):
+            bk.pop('catalog')
+        elif bk.has_key('catalog'):
+            bk['catalog_id'] = catalogs[bk.pop('catalog')].id
+        operation_book[bk['name']] = OperationBook(**bk)
+    db.session.add_all(operation_book.values())
+    db.session.commit()
+
     groups = {}
     for grp in opers['OperationGroups']:
-        if grp.has_key('system'):
-            sys = TradeSystem.find(name=grp.pop('system'))
+        if grp.has_key('sys_id') and grp.has_key('system'):
+            grp.pop('system')
+        elif grp.has_key('system'):
+            name = grp.pop('system')
+            if re.match(r'[\da-zA-Z]{8}-(?:[\da-zA-Z]{4}-){3}[\da-zA-Z]{12}', name):
+                sys = TradeSystem.find(uuid=name)
+            else:
+                sys = TradeSystem.find(name=name)
             grp['sys_id'] = sys.id
         groups[grp['name']] = OperationGroup(**grp)
     db.session.add_all(groups.values())
@@ -170,24 +235,14 @@ def init_operation():
 
     operations = []
     for op in opers['Operations']:
-        typ, cat = op['type'].split('.')
-        op['type'] = getattr(globals()[typ], cat).value
-        if test_app.config['GLOBAL_ENCRYPT'] and ScriptType(op['type']).IsInteractivator():
-            op['detail']['remote']['params']['password'] = \
-                AESCrypto.encrypt(
-                    op['detail']['remote']['params']['password'],
-                    test_app.config['SECRET_KEY']
-                )
         if op.has_key('op_group_id') and op.has_key('group'):
             op.pop('group')
         elif op.has_key('group'):
             op['op_group_id'] = groups[op.pop('group')].id
-        if op.has_key('sys_id') and op.has_key('system'):
-            op.pop('system')
-        elif op.has_key('system'):
-            sys = TradeSystem.find(name=op.pop('system'))
-            if sys:
-                op['sys_id'] = sys.id
+        if op.has_key('book_id') and op.has_key('op_book'):
+            op.pop('op_book')
+        elif op.has_key('op_book'):
+            op['book_id'] = operation_book[op.pop('op_book')].id
         operations.append(Operation(**op))
     db.session.add_all(operations)
     db.session.commit()

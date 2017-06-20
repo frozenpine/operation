@@ -19,3 +19,17 @@ Users:
     password: test
     roles:
       - *first
+Privileges:
+  - uri: /api/operation/id/*
+    bit: MethodType.ReExecute
+    # 其他可用的操作权限：Check，Execute，Authorize，All，目前Check未用
+    roles:
+      - *second
+  - uri: /api/operation/id/*
+    bit: MethodType.Authorize
+    roles:
+      - *second
+  - uri: /api/emerge_ops
+    bit: MethodType.Execute
+    roles:
+      - *second

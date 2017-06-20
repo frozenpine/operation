@@ -550,6 +550,7 @@ app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootSco
                                 $rootScope.LoginStatics[$routeParams.sysid][index2].disconn_count = value1.disconn_count;
                                 $rootScope.LoginStatics[$routeParams.sysid][index2].login_fail = value1.login_fail;
                                 $rootScope.LoginStatics[$routeParams.sysid][index2].login_success = value1.login_success;
+                                $rootScope.LoginStatics[$routeParams.sysid][index2].updated_time = value1.updated_time;
                                 if (value1.hasOwnProperty('trading_day')) {
                                     $rootScope.LoginStatics[$routeParams.sysid][index2].trading_day = value1.trading_day;
                                 }

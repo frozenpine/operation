@@ -284,7 +284,7 @@ class OperateRecord(SQLModelMixin, db.Model):
 class EmergeOpRecord(SQLModelMixin, db.Model):
     __tablename__ = 'emergeop_records'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    operation_id = db.Column(db.Integer, db.ForeignKey('operation_book.id'), index=True)
+    emergeop_id = db.Column(db.Integer, db.ForeignKey('operation_book.id'), index=True)
     operator_id = db.Column(db.Integer, db.ForeignKey('operators.id'), index=True)
     operated_at = db.Column(ArrowType, index=True)
     results = db.relationship('EmergeOpResult', backref='record')
@@ -684,7 +684,7 @@ class OperationBook(SQLModelMixin, db.Model):
     catalog_id = db.Column(db.Integer, db.ForeignKey('operation_catalogs.id'), index=True)
     detail = db.Column(JSONType, nullable=False, default={})
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
-    is_emergecy = db.Column(db.Boolean, default=False)
+    is_emergency = db.Column(db.Boolean, default=False)
     order = db.Column(db.Integer)
     operations = db.relationship(
         'Operation', backref='operate_define',
@@ -698,7 +698,7 @@ class OperationBook(SQLModelMixin, db.Model):
         if sys:
             params = self.detail['remote']['params']
             params['ip'] = sys.ip
-            if not (self.type.value & ScriptType.Interactivator.value
+            if not (self.type & ScriptType.Interactivator.value
                     == ScriptType.Interactivator.value):
                 params['user'] = sys.login_user
                 params['password'] = sys.login_pwd
@@ -728,7 +728,7 @@ class OperateResult(SQLModelMixin, db.Model):
 class EmergeOpResult(SQLModelMixin, db.Model):
     __tablename__ = 'emergeop_results'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    op_rec_id = db.Column(db.Integer, db.ForeignKey('emergeop_records.id'), index=True)
+    emergeop_rec_id = db.Column(db.Integer, db.ForeignKey('emergeop_records.id'), index=True)
     error_code = db.Column(db.Integer, default=0)
     detail = db.Column(JSONType, nullable=False, default=[])
 

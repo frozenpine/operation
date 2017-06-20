@@ -37,7 +37,7 @@ class  EmergeOpListApi(Resource):
     def find_operations(self):
         emerge_ops = OperationBook.query.filter(
             OperationBook.sys_id.in_((self.system_list)),
-            OperationBook.is_emergecy == True
+            OperationBook.is_emergency == True
         ).order_by(OperationBook.order).all()
         for op in emerge_ops:
             record = self.find_op_record(op)
@@ -67,7 +67,7 @@ class  EmergeOpListApi(Resource):
 
     def find_op_record(self, op):
         record = EmergeOpRecord.query\
-            .filter(EmergeOpRecord.operation_id == op.id)\
+            .filter(EmergeOpRecord.emergeop_id == op.id)\
                 .order_by(EmergeOpRecord.operated_at.desc()).first()
         return record
 

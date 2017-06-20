@@ -14,7 +14,7 @@ class InvalidUsernameOrPassword(AuthError):
     def __init__(self, msg='Invalid username or password.'):
         super(InvalidUsernameOrPassword, self).__init__(msg)
 
-class AuthorizationError(Exception):
+class AuthorizationError(AuthError):
     def __init__(self, msg='authorization error.'):
         super(AuthorizationError, self).__init__(msg)
         self.status_code = 403

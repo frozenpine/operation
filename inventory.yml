@@ -160,17 +160,15 @@ DataSources:
     src_type: DataSourceType.FILE
     src_model: DataSourceModel.Seat
     source:
-      uri: ssh://qdam:qdam@192.168.101.126:22/#/home/qdam/qtrade/bin/Syslog.log #ssh://user:pass@host:port/#file_path
-      grep: OnFrontConnected|OnRspUserLogin|OnFrontDisConnected
-      parser:
-        pattern: ^(.+us) .+EXID:([^,]+),SeatID:([^,]+),.+Main:\d+:(.+)$
-        key_list:
-          - timestamp
-          - exid
-          - seatid
-          - message
-        primary_key: seatid
-        skip_headline: True
+      uri: ssh://qdam:qdam@192.168.101.126:22/#/home/qdam/qtrade/bin/Syslog.log?quantdoLogin
+      # ssh://user:pass@host:port/#file_path?module_name
+      # 可用的模块名称：quantdoLogin, mapLogin, uftLogin
+      key_words:
+        conn: 连接成功
+        disconn: 断开
+        login:  登录成功
+        logfail: 登录失败
+      msg_pattern: .+TradeDate=\[(?P<trade_date>[^]]+)\]\s+TradeTime=\[(?P<trade_time>[^]]+)\]
       formatter:
         - key: seat_id
           default: ''
