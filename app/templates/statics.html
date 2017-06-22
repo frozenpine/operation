@@ -41,7 +41,7 @@
                                 <td class="table-data" style="max-width: 120px">{{::data.server}}</td>
                                 <td class="table-data" style="max-width: 120px">{{data.uptime}}</td>
                                 <td class="table-data">
-                                    <div class="am-dropdown" style="cursor: pointer" ng-mouseover="showCPUDetail = true" ng-mouseleave="showCPUDetail = false" data-am-dropdown="{boundary: '#drop-down-test'}">
+                                    <div class="am-dropdown" style="cursor: pointer" ng-mouseover="showCPUDetail = true" ng-mouseleave="showCPUDetail = false">
                                         {{data.cpu[0].idle | percent}}
                                         <div class="am-dropdown-content" ng-show="showCPUDetail" style="display: block;margin-top: 0">
                                             <div style="max-height: 300px; overflow-y: auto">
@@ -119,7 +119,7 @@
                                         <li ng-repeat="disk in data.disks">
                                             <span>
 												<div class="am-dropdown" style="cursor: pointer" ng-mouseover="showMountDetail[$index] = true"
-                                                ng-mouseleave="showMountDetail[$index] = false" data-am-dropdown="{boundary: '#server_statics'}">
+                                                ng-mouseleave="showMountDetail[$index] = false">
 													{{disk.percent}}
 													<div class="am-dropdown-content_l" ng-show="showMountDetail[$index]" style="display: block;margin-top: 0;">
 														<table class="am-table am-text-nowrap am-table-compact" style="margin-bottom: 0px">
@@ -182,11 +182,9 @@
                                 <th>进程名</th>
                                 <th>进程号</th>
                                 <th>角色</th>
-                                <th>CPU%</th>
-                                <th>MEM%</th>
-                                <th>RSS</th>
+                                <th>侦听端口</th>
+                                <th>连接端口</th>
                                 <th>启动日期</th>
-                                <th>运行时间</th>
                                 <th>进程状态</th>
                                 <th>服务器名</th>
                             </tr>
@@ -196,12 +194,84 @@
                                 <td class="table-data">{{::child.process}}</td>
                                 <td class="table-data">{{::child.status.pid}}</td>
                                 <td class="table-data">{{::child.proc_role}}</td>
-                                <td class="table-data">{{child.status.cpu}}</td>
-                                <td class="table-data">{{child.status.mem}}</td>
-                                <td class="table-data">{{child.status.rss | KB2}}</td>
+                                <td class="table-data">
+                                    <ul>
+                                        <li ng-repeat="socket in child.sockets track by $index">
+                                            <span>{{::socket.port}}</span>
+                                            <span class="am-fr am-dropdown" style="cursor: pointer" ng-mouseover="showSocketDetail[$index] = true" ng-mouseleave="showSocketDetail[$index] = false">
+                                                {{socket.status.stat}}
+                                                <div class="am-dropdown-content_l" ng-if="socket.status.hasOwnProperty('ip')" ng-show="showSocketDetail[$index]" style="display: block;margin-top: 0">
+                                                    <table class="am-table am-text-nowrap am-table-compact" style="margin-bottom: 0px">
+                                                        <thead>
+                                                            <th>Protocal</th>
+                                                            <th>Listening</th>
+                                                            <th>Port</th>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td>{{socket.status.proto | uppercase}}</td>
+                                                                <td>{{socket.status.ip}}</td>
+                                                                <td>{{socket.status.port}}</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </span>
+                                        </li>
+                                    </ul>
+                                </td>
+                                <td>
+                                    <ul>
+                                        <li ng-repeat="conn in child.connections track by $index">
+                                            <span>{{::conn.port}}</span>
+                                            <span class="am-fr am-dropdown" style="cursor: pointer" ng-mouseover="showConnDetail[$index] = true" ng-mouseleave="showConnDetail[$index] = false">
+                                                {{conn.status.stat}}
+                                                <div class="am-dropdown-content_l" ng-if="conn.status.hasOwnProperty('ip')" ng-show="showConnDetail[$index]" style="display: block;margin-top: 0;">
+                                                    <table class="am-table am-text-nowrap am-table-compact" style="margin-bottom: 0px">
+                                                        <thead>
+                                                            <th>Protocal</th>
+                                                            <th>Connected</th>
+                                                            <th>Port</th>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td>{{conn.status.proto | uppercase}}</td>
+                                                                <td>{{conn.status.ip}}</td>
+                                                                <td>{{conn.status.port}}</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </span>
+                                        </li>
+                                    </ul>
+                                </td>
                                 <td class="table-data">{{::child.status.start}}</td>
-                                <td class="table-data">{{child.status.time}}</td>
-                                <td class="table-status">{{child.status.stat | status}}</td>
+                                <td class="table-status">
+                                    <div class="am-dropdown" style="cursor: pointer" ng-mouseover="showStatDetail = true" ng-mouseleave="showStatDetail = false">
+                                        {{child.status.stat | status}}
+                                        <div class="am-dropdown-content" ng-show="showStatDetail" style="display: block;margin-top: 0">
+                                            <div style="max-height: 300px; overflow-y: auto">
+                                                <table class="am-table am-text-nowrap am-table-compact" style="margin-bottom: 0px">
+                                                    <thead>
+                                                        <th>CPU%</th>
+                                                        <th>MEM%</th>
+                                                        <th>RSS</th>
+                                                        <th>CPU时间</th>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td class="table-data">{{child.status.cpu}}</td>
+                                                            <td class="table-data">{{child.status.mem}}</td>
+                                                            <td class="table-data">{{child.status.rss | KB2}}</td>
+                                                            <td class="table-data">{{child.status.time}}</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
                                 <td class="table-data">{{::child.server}}</td>
                             </tr>
                         </tbody>
@@ -276,6 +346,11 @@
         <div class="portlet-title">
             <div class="caption font-green bold">
                 <span ng-click="clientShowDetail = !clientShowDetail;" style="cursor: pointer">状态信息-客户端连接 <i ng-class="{true: 'am-icon-angle-double-up am-icon-sm', false: 'am-icon-angle-double-down am-icon-sm'}[clientShowDetail]"></i></span>
+                <div class="am-checkbox" style="display: inline-block;">
+                    <label>
+                        <input type="checkbox" ng-click="autoRefresh(auto)" ng-model="auto" ng-init="auto=false"> 自动刷新
+                    </label>
+                </div>
             </div>
             <div class="font-green bold am-fr">
                 <span class="am-icon-refresh" ng-show="!checking" ng-click="CheckClientSessions()" style="cursor: pointer"></span>
@@ -291,7 +366,7 @@
         <div class="tpl-block" ng-show="clientShowDetail">
             <div class="am-g">
                 <div class="am-u-sm-12">
-                    <table class="am-table am-table-hover table-main">
+                    <table class="am-table am-table-hover table-main" style="width: 100%">
                         <thead>
                             <tr>
                                 <th class="table-data">经纪公司代码</th>
@@ -305,21 +380,23 @@
                                 <th class="table-data">用户端产品信息</th>
                                 <th class="table-data">用户端接口信息</th>
                                 <th class="table-data">登录次数</th>
+                                <th class="table-data">最后更新</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr ng-repeat="data in statusList | filter: keyword">
-                                <td>{{data.broker_id}}</td>
-                                <td>{{data.user_id}}</td>
-                                <td>{{data.user_type}}</td>
+                                <td>{{::data.broker_id}}</td>
+                                <td>{{::data.user_id}}</td>
+                                <td>{{::data.user_type}}</td>
                                 <td>{{data.session_id}}</td>
-                                <td>{{data.front_id}}</td>
+                                <td>{{::data.front_id}}</td>
                                 <td>{{data.login_time}}</td>
                                 <td>{{data.ip_address}}</td>
                                 <td>{{data.mac_address}}</td>
-                                <td>{{data.prod_info}}</td>
+                                <td style="max-width:160px; word-wrap: break-word">{{data.prod_info}}</td>
                                 <td>{{data.inter_info}}</td>
                                 <td>{{data.total_login}}</td>
+                                <td>{{data.updated_time}}</td>
                             </tr>
                         </tbody>
                     </table>

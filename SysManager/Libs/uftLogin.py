@@ -6,7 +6,7 @@ def run(client, module):
     mod = {
         'grep': dest,
         'args': {
-            'pattern': 'InitSeatInfo|HsUftLogin 5 Login rtn'
+            'pattern': 'InitUftApi|HsUftLogin 5 Login rtn'
         }
     }
     return grep.run(client, mod)

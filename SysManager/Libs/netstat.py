@@ -2,6 +2,7 @@
 import shell
 
 def run(client, module):
+    protocol = module.get('netstat', 'tcp').lower()[0]
     args = module.get('args')
     if args:
         if args.has_key('processes'):
@@ -17,16 +18,21 @@ def run(client, module):
         else:
             port_list = ''
         mod = {
-            'shell': """netstat -tanp | sed 1,2d | \
-                awk '$4 ~/{0}/ && \
-                $7 ~/{1}/ && $7 !~/^-/\
-                {{print}}'""".format(
-                    port_list,
-                    process_list
+            'shell': """\
+netstat -{proto}anp | \
+awk '
+    $0 ~/{ports}/ && $NF ~/{procs}/ && $NF !~/^-/ {{print}}
+'
+                """.format(
+                    proto=protocol,
+                    ports=port_list,
+                    procs=process_list
                 )
         }
     else:
         mod = {
-            'shell': """netstat -tanp | sed 1,2d | awk '$7 !~/^-/{print}'"""
+            'shell': """\
+netstat -{}anp | awk '$NF !~/^-/{{print}}'
+                """.format(protocol)
         }
     return shell.run(client, mod)

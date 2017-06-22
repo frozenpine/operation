@@ -15,5 +15,6 @@ class netstatParser(OutputParser):
                 'proto', 'local_ip', 'local_port',
                 'remote_ip', 'remote_port', 'state', 'pid', 'proc'
             ],
-            primary_key='state'
+            primary_key='state',
+            skip_headline=False
         )

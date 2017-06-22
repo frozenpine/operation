@@ -6,7 +6,7 @@ def run(client, module):
     mod = {
         'grep': dest,
         'args': {
-            'pattern': 'OnConnected|OnRspUserLogin|OnDisConnected'
+            'pattern': 'OnConnected|OnRspUserLogin|OnDisconnected'
         }
     }
     return grep.run(client, mod)

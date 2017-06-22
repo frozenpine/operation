@@ -38,21 +38,28 @@ class SystemApi(Resource):
                     details = json.loads(json.dumps(op.detail))
                     params = details['remote']['params']
                     params['ip'] = sys.ip
-                    params['user'] = sys.user
-                    params['password'] = sys.login_pwd
+                    if not op.type.IsInteractivator():
+                        params['user'] = sys.user
+                        params['password'] = sys.login_pwd
                     op.detail = details
                     db.session.add(op)
-                for ds in DataSource.query.filter(
-                        DataSource.src_type == DataSourceType.FILE
-                    ):
+                for ds in sys.data_sources:
                     source = json.loads(json.dumps(ds.source))
-                    source['uri'] = re.sub(
-                        '^(?P<header>[^:]+)://([^:]+):([^@]+)@([^:]+):(?P<tailer>.+)$',
-                        lambda matchs: matchs.group('header') + \
-                            "://" + sys.user + ":" + sys.login_pwd + \
-                            "@" + sys.ip + ":" + matchs.group('tailer'),
-                        source['uri']
-                    )
+                    if ds.src_type.value == DataSourceType.FILE.value:
+                        source['uri'] = re.sub(
+                            r'^(?P<header>[^:]+)://[^@]+@[^:]+:(?P<tailer>.+)$',
+                            lambda matchs: matchs.group('header') + \
+                                "://" + sys.user + ":" + sys.login_pwd + \
+                                "@" + sys.ip + ":" + matchs.group('tailer'),
+                            source['uri']
+                        )
+                    else:
+                        source['uri'] = re.sub(
+                            r'^(?P<header>[^@]+)@[^:]+:(?P<tailer>.+)$',
+                            lambda matchs: matchs.group('header') + \
+                                "@" + sys.ip + ":" + matchs.group('tailer'),
+                            source['uri']
+                        )
                     ds.source = source
                     db.session.add(ds)
                 db.session.add(sys)

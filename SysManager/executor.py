@@ -158,8 +158,7 @@ if __name__ == '__main__':
     conf = SSHConfig('192.168.101.126', 'qdam', 'qdam')
     exe = Executor.Create(conf)
     mod = {
-        'name': 'uftLogin',
-        'uftLogin': '/home/qdam/uftSyslog.log'
+        'name': 'netstat'
     }
     result = exe.run(mod)
     for line in result.lines:

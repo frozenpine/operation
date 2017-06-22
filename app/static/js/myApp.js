@@ -130,6 +130,7 @@ app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
             })
             .error(function(response) {
                 console.log(response);
+                $scope.checking = false;
             });
     };
     $scope.autoRefresh = function(auto) {
@@ -147,10 +148,6 @@ app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
             if ($routeParams.hasOwnProperty('sysid') && response.sys_id == $routeParams.sysid) {
                 $scope.serverStatics = response.details;
                 $scope.checkSvrStatics();
-                /*
-                $scope.svrStaticInterval = $interval(function() { $scope.checkSvrStatics(); }, 60000);
-                globalVar.intervals.push($scope.svrStaticInterval);
-                */
             }
         })
         .error(function(response) {
@@ -164,7 +161,13 @@ app.controller('sysStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
         $scope.checking = true;
         angular.forEach($scope.systemStatics, function(value1, index1) {
             angular.forEach(value1.detail, function(value2, index2) {
-                $scope.systemStatics[index1].detail[index2].status.stat = "checking...";
+                value2.status.stat = 'checking';
+                angular.forEach(value2.sockets, function(value3, index3) {
+                    value3.status.stat = '检查中...';
+                });
+                angular.forEach(value2.connections, function(value4, index4) {
+                    value4.status.stat = '检查中...';
+                });
             });
         });
         $http.get('api/system/id/' + $routeParams.sysid + '/sys_statics/check')
@@ -593,7 +596,7 @@ app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootSco
             console.log(response);
         });
 }]);
-app.controller('clientStaticsControl', ['$scope', '$http', '$routeParams', function($scope, $http, $routeParams) {
+app.controller('clientStaticsControl', ['$scope', 'globalVar', '$http', '$routeParams', '$interval', function($scope, globalVar, $http, $routeParams, $interval) {
     $scope.clientShowDetail = true;
     $scope.userSessionShow = false;
     $scope.CheckClientSessions = function() {
@@ -609,6 +612,15 @@ app.controller('clientStaticsControl', ['$scope', '$http', '$routeParams', funct
                 $scope.checking = false;
             });
     };
+    $scope.autoRefresh = function(auto) {
+        if (auto) {
+            $scope.clientSessionInterval = $interval(function() { $scope.CheckClientSessions(); }, 300000);
+            $scope.CheckClientSessions();
+            globalVar.intervals.push($scope.clientSessionInterval);
+        } else {
+            $interval.cancel($scope.clientSessionInterval);
+        }
+    }
     $scope.CheckClientSessions();
 }]);
 app.controller('warningCtrl', ['$scope', '$http', function($scope, $http) {
@@ -723,6 +735,9 @@ app.filter('mask', function() {
 app.filter('status', function() {
     return function(stat) {
         if (stat != "stopped") {
+            if (stat.indexOf("check") >= 0) {
+                return '检查中...';
+            }
             switch (stat[0]) {
                 case 'D':
                     return '不可中断 ';

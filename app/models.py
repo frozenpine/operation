@@ -9,6 +9,7 @@ from enum import Enum
 from flask import current_app
 from flask_login import UserMixin
 from ipaddress import IPv4Address, ip_address
+from sqlalchemy import orm
 from sqlalchemy_utils import observes
 from sqlalchemy_utils.types import (ArrowType, ChoiceType, DateTimeRangeType,
                                     IPAddressType, JSONType)
@@ -160,17 +161,31 @@ class SQLModelMixin(object):
             data = getattr(self, field)
             if not callable(data):
                 if isinstance(data, list):
-                    results[field] = [x.name for x in data]
+                    results[field] = [{
+                        'id': x.id,
+                        'name': hasattr(x, 'name') and x.name or '',
+                        'uuid': hasattr(x, 'uuid') and x.uuid or None
+                    } for x in data]
                 elif isinstance(data, dict):
                     results[field] = json.dumps(data)
                 elif isinstance(data, db.Query):
-                    results[field] = [x.name for x in data.all()]
+                    results[field] = [{
+                        'id': x.id,
+                        'name': hasattr(x, 'name') and x.name or '',
+                        'uuid': hasattr(x, 'uuid') and x.uuid or None
+                    } for x in data.all()]
                 elif isinstance(data, IPv4Address):
                     results[field] = data.exploded
                 elif isinstance(data, Arrow):
                     results[field] = data.to('local').format('YYYY-MM-DD HH:mm:ss ZZ')
-                elif hasattr(data, 'name'):
+                elif isinstance(data, Enum):
                     results[field] = data.name
+                elif isinstance(data, db.Model):
+                    results[field] = {
+                        'id': data.id,
+                        'name': hasattr(data, 'name') and data.name or '',
+                        'uuid': hasattr(data, 'uuid') and data.uuid or None
+                    }
                 else:
                     results[field] = data
         return results
@@ -219,6 +234,10 @@ class HaType(Enum):
 class SocketType(Enum):
     TCP = 1
     UDP = 2
+
+class SocketDirection(Enum):
+    Listen = 1
+    Establish = 2
 
 class MethodType(Enum):
     Check = 1
@@ -369,15 +388,10 @@ class OpRole(SQLModelMixin, db.Model):
         lazy='dynamic'
     )
 
-    def __init__(self, name):
-        self.name = name
-
-    def __repr__(self):
-        return '<OpRole {}>'.format(self.name)
-
 class OpPrivilege(SQLModelMixin, db.Model):
     __tablename__ = 'privileges'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+
     @property
     def name(self):
         return '{}.{}'.format(self.uri, self.bit.name)
@@ -416,13 +430,53 @@ class TradeProcess(SQLModelMixin, db.Model):
 class Socket(SQLModelMixin, db.Model):
     __tablename__ = 'sockets'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    uuid = db.Column(
+        db.String, index=True,
+        default=lambda: unicode(uuid4()).lower()
+    )
     name = db.Column(db.String, unique=True, index=True)
     description = db.Column(db.String)
-    socket_type = db.Column(ChoiceType(SocketType, impl=db.Integer()), default=SocketType.TCP)
-    socket_uri = db.Column(db.String)
-    listening_address = db.Column(IPAddressType, nullable=False)
-    bind_port = db.Column(db.Integer, nullable=False)
+    type = db.Column(
+        ChoiceType(SocketType, impl=db.Integer()),
+        default=SocketType.TCP
+    )
+    direction = db.Column(
+        ChoiceType(SocketDirection, impl=db.Integer()),
+        default=SocketDirection.Listen
+    )
+    uri = db.Column(db.String)
+    address = db.Column(IPAddressType, nullable=False)
+    port = db.Column(db.Integer, nullable=False)
     proc_id = db.Column(db.Integer, db.ForeignKey('trade_processes.id'), index=True)
+
+    @property
+    def ip(self):
+        return self.address.exploded
+    @ip.setter
+    def ip(self, addr):
+        self.address = ip_address(addr)
+
+    @observes('uri')
+    def uriObserver(self, uri):
+        if 'default' in uri:
+            uri_pattern = re.compile(
+                r'(?:\w+:)?default\s+-h\s+(?P<ip>[\d.]+)\s+-p\s+(?P<port>\d+)'
+            )
+        else:
+            uri_pattern = re.compile(
+                r'(?P<protocal>[^:]+)://(?P<ip>[^:]+):(?P<port>.+)$'
+            )
+        parse = uri_pattern.match(uri).groupdict()
+        if re.match('[Uu][Dd][Pp]', parse.get('protocal', '')):
+            self.type = SocketType.UDP
+        else:
+            self.type = SocketType.TCP
+        if parse['ip'] in ['127.0.0.1', 'localhost'] \
+            and self.direction == SocketDirection.Listen.value:
+            self.address = ip_address('0.0.0.0')
+        else:
+            self.address = ip_address(parse['ip'])
+        self.port = int(parse['port'])
 
 class SystemType(SQLModelMixin, db.Model):
     __tablename__ = 'system_types'

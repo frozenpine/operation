@@ -11,7 +11,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.sql import text
 
 from app.models import (DataSource, DataSourceModel, DataSourceType, Server,
-                        TradeProcess, TradeSystem)
+                        TradeProcess, TradeSystem, SocketDirection)
 from SysManager.Common import AESCrypto
 from SysManager.configs import SSHConfig, WinRmConfig
 from SysManager.executor import Executor
@@ -167,7 +167,39 @@ class SystemList(object):
                                 'command': proc.status.get('command')
                             },
                             'server':
-                                proc.server.name + "({})".format(proc.server.ip)
+                                proc.server.name + "({})".format(proc.server.ip),
+                            'sockets': [{
+                                'id': sock.id,
+                                'name': sock.name,
+                                'uri': sock.uri,
+                                'ip': sock.ip,
+                                'port': sock.port,
+                                'status':
+                                    hasattr(self, 'socket_status') \
+                                    and getattr(self, 'socket_status').get(
+                                        '{}://{}:{}'.format(
+                                            sock.type.name.lower(),
+                                            sock.ip, sock.port
+                                        ), {'stat': u'未侦听'}
+                                    ) or {'stat': u'未侦听'}
+                            } for sock in proc.sockets \
+                                if sock.direction.value == SocketDirection.Listen.value],
+                            'connections': [{
+                                'id': sock.id,
+                                'name': sock.name,
+                                'uri': sock.uri,
+                                'ip': sock.ip,
+                                'port': sock.port,
+                                'status':
+                                    hasattr(self, 'connection_status') \
+                                    and getattr(self, 'connection_status').get(
+                                        '{}://{}:{}'.format(
+                                            sock.type.name.lower(),
+                                            sock.ip, sock.port
+                                        ), {'stat': u'未连接'}
+                                    ) or {'stat': u'未连接'}
+                            } for sock in proc.sockets \
+                                if sock.direction.value == SocketDirection.Establish.value]
                         } for proc in each_sys.processes]
                     }
                 )
@@ -194,7 +226,39 @@ class SystemList(object):
                                 'command': None
                             },
                             'server':
-                                proc.server.name + "({})".format(proc.server.ip)
+                                proc.server.name + "({})".format(proc.server.ip),
+                            'sockets': [{
+                                'id': sock.id,
+                                'name': sock.name,
+                                'uri': sock.uri,
+                                'ip': sock.ip,
+                                'port': sock.port,
+                                'status':
+                                    hasattr(self, 'socket_status') \
+                                    and getattr(self, 'socket_status').get(
+                                        '{}://{}:{}'.format(
+                                            sock.type.name.lower(),
+                                            sock.ip, sock.port
+                                        ), {'stat': u'未侦听'}
+                                    ) or {'stat': u'未侦听'}
+                            } for sock in proc.sockets \
+                                if sock.direction.value == SocketDirection.Listen.value],
+                            'connections': [{
+                                'id': sock.id,
+                                'name': sock.name,
+                                'uri': sock.uri,
+                                'ip': sock.ip,
+                                'port': sock.port,
+                                'status':
+                                    hasattr(self, 'connection_status') \
+                                    and getattr(self, 'connection_status').get(
+                                        '{}://{}:{}'.format(
+                                            sock.type.name.lower(),
+                                            sock.ip, sock.port
+                                        ), {'stat': u'未连接'}
+                                    ) or {'stat': u'未连接'}
+                            } for sock in proc.sockets \
+                                if sock.direction.value == SocketDirection.Establish.value]
                         } for proc in each_sys.processes]
                     }
                 )
@@ -221,6 +285,8 @@ class ProcStaticApi(Resource, SystemList):
         super(ProcStaticApi, self).__init__()
         self.proc_list = {}
         self.checker = []
+        self.socket_status = {}
+        self.connection_status = {}
 
     def find_processes(self):
         for child_sys in self.system_list:
@@ -230,6 +296,8 @@ class ProcStaticApi(Resource, SystemList):
                 self.proc_list[proc.server].append(proc)
 
     def check_proc(self, svr, processes):
+        port_list = set()
+        process_list = set()
         conf = SSHConfig(
             svr.ip,
             svr.admin_user,
@@ -237,6 +305,8 @@ class ProcStaticApi(Resource, SystemList):
         )
         executor = Executor.Create(conf)
         for proc in processes:
+            process_list.add(proc.exec_file)
+            port_list |= set([socket.port for socket in proc.sockets])
             mod = {
                 'name': 'psaux',
                 'args': {
@@ -261,6 +331,46 @@ class ProcStaticApi(Resource, SystemList):
                     'time': None,
                     'command': None
                 }
+        mod = {'name': 'netstat'}
+        if len(port_list) > 0:
+            if not mod.has_key('args'):
+                mod['args'] = {}
+            mod['args']['ports'] = list(port_list)
+        if len(process_list) > 0:
+            if not mod.has_key('args'):
+                mod['args'] = {}
+            mod['args']['processes'] = list(process_list)
+        if mod.has_key('args'):
+            socket_result = executor.run(mod)
+            if 'LISTEN' in socket_result.data.keys():
+                # 处理Windows Linux平台的不同
+                try:
+                    sockets = socket_result.data['LISTEN']
+                except KeyError:
+                    sockets = socket_result.data['LISTENING']
+                for socket in sockets:
+                    self.socket_status['{}://{}:{}'.format(
+                        socket['proto'],
+                        socket['local_ip'],
+                        socket['local_port']
+                    )] = {
+                        'proto': socket['proto'],
+                        'ip': socket['local_ip'],
+                        'port': socket['local_port'],
+                        'stat': u'侦听中'
+                    }
+            if socket_result.data.has_key('ESTABLISHED'):
+                for socket in socket_result.data['ESTABLISHED']:
+                    self.connection_status['{}://{}:{}'.format(
+                        socket['proto'],
+                        socket['remote_ip'],
+                        socket['remote_port']
+                    )] = {
+                        'proto': socket['proto'],
+                        'ip': socket['remote_ip'],
+                        'port': socket['remote_port'],
+                        'stat': u'已连接'
+                    }
         executor.client.close()
 
     def get(self, **kwargs):
@@ -285,15 +395,16 @@ class ProcStaticApi(Resource, SystemList):
                 'message': 'system not found'
             }, 404
 
-class LoginListApi(Resource):
+class LoginListApi(Resource, SystemList):
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
+        self.find_systems(sys)
         rtn = []
         if sys:
             src = DataSource.query.filter(
                 DataSource.src_type == DataSourceType.SQL,
                 DataSource.src_model == DataSourceModel.Seat,
-                DataSource.sys_id == sys.id
+                DataSource.sys_id.in_([x.id for x in self.system_list])
             ).first()
             if src:
                 try:
@@ -449,15 +560,16 @@ class LoginCheckApi(Resource):
                 'message': 'system not found'
             }, 404
 
-class UserSessionListApi(Resource):
+class UserSessionListApi(Resource, SystemList):
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
+        self.find_systems(sys)
         rtn = []
         if sys:
             src = DataSource.query.filter(
                 DataSource.src_type == DataSourceType.SQL,
                 DataSource.src_model == DataSourceModel.Session,
-                DataSource.sys_id == sys.id,
+                DataSource.sys_id.in_([x.id for x in self.system_list]),
                 DataSource.disabled == False
             ).first()
             if src:
@@ -485,6 +597,8 @@ class UserSessionListApi(Resource):
                             except IndexError:
                                 tmp[src.source['formatter'][idx]['key']] = \
                                     src.source['formatter'][idx]['default']
+                            finally:
+                                tmp['updated_time'] = arrow.now().strftime('%H:%M:%S')
                         rtn.append(tmp)
                     sys_db.close()
                     return rtn

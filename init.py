@@ -147,6 +147,15 @@ def init_inventory():
     db.session.add_all(processes.values())
     db.session.commit()
 
+    sockets = {}
+    for sock  in inventory['Sockets']:
+        if sock.has_key('process'):
+            proc = processes[sock.pop('process')]
+            sock['proc_id'] = proc.id
+        sockets[sock['uri']] = Socket(**sock)
+    db.session.add_all(sockets.values())
+    db.session.commit()
+
     for parent, childs in inventory['Relations']['Parents'].iteritems():
         for child in childs:
             systems[parent].child_systems.append(systems[child])
@@ -177,6 +186,21 @@ def init_inventory():
         params['ip'] = '192.168.56.1'
         params['password'] = 'qdamqdam'
     db.session.add_all(operations)
+    db.session.commit()
+
+@manager.command
+def init_sockets():
+    f = open('inventory.yml')
+    inventory = yaml.load(f)
+
+    sockets = {}
+    for sock  in inventory['Sockets']:
+        if sock.has_key('process'):
+            proc = TradeProcess.find(name=sock.pop('process'))
+            if proc:
+                sock['proc_id'] = proc.id
+        sockets[sock['uri']] = Socket(**sock)
+    db.session.add_all(sockets.values())
     db.session.commit()
 
 @manager.command

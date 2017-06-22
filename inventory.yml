@@ -33,57 +33,87 @@ Systems:
     user: quantdo
     password: quantdo
 Processes:
-  - name: 交易核心
+  - name: &qtrade 交易核心
     type: HaType.Master #可选配置，默认为Master，可配置项：HaType.Master，HaType.Slave
     system: *parent1
     server: *svr01
     exec_file: qtrade #实际的可执行文件名
-  - name: 查询核心
+  - name: &qquery 查询核心
     system: *parent1
     server: *svr01
     exec_file: qquery
-  - name: 数据上场
+  - name: &qdata 数据上场
     system: *parent1
     server: *svr01
     exec_file: qdata
-  - name: 数据下场
+  - name: &qmdb 数据下场
     system: *parent1
     server: *svr01
     exec_file: qmdb
-  - name: QSDB
+  - name: &qsdb QSDB
     system: *parent1
     server: *svr01
     exec_file: qsdb
-  - name: 行情核心
+  - name: &qmarket 行情核心
     system: *parent1
     server: *svr01
     exec_file: qmarket
-  - name: 事前风控进程
+  - name: &ice1 事前风控进程
     system: *child1_2
     server: *svr01
     exec_file: qicegateway
     param: 1  #可选配置，可执行文件的第一个参数，此处用于标识主备进程
-  - name: 事中风控进程
+  - name: &ice2 事中风控进程
     type: HaType.Master
     system: *child1_2
     server: *svr01
     exec_file: qicegateway
     param: 2
-  - name: 柜台进程
+  - name: &tomcat 柜台进程
     system: *child1_3
     server: *svr02
     exec_file: java
     param: tomcat
-  - name: 风控核心
+  - name: &risk 风控核心
     type: HaType.Master
     system: *child1_2
     server: *svr02
     exec_file: java
     param: -d64
-  - name: 业务数据库
+  - name: &db 业务数据库
     system: *child1_3
     server: *svr02
     exec_file: mysqld
+Sockets:
+  - name: qdata
+    description: 数据关系:提供方(qdata)，使用方(qtrade)
+    direction: SocketDirection.Listen # 可选配置，默认即为Listen，其他可用配置：Establish
+    uri: tcp://127.0.0.1:30001
+    process: *qdata
+  - name: qmarket
+    description: 数据关系:提供方(qmarket)，使用方(qtrade)
+    uri: tcp://127.0.0.1:30007
+    process: *qmarket
+  - name: memchange
+    description: 数据关系:提供方(qtrade)，使用方(qmdb/qquery)
+    uri: tcp://127.0.0.1:30003
+    process: *qtrade
+  - name: qfront0
+    description: 数据关系:提供方(qfront/qtrade)，使用方(api/client)
+    uri: tcp://127.0.0.1:30005
+    process: *qtrade
+  - name: gateway0
+    description: 提供方(qfront/qtrade)，使用方(qfront[qicefront/qfixfront/...])
+    uri: tcp://127.0.0.1:30100
+    process: *qtrade
+  - name: qquery
+    description: 数据关系:提供方(qquery)，使用方(qtrade/qfront[qicefront/qfixfront/...])
+    uri: tcp://127.0.0.1:30004
+    process: *qquery
+#  - name: qoffer
+#    description: 提供方(qoffer/qkaymay/qgwuft/qgwpats/...)，使用方(qtrade))
+#    socket_uri: tcp://127.0.0.1:30300
+#    process: *qoffer
 Relations:
   Parents:
     *parent1: 
