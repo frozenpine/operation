@@ -11,7 +11,7 @@ from flask_login import current_user
 from flask_restful import Resource
 from sqlalchemy import text
 
-from app import db
+from app import db, globalEncryptKey
 from app.auth.errors import (AuthError, InvalidUsernameOrPassword,
                              LoopAuthorization, NoPrivilege)
 from app.auth.privileged import CheckPrivilege
@@ -224,14 +224,14 @@ class OperationUIApi(Resource):
                     valid_session = session[key]['login']
             else:
                 valid_session = False
-            if current_app.config['GLOBAL_ENCRYPT']:
+            if globalEncryptKey:
                 return render_template(
                     'Interactivators/{}.html'.format(op.operate_define.detail['mod']['name']),
                     session=valid_session,
                     login_user=op.operate_define.detail['remote']['params']['user'],
                     login_password=AESCrypto.decrypt(
                         op.operate_define.detail['remote']['params']['password'],
-                        current_app.config['SECRET_KEY']
+                        globalEncryptKey
                     ),
                     captcha=op.operate_define.detail['remote']['params'].get('captcha', False),
                     captcha_uri=url_for('api.operation_captcha', id=op.id),

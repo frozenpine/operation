@@ -194,11 +194,11 @@
                                 <td class="table-data">{{::child.process}}</td>
                                 <td class="table-data">{{::child.status.pid}}</td>
                                 <td class="table-data">{{::child.proc_role}}</td>
-                                <td class="table-data">
+                                <td class="table-data" style="max-width: 130px">
                                     <ul>
                                         <li ng-repeat="socket in child.sockets track by $index">
                                             <span>{{::socket.port}}</span>
-                                            <span class="am-fr am-dropdown" style="cursor: pointer" ng-mouseover="showSocketDetail[$index] = true" ng-mouseleave="showSocketDetail[$index] = false">
+                                            <span class="am-fr am-dropdown am-badge am-round" ng-class="{true: 'tpl-badge-success', false: ''}[socket.status.stat=='侦听中']" style="cursor: pointer" ng-mouseover="showSocketDetail[$index] = true" ng-mouseleave="showSocketDetail[$index] = false">
                                                 {{socket.status.stat}}
                                                 <div class="am-dropdown-content_l" ng-if="socket.status.hasOwnProperty('ip')" ng-show="showSocketDetail[$index]" style="display: block;margin-top: 0">
                                                     <table class="am-table am-text-nowrap am-table-compact" style="margin-bottom: 0px">
@@ -220,11 +220,11 @@
                                         </li>
                                     </ul>
                                 </td>
-                                <td>
+                                <td class="table-data" style="max-width: 130px">
                                     <ul>
                                         <li ng-repeat="conn in child.connections track by $index">
                                             <span>{{::conn.port}}</span>
-                                            <span class="am-fr am-dropdown" style="cursor: pointer" ng-mouseover="showConnDetail[$index] = true" ng-mouseleave="showConnDetail[$index] = false">
+                                            <span class="am-fr am-dropdown am-badge am-round" ng-class="{true: 'tpl-badge-success', false: ''}[conn.status.stat=='已连接']" style="cursor: pointer" ng-mouseover="showConnDetail[$index] = true" ng-mouseleave="showConnDetail[$index] = false">
                                                 {{conn.status.stat}}
                                                 <div class="am-dropdown-content_l" ng-if="conn.status.hasOwnProperty('ip')" ng-show="showConnDetail[$index]" style="display: block;margin-top: 0;">
                                                     <table class="am-table am-text-nowrap am-table-compact" style="margin-bottom: 0px">
@@ -250,7 +250,7 @@
                                 <td class="table-status">
                                     <div class="am-dropdown" style="cursor: pointer" ng-mouseover="showStatDetail = true" ng-mouseleave="showStatDetail = false">
                                         {{child.status.stat | status}}
-                                        <div class="am-dropdown-content" ng-show="showStatDetail" style="display: block;margin-top: 0">
+                                        <div class="am-dropdown-content" ng-if="child.status.stat != 'stopped' && child.status.stat != 'checking'" ng-show="showStatDetail" style="display: block;margin-top: 0">
                                             <div style="max-height: 300px; overflow-y: auto">
                                                 <table class="am-table am-text-nowrap am-table-compact" style="margin-bottom: 0px">
                                                     <thead>
@@ -326,7 +326,7 @@
                                 <td>{{::data.seat_name}}</td>
                                 <td>{{data.trading_day}}</td>
                                 <td>{{data.login_time}}</td>
-                                <td style="max-width: 260px; word-wrap: break-word">{{::data.front_addr}}</td>
+                                <td class="am-text-break" style="max-width: 260px">{{::data.front_addr}}</td>
                                 <td>{{::data.seat_id | mask}}</td>
                                 <td>{{data.seat_status}}</td>
                                 <td>{{data.conn_count - (data.conn_count - data.disconn_count)}}</td>
@@ -393,7 +393,7 @@
                                 <td>{{data.login_time}}</td>
                                 <td>{{data.ip_address}}</td>
                                 <td>{{data.mac_address}}</td>
-                                <td style="max-width:160px; word-wrap: break-word">{{data.prod_info}}</td>
+                                <td class="am-text-break" style="max-width:160px">{{data.prod_info}}</td>
                                 <td>{{data.inter_info}}</td>
                                 <td>{{data.total_login}}</td>
                                 <td>{{data.updated_time}}</td>

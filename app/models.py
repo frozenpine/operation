@@ -15,6 +15,7 @@ from sqlalchemy_utils.types import (ArrowType, ChoiceType, DateTimeRangeType,
                                     IPAddressType, JSONType)
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from app import globalEncryptKey
 from SysManager.Common import AESCrypto
 
 from . import db
@@ -214,7 +215,7 @@ operator_system = db.Table(
 operator_server = db.Table(
     'operator_server',
     db.Column('operator_id', db.Integer, db.ForeignKey('operators.id'), index=True),
-    db.Column('system_id', db.Integer, db.ForeignKey('servers.id'), index=True),
+    db.Column('server_id', db.Integer, db.ForeignKey('servers.id'), index=True),
     db.Column('disabled', db.Boolean, default=False)
 )
 
@@ -424,7 +425,6 @@ class TradeProcess(SQLModelMixin, db.Model):
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     svr_id = db.Column(db.Integer, db.ForeignKey('servers.id'), index=True)
     config_files = db.relationship('ConfigFile', backref='process', lazy='dynamic')
-    status = db.Column(JSONType, default={})
     sockets = db.relationship('Socket', backref='process')
 
 class Socket(SQLModelMixin, db.Model):
@@ -515,19 +515,19 @@ class TradeSystem(SQLModelMixin, db.Model):
     login_pwd = db.Column(db.String)
     @property
     def password(self):
-        if current_app.config['GLOBAL_ENCRYPT']:
+        if globalEncryptKey:
             return AESCrypto.decrypt(
                 self.login_pwd,
-                current_app.config['SECRET_KEY']
+                globalEncryptKey
             )
         else:
             return self.login_pwd
     @password.setter
     def password(self, password):
-        if current_app.config['GLOBAL_ENCRYPT']:
+        if globalEncryptKey:
             self.login_pwd = AESCrypto.encrypt(
                 password,
-                current_app.config['SECRET_KEY']
+                globalEncryptKey
             )
         else:
             self.login_pwd = password
@@ -645,25 +645,24 @@ class Server(SQLModelMixin, db.Model):
     admin_pwd = db.Column(db.String)
     @property
     def password(self):
-        if current_app.config['GLOBAL_ENCRYPT']:
+        if globalEncryptKey:
             return AESCrypto.decrypt(
                 self.admin_pwd,
-                current_app.config['SECRET_KEY']
+                globalEncryptKey
             )
         else:
             return self.admin_pwd
     @password.setter
     def password(self, password):
-        if current_app.config['GLOBAL_ENCRYPT']:
+        if globalEncryptKey:
             self.admin_pwd = AESCrypto.encrypt(
                 password,
-                current_app.config['SECRET_KEY']
+                globalEncryptKey
             )
         else:
             self.admin_pwd = password
 
     processes = db.relationship('TradeProcess', backref='server', lazy='dynamic')
-    status = db.Column(JSONType, default={})
 
 class Operation(SQLModelMixin, db.Model):
     __tablename__ = 'operations'

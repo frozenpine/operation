@@ -40,6 +40,7 @@ db = SQLAlchemy()
 db_list = {}
 
 msgQueues = MessageQueues
+globalEncryptKey = None
 
 from auth import auth as auth_blueprint, login_manager
 from restful import restapi as restapi_blueprint
@@ -50,6 +51,8 @@ def create_app(config_name):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
+    if app.config['GLOBAL_ENCRYPT']:
+        globalEncryptkey = app.config['SECRET_KEY']
 
     login_manager.init_app(app)
     db.init_app(app)

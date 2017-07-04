@@ -116,6 +116,9 @@ app.controller('userController', ['$scope', '$http', function($scope, $http) {
 app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval', '$routeParams', function($scope, $http, globalVar, $interval, $routeParams) {
     $scope.svrShowDetail = true;
     $scope.checkSvrStatics = function() {
+        angular.forEach($scope.serverStatics, function(value, index) {
+            value.uptime = '检查中...';
+        });
         $scope.checking = true;
         $http.get('api/system/id/' + $routeParams.sysid + '/svr_statics/check')
             .success(function(response) {
@@ -136,7 +139,7 @@ app.controller('svrStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
     $scope.autoRefresh = function(auto) {
         if (auto) {
             $scope.svrStaticInterval = $interval(function() { $scope.checkSvrStatics(); }, 60000);
-            scope.checkSvrStatics();
+            $scope.checkSvrStatics();
             globalVar.intervals.push($scope.svrStaticInterval);
         } else {
             $interval.cancel($scope.svrStaticInterval);
@@ -587,10 +590,6 @@ app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootSco
             $rootScope.LoginStatics[$routeParams.sysid] = response;
             $scope.loginStatics = $rootScope.LoginStatics[$routeParams.sysid];
             $scope.CheckLoginLog();
-            /*
-            $scope.loginStaticInterval = $interval(function() { $scope.CheckLoginLog(); }, 30000);
-            globalVar.intervals.push($scope.loginStaticInterval);
-            */
         })
         .error(function(response) {
             console.log(response);

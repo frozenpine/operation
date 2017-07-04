@@ -13,5 +13,5 @@ class dfParser(OutputParser):
             r'(.+?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(.+%)$',
             key_list=[
                 'mount', 'total', 'used', 'available', 'percent'
-            ],
+            ]
         )

@@ -155,10 +155,10 @@ if __name__ == '__main__':
     for line in result.lines:
         print line
     '''
-    conf = SSHConfig('192.168.101.126', 'qdam', 'qdam')
+    conf = WinRmConfig('192.168.56.2', 'administrator', '022010blue@safe')
     exe = Executor.Create(conf)
     mod = {
-        'name': 'netstat'
+        'name': 'windf'
     }
     result = exe.run(mod)
     for line in result.lines:

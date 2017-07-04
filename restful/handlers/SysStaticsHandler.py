@@ -2,16 +2,17 @@
 import json
 import logging
 import re
-import threading
-import arrow
 
-from flask import abort, current_app
+#import threading
+import arrow
+import gevent
 from flask_restful import Resource
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
 
-from app.models import (DataSource, DataSourceModel, DataSourceType, Server,
-                        TradeProcess, TradeSystem, SocketDirection)
+from app import globalEncryptKey
+from app.models import (DataSource, DataSourceModel, DataSourceType,
+                        SocketDirection, TradeSystem)
 from SysManager.Common import AESCrypto
 from SysManager.configs import SSHConfig, WinRmConfig
 from SysManager.executor import Executor
@@ -21,7 +22,7 @@ def _decrypt(match):
     return match.group(1) + \
         AESCrypto.decrypt(
             match.group(2),
-            current_app.config['SECRET_KEY']
+            globalEncryptKey
         ) + \
         match.group(3)
 
@@ -35,35 +36,23 @@ class ServerList(object):
             if self.server_list.has_key(svr.ip):
                 continue
             else:
-                self.server_list[svr.ip] = svr
+                self.server_list[svr.ip] = (svr, {'status': {}})
         if len(sys.child_systems) > 0:
             for child_sys in sys.child_systems:
                 self.find_servers(child_sys)
 
     def make_response(self):
-        for svr in self.server_list.values():
-            try:
-                self.rtn['details'].append({
-                    'id': svr.id,
-                    'server': svr.ip,
-                    'updated_time': arrow.now().format('HH:mm:ss'),
-                    'uptime': svr.status.get('uptime'),
-                    'cpu': svr.status.get('cpu'),
-                    'disks': svr.status.get('disks'),
-                    'memory': svr.status.get('memory'),
-                    'swap': svr.status.get('swap')
-                })
-            except Exception:
-                self.rtn['details'].append({
-                    'id': svr.id,
-                    'server': svr.ip,
-                    'updated_time': arrow.now().format('HH:mm:ss'),
-                    'uptime': None,
-                    'cpu': None,
-                    'disks': None,
-                    'memory': None,
-                    'swap': None
-                })
+        for data in self.server_list.values():
+            self.rtn['details'].append({
+                'id': data[0].id,
+                'server': data[0].ip,
+                'updated_time': arrow.now().format('HH:mm:ss'),
+                'uptime': data[1]['status'].get('uptime'),
+                'cpu': data[1]['status'].get('cpu'),
+                'disks': data[1]['status'].get('disks'),
+                'memory': data[1]['status'].get('memory'),
+                'swap': data[1]['status'].get('swap')
+            })
 
 class ServerStaticListApi(Resource, ServerList):
     def __init__(self):
@@ -71,8 +60,6 @@ class ServerStaticListApi(Resource, ServerList):
 
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
-        if len(self.server_list) > 0:
-            self.server_list = {}
         if sys:
             self.rtn['sys_id'] = sys.id
             self.find_servers(sys)
@@ -90,16 +77,12 @@ class ServerStaticApi(Resource, ServerList):
 
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
-        if len(self.server_list) > 0:
-            self.server_list = {}
         if sys:
             self.rtn['sys_id'] = sys.id
             self.find_servers(sys)
-            for svr in self.server_list.values():
-                self.checker.append(threading.Thread(target=self.check_svr, args=(svr,)))
-            for tr in self.checker:
-                tr.start()
-                tr.join()
+            for entry in self.server_list.values():
+                self.checker.append(gevent.spawn(self.check_svr, entry))
+            gevent.joinall(self.checker)
             self.make_response()
             return self.rtn
         else:
@@ -107,9 +90,9 @@ class ServerStaticApi(Resource, ServerList):
                 'message': 'system not found'
             }, 404
 
-    def check_svr(self, svr):
+    def check_svr(self, entry):
         result = {}
-        conf = SSHConfig(svr.ip, svr.admin_user, svr.admin_pwd)
+        conf = SSHConfig(entry[0].ip, entry[0].user, entry[0].password)
         modlist = [
             {'name': 'uptime'},
             {'name': 'mpstat'},
@@ -120,20 +103,21 @@ class ServerStaticApi(Resource, ServerList):
         executor = Executor.Create(conf)
         for mod in modlist:
             resultlist.append(executor.run(mod))
-        result['id'] = svr.id
-        result['server'] = svr.ip
+        result['id'] = entry[0].id
+        result['server'] = entry[0].ip
         result['uptime'] = resultlist[0].data
         result['cpu'] = resultlist[1].data
         result['disks'] = resultlist[2].data
         result['memory'] = resultlist[3].data['mem']
         result['swap'] = resultlist[3].data['swap']
-        svr.status = result
+        entry[1]['status'] = result
         executor.client.close()
 
 class SystemList(object):
     def __init__(self):
         self.system_list = []
         self.rtn = []
+        self.proc_status = {}
 
     def find_systems(self, sys):
         if len(sys.processes) > 0:
@@ -144,124 +128,75 @@ class SystemList(object):
 
     def make_response(self):
         for each_sys in self.system_list:
-            try:
-                self.rtn.append(
-                    {
-                        'name': each_sys.name,
-                        'updated_time': arrow.now().format('HH:mm:ss'),
-                        'detail': [{
-                            'id': proc.id,
-                            'process': proc.name,
-                            'proc_role': "{}".format(proc.type.name),
-                            'status': {
-                                'user': proc.status.get('user'),
-                                'pid': proc.status.get('pid'),
-                                'cpu': proc.status.get('cpu%'),
-                                'mem': proc.status.get('mem%'),
-                                'vsz': proc.status.get('vsz'),
-                                'rss': proc.status.get('rss'),
-                                'tty': proc.status.get('tty'),
-                                'stat': proc.status.get('stat'),
-                                'start': proc.status.get('start'),
-                                'time': proc.status.get('time'),
-                                'command': proc.status.get('command')
-                            },
-                            'server':
-                                proc.server.name + "({})".format(proc.server.ip),
-                            'sockets': [{
-                                'id': sock.id,
-                                'name': sock.name,
-                                'uri': sock.uri,
-                                'ip': sock.ip,
-                                'port': sock.port,
-                                'status':
-                                    hasattr(self, 'socket_status') \
-                                    and getattr(self, 'socket_status').get(
-                                        '{}://{}:{}'.format(
-                                            sock.type.name.lower(),
-                                            sock.ip, sock.port
-                                        ), {'stat': u'未侦听'}
-                                    ) or {'stat': u'未侦听'}
-                            } for sock in proc.sockets \
-                                if sock.direction.value == SocketDirection.Listen.value],
-                            'connections': [{
-                                'id': sock.id,
-                                'name': sock.name,
-                                'uri': sock.uri,
-                                'ip': sock.ip,
-                                'port': sock.port,
-                                'status':
-                                    hasattr(self, 'connection_status') \
-                                    and getattr(self, 'connection_status').get(
-                                        '{}://{}:{}'.format(
-                                            sock.type.name.lower(),
-                                            sock.ip, sock.port
-                                        ), {'stat': u'未连接'}
-                                    ) or {'stat': u'未连接'}
-                            } for sock in proc.sockets \
-                                if sock.direction.value == SocketDirection.Establish.value]
-                        } for proc in each_sys.processes]
-                    }
-                )
-            except Exception:
-                self.rtn.append(
-                    {
-                        'name': each_sys.name,
-                        'updated_time': arrow.now().format('HH:mm:ss'),
-                        'detail': [{
-                            'id': proc.id,
-                            'process': proc.name,
-                            'proc_role': "{}".format(proc.type.name),
-                            'status': {
-                                'user': None,
-                                'pid': None,
-                                'cpu': None,
-                                'mem': None,
-                                'vsz': None,
-                                'rss': None,
-                                'tty': None,
-                                'stat': 'checking...',
-                                'start': None,
-                                'time': None,
-                                'command': None
-                            },
-                            'server':
-                                proc.server.name + "({})".format(proc.server.ip),
-                            'sockets': [{
-                                'id': sock.id,
-                                'name': sock.name,
-                                'uri': sock.uri,
-                                'ip': sock.ip,
-                                'port': sock.port,
-                                'status':
-                                    hasattr(self, 'socket_status') \
-                                    and getattr(self, 'socket_status').get(
-                                        '{}://{}:{}'.format(
-                                            sock.type.name.lower(),
-                                            sock.ip, sock.port
-                                        ), {'stat': u'未侦听'}
-                                    ) or {'stat': u'未侦听'}
-                            } for sock in proc.sockets \
-                                if sock.direction.value == SocketDirection.Listen.value],
-                            'connections': [{
-                                'id': sock.id,
-                                'name': sock.name,
-                                'uri': sock.uri,
-                                'ip': sock.ip,
-                                'port': sock.port,
-                                'status':
-                                    hasattr(self, 'connection_status') \
-                                    and getattr(self, 'connection_status').get(
-                                        '{}://{}:{}'.format(
-                                            sock.type.name.lower(),
-                                            sock.ip, sock.port
-                                        ), {'stat': u'未连接'}
-                                    ) or {'stat': u'未连接'}
-                            } for sock in proc.sockets \
-                                if sock.direction.value == SocketDirection.Establish.value]
-                        } for proc in each_sys.processes]
-                    }
-                )
+            self.rtn.append(
+                {
+                    'name': each_sys.name,
+                    'updated_time': arrow.now().format('HH:mm:ss'),
+                    'detail': [{
+                        'id': proc.id,
+                        'process': proc.name,
+                        'proc_role': "{}".format(proc.type.name),
+                        'status': {
+                            'user': self.proc_status.has_key(proc) and \
+                                self.proc_status[proc].get('user') or None,
+                            'pid': self.proc_status.has_key(proc) and \
+                                self.proc_status[proc].get('pid') or None,
+                            'cpu': self.proc_status.has_key(proc) and \
+                                self.proc_status[proc].get('cpu%') or None,
+                            'mem': self.proc_status.has_key(proc) and \
+                                self.proc_status[proc].get('mem%') or None,
+                            'vsz': self.proc_status.has_key(proc) and \
+                                self.proc_status[proc].get('vsz') or None,
+                            'rss': self.proc_status.has_key(proc) and \
+                                self.proc_status[proc].get('rss') or None,
+                            'tty': self.proc_status.has_key(proc) and \
+                                self.proc_status[proc].get('tty') or None,
+                            'stat': self.proc_status.has_key(proc) and \
+                                self.proc_status[proc].get('stat') or None,
+                            'start': self.proc_status.has_key(proc) and \
+                                self.proc_status[proc].get('start') or None,
+                            'time': self.proc_status.has_key(proc) and \
+                                self.proc_status[proc].get('time') or None,
+                            'command': self.proc_status.has_key(proc) and \
+                                self.proc_status[proc].get('command') or None
+                        },
+                        'server':
+                            proc.server.name + "({})".format(proc.server.ip),
+                        'sockets': [{
+                            'id': sock.id,
+                            'name': sock.name,
+                            'uri': sock.uri,
+                            'ip': sock.ip,
+                            'port': sock.port,
+                            'status':
+                                hasattr(self, 'socket_status') \
+                                and getattr(self, 'socket_status').get(
+                                    '{}://{}:{}'.format(
+                                        sock.type.name.lower(),
+                                        sock.ip, sock.port
+                                    ), {'stat': u'未侦听'}
+                                ) or {'stat': u'未侦听'}
+                        } for sock in proc.sockets \
+                            if sock.direction.value == SocketDirection.Listen.value],
+                        'connections': [{
+                            'id': sock.id,
+                            'name': sock.name,
+                            'uri': sock.uri,
+                            'ip': sock.ip,
+                            'port': sock.port,
+                            'status':
+                                hasattr(self, 'connection_status') \
+                                and getattr(self, 'connection_status').get(
+                                    '{}://{}:{}'.format(
+                                        sock.type.name.lower(),
+                                        sock.ip, sock.port
+                                    ), {'stat': u'未连接'}
+                                ) or {'stat': u'未连接'}
+                        } for sock in proc.sockets \
+                            if sock.direction.value == SocketDirection.Establish.value]
+                    } for proc in each_sys.processes]
+                }
+            )
 
 class SystemStaticListApi(Resource, SystemList):
     def __init__(self):
@@ -291,17 +226,18 @@ class ProcStaticApi(Resource, SystemList):
     def find_processes(self):
         for child_sys in self.system_list:
             for proc in child_sys.processes:
-                if not self.proc_list.has_key(proc.server):
-                    self.proc_list[proc.server] = []
-                self.proc_list[proc.server].append(proc)
+                key = (proc.server.ip, proc.system.user, proc.system.password)
+                if not self.proc_list.has_key(key):
+                    self.proc_list[key] = []
+                self.proc_list[key].append(proc)
 
-    def check_proc(self, svr, processes):
+    def check_proc(self, entry, processes):
         port_list = set()
         process_list = set()
         conf = SSHConfig(
-            svr.ip,
-            svr.admin_user,
-            svr.admin_pwd
+            entry[0],
+            entry[1],
+            entry[2]
         )
         executor = Executor.Create(conf)
         for proc in processes:
@@ -316,9 +252,9 @@ class ProcStaticApi(Resource, SystemList):
             }
             result = executor.run(mod).data
             if len(result) > 0:
-                proc.status = result[0]
+                self.proc_status[proc] = result[0]
             else:
-                proc.status = {
+                self.proc_status[proc] = {
                     'user': None,
                     'pid': None,
                     'cpu': None,
@@ -378,16 +314,11 @@ class ProcStaticApi(Resource, SystemList):
         if sys:
             self.find_systems(sys)
             self.find_processes()
-            for svr in self.proc_list.keys():
+            for entry, proc_list in self.proc_list.iteritems():
                 self.checker.append(
-                    threading.Thread(
-                        target=self.check_proc,
-                        args=(svr, self.proc_list[svr])
-                    )
+                    gevent.spawn(self.check_proc, entry, proc_list)
                 )
-            for tr in self.checker:
-                tr.start()
-                tr.join()
+            gevent.joinall(self.checker)
             self.make_response()
             return self.rtn
         else:
@@ -408,7 +339,7 @@ class LoginListApi(Resource, SystemList):
             ).first()
             if src:
                 try:
-                    if current_app.config['GLOBAL_ENCRYPT']:
+                    if globalEncryptKey:
                         uri = re.sub(
                             '^(.+://[^:]+:)([^@]+)(@.+)$',
                             _decrypt,
@@ -437,7 +368,7 @@ class LoginListApi(Resource, SystemList):
                     return rtn
             else:
                 return {
-                    'message': 'no data source configured for system {}'.format(sys.name)
+                    'message': u'no data source configured for system {}'.format(sys.name)
                 }, 404
         else:
             return {
@@ -448,8 +379,8 @@ class LoginCheckApi(Resource):
     def __init__(self):
         self.syslog_list = {}
         self.rtn = []
-        self.check = []
-        self.mutex = threading.Lock()
+        self.checker = []
+        #self.mutex = threading.Lock()
 
     def find_syslog(self, sys):
         log_srcs = DataSource.query.filter(
@@ -459,7 +390,7 @@ class LoginCheckApi(Resource):
             DataSource.disabled == False
         ).all()
         for src in log_srcs:
-            if current_app.config['GLOBAL_ENCRYPT']:
+            if globalEncryptKey:
                 uri = re.sub(
                     '^(.+://[^:]+:)([^@]+)(@.+)$',
                     _decrypt,
@@ -479,11 +410,11 @@ class LoginCheckApi(Resource):
                 }
             self.syslog_list[svr]['logs'].append(log)
 
-    def check_log(self, svr, datas):
+    def check_log(self, uri, datas):
         reg = re.compile(
             r'^(?P<method>[^:]+)://(?P<user>[^:]+):(?P<pass>[^@]+)@(?P<ip>[^:]+):(?P<port>\d+)$'
         )
-        pars = reg.match(svr).groupdict()
+        pars = reg.match(uri).groupdict()
         if pars['method'] == 'ssh':
             conf = SSHConfig(
                 ip=pars['ip'],
@@ -540,9 +471,9 @@ class LoginCheckApi(Resource):
                         data['disconn_count'] += 1
                     else:
                         data['seat_status'] = u'未连接'
-                self.mutex.acquire()
+                #self.mutex.acquire()
                 self.rtn.append(data)
-                self.mutex.release()
+                #self.mutex.release()
         executor.client.close()
 
     def get(self, **kwargs):
@@ -550,10 +481,8 @@ class LoginCheckApi(Resource):
         if sys:
             self.find_syslog(sys)
             for (k, v) in self.syslog_list.items():
-                self.check.append(threading.Thread(target=self.check_log, args=(k, v)))
-            for tr in self.check:
-                tr.start()
-                tr.join()
+                self.checker.append(gevent.spawn(self.check_log, k, v))
+            gevent.joinall(self.checker)
             return self.rtn
         else:
             return {
@@ -574,7 +503,7 @@ class UserSessionListApi(Resource, SystemList):
             ).first()
             if src:
                 try:
-                    if current_app.config['GLOBAL_ENCRYPT']:
+                    if globalEncryptKey:
                         uri = re.sub(
                             '^(.+://[^:]+:)([^@]+)(@.+)$',
                             _decrypt,
@@ -604,7 +533,7 @@ class UserSessionListApi(Resource, SystemList):
                     return rtn
             else:
                 return {
-                    'message': 'no data source for system {}'.format(sys.name)
+                    'message': u'no data source for system {}'.format(sys.name)
                 }, 404
         else:
             return {
