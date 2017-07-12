@@ -205,6 +205,13 @@ role_privilege = db.Table(
     db.Column('disabled', db.Boolean, default=False)
 )
 
+config_process = db.Table(
+    'config_process',
+    db.Column('config_id', db.Integer, db.ForeignKey('config_files.id'), index=True),
+    db.Column('process_id', db.Integer, db.ForeignKey('trade_processes.id'), index=True),
+    db.Column('disabled', db.Boolean, default=False)
+)
+
 operator_system = db.Table(
     'operator_system',
     db.Column('operator_id', db.Integer, db.ForeignKey('operators.id'), index=True),
@@ -254,6 +261,14 @@ class DataSourceType(Enum):
 class DataSourceModel(Enum):
     Seat = 1
     Session = 2
+
+class ConfigType(Enum):
+    INIFile = 1
+    XMLFile = 2
+    YAMLFile = 3
+
+class ExeType(Enum):
+    Quantdo = 1
 
 class ScriptType(Enum):
     Checker = 1
@@ -419,13 +434,22 @@ class TradeProcess(SQLModelMixin, db.Model):
     name = db.Column(db.String, nullable=False, index=True)
     description = db.Column(db.String)
     type = db.Column(ChoiceType(HaType, impl=db.Integer()), default=HaType.Master)
+    version = db.Column(JSONType, default=[])
+    version_method = db.Column(db.String)
     base_dir = db.Column(db.String)
     exec_file = db.Column(db.String, nullable=False)
     param = db.Column(db.String)
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     svr_id = db.Column(db.Integer, db.ForeignKey('servers.id'), index=True)
-    config_files = db.relationship('ConfigFile', backref='process', lazy='dynamic')
     sockets = db.relationship('Socket', backref='process')
+    config_files = db.relationship(
+        'ConfigFile',
+        secondary=config_process,
+        primaryjoin="and_(TradeProcess.id==config_process.c.process_id,"
+                    "config_process.c.disabled==False)",
+        backref=db.backref('processes', lazy='dynamic'),
+        lazy='dynamic'
+    )
 
 class Socket(SQLModelMixin, db.Model):
     __tablename__ = 'sockets'
@@ -540,7 +564,6 @@ class TradeSystem(SQLModelMixin, db.Model):
         backref=db.backref('systems', lazy='dynamic'),
         lazy='dynamic'
     )
-    config_files = db.relationship('ConfigFile', backref='system', lazy='dynamic')
     vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.id'), index=True)
     parent_sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     parent_system = db.relationship(
@@ -559,6 +582,9 @@ class TradeSystem(SQLModelMixin, db.Model):
         'DataSource', backref='system', lazy='dynamic',
         primaryjoin="and_(DataSource.sys_id == TradeSystem.id,"
                     "DataSource.disabled == False)"
+    )
+    config_files = db.relationship(
+        'ConfigFile', backref='system', lazy='dynamic'
     )
 
     @property
@@ -667,6 +693,10 @@ class Server(SQLModelMixin, db.Model):
 class Operation(SQLModelMixin, db.Model):
     __tablename__ = 'operations'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    uuid = db.Column(
+        db.String, index=True,
+        default=lambda: unicode(uuid4()).lower()
+    )
     name = db.Column(db.String, index=True)
     description = db.Column(db.String)
     earliest = db.Column(db.String)
@@ -731,6 +761,10 @@ class OperationCatalog(SQLModelMixin, db.Model):
 class OperationBook(SQLModelMixin, db.Model):
     __tablename = 'operation_book'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    uuid = db.Column(
+        db.String, index=True,
+        default=lambda: unicode(uuid4()).lower()
+    )
     name = db.Column(db.String, index=True)
     description = db.Column(db.String)
     type = db.Column(ChoiceType(ScriptType, impl=db.Integer()))
@@ -760,6 +794,10 @@ class OperationBook(SQLModelMixin, db.Model):
 class OperationGroup(SQLModelMixin, db.Model):
     __tablename__ = 'operation_groups'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    uuid = db.Column(
+        db.String, index=True,
+        default=lambda: unicode(uuid4()).lower()
+    )
     name = db.Column(db.String, index=True)
     description = db.Column(db.String)
     order = db.Column(db.Integer)
@@ -800,10 +838,12 @@ class ConfigFile(SQLModelMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String, index=True)
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
-    proc_id = db.Column(db.Integer, db.ForeignKey('trade_processes.id'), index=True)
+    config_type = db.Column(ChoiceType(ConfigType, impl=db.Integer()), default=ConfigType.INIFile)
     dir = db.Column(db.String, nullable=False)
     file = db.Column(db.String, nullable=False)
+    pre_hash_code = db.Column(db.String)
+    pre_timestamp = db.Column(ArrowType, index=True)
     hash_code = db.Column(db.String)
-    storage = db.Column(db.String)
     timestamp = db.Column(ArrowType, index=True)
-    active = db.Column(db.Boolean)
+    storage = db.Column(db.String)
+    active = db.Column(db.Boolean, default=True)

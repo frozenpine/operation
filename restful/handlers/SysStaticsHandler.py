@@ -3,7 +3,7 @@ import json
 import logging
 import re
 
-#import threading
+import threading
 import arrow
 import gevent
 from flask_restful import Resource
@@ -11,8 +11,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.sql import text
 
 from app import globalEncryptKey
-from app.models import (DataSource, DataSourceModel, DataSourceType,
-                        SocketDirection, TradeSystem)
+from app.models import (ConfigType, DataSource, DataSourceModel,
+                        DataSourceType, SocketDirection, TradeSystem)
 from SysManager.Common import AESCrypto
 from SysManager.configs import SSHConfig, WinRmConfig
 from SysManager.executor import Executor
@@ -81,8 +81,17 @@ class ServerStaticApi(Resource, ServerList):
             self.rtn['sys_id'] = sys.id
             self.find_servers(sys)
             for entry in self.server_list.values():
-                self.checker.append(gevent.spawn(self.check_svr, entry))
-            gevent.joinall(self.checker)
+                # self.checker.append(gevent.spawn(self.check_svr, entry))
+                self.checker.append(threading.Thread(
+                    target=self.check_svr,
+                    args=(entry,)
+                ))
+            for tr in self.checker:
+                tr.setDaemon(True)
+                tr.start()
+                gevent.sleep(0)
+                tr.join()
+            # gevent.joinall(self.checker)
             self.make_response()
             return self.rtn
         else:
@@ -136,6 +145,7 @@ class SystemList(object):
                         'id': proc.id,
                         'process': proc.name,
                         'proc_role': "{}".format(proc.type.name),
+                        'version': proc.version,
                         'status': {
                             'user': self.proc_status.has_key(proc) and \
                                 self.proc_status[proc].get('user') or None,
@@ -267,6 +277,14 @@ class ProcStaticApi(Resource, SystemList):
                     'time': None,
                     'command': None
                 }
+            if proc.version_method:
+                mod = {
+                    'name': proc.version_method,
+                    'args': {
+                        'dir': proc.base_dir,
+                        'file': proc.exec_file
+                    }
+                }
         mod = {'name': 'netstat'}
         if len(port_list) > 0:
             if not mod.has_key('args'):
@@ -315,10 +333,19 @@ class ProcStaticApi(Resource, SystemList):
             self.find_systems(sys)
             self.find_processes()
             for entry, proc_list in self.proc_list.iteritems():
-                self.checker.append(
+                '''self.checker.append(
                     gevent.spawn(self.check_proc, entry, proc_list)
-                )
-            gevent.joinall(self.checker)
+                )'''
+                self.checker.append(threading.Thread(
+                    target=self.check_proc,
+                    args=(entry, proc_list,)
+                ))
+            for tr in self.checker:
+                tr.setDaemon(True)
+                tr.start()
+                gevent.sleep(0)
+                tr.join()
+            # gevent.joinall(self.checker)
             self.make_response()
             return self.rtn
         else:
@@ -539,3 +566,104 @@ class UserSessionListApi(Resource, SystemList):
             return {
                 'message': 'system not found'
             }, 404
+
+class ConfigList(object):
+    def __init__(self):
+        self.system_list = []
+        self.rtn = []
+
+    def find_systems(self, sys):
+        if len(sys.config_files.all()) > 0:
+            self.system_list.append(sys)
+        if len(sys.child_systems) > 0:
+            for child_sys in sys.child_systems:
+                self.find_systems(child_sys)
+
+    def make_response(self):
+        for each_sys in self.system_list:
+            self.rtn.append({
+                'name': each_sys.name,
+                'sys_id': each_sys.id,
+                'detail': [{
+                    'name': conf.name,
+                    'processes': [x.name for x in conf.processes],
+                    'type': conf.config_type.name,
+                    'dir': conf.dir,
+                    'file': conf.file,
+                    'pre_hash': conf.pre_hash_code,
+                    'pre_timestamp':
+                        conf.pre_timestamp and conf.pre_timestamp.to('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss'),
+                    'hash': conf.hash_code,
+                    'hash_changed': conf.pre_hash_code and conf.pre_hash_code != conf.hash_code or False,
+                    'timestamp': conf.timestamp and conf.timestamp.to('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss')
+                } for conf in each_sys.config_files.all()]
+            })
+
+class ConfigListApi(Resource, ConfigList):
+    def __init__(self):
+        super(ConfigListApi, self).__init__()
+
+    def get(self, **kwargs):
+        sys = TradeSystem.find(**kwargs)
+        if sys:
+            self.find_systems(sys)
+            self.make_response()
+            return self.rtn
+        else:
+            return {'message': 'system not found'}, 404
+
+class ConfigCheckApi(Resource, ConfigList):
+    def  __init__(self):
+        super(ConfigCheckApi, self).__init__()
+        self.config_file_list = {}
+        self.checker = []
+
+    def find_configs(self):
+        for each_sys in self.system_list:
+            for conf_file in each_sys.config_files:
+                key = (each_sys.ip, each_sys.user, each_sys.password)
+                if not self.config_file_list.has_key(key):
+                    self.config_file_list[key] = []
+                self.config_file_list[key].append(conf_file)
+
+    def checkConfig(self, entry, config_files):
+        remote_config = SSHConfig(entry[0], entry[1], entry[2])
+        exe = Executor.Create(remote_config)
+        for conf_file in config_files:
+            mod = {
+                'name': 'md5',
+                'args': {
+                    'dir': conf_file.dir,
+                    'file': conf_file.file
+                }
+            }
+            result = exe.run(mod)
+            if result.return_code == 0:
+                conf_file.pre_hash_code = conf_file.hash_code
+                conf_file.pre_timestamp = conf_file.timestamp
+                conf_file.hash_code = result.lines[0]
+                conf_file.timestamp = arrow.utcnow()
+
+    def get(self, **kwargs):
+        sys = TradeSystem.find(**kwargs)
+        if sys:
+            self.find_systems(sys)
+            self.find_configs()
+            for remote, configs in self.config_file_list.iteritems():
+                '''self.checker.append(
+                    gevent.spawn(self.checkConfig, remote, configs)
+                )'''
+                self.checker.append(threading.Thread(
+                    target=self.checkConfig,
+                    args=(remote, configs, )
+                ))
+            for tr in self.checker:
+                tr.setDaemon(True)
+                tr.start()
+                gevent.sleep(0)
+                tr.join()
+            # gevent.joinall(self.checker)
+            self.make_response()
+            return self.rtn
+        else:
+            return {'message': 'system not found'}, 404

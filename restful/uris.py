@@ -6,12 +6,15 @@ from .handlers.EmergeOpHandler import (EmergeOpApi, EmergeOpCaptchaApi,
                                        EmergeOpListApi, EmergeOpLoginApi,
                                        EmergeOpUIApi)
 from .handlers.LogHandler import LogApi
-from .handlers.OperationHandler import (OperationApi, OperationCaptchaApi,
-                                        OperationCSVApi, OperationExecuteApi,
-                                        OperationListApi, OperationLoginApi,
-                                        OperationUIApi)
+from .handlers.OperationHandler import (OperationApi, OperationCallbackApi,
+                                        OperationCaptchaApi, OperationCSVApi,
+                                        OperationExecuteApi, OperationListApi,
+                                        OperationListRunApi,
+                                        OperationListSnapshotApi,
+                                        OperationLoginApi, OperationUIApi)
 from .handlers.RoleHandler import RoleApi, RoleListApi
-from .handlers.SysStaticsHandler import (LoginCheckApi, LoginListApi,
+from .handlers.SysStaticsHandler import (ConfigCheckApi, ConfigListApi,
+                                         LoginCheckApi, LoginListApi,
                                          ProcStaticApi, ServerStaticApi,
                                          ServerStaticListApi,
                                          SystemStaticListApi,
@@ -84,8 +87,20 @@ resources.add_resource(
 resources.add_resource(
     OperationListApi,
     '/op_group/id/<int:id>',
-    methods=['GET'],
+    methods=['GET', 'POST', 'PUT'],
     endpoint='operations'
+)
+
+resources.add_resource(
+    OperationListRunApi,
+    '/op_group/id/<int:id>/next',
+    endpoint='op_group_next'
+)
+
+resources.add_resource(
+    OperationListSnapshotApi,
+    '/op_group/id/<int:id>/snapshot',
+    endpoint='op_group_snapshot'
 )
 
 resources.add_resource(
@@ -242,8 +257,31 @@ resources.add_resource(
     endpoint='user_sessions'
 )
 
+resources.add_resource(
+    ConfigListApi,
+    '/system/id/<int:id>/config_files',
+    '/system/id/<int:id>/config_files/',
+    methods=['GET'],
+    endpoint='config_files_list'
+)
+
+resources.add_resource(
+    ConfigCheckApi,
+    '/system/id/<int:id>/config_files/check',
+    '/system/id/<int:id>/config_files/check/',
+    methods=['GET'],
+    endpoint='config_files'
+)
+
 resources.add_resource(WebshellUIApi, '/webshell/system/id/<int:id>', methods=['GET'])
 
 resources.add_resource(LogApi, '/logs', methods=['POST'])
 
 resources.add_resource(UIDataApi, '/UI/<string:name>', methods=['GET'], endpoint='UIdata')
+
+resources.add_resource(
+    OperationCallbackApi,
+    '/operation/uuid/<string:uuid>/callback',
+    methods=['POST'],
+    endpoint='op_callback'
+)

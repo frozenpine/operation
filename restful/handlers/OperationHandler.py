@@ -11,7 +11,7 @@ from flask_login import current_user
 from flask_restful import Resource
 from sqlalchemy import text
 
-from app import db, globalEncryptKey
+from app import db, globalEncryptKey, msgQueues, taskManager, task_requests
 from app.auth.errors import (AuthError, InvalidUsernameOrPassword,
                              LoopAuthorization, NoPrivilege)
 from app.auth.privileged import CheckPrivilege
@@ -23,11 +23,17 @@ from SysManager.Common import AESCrypto
 from SysManager.configs import RemoteConfig, Result, SSHConfig
 from SysManager.excepts import ExecuteError
 from SysManager.executor import Executor, HttpExecutor
+from TaskManager.controller_queue import DispatchResult
+
+dispatchMessage = {
+    DispatchResult.Dispatched: u'任务调度成功',
+    DispatchResult.EmptyQueue: u'队列不存在',
+    DispatchResult.QueueBlock: u'上一项任务未完成，无法调度新任务'
+}
 
 
-class OperationListApi(Resource):
+class OperationList(object):
     def __init__(self):
-        super(OperationListApi, self).__init__()
         self.rtn = {}
 
     def find_op_record(self, op):
@@ -40,6 +46,11 @@ class OperationListApi(Resource):
             return record.results[-1].error_code == 0, record
         else:
             return False, None
+
+
+class OperationListApi(OperationList, Resource):
+    def __init__(self):
+        super(OperationListApi, self).__init__()
 
     def get(self, **kwargs):
         op_group = OperationGroup.find(**kwargs)
@@ -99,9 +110,63 @@ class OperationListApi(Resource):
                 'message': 'operation group not found'
             }, 404
 
-class OperationApi(Resource):
+    def post(self, **kwargs):
+        op_group = OperationGroup.find(**kwargs)
+        if op_group:
+            task_queue = {
+                op_group.uuid: {
+                    'group_block': True,
+                    'group_info': [{
+                        'task_uuid': task.uuid,
+                        'task': task.operate_define.detail
+                    } for task in op_group.operations]
+                }
+            }
+            taskManager.init_controller_queue(task_queue, True)
+            return taskManager.snapshot(op_group.uuid)
+        else:
+            return {
+                'message': 'operation group not found'
+            }, 404
+
+class OperationListSnapshotApi(Resource):
+    def get(self, **kwargs):
+        op_group = OperationGroup.find(**kwargs)
+        if op_group:
+            return taskManager.snapshot(op_group.uuid)
+        else:
+            return {
+                'message': 'Operation group not found.'
+            }, 404
+
+class OperationListRunApi(Resource):
+    def get(self, **kwargs):
+        op_group = OperationGroup.find(**kwargs)
+        if op_group:
+            ret_code, task_uuid = taskManager.run_next(op_group.uuid)
+            ret_code = DispatchResult(ret_code)
+            if ret_code == DispatchResult.Dispatched:
+                op = Operation.find(uuid=task_uuid)
+                # operator_id = current_user.id
+                operator_id = 2
+                record = OperateRecord(
+                    operation_id=op.id,
+                    operator_id=operator_id,
+                    operated_at=arrow.utcnow()
+                )
+                db.session.add(record)
+                db.session.commit()
+                task_requests[op.uuid] = record.id
+            return {
+                'message': dispatchMessage[ret_code]
+            }
+        else:
+            return {
+                'message': 'Operation group not found.'
+            }, 404
+
+class Oper(object):
     def __init__(self):
-        super(OperationApi, self).__init__()
         self.rtn = {}
         self.session = None
         self.op_record = OperateRecord()
@@ -141,6 +206,10 @@ class OperationApi(Resource):
         if session.has_key(key):
             self.session = session[key]['origin']
         self.executor = Executor.Create(conf)
+
+class OperationApi(Oper, Resource):
+    def __init__(self):
+        super(OperationApi, self).__init__()
 
     def post(self, **kwargs):
         op = Operation.find(**kwargs)
@@ -205,6 +274,32 @@ class OperationApi(Resource):
             return {
                 'message': 'operation not found'
             }, 404
+
+class OperationCallbackApi(Resource):
+    def post(self, **kwargs):
+        op = Operation.find(**kwargs)
+        if op:
+            try:
+                result = request.json
+                if result['task_status'] == 2:
+                    data = OperateResult(
+                        op_rec_id=task_requests[result['task_uuid']],
+                        error_code=result['task_result']['return_code'],
+                        detail=result['task_result']['lines']
+                    )
+                    db.session.add(data)
+                    db.session.commit()
+                msgQueues['tasks'].send_message(json.dumps(result))
+            except Exception, err:
+                logging.warning(err)
+                return {
+                    'message': 'request header & content must be json format'
+                }, 406
+        else:
+            return {
+                'message': 'Operation not found.'
+            }, 404
+
 
 class OperationUIApi(Resource):
     def get(self, id):

@@ -73,7 +73,7 @@ class SystemApi(Resource):
 
 class SystemListApi(Resource):
     def get(self):
-        systems = TradeSystem.query.filter(TradeSystem.parent_sys_id==None).all()
+        systems = TradeSystem.query.filter(TradeSystem.parent_sys_id == None).all()
         if systems:
             return {
                 'message': 'all systems listed.',

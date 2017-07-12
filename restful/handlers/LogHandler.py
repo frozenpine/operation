@@ -6,7 +6,7 @@ from app import msgQueues
 
 class LogApi(Resource):
     def post(self):
-        msg = request.values['msg']
+        msg = request.json['msg']
         #source = request.headers.get('src')
         #topic = request.headers.get('topic')
         #print msg, source

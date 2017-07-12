@@ -52,12 +52,17 @@ def req_heartbeat(request):
         'heartbeat': time.strftime('%Y-%m-%d %H:%M:%S')
     }))
 
+def req_topics(request):
+    request['ws'].send(json.dumps({
+        'topics': MessageQueues.keys()
+    }))
+
 class MessageServer(object):
-    switchRequest = {
+    '''switchRequest = {
         'subscribe': lambda req: req_subscribe(req),
         'unsubscribe': lambda req: req_unsubscribe(req),
         'heartbeat': lambda req: req_heartbeat(req)
-    }
+    }'''
     def __init__(self, topic):
         self.observers = set()
         self.topic = topic
@@ -78,8 +83,6 @@ class MessageServer(object):
                     'data': msg
                 }))
             except WebSocketError:
-                #print len(self.observers)
-                #print self.observers
                 fail_socket.add(ws)
                 continue
         self.observers -= fail_socket
@@ -93,22 +96,24 @@ class MessageServer(object):
     @staticmethod
     def parse_request(websocket):
         msg = websocket.receive()
-        #print msg
         try:
             request = json.loads(msg)
         except ValueError:
             websocket.send(json.dumps({
-                'error': """Sorry, i don't understand."""
+                'error': "Sorry, i don't understand."
             }))
         else:
             request['ws'] = websocket
             try:
-                MessageServer.switchRequest[request['method']](request)
+                # MessageServer.switchRequest[request['method']](request)
+                method = request['method']
+                globals()['req_{}'.format(method)](request)
             except KeyError:
                 websocket.send(json.dumps({
-                    'error': """Request method not valid."""
+                    'error': 'Request method not valid.'
                 }))
 
 MessageQueues = {
-    'public': MessageServer('public')
+    'public': MessageServer('public'),
+    'tasks': MessageServer('tasks')
 }

@@ -1,0 +1,21 @@
+<div id="SystemConfigChecker" ng-controller="configCheckControl">
+    <table class="am-table">
+        <tr>
+            <th>header</th>
+        </tr>
+        <tr>
+            <td>tester</td>
+        </tr>
+    </table>
+</div>
+<script type="text/javascript">
+    app.controller('configCheckControl', ['$scope', '$http', function($scope, $http) {
+        $http.get('api/system/id/3/config_files')
+            .success(function(response) {
+                console.log(response);
+            })
+            .error(function(response) {
+                console.log(reponse);
+            });
+    }])
+</script>

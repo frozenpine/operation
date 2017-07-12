@@ -5,53 +5,122 @@ var app = angular.module('myApp', ['ngRoute'], function($provide) {
         };
     });
 
-    $provide.factory('Message', function($rootScope, $location) {
+    $provide.factory('$message', function() {
+        return {
+            Alert: function(msg, timeout = 5) {
+
+            },
+            Warning: function(msg, timeout = 5) {
+
+            },
+            Info: function(msg, timeout = 5) {
+
+            }
+        }
+    })
+
+    $provide.factory('Message', function($rootScope, $location, $interval, $timeout) {
         if ($rootScope.Messages === undefined) {
             $rootScope.Messages = {
                 public: []
             };
         }
-        if ("WebSocket" in window) {
-            var ws = new WebSocket("ws://" + $location.host() + ":5000/websocket");
-            ws.onopen = function() {
-                console.log("conn success");
-                ws.send(JSON.stringify({
-                    method: 'subscribe',
-                    topic: 'public'
-                }));
-            };
 
-            ws.onmessage = function(event) {
-                onMessage(JSON.parse(event.data));
-            };
-        } else {
-            console.log("WebSocket not supported");
-        }
+        var connected = false;
+        var heartbeat_interval;
+        var unload = false;
+        var ws;
+
+        var init = function() {
+            if ("WebSocket" in window) {
+                ws = new WebSocket("ws://" + $location.host() + ":5000/websocket");
+                ws.onopen = function() {
+                    console.log("conn success");
+                    connected = true;
+                    ws.send(JSON.stringify({
+                        method: 'topics'
+                    }));
+                    heatbeat_interval = $interval(function() {
+                        ws.send(JSON.stringify({
+                            method: 'heartbeat'
+                        }));
+                    }, 60000);
+                };
+
+                ws.onmessage = function(event) {
+                    onMessage(JSON.parse(event.data));
+                };
+
+                ws.onerror = function() {
+                    connected = false;
+                    $interval.cancel(heatbeat_interval);
+                    console.log('Websocket error.');
+                };
+
+                ws.onclose = function() {
+                    connected = false;
+                    $interval.cancel(heatbeat_interval);
+                    console.log('Websocket closed');
+                    if (!unload) {
+                        console.log('Connection lost.')
+                        $timeout(init, 30000);
+                    }
+                };
+            } else {
+                console.log("WebSocket not supported");
+            }
+        };
+
+        init();
 
         window.onbeforeunload = function() {
-            ws.onclose = function() {
-                console.log('unlodad');
-            };
+            unload = true;
             ws.close();
         };
 
         var onMessage = function(msg) {
-            switch (msg.topic) {
-                case "public":
-                    $rootScope.$apply(function() {
-                        $rootScope.Messages.public.push(msg.data);
-                        $rootScope.AlertMessage = msg.data;
-                        $rootScope.triggered = true;
-                    });
-                    break;
-                default:
-                    console.log(JSON.stringify(msg));
+            if (msg.hasOwnProperty('heartbeat')) {
+                console.log(msg.heartbeat);
+            } else if (msg.hasOwnProperty('topics')) {
+                console.log(msg.topics);
+                msg.topics.forEach(function(topic_name) {
+                    ws.send(JSON.stringify({
+                        method: 'subscribe',
+                        topic: topic_name
+                    }));
+                });
+            } else {
+                switch (msg.topic) {
+                    case "public":
+                        $rootScope.$apply(function() {
+                            $rootScope.Messages.public.push(msg.data);
+                            $rootScope.AlertMessage = msg.data;
+                            $rootScope.triggered = true;
+                        });
+                        if (window.localStorage.public === undefined) {
+                            window.localStorage.public = [];
+                        }
+                        window.localStorage.public.push(msg.data);
+                        break;
+                    case "tasks":
+                        console.log(JSON.parse(msg.data));
+                        break;
+                    default:
+                        console.log(JSON.stringify(msg));
+                }
             }
         };
 
         return {
             Send: function(msg) {
                 ws.send(JSON.stringify(msg));
+            },
+            Close: function() { ws.close(); },
+            Subscribe: function(topic_name, callback) {
+                ws.send(JSON.stringify({
+                    method: 'subscribe',
+                    topic: topic_name
+                }));
             }
         };
     });
@@ -90,7 +159,7 @@ app.run(function($rootScope, $interval, $location, globalVar, Message) {
         $rootScope.LoginStatics = {};
     }
 });
-app.controller('dashBoardControl', ['$scope', 'Message', '$rootScope', function($scope, Message, $rootScope) {
+app.controller('dashBoardControl', ['$scope', 'Message', '$rootScope', '$http', function($scope, Message, $rootScope, $http) {
     //$rootScope.Message = Message;
     $rootScope.isShowSideList = false;
 }]);
@@ -198,10 +267,6 @@ app.controller('sysStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
             if ($routeParams.hasOwnProperty('sysid')) {
                 $scope.systemStatics = response;
                 $scope.checkProc();
-                /*
-                $scope.sysStaticInterval = $interval(function() { $scope.checkProc(); }, 30000);
-                globalVar.intervals.push($scope.sysStaticInterval);
-                */
             }
         })
         .error(function(response) {
@@ -320,7 +385,7 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', '$rootScope', '$lo
     };
 }]);
 
-app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParams', '$location', function($scope, $http, $timeout, $routeParams, $location) {
+app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParams', '$location', 'Message', function($scope, $http, $timeout, $routeParams, $location, Message) {
     $scope.$on('$routeChangeStart', function(evt, next, current) {
         var last = $scope.opList.details[$scope.opList.details.length - 1];
         if (last.err_code != -1 && last.checker.isTrue && !last.checker.checked) {
@@ -376,6 +441,13 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
                         $scope.$apply(function() {
                             if ($routeParams.hasOwnProperty('grpid')) {
                                 $scope.opList.details[index] = data;
+                                if (data.output_lines.length > 0) {
+                                    if (data.checker.isTrue) {
+                                        $scope.confirm(index);
+                                    } else {
+                                        $scope.check_result(index);
+                                    }
+                                }
                                 if (index < $scope.opList.details.length - 1 && ($scope.opList.details[index].checker === undefined || !$scope.opList.details[index].checker.isTrue)) {
                                     $scope.opList.details[index + 1].enabled = data.err_code === 0;
                                 }
@@ -406,6 +478,13 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
                         .success(function(response) {
                             if ($routeParams.hasOwnProperty('grpid')) {
                                 $scope.opList.details[index] = response;
+                                if (response.output_lines.length > 0) {
+                                    if (response.checker.isTrue) {
+                                        $scope.confirm(index);
+                                    } else {
+                                        $scope.check_result(index);
+                                    }
+                                }
                                 if (index < $scope.opList.details.length - 1 && ($scope.opList.details[index].checker === undefined || !$scope.opList.details[index].checker.isTrue)) {
                                     $scope.opList.details[index + 1].enabled = response.err_code === 0;
                                 }
@@ -426,11 +505,6 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
                     onCancel: function() {
                         $('#authorizeUser').val('');
                         $('#authorizePassword').val('');
-                        /*
-                        $scope.$apply(function() {
-                            $scope.opList.details[index].err_code = err_code;
-                        });
-                        */
                     }
                 });
             } else {
@@ -440,6 +514,13 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
                     .success(function(response) {
                         if ($routeParams.hasOwnProperty('grpid')) {
                             $scope.opList.details[index] = response;
+                            if (response.output_lines.length > 0) {
+                                if (response.checker.isTrue) {
+                                    $scope.confirm(index);
+                                } else {
+                                    $scope.check_result(index);
+                                }
+                            }
                             if (index < $scope.opList.details.length - 1 && ($scope.opList.details[index].checker === undefined || !$scope.opList.details[index].checker.isTrue)) {
                                 $scope.opList.details[index + 1].enabled = response.err_code === 0;
                             }
@@ -574,9 +655,23 @@ app.controller('loginStaticsControl', ['$scope', '$http', 'globalVar', '$rootSco
                 $scope.checking = false;
             });
     };
-    $scope.autoRefresh = function(auto) {
-        if (auto) {
-            $scope.loginStaticInterval = $interval(function() { $scope.CheckLoginLog(); }, 30000);
+    $scope.$watch('refresh_interval', function(newValue, oldValue) {
+        $interval.cancel($scope.loginStaticInterval);
+        $scope.autoRefresh();
+    })
+    $scope.autoRefresh = function() {
+        if ($scope.auto) {
+            if (isNaN($scope.refresh_interval)) {
+                var interval = 60000;
+            } else {
+                var interval = parseInt($scope.refresh_interval)
+                if (interval <= 30) {
+                    $scope.refresh_interval = 30;
+                    interval = 30;
+                }
+                interval = interval * 1000;
+            }
+            $scope.loginStaticInterval = $interval(function() { $scope.CheckLoginLog(); }, interval);
             $scope.CheckLoginLog();
             globalVar.intervals.push($scope.loginStaticInterval);
         } else {

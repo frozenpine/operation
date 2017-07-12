@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
+import zerorpc
+import sys
+import zmq.green as zmq
 from logging.handlers import TimedRotatingFileHandler
 from flask import Flask, Blueprint
 from flask_login import LoginManager
@@ -7,6 +10,8 @@ from flask_sqlalchemy import SQLAlchemy
 from settings import config
 from MessageQueue.msgserver import MessageQueues
 
+
+sys.modules['zmq'] = zmq
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -41,6 +46,9 @@ db_list = {}
 
 msgQueues = MessageQueues
 globalEncryptKey = None
+taskManager = zerorpc.Client()
+taskManager.connect("tcp://127.0.0.1:2017")
+task_requests = {}
 
 from auth import auth as auth_blueprint, login_manager
 from restful import restapi as restapi_blueprint
