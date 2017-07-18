@@ -141,6 +141,7 @@ class SystemList(object):
                 {
                     'name': each_sys.name,
                     'updated_time': arrow.now().format('HH:mm:ss'),
+                    'version': each_sys.version,
                     'detail': [{
                         'id': proc.id,
                         'process': proc.name,

@@ -174,7 +174,7 @@
         <div class="tpl-block" ng-show="sysShowDetail">
             <div class="am-g">
                 <div class="am-u-sm-12" ng-repeat="data in systemStatics | filter: keyword">
-                    <span class="am-icon-angle-double-right" style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169); hover: pointer"> 子系统名称 ： {{::data.name}}</span>
+                    <span class="am-icon-angle-double-right" style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169); hover: pointer"> 子系统名称 ： {{::data.name}} - {{::data.version}}</span>
                     <span class="am-fr" style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169);"> 最后更新：{{data.updated_time}}</span>
                     <table class="am-table am-table-hover table-main">
                         <thead>
@@ -191,7 +191,16 @@
                         </thead>
                         <tbody>
                             <tr ng-repeat="child in data.detail" ng-class="{true: 'am-danger', false: ''}[child.status.stat=='stopped']">
-                                <td class="table-data">{{::child.process}}</td>
+                                <td class="table-data">
+                                    <span class="am-dropdown" ng-mouseover="showProcVer[$index] = true" ng-mouseleave="showProcVer[$index] = false">
+                                        {{::child.process}}
+                                        <div class="am-dropdown-content" ng-if="child.version.length>0" ng-show="showProcVer[$index]" style="display: block;margin-top: 0;">
+                                            <ul ng-repeat="line in child.version">
+                                                <li>{{::line}}</li>
+                                            </ul>
+                                        </div>
+                                    </span>
+                                </td>
                                 <td class="table-data">{{::child.status.pid}}</td>
                                 <td class="table-data">{{::child.proc_role}}</td>
                                 <td class="table-data" style="max-width: 130px">

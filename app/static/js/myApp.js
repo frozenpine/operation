@@ -270,7 +270,11 @@ app.service('$operations', function($websocket, $http, $message, $sessionStorage
                     params.onSuccess(response.data);
                 } else {
                     console.log(response)
-                    params.onError(response.message);
+                    if (params.hasOwnProperty('onError')) {
+                        params.onError(response.message);
+                    } else {
+                        $message.Warning(response.message);
+                    }
                 }
             })
             .error(function(response) {
@@ -431,6 +435,7 @@ app.config(['$routeProvider', function($routeProvider) {
 }]);
 app.run(function($rootScope, $interval, $location, globalVar, $websocket) {
     $rootScope.tab = 1; //default
+    $rootScope.user_uuid = '';
     $rootScope.$on('$routeChangeStart', function(evt, next, current) {
         console.log('route begin change');
         angular.forEach(globalVar.intervals, function(value, index) {
@@ -832,7 +837,7 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$operationBooks', '$rootScope
     $http.get('api/UI/sideBarCtrl')
         .success(function(response) {
             $scope.listName = response;
-            console.log($scope.listName);
+            // console.log($scope.listName);
         })
         .error(function(response) {
             console.log(response);
@@ -924,28 +929,43 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$operationBooks', '$rootScope
     };
 }]);
 
-app.controller('opGroupController', ['$scope', '$operationBooks', '$operations', '$routeParams', '$location', '$rootScope', '$timeout', '$message', function($scope, $operationBooks, $operations, $routeParams, $location, $rootScope, $timeout, $message) {
+app.controller('opGroupController', ['$scope', '$operationBooks', '$operations', '$routeParams', '$location', '$rootScope', '$timeout', '$message', '$sessionStorage', function($scope, $operationBooks, $operations, $routeParams, $location, $rootScope, $timeout, $message, $sessionStorage) {
     $scope.$on('$routeChangeStart', function(evt, next, current) {
         var last = $scope.opList.details[$scope.opList.details.length - 1];
-        if (last.err_code != -1 && last.checker.isTrue && !last.checker.checked) {
+        if (last.exec_code != -1 && last.checker.isTrue && !last.checker.checked) {
             $location.url('/op_group/' + current.params.grpid);
             alert('还有未确认的操作结果！');
         }
     });
+
+    $scope.triggered_ouside = false;
+    $scope.batch_run = false;
+    $scope.user_uuid = $('#user_uuid').text();
 
     $scope.$on('TaskStatusChanged', function(event, data) {
         if (data.hasOwnProperty('details')) {
             $timeout(function() {
                 $scope.opList = data;
             }, 0)
+            angular.forEach($scope.opList.details, function(value, index) {
+                delete $sessionStorage[value.uuid];
+            });
             $message.Warning('任务队列被重新初始化');
         } else {
             angular.forEach($scope.opList.details, function(value, index) {
                 if (data.uuid == value.uuid) {
+                    if (data.user_session != $scope.user_uuid) {
+                        $scope.triggered_ouside = true;
+                        if (data.exec_code == -2) {
+                            $message.Warning('任务 "' + data.op_name + '" 被外部触发执行', 5);
+                        }
+                    } else {
+                        $scope.triggered_ouside = false;
+                    }
                     $timeout(function() {
                         $scope.opList.details[index] = data;
                     }, 0);
-                    TaskQueue(data, index);
+                    TaskStatus(data, index);
                 }
             });
         }
@@ -955,9 +975,11 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         groupID: $routeParams.grpid,
         onSuccess: function(data) {
             $scope.opList = data;
+            TaskQueueStatus();
         }
     });
-    $scope.confirm = function(index) {
+
+    $scope.check_result = function(index) {
         $('#result' + index).modal({
             relatedTarget: this,
             onConfirm: function() {
@@ -966,72 +988,66 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                         $scope.opList.details[index + 1].enabled = true;
                     }
                     $scope.opList.details[index].checker.checked = true;
+                    $sessionStorage[$scope.opList.details[index].uuid] = true;
                 });
             }
         });
     };
-    $scope.check_result = function(index) {
-        $('#result' + index).modal({ relatedTarget: this });
-    };
-    $scope.check_his_result = function(index) {
-        $('#his_result' + index).modal({ relatedTarget: this });
-    };
-    $scope.skip = function(index) {
-        if ($scope.opList.details[index].err_code == -1) {
-            $scope.opList.details[index].err_code = -3;
-        }
-        if (index < $scope.opList.details.length - 1) {
-            $scope.opList.details[index + 1].enabled = true;
-        }
-        for (var i = 0; i <= index; i++) {
-            $scope.opList.details[i].skip = false;
-            $scope.opList.details[i].enabled = true;
-        }
-    };
+
     $scope.runAll = function() {
         var authorizor;
-        angular.forEach($scope.opList.details, function(value, index) {
+        $scope.batch_run = true;
+        var terminate = false;
+        var need_authorization = false;
+        $scope.opList.details.forEach(function(value, index) {
             if (value.interactivator.isTrue) {
                 $message.Alert('操作列表内包含交互式执行操作，无法批量运行');
+                terminate = true;
                 return;
             }
-            if (value.need_authorized) {
-                $('#authorizor').bind('authorize.quantdo', function(event, data) {
-                    authorizor = data;
-                });
-                $('#authorizor').modal({
-                    relatedTarget: this,
-                    onCancel: function() {
-                        $('#authorizeUser').val('');
-                        $('#authorizePassword').val('');
-                        return;
-                    }
-                });
-            }
         });
-        $operations.RunAll({
-            groupID: $routeParams.grpid,
-            authorizor: authorizor,
-            onSuccess: function(data) {
-
-            }
-        });
+        if (!terminate) {
+            $operations.RunAll({
+                groupID: $routeParams.grpid,
+                onSuccess: function(data) {
+                    $message.Info('批量任务执行开始');
+                }
+            });
+        }
     }
 
-    function TaskQueue(data, index) {
-        if (data.hasOwnProperty('output_lines') && data.output_lines.length > 0) {
-            if (data.checker.isTrue) {
-                $scope.confirm(index);
-            } else {
+    function TaskStatus(data, index) {
+        if (!$scope.batch_run && !$scope.triggered_ouside) {
+            if (data.hasOwnProperty('output_lines') && data.output_lines.length > 0) {
                 $scope.check_result(index);
             }
+        } else {
+            if (data.checker.isTrue && data.exec_code == 0) {
+                $sessionStorage[data.uuid] = true;
+                $timeout(function() {
+                    $scope.opList.details[index].checker.checked = true;
+                })
+            }
         }
-        if (index < $scope.opList.details.length - 1 && ($scope.opList.details[index].checker === undefined || !$scope.opList.details[index].checker.isTrue)) {
-            $scope.opList.details[index + 1].enabled = data.err_code === 0;
+        if (index < $scope.opList.details.length - 1 && (!data.checker.isTrue || data.checker.checked)) {
+            $scope.opList.details[index + 1].enabled = data.exec_code === 0;
         }
+    }
+
+    function TaskQueueStatus() {
+        angular.forEach($scope.opList.details, function(value, index) {
+            if (index > 0 && $scope.opList.details[index - 1].checker.isTrue) {
+                checked = $sessionStorage[$scope.opList.details[index - 1].uuid];
+                $scope.opList.details[index].enabled = value.enabled && checked === true;
+            }
+            if (value.checker.isTrue) {
+                $scope.opList.details[index].checker.checked = $sessionStorage[value.uuid] === true;
+            }
+        })
     }
 
     $scope.execute = function(index, id) {
+        $scope.batch_run = false;
         if ($scope.opList.details[index].interactivator.isTrue) {
             $http.get('api/operation/id/' + id + '/ui')
                 .success(function(response) {
@@ -1040,7 +1056,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                         $scope.$apply(function() {
                             if ($routeParams.hasOwnProperty('grpid')) {
                                 $scope.opList.details[index] = data;
-                                TaskQueue(data);
+                                TaskStatus(data);
                             }
                         });
                     });
@@ -1071,7 +1087,6 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                         }
                     });
                 });
-                var err_code = $scope.opList.details[index].err_code;
                 $('#authorizor').modal({
                     relatedTarget: this,
                     onCancel: function() {

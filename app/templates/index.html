@@ -435,6 +435,7 @@
                 <li ng-controller="userController" class="am-dropdown" data-am-dropdown data-am-dropdown-toggle>
                     <a class="am-dropdown-toggle tpl-header-list-link" href="">
                         <span class="tpl-header-list-user-nick">[[user_name]]</span>
+                        <span id="user_uuid" style="display: none">[[user_uuid]]</span>
                         <span class="tpl-header-list-user-ico">
                             <img src="[[ url_for('static', filename='img/user01.png', _external=True) ]]">
                         </span>

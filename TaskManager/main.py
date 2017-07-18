@@ -18,6 +18,7 @@ monkey.patch_all(socket=False, thread=False)
 
 if __name__ == "__main__":
     controller = Controller()
+    controller.deserialize()
     worker = Worker()
     server = zerorpc.Server(controller)
     server.bind("tcp://0.0.0.0:2017")

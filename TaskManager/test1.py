@@ -196,11 +196,12 @@ if __name__ == "__main__":
     }
     client = zerorpc.Client()
     client.connect("tcp://127.0.0.1:2017")
-    print client.init(task_dict)
+    client.deserialize()
+    ''' print client.init(task_dict)
     print client.run_next("task_group1", "user1")
     time.sleep(10)
     print client.run_all("task_group1", "user1")
-    time.sleep(10)
+    time.sleep(10) '''
     """
     print client.init(task_dict)
     print client.init(task_dict)

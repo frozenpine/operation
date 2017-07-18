@@ -33,7 +33,8 @@ def index():
         "index.html", title='ITIL Test',
         user_name=current_user.name,
         user_id=current_user.id,
-        user_login=current_user.login
+        user_login=current_user.login,
+        user_uuid=current_user.uuid
     )
 
 @main.route('/UI/views/<string:name>')

@@ -155,8 +155,7 @@ class Controller(object):
         :param session: 执行用户的session
         :return:
         """
-        ret, task = self.get_task_from_controller_queue(controller_queue_uuid, session, True)
-        return ret
+        return self.get_task_from_controller_queue(controller_queue_uuid, session, True)
 
     def put_left_to_controller_queue(self, controller_queue_uuid):
         """
@@ -263,6 +262,7 @@ class Controller(object):
         :return:
         """
         dump_file_list = os.listdir("dump")
+        logging.info('TaskQueue deserializeing started')
         for each in dump_file_list:
             with open("dump/{0}".format(each)) as f:
                 queue_status = pickle.loads(f.read())
@@ -280,6 +280,7 @@ class Controller(object):
                 for i in range(0, len(task_list), 1):
                     if task_status_list[i].values()[0] in (0, 1, 3):
                         self.controller_queue_dict[queue_id].put_controller_todo_task_queue(task_list[i], True)
+        logging.info('TaskQueue deserializeing ended')
 
     def init(self, task_dict, force=False):
         return self.init_controller_queue(task_dict, force)
