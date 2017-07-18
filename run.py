@@ -30,7 +30,7 @@ def taskManagerStarter():
 
 if __name__ == '__main__':
     ''' proc = Process(target=taskManagerStarter)
-    proc.start() '''
+    proc.start()  '''
     monkey.patch_all()
     app = create_app(sys.argv[1])
     http_server = WSGIServer((host, port), app, handler_class=WebSocketHandler)

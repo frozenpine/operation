@@ -1,7 +1,9 @@
 # coding=utf-8
 
-import cPickle as pickle
+import json as pickle
 import logging
+import os
+
 import requests
 
 from controller_queue import ControllerQueue
@@ -19,12 +21,15 @@ class Controller(object):
         """
         获取controller_queue的快照
         :param controller_queue_uuid: controller_queue的controller_queue_uuid
-        :return:
+        :return: -3 队列不存在
         """
-        try:
-            return self.controller_queue_dict[controller_queue_uuid].to_dict()
-        except KeyError:
-            return None
+        if not self.controller_queue_exists(controller_queue_uuid):
+            return -3
+        else:
+            snap = self.controller_queue_dict[controller_queue_uuid].to_dict()
+            snap['task_result_list'] = map(lambda x: x.values()[0], snap['task_result_list'])
+            snap['task_status_list'] = map(lambda x: x.values()[0], snap['task_status_list'])
+            return snap
 
     def get_create_time(self, controller_queue_uuid):
         """
@@ -54,7 +59,7 @@ class Controller(object):
         """
         初始化controller_queue, 并向controller_queue中添加任务
         :param task_dict: 任务组和任务字典
-        :param force 强制
+        :param force: 强制
         :return:
         """
         if force:
@@ -63,7 +68,7 @@ class Controller(object):
                 for each in v["group_info"]:
                     self.put_task_to_controller_queue(k, each)
                     with open("dump/{0}.dump".format(k), "wb") as f:
-                        f.write(pickle.dumps(self.controller_queue_dict[k].controller_task_list))
+                        f.write(pickle.dumps(self.controller_queue_dict[k].to_dict()))
                 if not v["group_block"]:
                     self.get_tasks_from_controller_queue(k)
         else:
@@ -81,9 +86,7 @@ class Controller(object):
                     for each in v["group_info"]:
                         self.put_task_to_controller_queue(k, each)
                         with open("dump/{0}.dump".format(k), "wb") as f:
-                            f.write(pickle.dumps(
-                                self.controller_queue_dict[k].controller_task_list
-                            ))
+                            f.write(pickle.dumps(self.controller_queue_dict[k].to_dict()))
                     if not v["group_block"]:
                         self.get_tasks_from_controller_queue(k)
             if ret_dict:
@@ -96,7 +99,11 @@ class Controller(object):
         :param controller_queue_uuid: controller_queue的controller_queue_uuid
         :return:
         """
-        del self.controller_queue_dict[controller_queue_uuid]
+        if not self.controller_queue_exists(controller_queue_uuid):
+            return -3
+        else:
+            del self.controller_queue_dict[controller_queue_uuid]
+            return 0
 
     def put_task_to_controller_queue(self, controller_queue_uuid, task):
         """
@@ -112,38 +119,81 @@ class Controller(object):
         比较指定controller_queue的第一个元素的task_uuid
         :param controller_queue_uuid:
         :param task_uuid:
-        :return:
+        :return: -1 队列为空
+                 -2 不相等
+                 -3 不存在该队列
         """
-        ret = self.controller_queue_dict[controller_queue_uuid]\
-            .peek_controller_todo_task_queue(task_uuid)
-        return ret
+        if not self.controller_queue_exists(controller_queue_uuid):
+            return -3
+        else:
+            ret = self.controller_queue_dict[controller_queue_uuid].peek_controller_todo_task_queue(task_uuid)
+            return ret
 
-    def get_task_from_controller_queue(self, controller_queue_uuid, run_all=False):
+    def get_task_from_controller_queue(self, controller_queue_uuid, session=None, run_all=False):
         """
         从指定的controller_queue中取出任务
         :param controller_queue_uuid: controller_queue的controller_queue_uuid
+        :param session: 执行用户的session
         :param run_all: 执行所有
-        :return:
+        :return: -1 队列为空
+                 -2 不相等
+                 -3 不存在该队列
         """
-        ret, task = self.controller_queue_dict[controller_queue_uuid]\
-            .get_controller_todo_task_queue()
+        if not self.controller_queue_exists(controller_queue_uuid):
+            return -3, None
+        ret, task = self.controller_queue_dict[controller_queue_uuid].get_controller_todo_task_queue()
         if ret == -1 or ret == -2:
             return ret, None
         else:
-            msg_queue.todo_task_queue.put({"run_all": run_all, "ret": task})
+            msg_queue.todo_task_queue.put({"run_all": run_all, "ret": task, "session": session})
             return ret, task['task_uuid']
 
-    def get_tasks_from_controller_queue(self, controller_queue_uuid):
+    def get_tasks_from_controller_queue(self, controller_queue_uuid, session=None):
         """
         从指定的controller_queue中执行多个任务
         :param controller_queue_uuid: controller_queue的controller_queue_uuid
+        :param session: 执行用户的session
         :return:
         """
-        ret = self.get_task_from_controller_queue(controller_queue_uuid, run_all=True)
-        if ret == -1 or ret == -2:
-            return ret
+        ret, task = self.get_task_from_controller_queue(controller_queue_uuid, session, True)
+        return ret
+
+    def put_left_to_controller_queue(self, controller_queue_uuid):
+        """
+        向指定的controller_queue压回失败任务
+        :param controller_queue_uuid: controller_queue的controller_queue_uuid
+        :return: -3: 不存在该队列
+                 -4: 队列无失败任务
+        """
+        if not self.controller_queue_exists(controller_queue_uuid):
+            return -3
         else:
-            return 0
+            ret = self.controller_queue_dict[controller_queue_uuid].put_left_controller_todo_task_queue()
+            return ret
+
+    def pop_task_from_controller_queue(self, controller_queue_uuid, task_uuid=None):
+        """
+        从指定的controller_queue中移除第一个任务
+        :param controller_queue_uuid: controller_queue的controller_queue_uuid
+        :param task_uuid: task的task_uuid
+        :return: -1 队列为空
+                 -2 不相等
+                 -3 不存在该队列
+        """
+        if task_uuid:
+            ret = self.peek_task_from_controller_queue(controller_queue_uuid, task_uuid)
+            if ret in (-1, -2, -3):
+                return ret
+            else:
+                self.controller_queue_dict[controller_queue_uuid].pop_controller_todo_task_queue()
+                return 0
+        else:
+            ret = self.controller_queue_exists(controller_queue_uuid)
+            if not ret:
+                return -3
+            else:
+                self.controller_queue_dict[controller_queue_uuid].pop_controller_todo_task_queue()
+                return 0
 
     def register_callback(self, event, callback):
         """
@@ -154,15 +204,16 @@ class Controller(object):
         """
         self.callback_dict[event] = callback
 
-    def change_task_status(self, controller_queue_uuid, task_uuid, task_status):
+    def change_task_status(self, controller_queue_uuid, task_uuid, task_status, result):
         """
         更改task_list中的任务状态
+        :param result: 执行结果对象
         :param controller_queue_uuid: controller_queue的uuid
         :param task_uuid: task的uuid
         :param task_status: task的状态
         :return:
         """
-        self.controller_queue_dict[controller_queue_uuid].change_task_status(task_uuid, task_status)
+        self.controller_queue_dict[controller_queue_uuid].change_task_info(task_uuid, task_status, result)
 
     def worker_start_callback(self, result):
         """
@@ -170,17 +221,17 @@ class Controller(object):
         :param result: 回调结果
         :return:
         """
-        self.change_task_status(result.controller_queue_uuid, result.task_uuid, result.task_status)
-        logging.info("task {0} start".format(result.task_uuid))
+        self.change_task_status(result.controller_queue_uuid, result.task_uuid, result.task_status, None)
+        logging.info("task {0} start, user {1}".format(result.task_uuid, result.session))
         with open("dump/{0}.dump".format(result.controller_queue_uuid), "wb") as f:
             f.write(pickle.dumps(
-                self.controller_queue_dict[result.controller_queue_uuid].controller_task_list
+                self.controller_queue_dict[result.controller_queue_uuid].to_dict()
             ))
         logging.info(result.to_str())
-        ''' requests.post(
+        requests.post(
             'http://localhost:5000/api/operation/uuid/{id}/callback'.format(id=result.task_uuid),
             json=result.to_dict()
-        ) '''
+        )
         # 非阻塞队列开始执行后
         if result.run_all and not self.get_group_block(result.controller_queue_uuid):
             self.get_task_from_controller_queue(result.controller_queue_uuid, True)
@@ -191,11 +242,11 @@ class Controller(object):
         :param result: 回调结果
         :return:
         """
-        self.change_task_status(result.controller_queue_uuid, result.task_uuid, result.task_status)
-        logging.info("task {0} start".format(result.task_uuid))
+        self.change_task_status(result.controller_queue_uuid, result.task_uuid, result.task_status, result)
+        logging.info("task {0} end, user {1}".format(result.task_uuid, result.session))
         with open("dump/{0}.dump".format(result.controller_queue_uuid), "wb") as f:
             f.write(pickle.dumps(
-                self.controller_queue_dict[result.controller_queue_uuid].controller_task_list
+                self.controller_queue_dict[result.controller_queue_uuid].to_dict()
             ))
         logging.info(result.to_str())
         requests.post(
@@ -203,16 +254,44 @@ class Controller(object):
             json=result.to_dict()
         )
         # 阻塞队列执行完成后
-        if result.run_all and \
-            self.get_group_block(result.controller_queue_uuid) and \
-            result.task_status == 2:
-            self.get_task_from_controller_queue(result.controller_queue_uuid, True)
+        if result.run_all and self.get_group_block(result.controller_queue_uuid) and result.task_status == 2:
+            self.get_task_from_controller_queue(result.controller_queue_uuid, result.session, True)
 
-    def run_all(self, controller_queue_uuid):
-        return self.get_tasks_from_controller_queue(controller_queue_uuid)
+    def deserialize(self):
+        """
+        反序列化
+        :return:
+        """
+        dump_file_list = os.listdir("dump")
+        for each in dump_file_list:
+            with open("dump/{0}".format(each)) as f:
+                queue_status = pickle.loads(f.read())
+                create_time = queue_status["create_time"]
+                group_block = queue_status["group_block"]
+                queue_id = queue_status["queue_id"]
+                task_list = queue_status["task_list"]
+                task_result_list = queue_status["task_result_list"]
+                task_status_list = queue_status["task_status_list"]
+                self.controller_queue_dict[queue_id] = ControllerQueue(queue_id, group_block)
+                self.controller_queue_dict[queue_id].create_time = create_time
+                self.controller_queue_dict[queue_id].controller_task_list = task_list
+                self.controller_queue_dict[queue_id].controller_task_result_list = task_result_list
+                self.controller_queue_dict[queue_id].controller_task_status_list = task_status_list
+                for i in range(0, len(task_list), 1):
+                    if task_status_list[i].values()[0] in (0, 1, 3):
+                        self.controller_queue_dict[queue_id].put_controller_todo_task_queue(task_list[i], True)
 
-    def run_next(self, controller_queue_uuid):
-        return self.get_task_from_controller_queue(controller_queue_uuid)
+    def init(self, task_dict, force=False):
+        return self.init_controller_queue(task_dict, force)
+
+    def run_all(self, controller_queue_uuid, session=None):
+        return self.get_tasks_from_controller_queue(controller_queue_uuid, session)
+
+    def run_next(self, controller_queue_uuid, session=None):
+        return self.get_task_from_controller_queue(controller_queue_uuid, session, False)
+
+    def skip_next(self, controller_queue_uuid, task_uuid=None):
+        return self.pop_task_from_controller_queue(controller_queue_uuid, task_uuid)
 
     def peek(self, controller_queue_uuid, task_uuid):
         return self.peek_task_from_controller_queue(controller_queue_uuid, task_uuid)
@@ -222,3 +301,6 @@ class Controller(object):
 
     def create_time(self, controller_queue_uuid):
         return self.get_create_time(controller_queue_uuid)
+
+    def resume(self, controller_queue_uuid):
+        return self.put_left_to_controller_queue(controller_queue_uuid)

@@ -1,42 +1,93 @@
-var app = angular.module('myApp', ['ngRoute'], function($provide) {
+var app = angular.module('myApp', ['ngRoute', 'ngStorage'], function($provide) {
     $provide.factory('globalVar', function() {
         return {
             'intervals': []
         };
     });
 
-    $provide.factory('$message', function() {
+    $provide.factory('$uuid', function() {
         return {
-            Alert: function(msg, timeout = 5) {
-
-            },
-            Warning: function(msg, timeout = 5) {
-
-            },
-            Info: function(msg, timeout = 5) {
-
+            uuid4: function() {
+                return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+                    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+                )
             }
         }
-    })
+    });
 
-    $provide.factory('Message', function($rootScope, $location, $interval, $timeout) {
-        if ($rootScope.Messages === undefined) {
-            $rootScope.Messages = {
-                public: []
-            };
+    $provide.factory('$message', function($uuid) {
+        return {
+            Alert: function(msg, timeout = 3, id = $uuid.uuid4()) {
+                $('#alertMessage').append('\
+<div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">\
+    <span type="button" class="am-close am-fr">&times;</span>\
+    <p class="am-text-center">' + msg + '</p>\
+</div>\
+                ');
+                $('#' + id).alert();
+                $('#' + id).addClass('am-alert-danger').show();
+                setTimeout(function() {
+                    $('#' + id).alert('close');
+                }, timeout * 1000);
+            },
+            Warning: function(msg, timeout = 3, id = $uuid.uuid4()) {
+                $('#alertMessage').append('\
+<div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">\
+    <span type="button" class="am-close am-fr">&times;</span>\
+    <p class="am-text-center">' + msg + '</p>\
+</div>\
+                ');
+                $('#' + id).alert();
+                $('#' + id).addClass('am-alert-warning').show();
+                setTimeout(function() {
+                    $('#' + id).alert('close');
+                }, timeout * 1000);
+            },
+            Info: function(msg, timeout = 3, id = $uuid.uuid4()) {
+                $('#alertMessage').append('\
+<div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">\
+    <span type="button" class="am-close am-fr">&times;</span>\
+    <p class="am-text-center">' + msg + '</p>\
+</div>\
+                ');
+                $('#' + id).alert();
+                $('#' + id).show();
+                setTimeout(function() {
+                    $('#' + id).alert('close');
+                }, timeout * 1000);
+            },
+            Success: function(msg, timeout = 3, id = $uuid.uuid4()) {
+                $('#alertMessage').html('\
+<div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">\
+    <span type="button" class="am-close am-fr">&times;</span>\
+    <p class="am-text-center">' + msg + '</p>\
+</div>\
+                ');
+                $('#' + id).alert();
+                $('#' + id).addClass('am-alert-success').show();
+                setTimeout(function() {
+                    $('#' + id).alert('close');
+                }, timeout * 1000);
+            }
         }
+    });
 
+    $provide.factory('$websocket', function($rootScope, $location, $interval, $timeout, $message) {
         var connected = false;
+        var reconnect = false;
         var heartbeat_interval;
         var unload = false;
         var ws;
+        var topic_callbacks = {}
 
         var init = function() {
             if ("WebSocket" in window) {
                 ws = new WebSocket("ws://" + $location.host() + ":5000/websocket");
                 ws.onopen = function() {
-                    console.log("conn success");
+                    console.log("[Client] Websocket connected successfully.");
+                    $message.Success('Websocket connected successfully.');
                     connected = true;
+                    reconnect = false;
                     ws.send(JSON.stringify({
                         method: 'topics'
                     }));
@@ -54,20 +105,27 @@ var app = angular.module('myApp', ['ngRoute'], function($provide) {
                 ws.onerror = function() {
                     connected = false;
                     $interval.cancel(heatbeat_interval);
-                    console.log('Websocket error.');
+                    console.log('[Client] Websocket connection error.');
+                    $message.Alert('Websocket connection error.');
                 };
 
                 ws.onclose = function() {
                     connected = false;
                     $interval.cancel(heatbeat_interval);
-                    console.log('Websocket closed');
                     if (!unload) {
-                        console.log('Connection lost.')
+                        if (!reconnect) {
+                            console.log('[Client] Websocket connection lost.');
+                            $message.Warning('Websocket connection lost, reconnect in 30s.', 30)
+                        } else {
+                            console.log('[Client] Websocket re-connect failed, retry...');
+                            $message.Warning('Websocket re-connect failed, retry in 30s.', 30)
+                        }
                         $timeout(init, 30000);
+                        reconnect = true;
                     }
                 };
             } else {
-                console.log("WebSocket not supported");
+                console.log("[Client] WebSocket not supported.");
             }
         };
 
@@ -75,35 +133,34 @@ var app = angular.module('myApp', ['ngRoute'], function($provide) {
 
         window.onbeforeunload = function() {
             unload = true;
+            console.log('[Client] Closing websocket.')
             ws.close();
         };
 
         var onMessage = function(msg) {
             if (msg.hasOwnProperty('heartbeat')) {
-                console.log(msg.heartbeat);
+                console.log('[Server] Heartbeat: ' + msg.heartbeat);
             } else if (msg.hasOwnProperty('topics')) {
-                console.log(msg.topics);
                 msg.topics.forEach(function(topic_name) {
+                    topic_callbacks[topic_name] = new Set();
+                    console.log('[Client] Subscribing topic: ' + topic_name);
                     ws.send(JSON.stringify({
                         method: 'subscribe',
                         topic: topic_name
                     }));
                 });
-            } else {
+            } else if (msg.hasOwnProperty('message')) {
+                console.log('[Server] Message from server: ' + msg.message)
+                $message.Info(msg.message);
+            } else if (msg.hasOwnProperty('topic')) {
                 switch (msg.topic) {
                     case "public":
-                        $rootScope.$apply(function() {
-                            $rootScope.Messages.public.push(msg.data);
-                            $rootScope.AlertMessage = msg.data;
-                            $rootScope.triggered = true;
-                        });
-                        if (window.localStorage.public === undefined) {
-                            window.localStorage.public = [];
-                        }
-                        window.localStorage.public.push(msg.data);
+                        $message.Info(msg.data);
                         break;
                     case "tasks":
-                        console.log(JSON.parse(msg.data));
+                        task_result = JSON.parse(msg.data);
+                        console.log(task_result);
+                        $rootScope.$broadcast('TaskStatusChanged', task_result);
                         break;
                     default:
                         console.log(JSON.stringify(msg));
@@ -116,15 +173,129 @@ var app = angular.module('myApp', ['ngRoute'], function($provide) {
                 ws.send(JSON.stringify(msg));
             },
             Close: function() { ws.close(); },
-            Subscribe: function(topic_name, callback) {
-                ws.send(JSON.stringify({
-                    method: 'subscribe',
-                    topic: topic_name
-                }));
-            }
+            Subscribe: function(topic_name, callback) {},
+            UnSubscribe: function(topic_name, callback) {}
         };
     });
 });
+
+app.directive("fileModel", ["$parse", function($parse) {
+    return {
+        restrict: "A",
+        link: function(scope, element, attrs) {
+            var model = $parse(attrs.fileModel);
+            var modelSetter = model.assign;
+
+            element.bind("change", function() {
+                scope.$apply(function() {
+                    modelSetter(scope, element[0].files[0]);
+                    console.log(model.assign);
+                })
+            })
+        }
+    }
+}]);
+
+app.service("$fileUpload", ["$http", function($http) {
+    this.uploadFileToUrl = function(file, uploadUrl) {
+        var fd = new FormData();
+        fd.append("file", file)
+        $http.post(uploadUrl, fd, {
+                transformRequest: angular.identity,
+                headers: { "Content-Type": undefined }
+            })
+            .success(function(res) {
+                if (res.error_code == 0) {
+                    alert("文件上传成功。");
+                    window.location.reload();
+                } else {
+                    alert("数据已存在于数据库中。")
+                }
+            })
+            .error(function(res) {
+                alert(res.message);
+            })
+    }
+}]);
+
+app.service('$operations', function($websocket, $http, $message, $sessionStorage) {
+    this.Detail = function(params) {
+        $http.get('api/op_group/id/' + params.groupID)
+            .success(function(response) {
+                if (response.error_code == 0) {
+                    params.onSuccess(response.data);
+                } else {
+                    $message.Warning(response.message);
+                }
+            })
+            .error(function(response) {
+                console.log(response);
+                if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                }
+            });
+    }
+    this.InitQueue = function(params) {
+        $http.post('api/op_group/id/' + params.groupID)
+            .success(function(response) {
+                $message.Success(response.message);
+            })
+            .error(function(response) {
+                console.log(response);
+                $message.Alert(response.message);
+            });
+    }
+    this.SkipCurrent = function(params) {}
+    this.ResumeQueue = function(params) {}
+    this.Snapshot = function(params) {
+        $http.get('api/op_group/id/' + params.groupID + '/snapshot')
+            .success(function(response) {
+                $message.Success(response.message);
+            })
+            .error(function(response) {
+                console.log(response);
+                if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                }
+            });
+    }
+    this.RunNext = function(params) {
+        $http.get(
+                'api/operation/id/' + params.operationID,
+                headers = {
+                    Authorizor: JSON.stringify(params.authorizor)
+                }
+            )
+            .success(function(response) {
+                if (response.error_code == 0) {
+                    response.data.exec_code = -4;
+                    params.onSuccess(response.data);
+                } else {
+                    console.log(response)
+                    params.onError(response.message);
+                }
+            })
+            .error(function(response) {
+                console.log(response);
+                if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                }
+            });
+    }
+    this.RunAll = function(params) {
+        $http.get('api/op_group/id/' + params.groupID + '/all')
+            .success(function(response) {
+                params.onSuccess(response.data);
+            })
+            .error(function(response) {
+                console.log(response);
+                if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                }
+            });
+    }
+})
+
 app.config(['$routeProvider', function($routeProvider) {
     $routeProvider
         .when('/dashboard', {
@@ -144,7 +315,8 @@ app.config(['$routeProvider', function($routeProvider) {
             redirectTo: '/dashboard'
         });
 }]);
-app.run(function($rootScope, $interval, $location, globalVar, Message) {
+
+app.run(function($rootScope, $interval, $location, globalVar, $websocket) {
     $rootScope.tab = 1; //default
     $rootScope.$on('$routeChangeStart', function(evt, next, current) {
         console.log('route begin change');
@@ -154,14 +326,291 @@ app.run(function($rootScope, $interval, $location, globalVar, Message) {
         globalVar.intervals = [];
     });
     $rootScope.status = "normal";
-    $rootScope.Messenger = Message;
+    // $rootScope.Messenger = Message;
     if ($rootScope.LoginStatics === undefined) {
         $rootScope.LoginStatics = {};
     }
 });
-app.controller('dashBoardControl', ['$scope', 'Message', '$rootScope', '$http', function($scope, Message, $rootScope, $http) {
+app.controller('dashBoardControl', ['$scope', '$rootScope', '$http', function($scope, $rootScope, $http) {
     //$rootScope.Message = Message;
     $rootScope.isShowSideList = false;
+}]);
+app.controller('FileUpdateControl', ['$scope', '$fileUpload', function($scope, $fileUpload) {
+    $scope.sendFile = function() {
+        var url = "api/upload",
+            file = $scope.fileToUpload;
+        if (!file)
+            alert("请选择需要上传的文件。")
+        else
+            $fileUpload.uploadFileToUrl(file, url);
+    }
+}]);
+app.controller('EditoptionBookController', ['$scope', '$http', function($scope, $http) {
+    $http.get('api/systems')
+        .success(function(response) {
+            $scope.optionBookSystemData = response.data.records;
+        })
+        .error(function(response) {
+            console.log(response);
+        })
+    $http.get('api/ob-add')
+        .success(function(response) {
+            $scope.optionBookEditBookData = response.data;
+        })
+        .error(function(response) {
+            console.log(response);
+        });
+    $scope.optionBookSelectFormat = function() {
+        $scope.dataCopy = {};
+    }
+    $scope.optionBookSelectedGet = function(id) {
+        $scope.isEmergency = [{
+            "name": "紧急操作",
+            "value": true
+        }, {
+            "name": "非紧急操作",
+            "value": false
+        }];
+        $http.get('api/ob-adjust/id/' + id)
+            .success(function(response) {
+                $scope.optionBookSystemOptBookData = response.data;
+                console.log($scope.optionBookSystemOptBookData);
+                $scope.dataCopy = {
+                    "sys_id": $scope.optionBookSystemSelect.id,
+                    "catalog_id": $scope.optionBookSystemOptBookData.catalog.id.toString(),
+                    "type": $scope.optionBookSystemOptBookData.type,
+                    "description": $scope.optionBookSystemOptBookData.description,
+                    "name": $scope.optionBookSystemOptBookData.name,
+                    "is_emergency": $scope.optionBookSystemOptBookData.is_emergency.toString()
+                };
+            })
+            .error(function(response) {
+                console.log(response);
+            })
+
+    }
+    $scope.EditOptionBookPut = function(id) {
+        $http.put('api/ob-adjust/id/' + id, data = $scope.dataCopy)
+            .success(function(response) {
+                if (response.error_code == 0) {
+                    alert("表单提交成功");
+                    window.location.reload();
+                } else {
+                    alert("表单提交失败，错误代码" + response.message);
+                }
+            }).error(function(response) {
+                console.log(response);
+            });
+    }
+}]);
+app.controller('optionBookController', ['$scope', '$http', '$timeout', function($scope, $http, $timeout) {
+    $http.get('api/ob-add')
+        .success(function(response) {
+            $scope.optionBookData = response.data;
+        })
+        .error(function(response) {
+            console.log(response);
+        });
+    $scope.optionBookEditData = {
+        "name": "",
+        "description": "",
+        "remote_name": "",
+        "type": "",
+        "catalog": "",
+        "sys": "",
+        "is_emergency": "",
+        "mod": ""
+    };
+    $scope.optionBookCommand = [{
+        "shell": "",
+        "chdir": ""
+    }];
+    $scope.checkDataFull = function(data) {
+        if (data.name == "" || data.sys == "" || data.type == "" || !$scope.optionBookShellIs)
+            return true;
+        else
+            return false;
+    }
+    $scope.optionBookComAdd = function() {
+        $scope.optionBookShellIs = false;
+        $scope.optionBookNew = {};
+        $scope.optionBookCommand.push($scope.optionBookNew);
+    }
+    $scope.optionBookShellIs = false;
+    $scope.optionBookCheckShell = function(index) {
+        $scope.optionBookShellIs = false;
+        $scope.checkShow = true;
+        $http({
+            method: 'post',
+            url: 'http://localhost:5000/api/ob-check',
+            data: $scope.optionBookCommand[index]
+        }).success(function(response) {
+            if (response == 0) {
+                alert("检查成功");
+                $scope.checkShow = false;
+                $scope.optionBookShellIs = true;
+            } else {
+                alert("检查失败,脚本文件不存在");
+                $scope.checkShow = false;
+                if ($scope.optionBookCommand.length != 1)
+                    $scope.optionBookCommand.splice(index, 1);
+                else {
+                    $scope.optionBookCommand[index].shell = "";
+                    $scope.optionBookCommand[index].chdir = "";
+                }
+            }
+
+        }).error(function() {
+
+        });
+    }
+    $scope.optionBookEditPost = function() {
+        $scope.optionBookEditDataPost = {
+            "name": $scope.optionBookEditData.name,
+            "description": $scope.optionBookEditData.description,
+            "remote_name": $scope.optionBookEditData.remote_name,
+            "type": $scope.optionBookEditData.type.type,
+            "catalog_id": $scope.optionBookEditData.catalog.catalog_id,
+            "sys_id": $scope.optionBookEditData.sys.sys_id,
+            "is_emergency": $scope.optionBookEditData.is_emergency,
+            "mod": $scope.optionBookCommand
+        };
+        //		angular.forEach($scope.optionBookEditDataPost.mod,function(value,index){
+        //			
+        //		})
+        $http({
+                method: 'post',
+                url: 'http://localhost:5000/api/ob-add',
+                data: $scope.optionBookEditDataPost
+            }).success(function(req) {
+                console.log(req);
+                if (req.error_code == 0) {
+                    alert("表单提交成功");
+                    window.location.reload();
+                } else {
+                    alert("表单提交失败，错误代码" + req.message);
+                }
+            })
+            .error(function(req) {
+                console.log(req);
+            });
+    }
+}]);
+app.controller('optionGroupController', ['$scope', '$http', '$q', '$timeout', '$window', function($scope, $http, $q, $timeout, $window) {
+
+    //	$scope.cannotSort = false;
+
+    $http.get('api/systems')
+        .success(function(response) {
+            $scope.optionGroupSystem = response.data.records;
+        })
+        .error(function(response) {
+            console.log(response);
+        });
+    $scope.optionGroupConfirm = {
+        "operation_group": {
+            "sys_id": null,
+            "name": null,
+            "description": null
+        },
+        "operations": []
+    };
+    $scope.optionGroupDataBackup = [];
+    //	var watch = $scope.$watch('systemDetail',function(newValue,oldValue, scope){
+    //		angular.forEach(newValue, function(value, index) {
+    //          if(value.constructor == Array){
+    //          	angular.forEach(value, function(value1, index1){
+    //          		$scope.optionGroupDataBackup.push([value1.name,value1.book_id]);
+    //          	});
+    //          }
+    //  	});
+    //	});
+    $scope.optionBookInSysId = function(id) {
+        $http.get('api/sys-ob/id/' + id)
+            .success(function(response) {
+                $scope.optionGroupDataBackup = response;
+            })
+            .error(function(response) {
+                console.log(response);
+            });
+    }
+    $scope.optionGroupName = null;
+    $scope.optionGroupDescription = null;
+    $scope.optionNowSelect = null;
+    $scope.optionShow = false;
+    $scope.detailInfo = "";
+    $scope.optionGroupConfirmIsNull = false;
+    $scope.infOfDetail = function(id) {
+        if ($scope.optionGroupConfirm.operations.length != 0) {
+            $scope.optionGroupConfirmIsNull = true;
+        } else {
+            $scope.optionGroupConfirmIsNull = false;
+        }
+        $scope.optionGroupConfirm.operation_group.name = $scope.optionGroupName;
+        $scope.optionGroupConfirm.operation_group.description = $scope.optionGroupDescription;
+        $scope.optionShow = true;
+        angular.forEach($scope.optionGroupDataBackup, function(value, index) {
+            if (id == value.book_id) {
+                $scope.optionNowSelect = value;
+            }
+        });
+        //		$scope.optionGroupConfirm.operation_group.name = $scope.optionGroupName;
+        //		$scope.optionGroupConfirm.operation_group.description = $scope.optionGroupDescription;
+        //		$scope.optionShow = true;
+        //		$scope.optionDetail = optionGroupValue;
+        //		for(var i = 0;i < $scope.optionDetail.length;i++){
+        //			if(id == $scope.optionDetail[i].book_id){
+        //				$scope.optionNowSelect = $scope.optionDetail[i];
+        //				$scope.detailInfo = $scope.optionDetail[i].description;
+        //			}
+        //		}
+
+    }
+    $scope.optionSelectAdd = function() {
+        $scope.optionGroupConfirm.operations.push($scope.optionNowSelect);
+    };
+    activate();
+
+    function activate() {
+        var promises = $scope.optionGroupConfirm.operations;
+        return $q.all(promises).then(function() {
+            // promise被resolve时的处理
+            console.log(promises);
+        });
+    }
+    $scope.dbclickFunc = function(index) {
+        $scope.optionGroupConfirm.operations.splice(index, 1);
+    }
+    $scope.tes1 = function(data) {
+        console.log(data);
+    }
+    $scope.formComfirm = false;
+    $scope.loadingIcon = false;
+    $scope.test2 = function() {
+        $scope.formComfirm = !$scope.formComfirm;
+        $scope.loadingIcon = !$scope.loadingIcon;
+        $http({
+                method: 'post',
+                url: 'http://localhost:5000/api/og-add',
+                data: $scope.optionGroupConfirm
+            }).success(function(req) {
+                console.log(req);
+                if (req.error_code == 0) {
+                    $scope.loadingIcon = !$scope.loadingIcon;
+                    alert("表单提交成功");
+                    window.location.reload();
+                    $scope.formComfirm = !$scope.formComfirm;
+                } else {
+                    $scope.loadingIcon = !$scope.loadingIcon;
+                    alert("表单提交失败，错误代码" + req.message);
+                    $scope.formComfirm = !$scope.formComfirm;
+                }
+            })
+            .error(function(req) {
+                console.log(req);
+            });
+    }
+
 }]);
 app.controller('userController', ['$scope', '$http', function($scope, $http) {
     $scope.ModifyPassword = function(usr_id) {
@@ -385,7 +834,7 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', '$rootScope', '$lo
     };
 }]);
 
-app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParams', '$location', 'Message', function($scope, $http, $timeout, $routeParams, $location, Message) {
+app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParams', '$location', '$operations', '$message', function($scope, $http, $timeout, $routeParams, $location, $operations, $message) {
     $scope.$on('$routeChangeStart', function(evt, next, current) {
         var last = $scope.opList.details[$scope.opList.details.length - 1];
         if (last.err_code != -1 && last.checker.isTrue && !last.checker.checked) {
@@ -394,13 +843,36 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
         }
     });
 
-    $http.get('api/op_group/id/' + $routeParams.grpid)
-        .success(function(response) {
-            $scope.opList = response;
-        })
-        .error(function(response) {
-            console.log(response);
-        });
+    $scope.$on('TaskStatusChanged', function(event, data) {
+        if (data.hasOwnProperty('details')) {
+            $timeout(function() {
+                $scope.opList = data;
+            }, 0)
+            $message.Warning('任务队列被重新初始化');
+        } else {
+            angular.forEach($scope.opList.details, function(value, index) {
+                if (data.uuid == value.uuid) {
+                    $timeout(function() {
+                        $scope.opList.details[index] = data;
+                    }, 0);
+                    if (data.exec_code > 0) {
+                        $scope.check_result(index);
+                    } else if (data.exec_code == 0) {
+                        if (index + 1 <= $scope.opList.details.length - 1) {
+                            $scope.opList.details[index + 1].enabled = true;
+                        }
+                    }
+                }
+            });
+        }
+    });
+
+    $operations.Detail({
+        groupID: $routeParams.grpid,
+        onSuccess: function(data) {
+            $scope.opList = data;
+        }
+    })
     $scope.confirm = function(index) {
         $('#result' + index).modal({
             relatedTarget: this,
@@ -432,6 +904,37 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
             $scope.opList.details[i].enabled = true;
         }
     };
+
+    $scope.runAll = function() {
+        var authorizor;
+        angular.forEach($scope.opList.details, function(value, index) {
+            if (value.interactivator.isTrue) {
+                $message.Alert('操作列表内包含交互式执行操作，无法批量运行');
+                return;
+            }
+            if (value.need_authorized) {
+                $('#authorizor').bind('authorize.quantdo', function(event, data) {
+                    authorizor = data;
+                });
+                $('#authorizor').modal({
+                    relatedTarget: this,
+                    onCancel: function() {
+                        $('#authorizeUser').val('');
+                        $('#authorizePassword').val('');
+                        return;
+                    }
+                });
+            }
+        });
+        $operations.RunAll({
+            groupID: $routeParams.grpid,
+            authorizor: authorizor,
+            onSuccess: function(data) {
+
+            }
+        });
+    }
+
     $scope.execute = function(index, id) {
         if ($scope.opList.details[index].interactivator.isTrue) {
             $http.get('api/operation/id/' + id + '/ui')
@@ -472,32 +975,14 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
         } else {
             if ($scope.opList.details[index].need_authorized) {
                 $('#authorizor').bind('authorize.quantdo', function(event, data) {
-                    $scope.opList.details[index].err_code = -2;
-                    $scope.opList.details[index].skip = false;
-                    $http.post('api/operation/id/' + id, data = data)
-                        .success(function(response) {
-                            if ($routeParams.hasOwnProperty('grpid')) {
-                                $scope.opList.details[index] = response;
-                                if (response.output_lines.length > 0) {
-                                    if (response.checker.isTrue) {
-                                        $scope.confirm(index);
-                                    } else {
-                                        $scope.check_result(index);
-                                    }
-                                }
-                                if (index < $scope.opList.details.length - 1 && ($scope.opList.details[index].checker === undefined || !$scope.opList.details[index].checker.isTrue)) {
-                                    $scope.opList.details[index + 1].enabled = response.err_code === 0;
-                                }
-                            }
-                            $('#authorizor').unbind('authorize.quantdo');
-                        })
-                        .error(function(response) {
-                            console.log(response);
-                            if ($routeParams.hasOwnProperty('grpid')) {
-                                $scope.opList.details[index] = response;
-                            }
-                            $('#authorizor').unbind('authorize.quantdo');
-                        });
+                    $operations.RunNext({
+                        operationID: id,
+                        groupID: $routeParams.grpid,
+                        authorizor: data,
+                        onSuccess: function(data) {
+                            $scope.opList.details[index] = data;
+                        }
+                    });
                 });
                 var err_code = $scope.opList.details[index].err_code;
                 $('#authorizor').modal({
@@ -508,30 +993,13 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
                     }
                 });
             } else {
-                $scope.opList.details[index].err_code = -2;
-                $scope.opList.details[index].skip = false;
-                $http.post('api/operation/id/' + id)
-                    .success(function(response) {
-                        if ($routeParams.hasOwnProperty('grpid')) {
-                            $scope.opList.details[index] = response;
-                            if (response.output_lines.length > 0) {
-                                if (response.checker.isTrue) {
-                                    $scope.confirm(index);
-                                } else {
-                                    $scope.check_result(index);
-                                }
-                            }
-                            if (index < $scope.opList.details.length - 1 && ($scope.opList.details[index].checker === undefined || !$scope.opList.details[index].checker.isTrue)) {
-                                $scope.opList.details[index + 1].enabled = response.err_code === 0;
-                            }
-                        }
-                    })
-                    .error(function(response) {
-                        console.log(response);
-                        if ($routeParams.hasOwnProperty('grpid')) {
-                            $scope.opList.details[index] = response;
-                        }
-                    });
+                $operations.RunNext({
+                    groupID: $routeParams.grpid,
+                    operationID: id,
+                    onSuccess: function(data) {
+                        $scope.opList.details[index] = data;
+                    }
+                });
             }
         }
     };
@@ -862,6 +1330,8 @@ app.filter('exe_result', function() {
                 return "执行中...";
             case -3:
                 return "跳过执行";
+            case -4:
+                return "任务已调度";
             default:
                 return "执行失败";
         }

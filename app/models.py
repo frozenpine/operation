@@ -336,6 +336,10 @@ class Operator(UserMixin, SQLModelMixin, db.Model):
 
     __tablename__ = 'operators'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    uuid = db.Column(
+        db.String, index=True,
+        default=lambda: unicode(uuid4()).lower()
+    )
     login = db.Column(db.String, unique=True, index=True)
     name = db.Column(db.String, index=True)
     password_hash = db.Column(db.String, nullable=False)

@@ -9,7 +9,7 @@ import requests
 import winrm
 from paramiko import (AutoAddPolicy, PasswordRequiredException, RSAKey,
                       SSHClient)
-from paramiko.ssh_exception import NoValidConnectionsError
+from paramiko.ssh_exception import NoValidConnectionsError, AuthenticationException
 from winrm import Response
 from winrm.exceptions import (WinRMError, WinRMOperationTimeoutError,
                               WinRMTransportError)
@@ -26,12 +26,15 @@ class Executor():
 
     @staticmethod
     def Create(remote_config, parser=None, session=None):
-        if isinstance(remote_config, SSHConfig):
-            return SSHExecutor(remote_config, parser)
-        if isinstance(remote_config, WinRmConfig):
-            return WinRmExecutor(remote_config, parser)
-        if isinstance(remote_config, HttpConfig):
-            return HttpExecutor(remote_config, parser, session)
+        try:
+            if isinstance(remote_config, SSHConfig):
+                return SSHExecutor(remote_config, parser)
+            if isinstance(remote_config, WinRmConfig):
+                return WinRmExecutor(remote_config, parser)
+            if isinstance(remote_config, HttpConfig):
+                return HttpExecutor(remote_config, parser, session)
+        except Exception:
+            return None
 
     def run(self, module):
         import_mod = 'import Libs.{} as mod'.format(module.get('name'))
@@ -95,11 +98,15 @@ class SSHExecutor(Executor):
                     self.pKeyConnect(remote_config)
             else:
                 self.passConnect(remote_config)
-            #gevent.sleep(0)
         except NoValidConnectionsError, err:
             logging.error(err)
+            raise
+        except AuthenticationException, err:
+            logging.error(err)
+            raise
         except Exception, err:
             logging.error(err)
+            raise
 
     def pKeyConnect(self, ssh_config):
         try:

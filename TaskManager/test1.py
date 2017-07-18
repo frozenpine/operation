@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import sys
+import time
 
 import zerorpc
 import zmq.green as zmq
@@ -195,7 +196,14 @@ if __name__ == "__main__":
     }
     client = zerorpc.Client()
     client.connect("tcp://127.0.0.1:2017")
-    print client.init_controller_queue(task_dict)
-    print client.init_controller_queue(task_dict)
-    print client.get_tasks_from_controller_queue("task_group1")
-    print client.get_tasks_from_controller_queue("task_group2")
+    print client.init(task_dict)
+    print client.run_next("task_group1", "user1")
+    time.sleep(10)
+    print client.run_all("task_group1", "user1")
+    time.sleep(10)
+    """
+    print client.init(task_dict)
+    print client.init(task_dict)
+    print client.run_all("task_group1")
+    print client.run_all("task_group2")
+    """

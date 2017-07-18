@@ -48,7 +48,6 @@ msgQueues = MessageQueues
 globalEncryptKey = None
 taskManager = zerorpc.Client()
 taskManager.connect("tcp://127.0.0.1:2017")
-task_requests = {}
 
 from auth import auth as auth_blueprint, login_manager
 from restful import restapi as restapi_blueprint

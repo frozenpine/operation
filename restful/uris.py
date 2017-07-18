@@ -9,6 +9,7 @@ from .handlers.LogHandler import LogApi
 from .handlers.OperationHandler import (OperationApi, OperationCallbackApi,
                                         OperationCaptchaApi, OperationCSVApi,
                                         OperationExecuteApi, OperationListApi,
+                                        OperationListRunAllApi,
                                         OperationListRunApi,
                                         OperationListSnapshotApi,
                                         OperationLoginApi, OperationUIApi)
@@ -98,6 +99,12 @@ resources.add_resource(
 )
 
 resources.add_resource(
+    OperationListRunAllApi,
+    '/op_group/id/<int:id>/all',
+    endpoint='op_group_all'
+)
+
+resources.add_resource(
     OperationListSnapshotApi,
     '/op_group/id/<int:id>/snapshot',
     endpoint='op_group_snapshot'
@@ -106,7 +113,7 @@ resources.add_resource(
 resources.add_resource(
     OperationApi,
     '/operation/id/<int:id>',
-    methods=['POST'],
+    methods=['GET'],
     endpoint='operation'
 )
 

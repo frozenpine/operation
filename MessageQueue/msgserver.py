@@ -4,7 +4,7 @@ import time
 
 from geventwebsocket import WebSocketError
 
-from msgsink import LogSinker
+from msgsink import LogSinker, JSONSinker
 
 
 def req_subscribe(request):
@@ -58,15 +58,10 @@ def req_topics(request):
     }))
 
 class MessageServer(object):
-    '''switchRequest = {
-        'subscribe': lambda req: req_subscribe(req),
-        'unsubscribe': lambda req: req_unsubscribe(req),
-        'heartbeat': lambda req: req_heartbeat(req)
-    }'''
-    def __init__(self, topic):
+    def __init__(self, topic, sinker):
         self.observers = set()
         self.topic = topic
-        self.message_queue = LogSinker(self.topic, 5)
+        self.message_queue = sinker
         self.message_queue.setDaemon(True)
         self.message_queue.start()
 
@@ -87,6 +82,9 @@ class MessageServer(object):
                 continue
         self.observers -= fail_socket
 
+    def send_object(self, obj):
+        self.send_message(json.dumps(obj))
+
     def subscribe(self, websocket):
         self.observers.add(websocket)
 
@@ -105,7 +103,6 @@ class MessageServer(object):
         else:
             request['ws'] = websocket
             try:
-                # MessageServer.switchRequest[request['method']](request)
                 method = request['method']
                 globals()['req_{}'.format(method)](request)
             except KeyError:
@@ -114,6 +111,6 @@ class MessageServer(object):
                 }))
 
 MessageQueues = {
-    'public': MessageServer('public'),
-    'tasks': MessageServer('tasks')
+    'public': MessageServer('public', LogSinker('public')),
+    'tasks': MessageServer('tasks', JSONSinker('tasks', 10))
 }

@@ -1,6 +1,5 @@
 # coding=utf-8
 
-
 import json
 from multiprocessing import Process, Pipe
 from threading import Thread
@@ -15,18 +14,22 @@ from worker_queue import WorkerQueue
 
 
 class Result(object):
-    def __init__(self, controller_queue_uuid, task_uuid, task_status, run_all, task_result=None):
+    def __init__(self, controller_queue_uuid, task_uuid, task_status, session, run_all, task_result=None):
         status_relation = {100: 1, 0: 2}
         self.controller_queue_uuid = controller_queue_uuid
         self.task_uuid = task_uuid
         self.task_status = task_status
+        self.session = session
         self.run_all = run_all
         if self.task_status in status_relation:
             self.task_status = status_relation[self.task_status]
         else:
             self.task_status = 3
         if task_result:
-            self.task_result = vars(task_result)
+            if not isinstance(task_result, dict):
+                self.task_result = vars(task_result)
+            else:
+                self.task_result = task_result
         else:
             self.task_result = task_result
 
@@ -44,12 +47,13 @@ class Result(object):
 
 
 class RunTask(Process):
-    def __init__(self, controller_queue_uuid, task_uuid, task, pipe_child, run_all):
+    def __init__(self, controller_queue_uuid, task_uuid, task, pipe_child, session, run_all):
         Process.__init__(self)
         self.controller_queue_uuid = controller_queue_uuid
         self.task_uuid = task_uuid
         self.task = task
         self.pipe_child = pipe_child
+        self.session = session
         self.run_all = run_all
 
     def run(self):
@@ -57,13 +61,38 @@ class RunTask(Process):
         调用Executor执行task
         :return:
         """
-        self.pipe_child.send(Result(self.controller_queue_uuid, self.task_uuid, 100, self.run_all))
-        conf = SSHConfig(**self.task["remote"]["params"])
-        exe = Executor.Create(conf)
-        mod = self.task["mod"]
-        task_result = exe.run(mod)
-        task_status = task_result.return_code
-        self.pipe_child.send(Result(self.controller_queue_uuid, self.task_uuid, task_status, self.run_all, task_result))
+        self.pipe_child.send(Result(self.controller_queue_uuid, self.task_uuid, 100, self.session, self.run_all))
+        task_status, task_result = -1, None
+        try:
+            conf = SSHConfig(**self.task["remote"]["params"])
+        except TypeError:
+            # SSH格式错误
+            task_status = 3
+            task_result = {
+                "destination": None, "module": None, "return_code": -1, "error_msg": "", "data": {}, "lines": []
+            }
+        else:
+            exe = Executor.Create(conf)
+            if exe:
+                mod = self.task["mod"]
+                if isinstance(mod, dict):
+                    # 一个任务
+                    task_result = exe.run(mod)
+                    task_status = task_result.return_code
+                if isinstance(mod, list):
+                    # 多个任务
+                    for each in mod:
+                        task_result = exe.run(each)
+                        task_status = task_result.return_code
+                        if task_status != 0:
+                            break
+            else:
+                task_status = 3
+                task_result = {
+                    "destination": None, "module": None, "return_code": -1, "error_msg": "", "data": {}, "lines": []
+                }
+        self.pipe_child.send(
+            Result(self.controller_queue_uuid, self.task_uuid, task_status, self.session, self.run_all, task_result))
 
 
 class ParentPipe(Thread):
@@ -108,13 +137,14 @@ class Worker(object):
         while 1:
             ret = msg_queue.todo_task_queue.get()
             run_all = ret["run_all"]
+            session = ret["session"]
             ret = ret["ret"]
             gevent.sleep(0)
             controller_queue_uuid = ret["controller_queue_uuid"]
             task_uuid = ret["task_uuid"]
             task = ret["task"]
             start_time = get_time.current_timestamp()
-            t = RunTask(controller_queue_uuid, task_uuid, task, pipe_child, run_all)
+            t = RunTask(controller_queue_uuid, task_uuid, task, pipe_child, session, run_all)
             while 1:
                 for k in self.process_dict.keys():
                     if not self.process_dict[k][0].is_alive():

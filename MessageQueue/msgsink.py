@@ -3,6 +3,7 @@ import os
 import shutil
 import threading
 import time
+import json
 from Queue import Queue
 
 
@@ -64,3 +65,9 @@ class LogSinker(BaseSinker):
         with open("Flows/{0}.out".format(self.filename), "ab+") as f:
             while not self.queue.empty():
                 f.write(self.queue.get() + "\n")
+
+class JSONSinker(BaseSinker):
+    def sink(self):
+        with open("Flows/{0}.out".format(self.filename), "ab+") as f:
+            while not self.queue.empty():
+                f.write(json.dumps(self.queue.get()) + "\n")

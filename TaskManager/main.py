@@ -1,5 +1,11 @@
 # coding=utf-8
 
+
+import sys
+from os import path
+
+sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
+
 import gevent
 import zerorpc
 from gevent import monkey
