@@ -4,8 +4,8 @@ from app.models import OperationBook, ScriptType, TradeSystem, PlatformType, Ope
 from flask import request
 from werkzeug.exceptions import BadRequest
 from app import db
-from ..errors import DataNotJsonError, DataUniqueError, DataNotNullError, DataEnumValueError, PlatFormNotFoundError
-from ..output import Output
+from restful.errors import DataNotJsonError, DataUniqueError, DataNotNullError, DataEnumValueError, PlatFormNotFoundError
+from restful.protocol import RestProtocol
 import paramiko
 
 
@@ -15,7 +15,7 @@ class OperationBookListApi(Resource):
 
     def get(self):
         operation_books = OperationBook.query.all()
-        return Output(operation_books)
+        return RestProtocol(operation_books)
 
     def post(self):
         try:
@@ -24,7 +24,7 @@ class OperationBookListApi(Resource):
             try:
                 raise DataNotJsonError
             except DataNotJsonError:
-                return Output(DataNotJsonError())
+                return RestProtocol(DataNotJsonError())
         else:
             try:
                 if not data.get('name') or not data.get('sys_id') or not data.get('mod'):
@@ -63,22 +63,22 @@ class OperationBookListApi(Resource):
                                     mod_list.append(dict(name='shell', shell=mod_data[j].get('shell')))
                             detail_dict = dict(remote=remote_dict, mod=mod_list)
                     else:
-                        return Output(PlatFormNotFoundError())
+                        return RestProtocol(PlatFormNotFoundError())
 
                     ob.detail = detail_dict
                 else:
                     return {'message': 'System not found.'}, 404
 
             except DataNotNullError:
-                return Output(DataNotNullError())
+                return RestProtocol(DataNotNullError())
             except DataUniqueError:
-                return Output(DataUniqueError())
+                return RestProtocol(DataUniqueError())
             except DataEnumValueError:
-                return Output(DataEnumValueError())
+                return RestProtocol(DataEnumValueError())
             else:
                 db.session.add(ob)
                 db.session.commit()
-                return Output(ob)
+                return RestProtocol(ob)
 
 
 class OperationBookCheckApi(Resource):
@@ -92,13 +92,13 @@ class OperationBookCheckApi(Resource):
             try:
                 raise DataNotJsonError
             except DataNotJsonError:
-                return Output(DataNotJsonError())
+                return RestProtocol(DataNotJsonError())
         else:
             try:
                 if not data.get('shell'):
                     raise DataNotNullError
             except DataNotNullError:
-                return Output(DataNotNullError())
+                return RestProtocol(DataNotNullError())
             else:
                 file_name, chdir = data.get('shell'), data.get('chdir')
                 ssh = paramiko.SSHClient()
@@ -124,7 +124,7 @@ class OperationBookApi(Resource):
     def get(self, **kwargs):
         op_book = OperationBook.find(**kwargs)
         if op_book is not None:
-            return Output(op_book)
+            return RestProtocol(op_book)
         else:
             return {'message': 'Not found'}, 404
 
@@ -137,7 +137,7 @@ class OperationBookApi(Resource):
                 try:
                     raise DataNotJsonError
                 except DataNotJsonError:
-                    return Output(DataNotJsonError())
+                    return RestProtocol(DataNotJsonError())
             else:
                 try:
                     if op_book.name != data.get('name') and OperationBook.query.filter_by(
@@ -149,9 +149,9 @@ class OperationBookApi(Resource):
                         except KeyError:
                             raise DataEnumValueError
                 except DataUniqueError:
-                    return Output(DataUniqueError())
+                    return RestProtocol(DataUniqueError())
                 except DataEnumValueError:
-                    return Output(DataEnumValueError())
+                    return RestProtocol(DataEnumValueError())
                 else:
                     op_book.name = data.get('name', op_book.name)
                     op_book.description = data.get('description', op_book.description)
@@ -161,6 +161,6 @@ class OperationBookApi(Resource):
                     op_book.is_emergency = data.get('is_emergency', op_book.is_emergency)
                     db.session.add(op_book)
                     db.session.commit()
-                    return Output(op_book)
+                    return RestProtocol(op_book)
         else:
             return {'message': 'Not found'}, 404

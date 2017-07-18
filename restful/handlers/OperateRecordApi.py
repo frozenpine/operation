@@ -3,8 +3,8 @@ from flask_restful import Resource
 from app.models import OperateRecord, Operator
 from flask import request
 from werkzeug.exceptions import BadRequest
-from ..errors import DataNotJsonError, DataUniqueError, DataNotNullError, DataEnumValueError, PlatFormNotFoundError
-from ..output import Output
+from restful.errors import DataNotJsonError, DataUniqueError, DataNotNullError, DataEnumValueError, PlatFormNotFoundError
+from restful.protocol import RestProtocol
 
 
 class OperateRecordListApi(Resource):
@@ -13,7 +13,7 @@ class OperateRecordListApi(Resource):
 
     def get(self):
         '''operate_records = OperateRecord.query.all()
-        return Output(operate_records)'''
+        return RestProtocol(operate_records)'''
         operate_records = OperateRecord.query.all()
         record_list = []
         for op_record in operate_records:
@@ -40,7 +40,7 @@ class OperateRecordListApi(Resource):
             try:
                 raise DataNotJsonError
             except DataNotJsonError:
-                return Output(DataNotJsonError())
+                return RestProtocol(DataNotJsonError())
         else:
             if 'time' not in data and 'operator' not in data:
                 # operate_records = OperateRecord.query.limit(3).all()

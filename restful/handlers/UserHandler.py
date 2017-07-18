@@ -1,38 +1,35 @@
 # -*- coding: UTF-8 -*-
-#import logging
-
-from flask import request
-from flask_restful import Resource, reqparse
-from werkzeug.exceptions import BadRequest
-from werkzeug.security import check_password_hash
-
+from flask_restful import Resource
 from app import db
 from app.models import Operator
-from restful.errors import (DataNotJsonError, DataNotNullError, DataTypeError,
-                            DataUniqueError)
+from flask import request
+from werkzeug.exceptions import BadRequest
+from werkzeug.security import check_password_hash
+from restful.errors import DataNotJsonError, DataUniqueError, DataNotNullError, DataTypeError, DataNotMatchError
+from restful.protocol import RestProtocol
 
 
 class UserApi(Resource):
+    def __init__(self):
+        super(UserApi, self).__init__()
+
     def get(self, **kwargs):
         user = Operator.find(**kwargs)
-        if user:
-            return {
-                'message': 'user({}) found succeefully.'.format(user.name.encode('utf-8')),
-                'data': user.to_json()
-            }
+        if user is not None:
+            return RestProtocol(user)
         else:
-            return {'message': 'user not found'}, 404
+            return {'message': 'Not found'}, 404
 
     def put(self, **kwargs):
         user = Operator.find(**kwargs)
-        if user:
+        if user is not None:
             try:
                 data = request.get_json(force=True)
             except BadRequest:
                 try:
                     raise DataNotJsonError
-                except DataNotJsonError as e:
-                    return {'error_code': e.error_code, 'message': e.message}
+                except DataNotJsonError:
+                    return RestProtocol(DataNotJsonError())
             else:
                 try:
                     if 'old_password' in data:
@@ -41,57 +38,69 @@ class UserApi(Resource):
                             user.disabled = data.get('disabled', user.disabled)
                             if 'password' in data:
                                 user.password = data.get('password')
-                            db.session.add(user)
-                            db.session.commit()
-                            return {'message': 'user ({}) updated successfully.'.format(user.login),
-                                    'data': user.to_json()}
                         else:
-                            return {'error_code': 1106, 'message': 'Old password must match.'}
+                            try:
+                                raise DataNotMatchError
+                            except DataNotMatchError:
+                                return RestProtocol(DataNotMatchError('Old password must match.'))
                     else:
                         raise DataNotNullError
-                except DataNotNullError as e:
-                    return {'error_code': e.error_code, 'message': e.message}
+                except DataNotNullError:
+                    return RestProtocol(DataNotNullError())
                 except TypeError:
                     try:
                         raise DataTypeError
-                    except DataTypeError as e:
-                        return {'error_code': e.error_code, 'message': e.message}
+                    except DataTypeError:
+                        return RestProtocol(DataTypeError())
+                else:
+                    db.session.add(user)
+                    db.session.commit()
+                    return RestProtocol(user)
         else:
-            return {'message': 'user not found'}, 404
+            return {'message': 'Not found'}, 404
+
 
 class UserListApi(Resource):
     def __init__(self):
-        self.parser = reqparse.RequestParser()
-        self.parser.add_argument(
-            'login', type=str, required=True,
-            help='login name can not been none'
-        )
-        self.parser.add_argument(
-            'name', type=str
-        )
-        self.parser.add_argument(
-            'password', type=str, required=True,
-            help='user pass can not been none'
-        )
         super(UserListApi, self).__init__()
 
     def get(self):
         users = Operator.query.all()
-        if users:
-            return {
-                'message': 'all users listed.',
-                'data': {
-                    'count': len(users),
-                    'records': [user.to_json() for user in users]
-                }
-            }
-        else:
-            return {
-                'message': 'no users.'
-            }, 204
+        return RestProtocol(users)
 
     def post(self):
-        args = self.parser.parse_args()
-        user = Operator(args['login'], args['password'], args['name'])
-        db.session.add(user)
-        db.session.commit()
+        user = []
+        result_list = []
+        try:
+            data_list = request.get_json(force=True).get('data')
+        except BadRequest:
+            try:
+                raise DataNotJsonError
+            except DataNotJsonError:
+                return RestProtocol(DataNotJsonError())
+        else:
+            try:
+                for i in xrange(len(data_list)):
+                    if not data_list[i].get('login') or not data_list[i].get('password'):
+                        raise DataNotNullError
+                    elif Operator.query.filter_by(login=data_list[i].get('login')).first() is not None:
+                        raise DataUniqueError
+                    x = Operator(login=data_list[i].get('login'),
+                                 name=data_list[i].get('name'),
+                                 password=data_list[i].get('password'))
+                    user.append(x)
+            except DataNotNullError:
+                return RestProtocol(DataNotNullError())
+            except DataUniqueError:
+                return RestProtocol(DataUniqueError())
+            except TypeError:
+                try:
+                    raise DataTypeError
+                except DataTypeError:
+                    return RestProtocol(DataTypeError())
+            else:
+                db.session.add_all(user)
+                db.session.commit()
+                for j in xrange(len(user)):
+                    result_list.append(RestProtocol(user[j]))
+                return result_list

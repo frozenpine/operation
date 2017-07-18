@@ -5,8 +5,8 @@ from app.models import Socket, TradeProcess, Server, SystemType, TradeSystem, Pl
     DataSourceType, DataSourceModel, OpRole, Operator, OperationBook, ScriptType, Operation, OperationGroup, \
     SocketDirection, OperationCatalog, OpPrivilege, MethodType
 from app import db
-from ..output import Output
-from ..errors import DataUniqueError, LoaderNotFoundError, DataNotNullError
+from restful.protocol import RestProtocol
+from restful.errors import DataUniqueError, LoaderNotFoundError, DataNotNullError
 import os
 import time
 import yaml
@@ -34,7 +34,7 @@ class FilePostApi(Resource):
                         exec 'from loaders.ymlloader import ymlloader as loader'
                         f = yaml.dump(data_temp)
                     else:
-                        return Output(LoaderNotFoundError())
+                        return RestProtocol(LoaderNotFoundError())
                 data_from_file = loader(f)
 
                 # Add server
@@ -50,9 +50,9 @@ class FilePostApi(Resource):
                                     'ip'):
                                 raise DataNotNullError
                         except DataUniqueError:
-                            return Output(DataUniqueError())
+                            return RestProtocol(DataUniqueError())
                         except DataNotNullError:
-                            return Output(DataNotNullError())
+                            return RestProtocol(DataNotNullError())
                         else:
                             servers[i].name = svr['name']
                             if 'description' in svr:
@@ -77,9 +77,9 @@ class FilePostApi(Resource):
                             elif not sys_type.get('name'):
                                 raise DataNotNullError
                         except DataUniqueError:
-                            return Output(DataUniqueError())
+                            return RestProtocol(DataUniqueError())
                         except DataNotNullError:
-                            return Output(DataNotNullError())
+                            return RestProtocol(DataNotNullError())
                         else:
                             sys_types[i].name = sys_type.get('name')
                             if 'description' in sys_type:
@@ -100,9 +100,9 @@ class FilePostApi(Resource):
                                     'ip'):
                                 raise DataNotNullError
                         except DataUniqueError:
-                            return Output(DataUniqueError())
+                            return RestProtocol(DataUniqueError())
                         except DataNotNullError:
-                            return Output(DataNotNullError())
+                            return RestProtocol(DataNotNullError())
                         else:
                             systems[i].name = sys['name']
                             systems[i].ip = sys['ip'].decode('utf-8')
@@ -130,9 +130,9 @@ class FilePostApi(Resource):
                                     'exec_file'):
                                 raise DataNotNullError
                         except DataUniqueError:
-                            return Output(DataUniqueError())
+                            return RestProtocol(DataUniqueError())
                         except DataNotNullError:
-                            return Output(DataNotNullError())
+                            return RestProtocol(DataNotNullError())
                         else:
                             system = TradeSystem.find(name=pro['system'])
                             server = Server.find(name=pro['server'])
@@ -161,9 +161,9 @@ class FilePostApi(Resource):
                             elif not sock.get('name') or not sock.get('uri'):
                                 raise DataNotNullError
                         except DataUniqueError:
-                            return Output(DataUniqueError())
+                            return RestProtocol(DataUniqueError())
                         except DataNotNullError:
-                            return Output(DataNotNullError())
+                            return RestProtocol(DataNotNullError())
                         else:
                             sockets[i].name = sock.get('name')
                             sockets[i].description = sock.get('description')
@@ -203,9 +203,9 @@ class FilePostApi(Resource):
                                     'source'):
                                 raise DataNotNullError
                         except DataUniqueError:
-                            return Output(DataUniqueError())
+                            return RestProtocol(DataUniqueError())
                         except DataNotNullError:
-                            return Output(DataNotNullError())
+                            return RestProtocol(DataNotNullError())
                         else:
                             data_sources[i].name = ds.get('name')
                             if 'description' in ds:
@@ -229,9 +229,9 @@ class FilePostApi(Resource):
                             elif not role.get('name'):
                                 raise DataNotNullError
                         except DataUniqueError:
-                            return Output(DataUniqueError())
+                            return RestProtocol(DataUniqueError())
                         except DataNotNullError:
-                            return Output(DataNotNullError())
+                            return RestProtocol(DataNotNullError())
                         else:
                             r = OpRole(name=role.get('name'))
                             roles.append(r)
@@ -248,9 +248,9 @@ class FilePostApi(Resource):
                             elif not user.get('login') or not user.get('password'):
                                 raise DataNotNullError
                         except DataUniqueError:
-                            return Output(DataUniqueError())
+                            return RestProtocol(DataUniqueError())
                         except DataNotNullError:
-                            return Output(DataNotNullError())
+                            return RestProtocol(DataNotNullError())
                         else:
                             u = Operator(login=user.get('login'),
                                          password=user.get('password'))
@@ -274,7 +274,7 @@ class FilePostApi(Resource):
                             if not pri.get('uri') or not pri.get('bit'):
                                 raise DataNotNullError
                         except DataNotNullError:
-                            return Output(DataNotNullError())
+                            return RestProtocol(DataNotNullError())
                         else:
                             p = OpPrivilege()
                             privileges.append(p)
@@ -299,9 +299,9 @@ class FilePostApi(Resource):
                             elif not oc.get('name'):
                                 raise DataNotNullError
                         except DataUniqueError:
-                            return Output(DataUniqueError())
+                            return RestProtocol(DataUniqueError())
                         except DataNotNullError:
-                            return Output(DataNotNullError())
+                            return RestProtocol(DataNotNullError())
                         else:
                             op_catalogs[i].name = oc.get('name')
                             op_catalogs[i].order = oc.get('order')
@@ -320,9 +320,9 @@ class FilePostApi(Resource):
                             elif not ob.get('name') or not ob.get('detail'):
                                 raise DataNotNullError
                         except DataUniqueError:
-                            return Output(DataUniqueError())
+                            return RestProtocol(DataUniqueError())
                         except DataNotNullError:
-                            return Output(DataNotNullError())
+                            return RestProtocol(DataNotNullError())
                         else:
                             operation_book = OperationBook()
                             op_books.append(operation_book)
@@ -360,7 +360,7 @@ class FilePostApi(Resource):
                                     (not og.get('sys_id') and not og.get('system')):
                                 raise DataNotNullError
                         except DataNotNullError:
-                            return Output(DataNotNullError())
+                            return RestProtocol(DataNotNullError())
                         else:
                             op_groups[i].name = og.get('name')
                             if 'description' in og:
@@ -386,7 +386,7 @@ class FilePostApi(Resource):
                                     (not op.get('op_group_id') and not op.get('group')):
                                 raise DataNotNullError
                         except DataNotNullError:
-                            return Output(DataNotNullError())
+                            return RestProtocol(DataNotNullError())
                         else:
                             operations[i].name = op.get('name')
                             if 'description' in op:

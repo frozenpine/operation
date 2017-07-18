@@ -1,8 +1,8 @@
 # -*- coding: UTF-8 -*-
 from flask_restful import Resource
 from app.models import TradeSystem, ScriptType, OperationCatalog
-from ..output import Output
-from ..errors import DataNotMatchError
+from restful.protocol import RestProtocol
+from restful.errors import DataNotMatchError
 
 
 class SystemInformationApi(Resource):
@@ -11,7 +11,7 @@ class SystemInformationApi(Resource):
 
     def get(self):
         systems = TradeSystem.query.all()
-        return Output(systems)
+        return RestProtocol(systems)
 
 
 class ParentSystemFindOperationBookApi(Resource):
@@ -34,7 +34,7 @@ class ParentSystemFindOperationBookApi(Resource):
                         'data': {'count': len(ob_result),
                                  'records': ob_result}}
             else:
-                return Output(DataNotMatchError('The system is not a parent system.'))
+                return RestProtocol(DataNotMatchError('The system is not a parent system.'))
         else:
             return {'message': 'System not found.'}, 404
 

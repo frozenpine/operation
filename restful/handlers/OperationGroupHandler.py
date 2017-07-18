@@ -4,8 +4,8 @@ from flask import request
 from app import db
 from app.models import OperationGroup, Operation
 from werkzeug.exceptions import BadRequest
-from ..output import Output
-from ..errors import DataNotJsonError, DataNotNullError
+from restful.protocol import RestProtocol
+from restful.errors import DataNotJsonError, DataNotNullError
 
 
 class OperationGroupListApi(Resource):
@@ -14,7 +14,7 @@ class OperationGroupListApi(Resource):
 
     def get(self):
         op_groups = OperationGroup.query.all()
-        return Output(op_groups)
+        return RestProtocol(op_groups)
 
     def post(self):
         try:
@@ -23,7 +23,7 @@ class OperationGroupListApi(Resource):
             try:
                 raise DataNotJsonError
             except DataNotJsonError:
-                return Output(DataNotJsonError())
+                return RestProtocol(DataNotJsonError())
         else:
             # Add operation group
             og = OperationGroup()
@@ -31,7 +31,7 @@ class OperationGroupListApi(Resource):
                 if not data['operation_group'].get('name') or not data['operation_group'].get('sys_id'):
                     raise DataNotNullError
             except DataNotNullError:
-                return Output(DataNotNullError())
+                return RestProtocol(DataNotNullError())
             og.name = data['operation_group'].get('name')
             og.description = data['operation_group'].get('description')
             og.sys_id = data['operation_group'].get('sys_id')
@@ -55,7 +55,7 @@ class OperationGroupListApi(Resource):
                     if not op_list[i].get('book_id'):
                         raise DataNotNullError
                 except DataNotNullError:
-                    return Output(DataNotNullError())
+                    return RestProtocol(DataNotNullError())
                 operations[i].name = op_list[i].get('name')
                 operations[i].description = op_list[i].get('description')
                 operations[i].earliest = op_list[i].get('earliest')
@@ -65,7 +65,7 @@ class OperationGroupListApi(Resource):
                 operations[i].op_group_id = og.id
             db.session.add_all(operations)
             db.session.commit()
-            return Output(og)
+            return RestProtocol(og)
 
 
 class OperationGroupApi(Resource):
@@ -75,7 +75,7 @@ class OperationGroupApi(Resource):
     def get(self, **kwargs):
         op_group = OperationGroup.find(**kwargs)
         if op_group is not None:
-            return Output(op_group)
+            return RestProtocol(op_group)
         else:
             return {'message': 'Not found'}, 404
 
@@ -88,7 +88,7 @@ class OperationGroupApi(Resource):
                 try:
                     raise DataNotJsonError
                 except DataNotJsonError:
-                    return Output(DataNotJsonError())
+                    return RestProtocol(DataNotJsonError())
             else:
                 # Modify operation group itself
                 op_group.name = data['operation_group'].get('name', op_group.name)
@@ -121,7 +121,7 @@ class OperationGroupApi(Resource):
                             if not op_list[i].get('book_id'):
                                 raise DataNotNullError
                         except DataNotNullError:
-                            return Output(DataNotNullError())
+                            return RestProtocol(DataNotNullError())
                         else:
                             op = Operation()
                             operations.append(op)
@@ -139,6 +139,6 @@ class OperationGroupApi(Resource):
                         op_e2.disabled = True
                 db.session.add_all(operations)
                 db.session.commit()
-                return Output(op_group)
+                return RestProtocol(op_group)
         else:
             return {'message': 'Not found'}, 404

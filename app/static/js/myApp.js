@@ -1,4 +1,4 @@
-var app = angular.module('myApp', ['ngRoute', 'ngStorage'], function($provide) {
+var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorage'], function($provide) {
     $provide.factory('globalVar', function() {
         return {
             'intervals': []
@@ -178,7 +178,6 @@ var app = angular.module('myApp', ['ngRoute', 'ngStorage'], function($provide) {
         };
     });
 });
-
 app.directive("fileModel", ["$parse", function($parse) {
     return {
         restrict: "A",
@@ -195,8 +194,7 @@ app.directive("fileModel", ["$parse", function($parse) {
         }
     }
 }]);
-
-app.service("$fileUpload", ["$http", function($http) {
+app.service("fileUpload", ["$http", function($http) {
     this.uploadFileToUrl = function(file, uploadUrl) {
         var fd = new FormData();
         fd.append("file", file)
@@ -294,13 +292,129 @@ app.service('$operations', function($websocket, $http, $message, $sessionStorage
                 }
             });
     }
-})
+});
 
+app.service("$operationBooks", ["$http", function($http) {
+    this.operationBookBaseInfoGet = function(params) {
+        $http.get('api/operation-book-base-info')
+            .success(function(response) {
+                if (response.error_code == 0)
+                    params.onSuccess(response.data);
+            })
+            .error(function(response) {
+                console.log(response);
+            });
+    }
+    this.oprationbooksGet = function(params) {
+        $http.get('api/operation-books')
+            .success(function(response) {
+                if (response.error_code == 0)
+                    params.onSuccess(response.data);
+            })
+            .error(function(response) {
+                console.log(response);
+            });
+    }
+    this.operationbooksPut = function(params) {
+        $http.put('api/operation-book/id/' + params.optBook_id, data = params.data)
+            .success(function(response) {
+                if (response.error_code == 0) {
+                    params.onSuccess(response.data);
+                } else {
+                    params.onError(response.message)
+                }
+            }).error(function(response) {
+                console.log(response);
+            });
+    }
+    this.operationbookCheck = function(params) {
+        $http.post('api/operation-book-check', data = params.data)
+            .success(function(response) {
+                if (response.error_code == 0) {
+                    params.onSuccess(response.data);
+                } else {
+                    params.onError(response.message)
+                }
+            }).error(function(response) {
+                console.log(response);
+            });
+    }
+    this.operationbookDefinePost = function(params) {
+        $http.post('api/operation-books', data = params.data)
+            .success(function(response) {
+                if (response.error_code == 0) {
+                    params.onSuccess(response.data);
+                } else {
+                    params.onError(response.message)
+                }
+            }).error(function(response) {
+                console.log(response);
+            });
+    }
+    this.systemOptionGroupGet = function(params) {
+        $http.get('api/systems')
+            .success(function(response) {
+                if (response.error_code == 0)
+                    params.onSuccess(response.data);
+                else {
+                    params.onError(response.message)
+                }
+            }).error(function(response) {
+                console.log(response);
+            });
+    }
+    this.systemOptionBooksGet = function(params) {
+        $http.get('api/system/id/' + params.sys_id + '/operation-books')
+            .success(function(response) {
+                if (response.error_code == 0) {
+                    params.onSuccess(response.data);
+                } else {
+                    params.onError(response.message)
+                }
+            }).error(function(response) {
+                console.log(response);
+            });
+    }
+    this.systemOptionGroupPost = function(params) {
+        $http.post('api/operation-groups', data = params.data)
+            .success(function(response) {
+                if (response.error_code == 0) {
+                    params.onSuccess(response.data);
+                } else {
+                    params.onError(response.message)
+                }
+            }).error(function(response) {
+                console.log(response);
+            });
+    }
+    this.optionGroupEditPut = function(params) {
+        $http.put('api/operation-group/id/' + params.optionGroup_id, data = params.data)
+            .success(function(response) {
+                if (response.error_code == 0) {
+                    params.onSuccess(response.data);
+                } else {
+                    params.onError(response.message)
+                }
+            }).error(function(response) {
+                console.log(response);
+            });
+    }
+    this.operationRecordsPost = function(params) {
+        $http.post('api/operate-records', data = {})
+            .success(function(response) {
+                params.onSuccess(response.records);
+            }).error(function(response) {
+                console.log(response);
+            });
+    }
+}]);
 app.config(['$routeProvider', function($routeProvider) {
     $routeProvider
         .when('/dashboard', {
-            templateUrl: 'UI/views/dashboard',
-            controller: 'dashBoardControl'
+            templateUrl: 'UI/views/dashboard'
+        })
+        .when('/op_records', {
+            templateUrl: 'UI/views/op_records'
         })
         .when('/statics/:sysid', {
             templateUrl: 'UI/views/statics'
@@ -315,7 +429,6 @@ app.config(['$routeProvider', function($routeProvider) {
             redirectTo: '/dashboard'
         });
 }]);
-
 app.run(function($rootScope, $interval, $location, globalVar, $websocket) {
     $rootScope.tab = 1; //default
     $rootScope.$on('$routeChangeStart', function(evt, next, current) {
@@ -331,39 +444,53 @@ app.run(function($rootScope, $interval, $location, globalVar, $websocket) {
         $rootScope.LoginStatics = {};
     }
 });
-app.controller('dashBoardControl', ['$scope', '$rootScope', '$http', function($scope, $rootScope, $http) {
+app.controller('dashBoardControl', ['$scope', '$rootScope', function($scope, $rootScope) {
     //$rootScope.Message = Message;
     $rootScope.isShowSideList = false;
 }]);
-app.controller('FileUpdateControl', ['$scope', '$fileUpload', function($scope, $fileUpload) {
+app.filter('paging', function() {
+    return function(listsData, start) {
+        return listsData.slice(start);
+    }
+})
+app.controller('optionResultControl', ['$scope', '$http', '$operationBooks', function($scope, $http, $operationBooks) {
+    $operationBooks.operationRecordsPost({
+        onSuccess: function(res) {
+            $scope.operationRecordsData = res;
+            console.log($scope.operationRecordsData);
+            $scope.listsDataNum = $scope.operationRecordsData.length;
+            $scope.pages = Math.ceil($scope.listsDataNum / 10);
+            console.log($scope.pages);
+        }
+    });
+    $scope.show_result = function(index) {
+        $('#op_result' + index).modal({ relatedTarget: this });
+    };
+
+
+}]);
+app.controller('FileUpdateControl', ['$scope', 'fileUpload', function($scope, fileUpload) {
     $scope.sendFile = function() {
-        var url = "api/upload",
+        var url = "api/global-config",
             file = $scope.fileToUpload;
         if (!file)
             alert("请选择需要上传的文件。")
         else
-            $fileUpload.uploadFileToUrl(file, url);
+            fileUpload.uploadFileToUrl(file, url);
     }
 }]);
-app.controller('EditoptionBookController', ['$scope', '$http', function($scope, $http) {
-    $http.get('api/systems')
-        .success(function(response) {
-            $scope.optionBookSystemData = response.data.records;
-        })
-        .error(function(response) {
-            console.log(response);
-        })
-    $http.get('api/ob-add')
-        .success(function(response) {
-            $scope.optionBookEditBookData = response.data;
-        })
-        .error(function(response) {
-            console.log(response);
-        });
-    $scope.optionBookSelectFormat = function() {
-        $scope.dataCopy = {};
-    }
-    $scope.optionBookSelectedGet = function(id) {
+app.controller('EditoptionBookController', ['$scope', '$http', '$operationBooks', function($scope, $http, $operationBooks) {
+    $operationBooks.operationBookBaseInfoGet({
+        onSuccess: function(res) {
+            $scope.optionBookEditBookData = res;
+        }
+    });
+    $operationBooks.oprationbooksGet({
+        onSuccess: function(res) {
+            $scope.optionBookSystemOptBookData = res.records;
+        }
+    });
+    $scope.optionBookSelectedGet = function() {
         $scope.isEmergency = [{
             "name": "紧急操作",
             "value": true
@@ -371,46 +498,35 @@ app.controller('EditoptionBookController', ['$scope', '$http', function($scope, 
             "name": "非紧急操作",
             "value": false
         }];
-        $http.get('api/ob-adjust/id/' + id)
-            .success(function(response) {
-                $scope.optionBookSystemOptBookData = response.data;
-                console.log($scope.optionBookSystemOptBookData);
-                $scope.dataCopy = {
-                    "sys_id": $scope.optionBookSystemSelect.id,
-                    "catalog_id": $scope.optionBookSystemOptBookData.catalog.id.toString(),
-                    "type": $scope.optionBookSystemOptBookData.type,
-                    "description": $scope.optionBookSystemOptBookData.description,
-                    "name": $scope.optionBookSystemOptBookData.name,
-                    "is_emergency": $scope.optionBookSystemOptBookData.is_emergency.toString()
-                };
-            })
-            .error(function(response) {
-                console.log(response);
-            })
-
+        $scope.dataCopy = {
+            "sys_id": $scope.optionBookSelected.system.id.toString(),
+            "catalog_id": $scope.optionBookSelected.catalog.id.toString(),
+            "type": $scope.optionBookSelected.type,
+            "description": $scope.optionBookSelected.description,
+            "name": $scope.optionBookSelected.name,
+            "is_emergency": $scope.optionBookSelected.is_emergency.toString()
+        };
     }
     $scope.EditOptionBookPut = function(id) {
-        $http.put('api/ob-adjust/id/' + id, data = $scope.dataCopy)
-            .success(function(response) {
-                if (response.error_code == 0) {
-                    alert("表单提交成功");
-                    window.location.reload();
-                } else {
-                    alert("表单提交失败，错误代码" + response.message);
-                }
-            }).error(function(response) {
-                console.log(response);
-            });
+        $operationBooks.operationbooksPut({
+            optBook_id: id,
+            data: $scope.dataCopy,
+            onSuccess: function(response) {
+                alert("表单提交成功");
+                window.location.reload();
+            },
+            onError: function(response) {
+                alert("表单提交失败，错误代码" + response);
+            }
+        });
     }
 }]);
-app.controller('optionBookController', ['$scope', '$http', '$timeout', function($scope, $http, $timeout) {
-    $http.get('api/ob-add')
-        .success(function(response) {
-            $scope.optionBookData = response.data;
-        })
-        .error(function(response) {
-            console.log(response);
-        });
+app.controller('optionBookController', ['$scope', '$http', '$timeout', '$operationBooks', function($scope, $http, $timeout, $operationBooks) {
+    $operationBooks.operationBookBaseInfoGet({
+        onSuccess: function(res) {
+            $scope.optionBookData = res;
+        }
+    });
     $scope.optionBookEditData = {
         "name": "",
         "description": "",
@@ -440,28 +556,27 @@ app.controller('optionBookController', ['$scope', '$http', '$timeout', function(
     $scope.optionBookCheckShell = function(index) {
         $scope.optionBookShellIs = false;
         $scope.checkShow = true;
-        $http({
-            method: 'post',
-            url: 'http://localhost:5000/api/ob-check',
-            data: $scope.optionBookCommand[index]
-        }).success(function(response) {
-            if (response == 0) {
-                alert("检查成功");
-                $scope.checkShow = false;
-                $scope.optionBookShellIs = true;
-            } else {
-                alert("检查失败,脚本文件不存在");
-                $scope.checkShow = false;
-                if ($scope.optionBookCommand.length != 1)
-                    $scope.optionBookCommand.splice(index, 1);
-                else {
-                    $scope.optionBookCommand[index].shell = "";
-                    $scope.optionBookCommand[index].chdir = "";
+        $operationBooks.operationbookCheck({
+            data: $scope.optionBookCommand[index],
+            onSuccess: function(response) {
+                if (response == 0) {
+                    alert("检查成功");
+                    $scope.checkShow = false;
+                    $scope.optionBookShellIs = true;
+                } else {
+                    alert("检查失败,脚本文件不存在");
+                    $scope.checkShow = false;
+                    if ($scope.optionBookCommand.length != 1)
+                        $scope.optionBookCommand.splice(index, 1);
+                    else {
+                        $scope.optionBookCommand[index].shell = "";
+                        $scope.optionBookCommand[index].chdir = "";
+                    }
                 }
+            },
+            onError: function(response) {
+                console.log(response);
             }
-
-        }).error(function() {
-
         });
     }
     $scope.optionBookEditPost = function() {
@@ -469,44 +584,36 @@ app.controller('optionBookController', ['$scope', '$http', '$timeout', function(
             "name": $scope.optionBookEditData.name,
             "description": $scope.optionBookEditData.description,
             "remote_name": $scope.optionBookEditData.remote_name,
-            "type": $scope.optionBookEditData.type.type,
+            "type": $scope.optionBookEditData.type.name,
             "catalog_id": $scope.optionBookEditData.catalog.catalog_id,
             "sys_id": $scope.optionBookEditData.sys.sys_id,
             "is_emergency": $scope.optionBookEditData.is_emergency,
             "mod": $scope.optionBookCommand
         };
-        //		angular.forEach($scope.optionBookEditDataPost.mod,function(value,index){
-        //			
-        //		})
-        $http({
-                method: 'post',
-                url: 'http://localhost:5000/api/ob-add',
-                data: $scope.optionBookEditDataPost
-            }).success(function(req) {
-                console.log(req);
-                if (req.error_code == 0) {
-                    alert("表单提交成功");
-                    window.location.reload();
-                } else {
-                    alert("表单提交失败，错误代码" + req.message);
-                }
-            })
-            .error(function(req) {
-                console.log(req);
-            });
+        console.log($scope.optionBookEditDataPost);
+        $operationBooks.operationbookDefinePost({
+            data: $scope.optionBookEditDataPost,
+            onSuccess: function(response) {
+                alert("表单提交成功");
+                window.location.reload();
+            },
+            onError: function(response) {
+                alert("表单提交失败，错误代码" + response);
+            }
+        });
     }
 }]);
-app.controller('optionGroupController', ['$scope', '$http', '$q', '$timeout', '$window', function($scope, $http, $q, $timeout, $window) {
+app.controller('optionGroupController', ['$scope', '$http', '$q', '$operationBooks', '$window', function($scope, $http, $q, $operationBooks, $window) {
 
     //	$scope.cannotSort = false;
-
-    $http.get('api/systems')
-        .success(function(response) {
-            $scope.optionGroupSystem = response.data.records;
-        })
-        .error(function(response) {
-            console.log(response);
-        });
+    $operationBooks.systemOptionGroupGet({
+        onSuccess: function(res) {
+            $scope.optionGroupSystem = res.records;
+        },
+        onError: function(res) {
+            console.log(res);
+        }
+    })
     $scope.optionGroupConfirm = {
         "operation_group": {
             "sys_id": null,
@@ -516,23 +623,16 @@ app.controller('optionGroupController', ['$scope', '$http', '$q', '$timeout', '$
         "operations": []
     };
     $scope.optionGroupDataBackup = [];
-    //	var watch = $scope.$watch('systemDetail',function(newValue,oldValue, scope){
-    //		angular.forEach(newValue, function(value, index) {
-    //          if(value.constructor == Array){
-    //          	angular.forEach(value, function(value1, index1){
-    //          		$scope.optionGroupDataBackup.push([value1.name,value1.book_id]);
-    //          	});
-    //          }
-    //  	});
-    //	});
     $scope.optionBookInSysId = function(id) {
-        $http.get('api/sys-ob/id/' + id)
-            .success(function(response) {
-                $scope.optionGroupDataBackup = response;
-            })
-            .error(function(response) {
-                console.log(response);
-            });
+        $operationBooks.systemOptionBooksGet({
+            sys_id: id,
+            onSuccess: function(res) {
+                $scope.optionGroupDataBackup = res.records;
+            },
+            onError: function(res) {
+                console.log(res);
+            }
+        });
     }
     $scope.optionGroupName = null;
     $scope.optionGroupDescription = null;
@@ -552,18 +652,9 @@ app.controller('optionGroupController', ['$scope', '$http', '$q', '$timeout', '$
         angular.forEach($scope.optionGroupDataBackup, function(value, index) {
             if (id == value.book_id) {
                 $scope.optionNowSelect = value;
+                $scope.detailInfo = value.description;
             }
         });
-        //		$scope.optionGroupConfirm.operation_group.name = $scope.optionGroupName;
-        //		$scope.optionGroupConfirm.operation_group.description = $scope.optionGroupDescription;
-        //		$scope.optionShow = true;
-        //		$scope.optionDetail = optionGroupValue;
-        //		for(var i = 0;i < $scope.optionDetail.length;i++){
-        //			if(id == $scope.optionDetail[i].book_id){
-        //				$scope.optionNowSelect = $scope.optionDetail[i];
-        //				$scope.detailInfo = $scope.optionDetail[i].description;
-        //			}
-        //		}
 
     }
     $scope.optionSelectAdd = function() {
@@ -589,26 +680,20 @@ app.controller('optionGroupController', ['$scope', '$http', '$q', '$timeout', '$
     $scope.test2 = function() {
         $scope.formComfirm = !$scope.formComfirm;
         $scope.loadingIcon = !$scope.loadingIcon;
-        $http({
-                method: 'post',
-                url: 'http://localhost:5000/api/og-add',
-                data: $scope.optionGroupConfirm
-            }).success(function(req) {
-                console.log(req);
-                if (req.error_code == 0) {
-                    $scope.loadingIcon = !$scope.loadingIcon;
-                    alert("表单提交成功");
-                    window.location.reload();
-                    $scope.formComfirm = !$scope.formComfirm;
-                } else {
-                    $scope.loadingIcon = !$scope.loadingIcon;
-                    alert("表单提交失败，错误代码" + req.message);
-                    $scope.formComfirm = !$scope.formComfirm;
-                }
-            })
-            .error(function(req) {
-                console.log(req);
-            });
+        $operationBooks.systemOptionGroupPost({
+            data: $scope.optionGroupConfirm,
+            onSuccess: function(response) {
+                $scope.loadingIcon = !$scope.loadingIcon;
+                alert("表单提交成功");
+                window.location.reload();
+                $scope.formComfirm = !$scope.formComfirm;
+            },
+            onError: function(response) {
+                $scope.loadingIcon = !$scope.loadingIcon;
+                alert("表单提交失败，错误代码" + response);
+                $scope.formComfirm = !$scope.formComfirm;
+            }
+        })
     }
 
 }]);
@@ -716,6 +801,10 @@ app.controller('sysStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
             if ($routeParams.hasOwnProperty('sysid')) {
                 $scope.systemStatics = response;
                 $scope.checkProc();
+                /*
+                $scope.sysStaticInterval = $interval(function() { $scope.checkProc(); }, 30000);
+                globalVar.intervals.push($scope.sysStaticInterval);
+                */
             }
         })
         .error(function(response) {
@@ -723,7 +812,7 @@ app.controller('sysStaticsControl', ['$scope', '$http', 'globalVar', '$interval'
             $scope.checking = false;
         });
 }]);
-app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', '$rootScope', '$location', function($scope, $http, $timeout, $rootScope, $location) {
+app.controller('sideBarCtrl', ['$scope', '$http', '$operationBooks', '$rootScope', '$location', function($scope, $http, $operationBooks, $rootScope, $location) {
     $scope.tabList = [];
     var idList = [];
     $scope.$on('$routeChangeStart', function(evt, next, current) {
@@ -743,6 +832,7 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', '$rootScope', '$lo
     $http.get('api/UI/sideBarCtrl')
         .success(function(response) {
             $scope.listName = response;
+            console.log($scope.listName);
         })
         .error(function(response) {
             console.log(response);
@@ -834,7 +924,7 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$timeout', '$rootScope', '$lo
     };
 }]);
 
-app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParams', '$location', '$operations', '$message', function($scope, $http, $timeout, $routeParams, $location, $operations, $message) {
+app.controller('opGroupController', ['$scope', '$operationBooks', '$operations', '$routeParams', '$location', '$rootScope', '$timeout', '$message', function($scope, $operationBooks, $operations, $routeParams, $location, $rootScope, $timeout, $message) {
     $scope.$on('$routeChangeStart', function(evt, next, current) {
         var last = $scope.opList.details[$scope.opList.details.length - 1];
         if (last.err_code != -1 && last.checker.isTrue && !last.checker.checked) {
@@ -855,14 +945,7 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
                     $timeout(function() {
                         $scope.opList.details[index] = data;
                     }, 0);
-                    TaskQueue(value, index);
-                    /* if (data.exec_code > 0) {
-                        $scope.check_result(index);
-                    } else if (data.exec_code == 0) {
-                        if (index + 1 <= $scope.opList.details.length - 1) {
-                            $scope.opList.details[index + 1].enabled = true;
-                        }
-                    } */
+                    TaskQueue(data, index);
                 }
             });
         }
@@ -873,7 +956,7 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
         onSuccess: function(data) {
             $scope.opList = data;
         }
-    })
+    });
     $scope.confirm = function(index) {
         $('#result' + index).modal({
             relatedTarget: this,
@@ -905,7 +988,6 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
             $scope.opList.details[i].enabled = true;
         }
     };
-
     $scope.runAll = function() {
         var authorizor;
         angular.forEach($scope.opList.details, function(value, index) {
@@ -937,7 +1019,7 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
     }
 
     function TaskQueue(data, index) {
-        if (data.output_lines.length > 0) {
+        if (data.hasOwnProperty('output_lines') && data.output_lines.length > 0) {
             if (data.checker.isTrue) {
                 $scope.confirm(index);
             } else {
@@ -1008,6 +1090,103 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
             }
         }
     };
+    $scope.optionGroupEditShow = true;
+    $scope.optionGroupSelect = 0;
+    $scope.optionGroupEdit = function(data) {
+        $operationBooks.systemOptionBooksGet({
+            sys_id: data.sys_id,
+            onSuccess: function(res) {
+                $scope.optionBooks = res.records;
+            },
+            onError: function(res) {
+                console.log(response);
+            }
+        })
+
+        $scope.optionGroupCopy = {
+            "operation_group": {
+                "id": data.grp_id,
+                "name": data.name,
+                "description": null,
+                "is_emergency": null
+            },
+            "operations": []
+        };
+        $scope.need_authorization = [{
+            "name": "是",
+            "value": true
+        }, {
+            "name": "否",
+            "value": false
+        }];
+        $scope.optionOldData = angular.copy($scope.opList.details);
+        angular.forEach($scope.optionOldData, function(value, index) {
+            var data = new Object;
+            data.operation_name = value.op_name;
+            data.description = value.op_desc;
+            data.earliest = value.time_range.lower;
+            data.latest = value.time_range.upper;
+            data.need_authorized = value.need_authorized;
+            data.operation_id = value.id;
+            $scope.optionGroupCopy.operations.push(data);
+        })
+
+        $scope.optionGroupSelectWhich = function(Id, data, index_id) {
+            angular.forEach($scope.optionBooks, function(value, index) {
+                if (value.book_id == Id) {
+                    data.book_id = value.book_id;
+                    data.description = value.description;
+                    data.operation_name = value.name;
+                    data.operation_id = "";
+                }
+            });
+            var stringId = "#resetSelect" + index_id;
+            $(stringId).val("0");
+        }
+
+        $scope.optionGroupEditShow = !$scope.optionGroupEditShow;
+    }
+    $scope.optionGroupEditAdd = function() {
+        $scope.optionGroupNew = {};
+        $scope.optionGroupCopy.operations.push($scope.optionGroupNew);
+    }
+    $scope.optionGroupEditCancel = function() {
+        $scope.optionGroupEditShow = !$scope.optionGroupEditShow
+    }
+    $scope.optionGroupEditDelete = function(index_del) {
+        //  	console.log($scope.optionGroupCopy.operations,index_del);
+        $scope.optionGroupCopy.operations.splice(index_del, 1);
+    }
+    $scope.optionGroupEditPostShow = true;
+    $scope.optionGroupEditFinish = function() {
+        $operationBooks.optionGroupEditPut({
+                optionGroup_id: $scope.optionGroupCopy.operation_group.id,
+                data: $scope.optionGroupCopy,
+                onSuccess: function(req) {
+                    $scope.optionGroupEditPostShow = !$scope.optionGroupEditPostShow;
+                    alert("表单提交成功");
+                    window.location.reload();
+                },
+                onError: function(req) {
+                    $scope.optionGroupEditPostShow = !$scope.optionGroupEditPostShow;
+                    alert("表单提交失败，错误代码" + req);
+                }
+            })
+            //  	$http({
+            //  		method: 'put',
+            //  		url: 'http://localhost:5000/api/operation-group/id/' + $scope.optionGroupCopy.operation_group.id,
+            //  		data: $scope.optionGroupCopy
+            //  	}).success(function(req) {
+            //  		if(req.error_code == 0){
+            //  			$scope.optionGroupEditPostShow = !$scope.optionGroupEditPostShow;
+            //	    		alert("表单提交成功");
+            //	    		window.location.reload();
+            //  		}else{
+            //  			$scope.optionGroupEditPostShow = !$scope.optionGroupEditPostShow;
+            //	    		alert("表单提交失败，错误代码"+req.message);
+            //  		}
+            //  	});
+    }
 }]);
 app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', function($scope, $http, $routeParams) {
     $http.get('api/emerge_ops/system/id/' + $routeParams.sysid)
