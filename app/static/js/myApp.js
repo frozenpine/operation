@@ -855,13 +855,14 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
                     $timeout(function() {
                         $scope.opList.details[index] = data;
                     }, 0);
-                    if (data.exec_code > 0) {
+                    TaskQueue(value, index);
+                    /* if (data.exec_code > 0) {
                         $scope.check_result(index);
                     } else if (data.exec_code == 0) {
                         if (index + 1 <= $scope.opList.details.length - 1) {
                             $scope.opList.details[index + 1].enabled = true;
                         }
-                    }
+                    } */
                 }
             });
         }
@@ -935,6 +936,19 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
         });
     }
 
+    function TaskQueue(data, index) {
+        if (data.output_lines.length > 0) {
+            if (data.checker.isTrue) {
+                $scope.confirm(index);
+            } else {
+                $scope.check_result(index);
+            }
+        }
+        if (index < $scope.opList.details.length - 1 && ($scope.opList.details[index].checker === undefined || !$scope.opList.details[index].checker.isTrue)) {
+            $scope.opList.details[index + 1].enabled = data.err_code === 0;
+        }
+    }
+
     $scope.execute = function(index, id) {
         if ($scope.opList.details[index].interactivator.isTrue) {
             $http.get('api/operation/id/' + id + '/ui')
@@ -944,16 +958,7 @@ app.controller('opGroupController', ['$scope', '$http', '$timeout', '$routeParam
                         $scope.$apply(function() {
                             if ($routeParams.hasOwnProperty('grpid')) {
                                 $scope.opList.details[index] = data;
-                                if (data.output_lines.length > 0) {
-                                    if (data.checker.isTrue) {
-                                        $scope.confirm(index);
-                                    } else {
-                                        $scope.check_result(index);
-                                    }
-                                }
-                                if (index < $scope.opList.details.length - 1 && ($scope.opList.details[index].checker === undefined || !$scope.opList.details[index].checker.isTrue)) {
-                                    $scope.opList.details[index + 1].enabled = data.err_code === 0;
-                                }
+                                TaskQueue(data);
                             }
                         });
                     });
