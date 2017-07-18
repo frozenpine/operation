@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 from flask_restful import Resource
-from app.models import OperationBook, ScriptType, TradeSystem, PlatformType, OperationCatalog
+from app.models import OperationBook, ScriptType, TradeSystem, PlatformType
 from flask import request
 from werkzeug.exceptions import BadRequest
 from app import db
@@ -43,7 +43,11 @@ class OperationBookListApi(Resource):
                 # ob.order = data.get('order')
                 ob.catalog_id = data.get('catalog_id')
                 ob.sys_id = data.get('sys_id')
-                ob.is_emergency = data.get('is_emergency')
+                # ob.is_emergency = data.get('is_emergency')
+                if data.get('is_emergency') == 'false':
+                    ob.is_emergency = 0
+                elif data.get('is_emergency') == 'true':
+                    ob.is_emergency = 1
 
                 system = TradeSystem.find(id=data.get('sys_id'))
                 if system:
@@ -85,7 +89,7 @@ class OperationBookCheckApi(Resource):
     def __init__(self):
         super(OperationBookCheckApi, self).__init__()
 
-    def post(self):
+    def post(self, **kwargs):
         try:
             data = request.get_json(force=True)
         except BadRequest:
@@ -100,21 +104,26 @@ class OperationBookCheckApi(Resource):
             except DataNotNullError:
                 return RestProtocol(DataNotNullError())
             else:
-                file_name, chdir = data.get('shell'), data.get('chdir')
-                ssh = paramiko.SSHClient()
-                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                ssh.connect('192.168.101.126', 22, 'qdam', 'qdam')
-                if chdir:
-                    stdin, stdout, stderr = ssh.exec_command(
-                        'cd {0};if [ -f {1} ];then echo 0;else echo 1;fi'.format(chdir, file_name))
+                system=TradeSystem.find(**kwargs)
+                if system:
+                    file_name, chdir = data.get('shell'), data.get('chdir')
+                    ssh = paramiko.SSHClient()
+                    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                    # ssh.connect('192.168.101.126', 22, 'qdam', 'qdam')
+                    ssh.connect('{}'.format(system.ip), 22, '{}'.format(system.user), '{}'.format(system.password))
+                    if chdir:
+                        stdin, stdout, stderr = ssh.exec_command(
+                            'cd {0};if [ -f {1} ];then echo 0;else echo 1;fi'.format(chdir, file_name))
+                    else:
+                        stdin, stdout, stderr = ssh.exec_command(
+                            'if [ -f {0} ];then echo 0;else echo 1;fi'.format(file_name))
+                    ans = stdout.readlines()[0]
+                    ssh.close()
+                    return {'error_code': '0',
+                            'data': ans,
+                            'message': 'Script Check successfully'}
                 else:
-                    stdin, stdout, stderr = ssh.exec_command(
-                        'if [ -f {0} ];then echo 0;else echo 1;fi'.format(file_name))
-                ans = stdout.readlines()[0]
-                ssh.close()
-                return {'error_code': '0',
-                        'data': ans,
-                        'message': 'Script Check successfully'}
+                    pass
 
 
 class OperationBookApi(Resource):
@@ -158,7 +167,10 @@ class OperationBookApi(Resource):
                     op_book.type = ScriptType[data.get('type')] or op_book.type
                     op_book.catalog_id = data.get('catalog_id', op_book.catalog_id)
                     op_book.sys_id = data.get('sys_id', op_book.sys_id)
-                    op_book.is_emergency = data.get('is_emergency', op_book.is_emergency)
+                    if data.get('is_emergency') == 'false':
+                        op_book.is_emergency = 0
+                    elif data.get('is_emergency') == 'true':
+                        op_book.is_emergency = 1
                     db.session.add(op_book)
                     db.session.commit()
                     return RestProtocol(op_book)

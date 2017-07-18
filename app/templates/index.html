@@ -137,18 +137,21 @@
                                 </div>
                                 <div id="listBorderBottom" class="am-panel-bd am-u-sm-12" style="height: 300px;overflow-y: scroll;padding: 0;background-color:#FFFFFF;">
                                     <ul sv-root sv-part="optionGroupConfirm.operations">
-                                        <li ng-dblclick="dbclickFunc($index)" ng-repeat="data in optionGroupConfirm.operations track by $index" sv-element>
+                                        <li ng-style="Mystyle" style="height: 45px;" ng-dblclick="dbclickFunc($index)" ng-repeat="data in optionGroupConfirm.operations track by $index" sv-element>
                                             <div class="am-u-sm-3" style="padding: 0;">
                                                 <input type="text" style="border: none;" value="{{data.name}}" ng-model="data.name" />
                                             </div>
-                                            <div class="am-u-sm-3">
-                                                <input type="text" style="border: none;" value="{{data.description}}" ng-model="data.description" />
+                                            <div class="am-u-sm-3" style="padding: 0;">
+                                                <textarea ng-change="" style="font-size: 12px;border: none;resize:none" cols="" value="{{data.description}}" ng-model="data.description"></textarea>
+                                                <!--<input type="text" style="border: none;" value="{{data.description}}" ng-model="data.description" />-->
                                             </div>
-                                            <div class="am-u-sm-2" style="padding: 0;">
-                                                <input name='startTime{{$index}}' type="text" style="border: none;" value="{{data.earliest}}" ng-model="data.earliest" ng-pattern="/^(0\d{1}|1\d{1}|2[0-3]):([0-5]\d{1})$/" />
+                                            <div class="am-u-sm-2" ">
+                                                <input name='startTime{{$index}}' type="text " style="border: none; " value="{{data.earliest}} " 
+                                                	ng-model="data.earliest " 
+                                                	ng-pattern="/^(0\d{1}|1\d{1}|2[0-3]):([0-5]\d{1})$/ " />
 
                                             </div>
-                                            <div class="am-u-sm-2" style="padding: 0;">
+                                            <div class="am-u-sm-2 " ">
                                                 <input name="endTime{{$index}}" type="text" style="border: none;" value="{{data.latest}}" ng-model="data.latest" ng-pattern="/^(0\d{1}|1\d{1}|2[0-3]):([0-5]\d{1})$/" />
                                             </div>
                                             <div>
@@ -183,46 +186,64 @@
                 </div>
                 <div class="am-modal-bd">
                     <div class="am-form-group am-form-icon font-green">
-                        <label for="doc-ipt-3-a" class="am-u-sm-2 am-form-label">系统名</label>
+                        <label class="am-u-sm-2 am-form-label">主系统</label>
                         <div class="am-u-sm-3">
-                            <select id="doc-ipt-3-a" ng-model="optionBookEditData.sys" value="x.sys_id" ng-options="x.sys_name for x in optionBookData.systems">
-                            </select>
+                            <select ng-change="selectWhichSystem(optionBookEditData.main_sys.id)" ng-model="optionBookEditData.main_sys" ng-options="x.name for x in optionBookData">
+                			</select>
                         </div>
-                        <label for="doc-ipt-3-f" class="am-u-sm-1 am-form-label" style="padding: .6em 0;">类型</label>
-                        <div class="am-u-sm-6">
-                            <select ng-model="optionBookEditData.type" ng-options="x.name for x in optionBookData.script_types">
+                        <label for="doc-ipt-3-a" class="am-u-sm-2 am-form-label">系统列表</label>
+                        <div class="am-u-sm-5">
+                            <select id="doc-ipt-3-a" ng-model="optionBookEditData.sys" value="x.id" ng-options="x.name for x in systemListData">
                             </select>
                         </div>
                     </div>
                     <div class="am-form-group am-form-icon font-green">
-                        <label for="doc-ipt-3-r" class="am-u-sm-2 am-form-label">连接方式</label>
+                        <label for="doc-ipt-3-f" class="am-u-sm-2 am-form-label">类型</label>
                         <div class="am-u-sm-3">
+                            <select ng-model="optionBookEditData.type">
+                            	<option value="Checker">检查</option>
+                            	<option value="Executor">执行</option>
+                            	<option value="Interactivator">交互</option>
+                            	<option value="Execute_Checker">执行与检查</option>
+                            	<option value="Interactive_Checker">交互与检查</option>
+                            </select>
+                        </div>
+                        <label for="doc-ipt-3-r" class="am-u-sm-2 am-form-label">连接方式</label>
+                        <div class="am-u-sm-5">
                             <select id="doc-ipt-3-r" ng-model="optionBookEditData.remote_name">
                                 <option value="SSHConfig">SSHConfig</option>
                                 <option value="WinRmConfig">WinRmConfig</option>
                             </select>
                         </div>
-                        <label for="doc-ipt-3-c" class="am-u-sm-1 am-form-label" style="padding: .6em 0;">描述</label>
-                        <div class="am-u-sm-6">
+                    </div>
+                    <div class="am-form-group am-form-icon font-green">
+                        <label for="doc-ipt-3-b" class="am-u-sm-2 am-form-label">名称</label>
+                        <div class="am-u-sm-3">
+                            <input type="text" name="optionGroup_name" id="doc-ipt-3-b" value="optionBookEditData.name" ng-model="optionBookEditData.name">
+                        </div>
+                        <label for="doc-ipt-3-c" class="am-u-sm-2 am-form-label">描述</label>
+                        <div class="am-u-sm-5">
                             <input type="text" name="optionGroup_des" id="doc-ipt-3-c" ng-model="optionBookEditData.description" value="optionBookEditData.description">
                         </div>
                     </div>
                     <div class="am-form-group am-form-icon font-green">
-                        <label class="am-u-sm-2 am-form-label">紧急操作</label>
+                        <label for="doc-ipt-3-d" class="am-u-sm-2 am-form-label">分类</label>
                         <div class="am-u-sm-3">
-                            <select ng-model="optionBookEditData.is_emergency">
-                                <option value="true">紧急操作</option>
-                                <option value="false" selected="selected">非紧急操作</option>
+                            <select ng-model="optionBookEditData.catalog" ng-options="x.name for x in operationCatalogs">
                             </select>
                         </div>
-                        <label for="doc-ipt-3-b" class="am-u-sm-1 am-form-label" style="padding: .6em 0;">名称</label>
-                        <div class="am-u-sm-3">
-                            <input type="text" name="optionGroup_name" id="doc-ipt-3-b" value="optionBookEditData.name" ng-model="optionBookEditData.name">
-                        </div>
-                        <label for="doc-ipt-3-d" style="padding: .6em 0;" class="am-u-sm-1 am-form-label">分类</label>
-                        <div class="am-u-sm-2">
-                            <select ng-model="optionBookEditData.catalog" ng-options="x.catalog_name for x in optionBookData.catalogs">
-                            </select>
+                        <label class="am-u-sm-2 am-form-label">操作类型</label>
+                        <div class="am-u-sm-5">
+                            <div class="am-radio am-u-sm-6">
+                                <label>
+                        		    <input type="radio" ng-model="optionBookEditData.is_emergency" name="doc-radio-1" value="true" checked>紧急操作
+                        		</label>
+                            </div>
+                            <div class="am-radio am-u-sm-6">
+                                <label>
+                        		    <input type="radio" ng-model="optionBookEditData.is_emergency" name="doc-radio-1" value="false">非紧急操作
+                        		</label>
+                            </div>
                         </div>
                     </div>
                     <div class="am-form-group am-form-icon font-green" ng-repeat="data in optionBookCommand track by $index">
@@ -234,7 +255,7 @@
                             <input type="text" ng-model="data.chdir" />
                         </div>
                         <div class="am-u-sm-2">
-                            <button ng-disabled="checkShow" ng-click="optionBookCheckShell($index)" type="button" class="am-btn am-btn-default">检查</button>
+                            <button ng-disabled="checkShow" ng-click="optionBookCheckShell($index,optionBookEditData.main_sys.id)" type="button" class="am-btn am-btn-default">检查</button>
                         </div>
                     </div>
                     {{optionBookEditDataPost}}
@@ -258,57 +279,86 @@
                 </div>
                 <div class="am-modal-bd">
                     <div class="am-form-group am-form-icon font-green">
-                        <label class="am-u-sm-2 am-form-label">系统名</label>
+                        <label class="am-u-sm-2 am-form-label">主系统</label>
                         <div class="am-u-sm-3">
-                            <select ng-model="optionBookSystemSelect" ng-options="x.name for x in optionBookSystemData" ng-change="optionBookSelectFormat()">
-                            </select>
+                            <select ng-change="selectWhichSystem(asdqwe.id)" ng-model="asdqwe" ng-options="x.name for x in optionBookData">
+                			</select>
                         </div>
-                        <label class="am-u-sm-1 am-form-label" style="padding: .6em 0;">源操作</label>
-                        <div class="am-u-sm-6">
-                            <select ng-model="optionBookSelected" ng-options="x.name for x in optionBookSystemSelect.operation_book" ng-change="optionBookSelectedGet(optionBookSelected.id)"></select>
+                        <label for="doc-ipt-3-a" class="am-u-sm-2 am-form-label">源操作</label>
+                        <div class="am-u-sm-5">
+                            <select id="doc-ipt-3-a" ng-model="optionBookSelected" ng-options="x.name for x in operationBooksData" ng-change="optionBookSelectedGet(optionBookSelected.book_id)">
+                            </select>
                         </div>
                     </div>
                     <div class="am-form-group am-form-icon font-green">
-                        <label class="am-u-sm-2 am-form-label">类型</label>
+                        <label class="am-u-sm-2 am-form-label">所属系统</label>
                         <div class="am-u-sm-3">
-                            <select ng-model="dataCopy.type">
-                                <option value="{{x.name}}" ng-repeat="x in optionBookEditBookData.script_types">
-                                    {{x.alias}}
+                            <select ng-model="dataCopy.sys_id">
+                                <option value="{{x.id}}" ng-repeat="x in optionBookSystemData">
+                                    {{x.name}}
                                 </option>
                             </select>
                         </div>
-                        <label class="am-u-sm-1 am-form-label" style="padding: .6em 0;">描述</label>
-                        <div class="am-u-sm-6">
+                        <label class="am-u-sm-2 am-form-label">类型</label>
+                        <div class="am-u-sm-5">
+                            <select ng-model="dataCopy.type">
+                        			<option value="Checker">检查</option>
+                        			<option value="Executor">执行</option>
+                        			<option value="Interactivator">交互</option>
+                        			<option value="Execute_Checker">执行与检查</option>
+                        			<option value="Interactive_Checker">交互与检查</option>
+                        		</select>
+                        </div>
+                    </div>
+                    <div class="am-form-group am-form-icon font-green">
+                        <label class="am-u-sm-2 am-form-label">名称</label>
+                        <div class="am-u-sm-3">
+                            <input type="text" name="" value="" ng-model="dataCopy.name">
+                        </div>
+                        <label class="am-u-sm-2 am-form-label">描述</label>
+                        <div class="am-u-sm-5">
                             <input type="text" name="optionGroup_des" ng-model="dataCopy.description" value="optionBookSystemOptBookData.description">
                         </div>
                     </div>
                     <div class="am-form-group am-form-icon font-green">
-                        <label class="am-u-sm-2 am-form-label">紧急操作</label>
+                        <label class="am-u-sm-2 am-form-label">分类</label>
                         <div class="am-u-sm-3">
-                            <select ng-model="dataCopy.is_emergency">
-                                <option value="{{x.value}}" ng-repeat="x in isEmergency">{{x.name}}</option>
-                            </select>
-                        </div>
-                        <label class="am-u-sm-1 am-form-label" style="padding: .6em 0;">名称</label>
-                        <div class="am-u-sm-3">
-                            <input type="text" name="" value="" ng-model="dataCopy.name">
-                        </div>
-                        <label style="padding: .6em 0;" class="am-u-sm-1 am-form-label">分类</label>
-                        <div class="am-u-sm-2">
                             <select ng-model="dataCopy.catalog_id">
-                                <option value="{{x.catalog_id}}" ng-repeat="x in optionBookEditBookData.catalogs">
-                                    {{x.catalog_name}}
+                                <option value="{{x.id}}" ng-repeat="x in optionBookEditBookData">
+                                    {{x.name}}
                                 </option>
                             </select>
                         </div>
+                        <!--<label class="am-u-sm-2 am-form-label">紧急操作</label>
+                        <div class="am-u-sm-5">
+                            <select ng-model="dataCopy.is_emergency">
+                                <option value="{{x.value}}" ng-repeat="x in isEmergency">{{x.name}}</option>
+                            </select>
+                        </div>-->
+                        <label class="am-u-sm-2 am-form-label">操作类型</label>
+                        <div class="am-u-sm-5">
+                            <div class="am-radio am-u-sm-6">
+                                <label>
+                        		    <input type="radio" ng-model="dataCopy.is_emergency" name="doc-radio-1" value="true" checked>紧急操作
+                        		</label>
+                            </div>
+                            <div class="am-radio am-u-sm-6">
+                                <label>
+                        		    <input type="radio" ng-model="dataCopy.is_emergency" name="doc-radio-1" value="false">非紧急操作
+                        		</label>
+                            </div>
+                        </div>
+
+
                     </div>
                 </div>
                 <div class="am-modal-footer am-u-sm-12">
                     <span class="am-modal-btn am-u-sm-6" data-am-modal-cancel>取消</span>
-                    <button ng-click="EditOptionBookPut(optionBookSelected.id)" type="submit" class="am-btn am-btn-primary am-u-sm-6" style="height: 44px;">
+                    <button ng-click="EditOptionBookPut(optionBookSelected.book_id)" type="submit" class="am-btn am-btn-primary am-u-sm-6" style="height: 44px;">
 	                	确定  
 	                </button>
                 </div>
+                {{dataCopy}}
             </form>
         </div>
     </div>
@@ -397,7 +447,7 @@
             </ul>
             <ul class="am-nav am-nav-pills am-topbar-nav am-topbar-right admin-header-list tpl-header-list">
                 <li>
-                    <a class="tpl-header-list-link am-dropdown-toggle" href="">
+                    <a class="tpl-header-list-link am-dropdown-toggle" href="#op_records">
                         <span class="am-icon-cog"> 操作历史查询</span>
                     </a>
                 </li>
@@ -407,7 +457,7 @@
                     </a>
                     <ul class="am-dropdown-content">
                         <li>
-                            <a href="" data-am-modal="{target: '#addNewGroups', closeViaDimmer: 0, width: 800}">
+                            <a href="" data-am-modal="{target: '#addNewGroups', closeViaDimmer: 0, width: 1000}">
                                 <i class="am-icon-plus am-icon-fw"></i>
                                 <span>新增组操作</span>
                             </a>
@@ -544,7 +594,11 @@
     <script src="[[ url_for('static', filename='js/amazeui.min.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/echarts.min.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/app.js', _external=True) ]]" type="text/javascript" charset="utf-8"></script>
-    <script src="[[ url_for('static', filename='js/myApp.js', _external=True) ]]" type="text/javascript" charset="utf-8"></script>
+    <script>
+        document.write("<s" + "cript type='text/javascript' src='[[ url_for('static', filename='js/myApp.js', _external=True) ]]?" + Math.random() + "'></scr" + "ipt>");
+    </script>
+
+    <!--<script src="[[ url_for('static', filename='js/myApp.js', _external=True) ]]" type="text/javascript" charset="utf-8"></script>-->
 </body>
 
 </html>

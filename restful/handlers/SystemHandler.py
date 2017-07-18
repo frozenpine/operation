@@ -1,14 +1,13 @@
 # -*- coding: UTF-8 -*-
+from flask_restful import Resource
+from app.models import TradeSystem, DataSource, DataSourceType
+from app import db
+from flask import request
+from werkzeug.exceptions import BadRequest
+from ..errors import DataNotJsonError, DataUniqueError, DataNotNullError, DataNotMatchError
 import json
 import re
-
-from flask_restful import Resource, request
-from werkzeug.exceptions import BadRequest
-
-from app import db
-from app.models import DataSource, DataSourceType, TradeSystem
-from restful.errors import DataNotJsonError, DataNotNullError, DataUniqueError
-from restful.protocol import RestProtocol
+from ..protocol import RestProtocol
 
 
 class SystemApi(Resource):
@@ -19,7 +18,6 @@ class SystemApi(Resource):
         system = TradeSystem.find(**kwargs)
         if system is not None:
             return RestProtocol(system)
-            # return str(system.servers.first().platform)
         else:
             return {'message': 'Not found'}, 404
 
@@ -129,3 +127,46 @@ class SystemListApi(Resource):
                 for j in xrange(len(system)):
                     result_list.append(RestProtocol(system[j]))
                 return result_list
+
+
+class ParentSystemFindOperationBookApi(Resource):
+    def __init__(self):
+        super(ParentSystemFindOperationBookApi, self).__init__()
+
+    def get(self, **kwargs):
+        system = TradeSystem.find(**kwargs)
+        if system:
+            if system.parent_sys_id == None:
+                sys_list = [system]
+                for child_sys in system.child_systems:
+                    sys_list.append(child_sys)
+                ob_result = []
+                for sys in sys_list:
+                    for ob in sys.operation_book:
+                        ob_result.append(dict(name=ob.name, book_id=ob.id, description=ob.description))
+                return {'message': 'All data listed.',
+                        'error_code': 0,
+                        'data': {'count': len(ob_result),
+                                 'records': ob_result}}
+            else:
+                return RestProtocol(DataNotMatchError('The system is not a parent system.'))
+        else:
+            return {'message': 'System not found.'}, 404
+
+
+class SystemSystemListInformationApi(Resource):
+    def __init__(self):
+        super(SystemSystemListInformationApi, self).__init__()
+
+    def get(self, **kwargs):
+        parent_sys = TradeSystem.find(**kwargs)
+        if parent_sys:
+            if parent_sys.parent_sys_id == None:
+                sys_list = [parent_sys]
+                for child_sys in parent_sys.child_systems:
+                    sys_list.append(child_sys)
+                return RestProtocol(sys_list)
+            else:
+                return RestProtocol(DataNotMatchError('The system is not a parent system.'))
+        else:
+            return {'message': 'System not found.'}, 404

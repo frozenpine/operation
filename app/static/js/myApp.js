@@ -299,8 +299,8 @@ app.service('$operations', function($websocket, $http, $message, $sessionStorage
 });
 
 app.service("$operationBooks", ["$http", function($http) {
-    this.operationBookBaseInfoGet = function(params) {
-        $http.get('api/operation-book-base-info')
+    this.operationBookSystemsGet = function(params) {
+        $http.get('api/systems')
             .success(function(response) {
                 if (response.error_code == 0)
                     params.onSuccess(response.data);
@@ -309,16 +309,57 @@ app.service("$operationBooks", ["$http", function($http) {
                 console.log(response);
             });
     }
-    this.oprationbooksGet = function(params) {
-        $http.get('api/operation-books')
+
+    this.operationBookSystemListGet = function(params) {
+        $http.get('api/system/id/' + params.sys_id + '/systems')
             .success(function(response) {
                 if (response.error_code == 0)
                     params.onSuccess(response.data);
-            })
-            .error(function(response) {
+                else {
+                    params.onError(response.message)
+                }
+            }).error(function(response) {
                 console.log(response);
             });
     }
+
+    this.operationCatalogs = function(params) {
+        $http.get('/api/operation-catalogs')
+            .success(function(response) {
+                if (response.error_code == 0)
+                    params.onSuccess(response.data);
+                else {
+                    params.onError(response.message)
+                }
+            }).error(function(response) {
+                console.log(response);
+            });
+    }
+
+    //  this.operationbooksGet = function(params) {
+    //      $http.get('api/system/id/' + params.sys_id + 'operation-books')
+    //          .success(function(response) {
+    //              if (response.error_code == 0)
+    //                  params.onSuccess(response.data);
+    //          })
+    //          .error(function(response) {
+    //              console.log(response);
+    //          });
+    //  }
+    //  
+    this.operationbookGet = function(params) {
+        $http.get('api/operation-book/id/' + params.optBook_id)
+            .success(function(response) {
+                if (response.error_code == 0) {
+                    params.onSuccess(response.data);
+                } else {
+                    params.onError(response.message)
+                }
+            }).error(function(response) {
+                console.log(response);
+            });
+    }
+
     this.operationbooksPut = function(params) {
         $http.put('api/operation-book/id/' + params.optBook_id, data = params.data)
             .success(function(response) {
@@ -332,7 +373,7 @@ app.service("$operationBooks", ["$http", function($http) {
             });
     }
     this.operationbookCheck = function(params) {
-        $http.post('api/operation-book-check', data = params.data)
+        $http.post('api/system/id/' + params.sys_id + '/operation-book/script-check', data = params.data)
             .success(function(response) {
                 if (response.error_code == 0) {
                     params.onSuccess(response.data);
@@ -349,18 +390,6 @@ app.service("$operationBooks", ["$http", function($http) {
                 if (response.error_code == 0) {
                     params.onSuccess(response.data);
                 } else {
-                    params.onError(response.message)
-                }
-            }).error(function(response) {
-                console.log(response);
-            });
-    }
-    this.systemOptionGroupGet = function(params) {
-        $http.get('api/systems')
-            .success(function(response) {
-                if (response.error_code == 0)
-                    params.onSuccess(response.data);
-                else {
                     params.onError(response.message)
                 }
             }).error(function(response) {
@@ -406,7 +435,8 @@ app.service("$operationBooks", ["$http", function($http) {
     this.operationRecordsPost = function(params) {
         $http.post('api/operate-records', data = {})
             .success(function(response) {
-                params.onSuccess(response.records);
+                params.onSuccess(response.data);
+                console.log(response);
             }).error(function(response) {
                 console.log(response);
             });
@@ -435,7 +465,6 @@ app.config(['$routeProvider', function($routeProvider) {
 }]);
 app.run(function($rootScope, $interval, $location, globalVar, $websocket) {
     $rootScope.tab = 1; //default
-    $rootScope.user_uuid = '';
     $rootScope.$on('$routeChangeStart', function(evt, next, current) {
         console.log('route begin change');
         angular.forEach(globalVar.intervals, function(value, index) {
@@ -457,17 +486,35 @@ app.filter('paging', function() {
     return function(listsData, start) {
         return listsData.slice(start);
     }
-})
+});
 app.controller('optionResultControl', ['$scope', '$http', '$operationBooks', function($scope, $http, $operationBooks) {
     $operationBooks.operationRecordsPost({
         onSuccess: function(res) {
-            $scope.operationRecordsData = res;
-            console.log($scope.operationRecordsData);
+            $scope.operationRecordsData = res.records;
             $scope.listsDataNum = $scope.operationRecordsData.length;
             $scope.pages = Math.ceil($scope.listsDataNum / 10);
-            console.log($scope.pages);
+            $scope.pagesNum = [];
+            for (var i = 0; i < $scope.pages; i++) {
+                $scope.pagesNum.push(i);
+            }
+            $scope.currentPage = 0;
+            $scope.listsPerPage = 10;
+            $scope.setPages = function(num) {
+                $scope.currentPage = num;
+            }
+            $scope.prePage = function() {
+                if ($scope.currentPage > 0)
+                    $scope.currentPage--;
+            }
+            $scope.nextPage = function() {
+                if ($scope.currentPage < $scope.pages - 1)
+                    $scope.currentPage++;
+            }
         }
     });
+    $scope.recordsIndex = function(index) {
+        $scope.clickIndex = index;
+    }
     $scope.show_result = function(index) {
         $('#op_result' + index).modal({ relatedTarget: this });
     };
@@ -485,17 +532,55 @@ app.controller('FileUpdateControl', ['$scope', 'fileUpload', function($scope, fi
     }
 }]);
 app.controller('EditoptionBookController', ['$scope', '$http', '$operationBooks', function($scope, $http, $operationBooks) {
-    $operationBooks.operationBookBaseInfoGet({
+
+    $operationBooks.operationBookSystemsGet({
         onSuccess: function(res) {
-            $scope.optionBookEditBookData = res;
+            $scope.optionBookData = res.records;
         }
     });
-    $operationBooks.oprationbooksGet({
-        onSuccess: function(res) {
-            $scope.optionBookSystemOptBookData = res.records;
-        }
-    });
-    $scope.optionBookSelectedGet = function() {
+    $scope.selectWhichSystem = function(id) {
+
+        $operationBooks.operationBookSystemListGet({
+            sys_id: id,
+            onSuccess: function(res) {
+                $scope.optionBookSystemData = res.records;
+            }
+        });
+
+        $operationBooks.systemOptionBooksGet({
+            sys_id: id,
+            onSuccess: function(res) {
+                $scope.operationBooksData = res.records;
+            }
+        });
+    }
+
+    $scope.optionBookSelectedGet = function(id) {
+        $operationBooks.operationbookGet({
+            optBook_id: id,
+            onSuccess: function(res) {
+
+                $operationBooks.operationCatalogs({
+                    onSuccess: function(res) {
+                        $scope.optionBookEditBookData = res.records;
+                    }
+                });
+
+
+                $scope.optionBookSystemOptBookData = res;
+                $scope.dataCopy = {
+                    "sys_id": $scope.optionBookSystemOptBookData.system.id.toString(),
+                    "catalog_id": $scope.optionBookSystemOptBookData.catalog.id.toString(),
+                    "type": $scope.optionBookSystemOptBookData.type,
+                    "description": $scope.optionBookSystemOptBookData.description,
+                    "name": $scope.optionBookSystemOptBookData.name,
+                    "is_emergency": $scope.optionBookSystemOptBookData.is_emergency.toString()
+                };
+            },
+            onError: function(res) {
+                console.log(res);
+            }
+        });
         $scope.isEmergency = [{
             "name": "紧急操作",
             "value": true
@@ -503,14 +588,6 @@ app.controller('EditoptionBookController', ['$scope', '$http', '$operationBooks'
             "name": "非紧急操作",
             "value": false
         }];
-        $scope.dataCopy = {
-            "sys_id": $scope.optionBookSelected.system.id.toString(),
-            "catalog_id": $scope.optionBookSelected.catalog.id.toString(),
-            "type": $scope.optionBookSelected.type,
-            "description": $scope.optionBookSelected.description,
-            "name": $scope.optionBookSelected.name,
-            "is_emergency": $scope.optionBookSelected.is_emergency.toString()
-        };
     }
     $scope.EditOptionBookPut = function(id) {
         $operationBooks.operationbooksPut({
@@ -527,12 +604,27 @@ app.controller('EditoptionBookController', ['$scope', '$http', '$operationBooks'
     }
 }]);
 app.controller('optionBookController', ['$scope', '$http', '$timeout', '$operationBooks', function($scope, $http, $timeout, $operationBooks) {
-    $operationBooks.operationBookBaseInfoGet({
+    $operationBooks.operationBookSystemsGet({
         onSuccess: function(res) {
-            $scope.optionBookData = res;
+            $scope.optionBookData = res.records;
         }
     });
+    $operationBooks.operationCatalogs({
+        onSuccess: function(res) {
+            $scope.operationCatalogs = res.records;
+        }
+    });
+
+    $scope.selectWhichSystem = function(id) {
+        $operationBooks.operationBookSystemListGet({
+            sys_id: id,
+            onSuccess: function(res) {
+                $scope.systemListData = res.records;
+            }
+        });
+    }
     $scope.optionBookEditData = {
+        "main_sys": "",
         "name": "",
         "description": "",
         "remote_name": "",
@@ -558,10 +650,11 @@ app.controller('optionBookController', ['$scope', '$http', '$timeout', '$operati
         $scope.optionBookCommand.push($scope.optionBookNew);
     }
     $scope.optionBookShellIs = false;
-    $scope.optionBookCheckShell = function(index) {
+    $scope.optionBookCheckShell = function(index, id) {
         $scope.optionBookShellIs = false;
         $scope.checkShow = true;
         $operationBooks.operationbookCheck({
+            sys_id: id,
             data: $scope.optionBookCommand[index],
             onSuccess: function(response) {
                 if (response == 0) {
@@ -589,9 +682,9 @@ app.controller('optionBookController', ['$scope', '$http', '$timeout', '$operati
             "name": $scope.optionBookEditData.name,
             "description": $scope.optionBookEditData.description,
             "remote_name": $scope.optionBookEditData.remote_name,
-            "type": $scope.optionBookEditData.type.name,
-            "catalog_id": $scope.optionBookEditData.catalog.catalog_id,
-            "sys_id": $scope.optionBookEditData.sys.sys_id,
+            "type": $scope.optionBookEditData.type,
+            "catalog_id": $scope.optionBookEditData.catalog.id,
+            "sys_id": $scope.optionBookEditData.sys.id,
             "is_emergency": $scope.optionBookEditData.is_emergency,
             "mod": $scope.optionBookCommand
         };
@@ -610,8 +703,7 @@ app.controller('optionBookController', ['$scope', '$http', '$timeout', '$operati
 }]);
 app.controller('optionGroupController', ['$scope', '$http', '$q', '$operationBooks', '$window', function($scope, $http, $q, $operationBooks, $window) {
 
-    //	$scope.cannotSort = false;
-    $operationBooks.systemOptionGroupGet({
+    $operationBooks.operationBookSystemsGet({
         onSuccess: function(res) {
             $scope.optionGroupSystem = res.records;
         },

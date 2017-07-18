@@ -9,10 +9,9 @@
                     <span>全部执行</span>
                 </button>
             </div>
-            <div>
-                <button ng-show="!optionGroupEditShow" ng-click="optionGroupEditAdd()" type="button" class="am-btn am-btn-primary am-round am-fr">添加</button>
-                <button ng-show="optionGroupEditShow" ng-click="optionGroupEdit(opList)" type="button" class="am-btn am-btn-primary am-round am-fr">编辑</button>
-            </div>
+            <button ng-show="!optionGroupEditShow" ng-click="optionGroupEditAdd()" type="button" class="am-btn am-btn-primary am-round am-btn-sm am-fr">添加</button>
+            <button ng-show="optionGroupEditShow" ng-click="optionGroupEdit(opList)" type="button" class="am-btn am-btn-sm am-btn-primary am-round am-fr">编辑</button>
+
         </div>
         <div class="tpl-block">
             <div class="am-g">
@@ -149,16 +148,18 @@
                             <ul sv-root sv-part="optionGroupCopy.operations">
                                 <li ng-repeat="data in optionGroupCopy.operations track by $index" sv-element>
                                     <div class="am-u-sm-2" style="padding: 0;">
+                                        <!--<select id="doc-ipt-3-a" ng-model="data.operation" ng-options="x.operation_book_name for x in optionBooks">
+                    	                </select>-->
                                         <input type="text" style="padding: 5px 5px 5px 0;border: none;" value="data.operation_name" ng-model="data.operation_name" />
                                     </div>
                                     <div class="am-u-sm-3" style="padding-left: 4px;">
                                         <input type="text" style="padding: 5px 5px 5px 0;border: none;" value="data.description" ng-model="data.description" />
                                     </div>
                                     <div class="am-u-sm-1" style="padding-left: 6px;">
-                                        <input name='startTime{{$index}}' type="text" style="padding: 5px 5px 5px 0;border: none;width: 60px;" value="data.earliest" ng-model="data.earliest" ng-pattern="/^(0\d{1}|1\d{1}|2[0-3]|[0-9]):([0-5]\d{1})/|:([0-5]\d{1})$/" />
+                                        <input name='startTime{{$index}}' type="text" style="padding: 5px 5px 5px 0;border: none;width: 60px;" value="data.earliest" ng-model="data.earliest" ng-pattern="/^(0\d{1}|1\d{1}|2[0-3]|[0-9]):([0-5]\d{1})/|:([0-5]\d{1})|[None]$/" />
                                     </div>
                                     <div class="am-u-sm-1" style="padding-left: 6px;">
-                                        <input name='endTime{{$index}}' type="text" style="padding: 5px 5px 5px 0;border: none;width: 60px;" value="data.latest" ng-model="data.latest" ng-pattern="/^(0\d{1}|1\d{1}|2[0-3]|[0-9]):([0-5]\d{1})/|:([0-5]\d{1})$/" />
+                                        <input name='endTime{{$index}}' type="text" style="padding: 5px 5px 5px 0;border: none;width: 60px;" value="data.latest" ng-model="data.latest" ng-pattern="/^(0\d{1}|1\d{1}|2[0-3]|[0-9]):([0-5]\d{1})/|:([0-5]\d{1})|[None]$/" />
                                     </div>
                                     <div class="am-u-sm-2">
                                         <select id="resetSelect{{$index}}" ng-init="optionGroupSelect='0'" ng-model="optionGroupSelect" ng-change="optionGroupSelectWhich(optionGroupSelect,data,$index)">
@@ -173,6 +174,7 @@
                     					</select>
                                     </div>
                                     <div class="am-u-sm-1" style="background: none;">
+                                        <!--<button style="background-color: none;" ng-click="optionGroupEditDelete($index)">删除</button>-->
                                         <a ng-click="optionGroupEditDelete($index)" class="am-close am-close-alt am-icon-times"></a>
                                     </div>
                                     <div>
@@ -189,8 +191,8 @@
                     <hr/>
                 </div>
                 <div class="am-fr" ng-show="!optionGroupEditShow">
-                    <button ng-click="optionGroupEditShow = !optionGroupEditShow" class="am-btn am-btn-primary am-round">取消</button>
-                    <button ng-click="optionGroupEditFinish()" type="submit" class="am-btn am-btn-primary am-round" ng-disabled="!optionGroupEditSub.$valid && optionGroupEditPostShow">确定</button>
+                    <button ng-click="optionGroupEditShow = !optionGroupEditShow" class="am-btn am-btn-primary am-btn-sm am-round">取消</button>
+                    <button ng-click="optionGroupEditFinish()" type="submit" class="am-btn am-btn-primary am-btn-sm am-round" ng-disabled="!optionGroupEditSub.$valid && optionGroupEditPostShow">确定</button>
                 </div>
             </div>
 

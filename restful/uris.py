@@ -5,7 +5,15 @@ from .handlers.EmergeOpHandler import (EmergeOpApi, EmergeOpCaptchaApi,
                                        EmergeOpCSVApi, EmergeOpExecuteApi,
                                        EmergeOpListApi, EmergeOpLoginApi,
                                        EmergeOpUIApi)
+from .handlers.FilePostHandler import FilePostApi
 from .handlers.LogHandler import LogApi
+from .handlers.OperateRecordHandler import OperateRecordListApi
+from .handlers.OperationBookHandler import (OperationBookApi,
+                                            OperationBookCheckApi,
+                                            OperationBookListApi)
+from .handlers.OperationCatalogHandler import OperationCatalogListApi
+from .handlers.OperationGroupHandler import (OperationGroupApi,
+                                             OperationGroupListApi)
 from .handlers.OperationHandler import (OperationApi, OperationCallbackApi,
                                         OperationCaptchaApi, OperationCSVApi,
                                         OperationExecuteApi, OperationListApi,
@@ -20,18 +28,13 @@ from .handlers.SysStaticsHandler import (ConfigCheckApi, ConfigListApi,
                                          ServerStaticListApi,
                                          SystemStaticListApi,
                                          UserSessionListApi)
-from .handlers.SystemHandler import SystemApi, SystemListApi
+from .handlers.SystemHandler import (ParentSystemFindOperationBookApi,
+                                     SystemApi, SystemListApi,
+                                     SystemSystemListInformationApi)
 from .handlers.TradingDayHandler import NextTradingDayApi
 from .handlers.UIDataHandler import UIDataApi
 from .handlers.UserHandler import UserApi, UserListApi
 from .handlers.WebshellHandler import WebshellUIApi
-from .handlers.OperationGroupHandler import OperationGroupListApi, OperationGroupApi
-from .handlers.OperationBookHandler import OperationBookListApi, OperationBookCheckApi, OperationBookApi
-from .handlers.SystemInformationHandler import SystemInformationApi, ParentSystemFindOperationBookApi, \
-    AddOperationBookBaseInformationApi
-from .handlers.FilePostHandler import FilePostApi
-from .handlers.OperateRecordApi import OperateRecordListApi
-
 
 resources.add_resource(
     UserApi,
@@ -323,6 +326,14 @@ resources.add_resource(
 )
 
 resources.add_resource(
+    SystemSystemListInformationApi,
+    '/system/id/<int:id>/systems',
+    '/system/id/<int:id>/systems',
+    methods=['GET'],
+    endpoint='sys_sys_list'
+)
+
+resources.add_resource(
     OperationBookListApi,
     '/operation-books',
     '/operation-books/',
@@ -332,10 +343,10 @@ resources.add_resource(
 
 resources.add_resource(
     OperationBookCheckApi,
-    '/operation-book-check',
-    '/operation-book-check/',
+    '/system/id/<int:id>/operation-book/script-check',
+    '/system/id/<int:id>/operation-book/script-check',
     methods=['POST'],
-    endpoint='ob_check'
+    endpoint='sys_ob_check'
 )
 
 resources.add_resource(
@@ -343,22 +354,6 @@ resources.add_resource(
     '/operation-book/id/<int:id>',
     methods=['GET', 'PUT'],
     endpoint='operation_book'
-)
-
-resources.add_resource(
-    SystemInformationApi,
-    '/sys-info',
-    '/sys-info/',
-    methods=['GET'],
-    endpoint='sys_info'
-)
-
-resources.add_resource(
-    AddOperationBookBaseInformationApi,
-    '/operation-book-base-info',
-    '/operation-book-base-info/',
-    methods=['GET'],
-    endpoint='ob_base_info'
 )
 
 resources.add_resource(
@@ -374,4 +369,12 @@ resources.add_resource(
     '/operate-records',
     methods=['GET', 'POST'],
     endpoint='operate_records'
+)
+
+resources.add_resource(
+    OperationCatalogListApi,
+    '/operation-catalogs',
+    '/operation-catalogs/',
+    methods=['GET', 'POST'],
+    endpoint='operation_catalogs'
 )
