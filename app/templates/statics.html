@@ -174,7 +174,7 @@
         <div class="tpl-block" ng-show="sysShowDetail">
             <div class="am-g">
                 <div class="am-u-sm-12" ng-repeat="data in systemStatics | filter: keyword">
-                    <span class="am-icon-angle-double-right" style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169); cursor: pointer"> 子系统名称 ： {{::data.name}}</span>
+                    <span class="am-icon-angle-double-right" style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169); hover: pointer"> 子系统名称 ： {{::data.name}}</span>
                     <span class="am-fr" style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169);"> 最后更新：{{data.updated_time}}</span>
                     <table class="am-table am-table-hover table-main">
                         <thead>
@@ -191,25 +191,16 @@
                         </thead>
                         <tbody>
                             <tr ng-repeat="child in data.detail" ng-class="{true: 'am-danger', false: ''}[child.status.stat=='stopped']">
-                                <td class="table-data">
-                                    <span class="am-dropdown" ng-mouseover="showProcVersion[$index] = true" ng-mouseleave="showProcVersion[$index] = false" style="cursor: pointer">
-                                        {{::child.process}}
-                                        <div class="am-dropdown-content" ng-if="child.version.length > 0" ng-show="showProcVersion[$index]" style="display: block;margin-top: 0; min-width: 300px;">
-                                            <ul class="am-monospace am-text-nowrap am-text-primary" ng-repeat="line in child.version">
-                                                <li>{{line}}</li>
-                                            </ul>
-                                        </div>
-                                    </span>
-                                </td>
+                                <td class="table-data">{{::child.process}}</td>
                                 <td class="table-data">{{::child.status.pid}}</td>
                                 <td class="table-data">{{::child.proc_role}}</td>
                                 <td class="table-data" style="max-width: 130px">
                                     <ul>
                                         <li ng-repeat="socket in child.sockets track by $index">
                                             <span>{{::socket.port}}</span>
-                                            <span class="am-dropdown am-badge am-round" ng-class="{true: 'tpl-badge-success', false: ''}[socket.status.stat=='侦听中']" style="cursor: pointer" ng-mouseover="showSocketDetail[$index] = true" ng-mouseleave="showSocketDetail[$index] = false">
+                                            <span class="am-fr am-dropdown am-badge am-round" ng-class="{true: 'tpl-badge-success', false: ''}[socket.status.stat=='侦听中']" style="cursor: pointer" ng-mouseover="showSocketDetail[$index] = true" ng-mouseleave="showSocketDetail[$index] = false">
                                                 {{socket.status.stat}}
-                                                <div class="am-dropdown-content" ng-if="socket.status.hasOwnProperty('ip')" ng-show="showSocketDetail[$index]" style="display: block;margin-top: 0">
+                                                <div class="am-dropdown-content_l" ng-if="socket.status.hasOwnProperty('ip')" ng-show="showSocketDetail[$index]" style="display: block;margin-top: 0">
                                                     <table class="am-table am-text-nowrap am-table-compact" style="margin-bottom: 0px">
                                                         <thead>
                                                             <th>Protocal</th>
@@ -233,9 +224,9 @@
                                     <ul>
                                         <li ng-repeat="conn in child.connections track by $index">
                                             <span>{{::conn.port}}</span>
-                                            <span class="am-dropdown am-badge am-round" ng-class="{true: 'tpl-badge-success', false: ''}[conn.status.stat=='已连接']" style="cursor: pointer" ng-mouseover="showConnDetail[$index] = true" ng-mouseleave="showConnDetail[$index] = false">
+                                            <span class="am-fr am-dropdown am-badge am-round" ng-class="{true: 'tpl-badge-success', false: ''}[conn.status.stat=='已连接']" style="cursor: pointer" ng-mouseover="showConnDetail[$index] = true" ng-mouseleave="showConnDetail[$index] = false">
                                                 {{conn.status.stat}}
-                                                <div class="am-dropdown-content" ng-if="conn.status.hasOwnProperty('ip')" ng-show="showConnDetail[$index]" style="display: block;margin-top: 0;">
+                                                <div class="am-dropdown-content_l" ng-if="conn.status.hasOwnProperty('ip')" ng-show="showConnDetail[$index]" style="display: block;margin-top: 0;">
                                                     <table class="am-table am-text-nowrap am-table-compact" style="margin-bottom: 0px">
                                                         <thead>
                                                             <th>Protocal</th>
@@ -296,9 +287,8 @@
             <div class="caption font-green bold">
                 <span ng-click="loginShowDetail = !loginShowDetail;" style="cursor: pointer">状态信息 - 账号连接 <i ng-class="{true: 'am-icon-angle-double-up am-icon-sm', false: 'am-icon-angle-double-down am-icon-sm'}[loginShowDetail]"></i></span>
                 <div class="am-checkbox" style="display: inline-block;">
-                    <label ng-init="auto=false; refresh_interval=60">
-                        <input type="checkbox" ng-click="autoRefresh()" ng-model="auto"> 自动刷新间隔：
-                        <input type="text" ng-model="refresh_interval" style="display: inline-block; width: 1.5em">s
+                    <label>
+                        <input type="checkbox" ng-click="autoRefresh(auto)" ng-model="auto" ng-init="auto=false"> 自动刷新
                     </label>
                 </div>
             </div>
@@ -357,8 +347,8 @@
             <div class="caption font-green bold">
                 <span ng-click="clientShowDetail = !clientShowDetail;" style="cursor: pointer">状态信息-客户端连接 <i ng-class="{true: 'am-icon-angle-double-up am-icon-sm', false: 'am-icon-angle-double-down am-icon-sm'}[clientShowDetail]"></i></span>
                 <div class="am-checkbox" style="display: inline-block;">
-                    <label ng-init="auto=false">
-                        <input type="checkbox" ng-click="autoRefresh(auto)" ng-model="auto"> 自动刷新
+                    <label>
+                        <input type="checkbox" ng-click="autoRefresh(auto)" ng-model="auto" ng-init="auto=false"> 自动刷新
                     </label>
                 </div>
             </div>

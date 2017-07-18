@@ -25,6 +25,13 @@ from .handlers.TradingDayHandler import NextTradingDayApi
 from .handlers.UIDataHandler import UIDataApi
 from .handlers.UserHandler import UserApi, UserListApi
 from .handlers.WebshellHandler import WebshellUIApi
+from .handlers.OperationGroupHandler import OperationGroupListApi, OperationGroupApi
+from .handlers.OperationBookHandler import OperationBookListApi, OperationBookCheckApi, OperationBookApi
+from .handlers.SystemInformationHandler import SystemInformationApi, ParentSystemFindOperationBookApi, \
+    AddOperationBookBaseInformationApi
+from .handlers.FilePostHandler import FilePostApi
+from .handlers.OperateRecordApi import OperateRecordListApi
+
 
 resources.add_resource(
     UserApi,
@@ -291,4 +298,80 @@ resources.add_resource(
     '/operation/uuid/<string:uuid>/callback',
     methods=['POST'],
     endpoint='op_callback'
+)
+
+resources.add_resource(
+    OperationGroupListApi,
+    '/operation-groups',
+    '/operation-groups/',
+    methods=['GET', 'POST'],
+    endpoint='operation_groups'
+)
+
+resources.add_resource(
+    OperationGroupApi,
+    '/operation-group/id/<int:id>',
+    methods=['GET', 'PUT'],
+    endpoint='operation_group'
+)
+
+resources.add_resource(
+    ParentSystemFindOperationBookApi,
+    '/system/id/<int:id>/operation-books',
+    methods=['GET'],
+    endpoint='sys_ob'
+)
+
+resources.add_resource(
+    OperationBookListApi,
+    '/operation-books',
+    '/operation-books/',
+    methods=['GET', 'POST'],
+    endpoint='operation_books'
+)
+
+resources.add_resource(
+    OperationBookCheckApi,
+    '/operation-book-check',
+    '/operation-book-check/',
+    methods=['POST'],
+    endpoint='ob_check'
+)
+
+resources.add_resource(
+    OperationBookApi,
+    '/operation-book/id/<int:id>',
+    methods=['GET', 'PUT'],
+    endpoint='operation_book'
+)
+
+resources.add_resource(
+    SystemInformationApi,
+    '/sys-info',
+    '/sys-info/',
+    methods=['GET'],
+    endpoint='sys_info'
+)
+
+resources.add_resource(
+    AddOperationBookBaseInformationApi,
+    '/operation-book-base-info',
+    '/operation-book-base-info/',
+    methods=['GET'],
+    endpoint='ob_base_info'
+)
+
+resources.add_resource(
+    FilePostApi,
+    '/global-config',
+    '/global-config/',
+    methods=['POST'],
+    endpoint='global_config'
+)
+
+resources.add_resource(
+    OperateRecordListApi,
+    '/operate-records',
+    methods=['GET', 'POST'],
+    endpoint='operate_records'
 )
