@@ -1033,6 +1033,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     $scope.triggered_ouside = false;
     $scope.batch_run = false;
     $scope.user_uuid = $('#user_uuid').text();
+    $scope.taskQueueRunning = false;
 
     $scope.$on('TaskStatusChanged', function(event, data) {
         if (data.hasOwnProperty('details')) {
@@ -1054,9 +1055,9 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                     } else {
                         $scope.triggered_ouside = false;
                     }
-                    $timeout(function() {
+                    /* $timeout(function() {
                         $scope.opList.details[index] = data;
-                    }, 0);
+                    }, 0); */
                     TaskStatus(data, index);
                 }
             });
@@ -1095,7 +1096,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             if (value.interactivator.isTrue) {
                 $message.Alert('操作列表内包含交互式执行操作，无法批量运行');
                 terminate = true;
-                return;
+                value.enabled = false;
             }
         });
         if (!terminate) {
@@ -1109,20 +1110,29 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     }
 
     function TaskStatus(data, index) {
-        if (!$scope.batch_run && !$scope.triggered_ouside) {
-            if (data.hasOwnProperty('output_lines') && data.output_lines.length > 0) {
+        $timeout(function() {
+            $scope.opList.details[index] = data;
+        }, 0)
+        if (!$scope.batch_run) {
+            if (!$scope.triggered_ouside && data.hasOwnProperty('output_lines') && data.output_lines.length > 0) {
                 $scope.check_result(index);
             }
-        } else {
-            if (data.checker.isTrue && data.exec_code == 0) {
-                $sessionStorage[data.uuid] = true;
-                $timeout(function() {
-                    $scope.opList.details[index].checker.checked = true;
-                })
+            if (index < $scope.opList.details.length - 1 && (!data.checker.isTrue || data.checker.checked)) {
+                $scope.opList.details[index + 1].enabled = data.exec_code === 0;
             }
+        } else {
+            $timeout(function() {
+                $scope.opList.details[index].enabled = false;
+                if (data.checker.isTrue && data.exec_code == 0) {
+                    $sessionStorage[data.uuid] = true;
+                    $scope.opList.details[index].checker.checked = true;
+                }
+            }, 0);
         }
-        if (index < $scope.opList.details.length - 1 && (!data.checker.isTrue || data.checker.checked)) {
-            $scope.opList.details[index + 1].enabled = data.exec_code === 0;
+        if (index < $scope.opList.details.length - 1) {
+            $scope.taskQueueRunning = true;
+        } else if (data.exec_code == 0) {
+            $scope.taskQueueRunning = false;
         }
     }
 
@@ -1131,6 +1141,14 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             if (index > 0 && $scope.opList.details[index - 1].checker.isTrue) {
                 checked = $sessionStorage[$scope.opList.details[index - 1].uuid];
                 $scope.opList.details[index].enabled = value.enabled && checked === true;
+            }
+            if (index < $scope.opList.details.length - 1) {
+                $scope.taskQueueRunning = true;
+                if (value.checker.isTrue && $scope.opList.details[index + 1].exec_code == 0) {
+                    $sessionStorage[value.uuid] = true;
+                }
+            } else if (value.exec_code == 0) {
+                $scope.taskQueueRunning = false;
             }
             if (value.checker.isTrue) {
                 $scope.opList.details[index].checker.checked = $sessionStorage[value.uuid] === true;
@@ -1200,6 +1218,10 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     $scope.optionGroupEditShow = true;
     $scope.optionGroupSelect = 0;
     $scope.optionGroupEdit = function(data) {
+        if ($scope.taskQueueRunning) {
+            $message.Warning('任务队列未完成，无法编辑队列内容');
+            return;
+        }
         $operationBooks.systemOptionBooksGet({
             sys_id: data.sys_id,
             onSuccess: function(res) {
