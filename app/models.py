@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 import json
 import re
+import sys
 from datetime import datetime, time
 from uuid import uuid4
 
@@ -154,6 +155,19 @@ class SQLModelMixin(object):
         else:
             return cls.query.filter_by(**kwargs).first()
 
+    @staticmethod
+    def __safeToJson(obj):
+        if isinstance(obj, OperateResult):
+            return obj.to_json()
+        elif isinstance(obj, unicode):
+            return obj
+        else:
+            return {
+                'id': obj.id,
+                'name': hasattr(obj, 'name') and obj.name or '',
+                'uuid': hasattr(obj, 'uuid') and obj.uuid or None
+            }
+
     def to_json(self):
         results = {}
         for field in [x for x in dir(self) if not re.match(
@@ -162,31 +176,34 @@ class SQLModelMixin(object):
             data = getattr(self, field)
             if not callable(data):
                 if isinstance(data, list):
-                    results[field] = [{
+                    ''' results[field] = [{
                         'id': x.id,
                         'name': hasattr(x, 'name') and x.name or '',
                         'uuid': hasattr(x, 'uuid') and x.uuid or None
-                    } for x in data]
+                    } for x in data] '''
+                    results[field] = map(SQLModelMixin.__safeToJson, data)
                 elif isinstance(data, dict):
                     results[field] = json.dumps(data)
                 elif isinstance(data, db.Query):
-                    results[field] = [{
+                    ''' results[field] = [{
                         'id': x.id,
                         'name': hasattr(x, 'name') and x.name or '',
                         'uuid': hasattr(x, 'uuid') and x.uuid or None
-                    } for x in data.all()]
+                    } for x in data.all()] '''
+                    results[field] = map(SQLModelMixin.__safeToJson, data.all())
                 elif isinstance(data, IPv4Address):
                     results[field] = data.exploded
                 elif isinstance(data, Arrow):
                     results[field] = data.to('local').format('YYYY-MM-DD HH:mm:ss ZZ')
                 elif isinstance(data, Enum):
                     results[field] = data.name
-                elif isinstance(data, db.Model):
-                    results[field] = {
+                elif isinstance(data, SQLModelMixin):
+                    ''' results[field] = {
                         'id': data.id,
                         'name': hasattr(data, 'name') and data.name or '',
                         'uuid': hasattr(data, 'uuid') and data.uuid or None
-                    }
+                    } '''
+                    results[field] = SQLModelMixin.__safeToJson(data)
                 else:
                     results[field] = data
         return results

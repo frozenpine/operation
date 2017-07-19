@@ -16,6 +16,7 @@ from app.models import (ConfigType, DataSource, DataSourceModel,
 from SysManager.Common import AESCrypto
 from SysManager.configs import SSHConfig, WinRmConfig
 from SysManager.executor import Executor
+from restful.protocol import RestProtocol
 
 
 def _decrypt(match):
@@ -64,11 +65,12 @@ class ServerStaticListApi(Resource, ServerList):
             self.rtn['sys_id'] = sys.id
             self.find_servers(sys)
             self.make_response()
-            return self.rtn
+            return RestProtocol(self.rtn)
         else:
-            return {
-                'message': 'system not found'
-            }, 404
+            return RestProtocol(
+                message='System not found',
+                error_code=-1
+            ), 404
 
 class ServerStaticApi(Resource, ServerList):
     def __init__(self):
@@ -93,11 +95,9 @@ class ServerStaticApi(Resource, ServerList):
                 tr.join()
             # gevent.joinall(self.checker)
             self.make_response()
-            return self.rtn
+            return RestProtocol(self.rtn)
         else:
-            return {
-                'message': 'system not found'
-            }, 404
+            return RestProtocol(message='System not found', error_code=-1), 404
 
     def check_svr(self, entry):
         result = {}
@@ -220,11 +220,9 @@ class SystemStaticListApi(Resource, SystemList):
         if sys:
             self.find_systems(sys)
             self.make_response()
-            return self.rtn
+            return RestProtocol(self.rtn)
         else:
-            return {
-                'message': 'system not found'
-            }, 404
+            return RestProtocol(message='System not found', error_code=-1), 404
 
 class ProcStaticApi(Resource, SystemList):
     def __init__(self):
@@ -262,6 +260,7 @@ class ProcStaticApi(Resource, SystemList):
                 }
             }
             result = executor.run(mod).data
+            gevent.sleep(0)
             if len(result) > 0:
                 self.proc_status[proc] = result[0]
             else:
@@ -286,6 +285,8 @@ class ProcStaticApi(Resource, SystemList):
                         'file': proc.exec_file
                     }
                 }
+                proc.version = executor.run(mod).lines
+                gevent.sleep(0)
         mod = {'name': 'netstat'}
         if len(port_list) > 0:
             if not mod.has_key('args'):
@@ -297,6 +298,7 @@ class ProcStaticApi(Resource, SystemList):
             mod['args']['processes'] = list(process_list)
         if mod.has_key('args'):
             socket_result = executor.run(mod)
+            gevent.sleep(0)
             if 'LISTEN' in socket_result.data.keys():
                 # 处理Windows Linux平台的不同
                 try:
@@ -348,11 +350,9 @@ class ProcStaticApi(Resource, SystemList):
                 tr.join()
             # gevent.joinall(self.checker)
             self.make_response()
-            return self.rtn
+            return RestProtocol(self.rtn)
         else:
-            return {
-                'message': 'system not found'
-            }, 404
+            return RestProtocol(message='System not found', error_code=-1), 404
 
 class LoginListApi(Resource, SystemList):
     def get(self, **kwargs):
@@ -393,15 +393,14 @@ class LoginListApi(Resource, SystemList):
                             tmp['updated_time'] = arrow.now().format('HH:mm:ss')
                         rtn.append(tmp)
                     sys_db.close()
-                    return rtn
+                    return RestProtocol(rtn)
             else:
-                return {
-                    'message': u'no data source configured for system {}'.format(sys.name)
-                }, 404
+                return RestProtocol(
+                    message=u'no data source configured for system {}'.format(sys.name),
+                    error_code=-1
+                )
         else:
-            return {
-                'message': 'system not found'
-            }, 404
+            return RestProtocol(message='system not found', error_code=-1), 404
 
 class LoginCheckApi(Resource):
     def __init__(self):
@@ -511,11 +510,9 @@ class LoginCheckApi(Resource):
             for (k, v) in self.syslog_list.items():
                 self.checker.append(gevent.spawn(self.check_log, k, v))
             gevent.joinall(self.checker)
-            return self.rtn
+            return RestProtocol(self.rtn)
         else:
-            return {
-                'message': 'system not found'
-            }, 404
+            return RestProtocol(message='system not found', error_code=-1), 404
 
 class UserSessionListApi(Resource, SystemList):
     def get(self, **kwargs):
@@ -541,9 +538,7 @@ class UserSessionListApi(Resource, SystemList):
                         uri = src.source['uri']
                     sys_db = create_engine(uri).connect()
                 except Exception:
-                    return {
-                        'message': 'failed to connect to database.'
-                    }, 404
+                    return RestProtocol(message='failed to connect to database.', error_code=-1)
                 else:
                     results = sys_db.execute(text(src.source['sql'])).fetchall()
                     for result in results:
@@ -560,13 +555,12 @@ class UserSessionListApi(Resource, SystemList):
                     sys_db.close()
                     return rtn
             else:
-                return {
-                    'message': u'no data source for system {}'.format(sys.name)
-                }, 404
+                return RestProtocol(
+                    message=u'No data source for system {}'.format(sys.name),
+                    error_code=-1
+                )
         else:
-            return {
-                'message': 'system not found'
-            }, 404
+            return RestProtocol(message='System not found', error_code=-1), 404
 
 class ConfigList(object):
     def __init__(self):
@@ -593,10 +587,13 @@ class ConfigList(object):
                     'file': conf.file,
                     'pre_hash': conf.pre_hash_code,
                     'pre_timestamp':
-                        conf.pre_timestamp and conf.pre_timestamp.to('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss'),
+                        conf.pre_timestamp and \
+                        conf.pre_timestamp.to('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss'),
                     'hash': conf.hash_code,
-                    'hash_changed': conf.pre_hash_code and conf.pre_hash_code != conf.hash_code or False,
-                    'timestamp': conf.timestamp and conf.timestamp.to('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss')
+                    'hash_changed': conf.pre_hash_code and \
+                        conf.pre_hash_code != conf.hash_code or False,
+                    'timestamp': conf.timestamp and \
+                        conf.timestamp.to('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss')
                 } for conf in each_sys.config_files.all()]
             })
 

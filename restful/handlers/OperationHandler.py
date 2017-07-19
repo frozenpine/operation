@@ -83,8 +83,10 @@ class OperationMixin(object):
                               == TaskStatus.Success.value) and \
                 (not self.snapshot['task_status_list'][idx]
                  == TaskStatus.Success.value)
-        else:
+        elif idx == 0:
             dtl['enabled'] = not self.snapshot['task_status_list'][0] == TaskStatus.Success.value
+        else:
+            dtl['enabled'] = False
         return dtl
 
     def make_operation_list(self, op_group):
@@ -183,14 +185,20 @@ class OperationListRunApi(OperationMixin, Resource):
                     'operated_at': unicode(arrow.utcnow())
                 })
             )
-            op = Operation.find(uuid=task_uuid)
-            self.snapshot = taskManager.snapshot(op_group.uuid)
             ret_code = DispatchResult(ret_code)
-            return RestProtocol(
-                self.make_operation_detail(op),
-                message=dispatchMessage[ret_code],
-                error_code=ret_code.value
-            )
+            if ret_code == DispatchResult.Dispatched:
+                self.snapshot = taskManager.snapshot(op_group.uuid)
+                op = Operation.find(uuid=task_uuid)
+                return RestProtocol(
+                    self.make_operation_detail(op),
+                    message=dispatchMessage[ret_code],
+                    error_code=ret_code.value
+                )
+            else:
+                return RestProtocol(
+                    error_code=ret_code.value,
+                    message=dispatchMessage[ret_code]
+                )
         else:
             return RestProtocol(message='Operation group not found', error_code=-1), 404
 
@@ -212,14 +220,15 @@ class OperationListRunAllApi(OperationMixin, Resource):
                     'operated_at': unicode(arrow.utcnow())
                 })
             )
-            if ret_code == 0:
+            ret_code = DispatchResult(ret_code)
+            if ret_code == DispatchResult.Dispatched:
                 op = Operation.find(uuid=task_uuid)
                 self.snapshot = taskManager.snapshot(op_group.uuid)
                 return RestProtocol(self.make_operation_detail(op, operator.uuid))
             else:
                 return RestProtocol(
-                    message=dispatchMessage[DispatchResult(ret_code)],
-                    error_code=ret_code
+                    message=dispatchMessage[ret_code],
+                    error_code=ret_code.value
                 )
         else:
             return RestProtocol(message='Operation group not found', error_code=-1), 404
@@ -256,7 +265,7 @@ class OperationApi(OperationMixin, Resource):
                 author = self.check_privileges(op)
                 ret = taskManager.peek(op.group.uuid, op.uuid)
                 if ret == 0:
-                    ret, task_uuid = taskManager.run_next(
+                    taskManager.run_next(
                         op.group.uuid,
                         json.dumps({
                             'operation_id': op.id,
@@ -269,10 +278,7 @@ class OperationApi(OperationMixin, Resource):
                     self.snapshot = taskManager.snapshot(op.group.uuid)
                     return RestProtocol(self.make_operation_detail(op, current_user.uuid))
                 else:
-                    raise ApiError(
-                        u'Operation mismatch with TaskQueue, next task is {name}'\
-                            .format(name=op.name)
-                    )
+                    raise ApiError(dispatchMessage[DispatchResult(ret)])
             except AuthError as err:
                 return RestProtocol(error_code=err.status_code, message=err.message)
             except ApiError as err:

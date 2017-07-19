@@ -1,6 +1,9 @@
 # -*- coding: UTF-8 -*-
+
 from app.models import SQLModelMixin
+
 from .errors import ApiError
+
 
 class RestProtocol(dict):
     version = '1.0'
@@ -16,7 +19,7 @@ class RestProtocol(dict):
             self['message'] = kwargs.get('message', '')
             self['data'] = {
                 'count': len(obj),
-                'records': [element.to_json() for element in obj]
+                'records': map(lambda x: isinstance(x, dict) and x or x.to_json(), obj)
             }
         elif isinstance(obj, dict):
             self['error_code'] = kwargs.get('error_code', 0)

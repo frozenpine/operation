@@ -195,7 +195,7 @@
                                     <span class="am-dropdown" ng-mouseover="showProcVer[$index] = true" ng-mouseleave="showProcVer[$index] = false">
                                         {{::child.process}}
                                         <div class="am-dropdown-content" ng-if="child.version.length>0" ng-show="showProcVer[$index]" style="display: block;margin-top: 0;">
-                                            <ul ng-repeat="line in child.version">
+                                            <ul class="am-text-primary" ng-repeat="line in child.version">
                                                 <li>{{::line}}</li>
                                             </ul>
                                         </div>
