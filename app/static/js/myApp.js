@@ -276,6 +276,9 @@ app.service('$servers', function($http, $message, $localStorage) {
 
 app.service('$systems', function($http, $message, $localStorage, $sessionStorage) {
     this.SystemStaticsCheck = function(params) {
+        if (params.sysID === undefined) {
+            return;
+        }
         if ($localStorage.hasOwnProperty('sysStatics_' + params.sysID)) {
             if (params.hasOwnProperty('onSuccess')) {
                 params.onSuccess(angular.extend(
@@ -305,6 +308,9 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
     }
 
     this.SystemList = function(params) {
+        if (params.sysID === undefined) {
+            return;
+        }
         $http.get('api/system/id/' + params.sysID + '/sys_statics')
             .success(function(response) {
                 if (response.error_code == 0) {
@@ -326,6 +332,9 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
     }
 
     this.LoginStaticsCheck = function(params) {
+        if (params.sysID === undefined) {
+            return;
+        }
         if ($sessionStorage.hasOwnProperty('loginStatics_' + params.sysID)) {
             if (params.hasOwnProperty('onSuccess')) {
                 params.onSuccess(angular.extend(
@@ -353,6 +362,9 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
     }
 
     this.LoginList = function(params) {
+        if (params.sysID === undefined) {
+            return;
+        }
         $http.get('api/system/id/' + params.sysID + '/login_statics')
             .success(function(response) {
                 if (response.error_code == 0) {
@@ -372,6 +384,9 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
     }
 
     this.ClientSessionCheck = function(params) {
+        if (params.sysID === undefined) {
+            return;
+        }
         if ($sessionStorage.hasOwnProperty('clientSessions_' + params.sysID)) {
             if (params.hasOwnProperty('onSuccess')) {
                 params.onSuccess(angular.extend(
@@ -1619,59 +1634,26 @@ app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', functi
 app.controller('loginStaticsControl', ['$scope', '$systems', '$interval', '$timeout', '$routeParams', function($scope, $systems, $interval, $timeout, $routeParams) {
     $scope.loginShowDetail = true;
     $scope.loginStaticsShow = false;
-    /* $scope.$watch('$rootScope.LoginStatics', function(newValue, oldValue) {
-        $timeout(function() {
-            $scope.loginStatics = $rootScope.LoginStatics[$routeParams.sysid];
-        }, 0);
-    }, true); */
     $scope.CheckLoginLog = function() {
         $scope.checking = true;
         $systems.LoginStaticsCheck({
-                sysID: $routeParams.sysid,
-                onSuccess: function(data) {
-                    angular.forEach(data.records, function(rspValue, rspIndex) {
-                        angular.forEach($scope.loginStatics, function(value, index) {
-                            if (rspValue.seat_id == value.seat_id) {
-                                angular.merge(value, rspValue);
-                            }
-                        })
-                    });
-                    if (data.cached != true) {
-                        $scope.checking = false;
-                    }
-                },
-                onError: function() {
+            sysID: $routeParams.sysid,
+            onSuccess: function(data) {
+                angular.forEach(data.records, function(rspValue, rspIndex) {
+                    angular.forEach($scope.loginStatics, function(value, index) {
+                        if (rspValue.seat_id == value.seat_id) {
+                            angular.merge(value, rspValue);
+                        }
+                    })
+                });
+                if (data.cached != true) {
                     $scope.checking = false;
                 }
-            })
-            /* $http.get('api/system/id/' + $routeParams.sysid + '/login_statics/check')
-                .success(function(response) {
-                    if ($routeParams.hasOwnProperty('sysid')) {
-                        angular.forEach(response, function(value1, index1) {
-                            angular.forEach($rootScope.LoginStatics[$routeParams.sysid], function(value2, index2) {
-                                if (value1.seat_id == value2.seat_id) {
-                                    $rootScope.LoginStatics[$routeParams.sysid][index2].seat_status = value1.seat_status;
-                                    $rootScope.LoginStatics[$routeParams.sysid][index2].conn_count = value1.conn_count;
-                                    $rootScope.LoginStatics[$routeParams.sysid][index2].disconn_count = value1.disconn_count;
-                                    $rootScope.LoginStatics[$routeParams.sysid][index2].login_fail = value1.login_fail;
-                                    $rootScope.LoginStatics[$routeParams.sysid][index2].login_success = value1.login_success;
-                                    $rootScope.LoginStatics[$routeParams.sysid][index2].updated_time = value1.updated_time;
-                                    if (value1.hasOwnProperty('trading_day')) {
-                                        $rootScope.LoginStatics[$routeParams.sysid][index2].trading_day = value1.trading_day;
-                                    }
-                                    if (value1.hasOwnProperty('login_time')) {
-                                        $rootScope.LoginStatics[$routeParams.sysid][index2].login_time = value1.login_time;
-                                    }
-                                }
-                            });
-                        });
-                        $scope.checking = false;
-                    }
-                })
-                .error(function(response) {
-                    console.log(response);
-                    $scope.checking = false;
-                }); */
+            },
+            onError: function() {
+                $scope.checking = false;
+            }
+        })
     };
     $scope.$watch('refresh_interval', function(newValue, oldValue) {
         $interval.cancel($scope.loginStaticInterval);
@@ -1707,17 +1689,6 @@ app.controller('loginStaticsControl', ['$scope', '$systems', '$interval', '$time
             $scope.CheckLoginLog();
         }
     })
-
-    /* $http.get('api/system/id/' + $routeParams.sysid + '/login_statics')
-        .success(function(response) {
-            $scope.loginStaticsShow = true;
-            // $rootScope.LoginStatics[$routeParams.sysid] = response;
-            $scope.loginStatics = $rootScope.LoginStatics[$routeParams.sysid];
-            $scope.CheckLoginLog();
-        })
-        .error(function(response) {
-            console.log(response);
-        }); */
 }]);
 app.controller('clientStaticsControl', ['$scope', '$systems', '$routeParams', '$interval', '$message', function($scope, $systems, $routeParams, $interval, $message) {
     $scope.clientShowDetail = true;
@@ -1740,16 +1711,6 @@ app.controller('clientStaticsControl', ['$scope', '$systems', '$routeParams', '$
                 $scope.checking = false;
             }
         });
-        /* $http.get('api/system/id/' + $routeParams.sysid + '/user_sessions')
-            .success(function(response) {
-                $scope.userSessionShow = true;
-                $scope.checking = false;
-                $scope.statusList = response;
-            })
-            .error(function(response) {
-                console.log(response);
-                $scope.checking = false;
-            }); */
     };
     $scope.autoRefresh = function(auto) {
         if (auto) {
@@ -1806,9 +1767,6 @@ app.controller('clientStaticsControl', ['$scope', '$systems', '$routeParams', '$
 // app.controller('taskControl', ['$scope', '$rootScope', function($scope, $rootScope) {}]);
 app.controller('messageControl', ['$scope', '$sessionStorage', function($scope, $sessionStorage) {
     $scope.messages = $sessionStorage.messages;
-    /* $scope.$watch(function(){
-        return angular.toJson($sessionStorage);
-    }) */
 }]);
 app.filter('KB2', function() {
     return function(value, dst) {
