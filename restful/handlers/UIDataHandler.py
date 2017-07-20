@@ -35,6 +35,7 @@ class UIDataApi(Resource):
                     {
                         'id': group.id,
                         'name': group.name,
+                        'trigger_time': group.trigger_time,
                         'Url': '#op_group/{}'.format(group.id)
                     } for group in sys.operation_groups]
             }

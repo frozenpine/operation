@@ -17,15 +17,6 @@
     {% else %}
     <title>Welcome to Flask Test</title>
     {% endif %}
-    <style type="text/css">
-        input.ng-invalid {
-            border: 1px solid red;
-        }
-        
-        input.ng-valid {
-            border: 1px solid green;
-        }
-    </style>
 </head>
 
 <body>
@@ -358,7 +349,6 @@
 	                	确定  
 	                </button>
                 </div>
-                {{dataCopy}}
             </form>
         </div>
     </div>
@@ -448,7 +438,7 @@
             <ul class="am-nav am-nav-pills am-topbar-nav am-topbar-right admin-header-list tpl-header-list">
                 <li>
                     <a class="tpl-header-list-link am-dropdown-toggle" href="#op_records">
-                        <span class="am-icon-cog"> 操作历史查询</span>
+                        <span class="am-icon-search"> 操作历史查询</span>
                     </a>
                 </li>
                 <li class="am-dropdown" data-am-dropdown data-am-dropdown-toggle>
@@ -530,10 +520,10 @@
                             </a>
                             <ul class="am-dropdown-content" id="second{{data.id}}" ng-if="data.isSecond" style="display: block" ng-show="showListIcon">
                                 <li style="margin-left: 15px; font-size: 10pt; font-weight: bold; color: #7FB0DA;">
-                                    {{data.name}}
+                                    {{::data.name}}
                                 </li>
                                 <li ng-repeat="children in data.secondName" ng-click="operateChange(children.id)">
-                                    <a href="{{children.Url}}">{{children.name}}</a>
+                                    <a href="{{children.Url}}">{{::children.name}} - {{::children.trigger_time}}</a>
                                 </li>
                             </ul>
                         </div>
@@ -563,7 +553,7 @@
                         <ul class="tpl-left-nav-sub-menu" id="{{data.id}}" ng-if="data.isSecond" style="display: block" ng-show="data.isShow">
                             <li ng-repeat="children in data.secondName" ng-click="operateChange(children.id)" style="vertical-align: center;">
                                 <a href="{{children.Url}}">
-                                    <span class="am-icon-circle">&nbsp&nbsp{{children.name}}</span>
+                                    <span class="am-icon-circle"> {{children.name}} - {{::children.trigger_time}}</span>
                                 </a>
                             </li>
                         </ul>

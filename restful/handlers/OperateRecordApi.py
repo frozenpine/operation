@@ -37,10 +37,7 @@ class OperateRecordListApi(Resource):
         try:
             data = request.get_json(force=True)
         except BadRequest:
-            try:
-                raise DataNotJsonError
-            except DataNotJsonError:
-                return RestProtocol(DataNotJsonError())
+            return RestProtocol(DataNotJsonError())
         else:
             if 'time' not in data and 'operator' not in data:
                 # operate_records = OperateRecord.query.limit(3).all()

@@ -21,10 +21,7 @@ class OperationBookListApi(Resource):
         try:
             data = request.get_json(force=True)
         except BadRequest:
-            try:
-                raise DataNotJsonError
-            except DataNotJsonError:
-                return RestProtocol(DataNotJsonError())
+            return RestProtocol(DataNotJsonError())
         else:
             try:
                 if not data.get('name') or not data.get('sys_id') or not data.get('mod'):

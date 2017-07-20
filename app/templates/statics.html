@@ -9,7 +9,7 @@
                     </label>
                 </div>
             </div>
-            <div class="font-green bold am-fr">
+            <div class="font-green bold am-fr am-margin-left-xs">
                 <span class="am-icon-refresh" ng-show="!checking" ng-click="checkSvrStatics()" style="cursor: pointer"></span>
                 <span class="am-icon-refresh am-icon-spin" ng-show="checking"></span>
             </div>
@@ -160,7 +160,7 @@
                     </label>
                 </div>
             </div>
-            <div class="font-green bold am-fr">
+            <div class="font-green bold am-fr am-margin-left-xs">
                 <span class="am-icon-refresh" ng-show="!checking" ng-click="checkProc()" style="cursor: pointer"></span>
                 <span class="am-icon-refresh am-icon-spin" ng-show="checking"></span>
             </div>
@@ -174,7 +174,7 @@
         <div class="tpl-block" ng-show="sysShowDetail">
             <div class="am-g">
                 <div class="am-u-sm-12" ng-repeat="data in systemStatics | filter: keyword">
-                    <span class="am-icon-angle-double-right" style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169); hover: pointer"> 子系统名称 ： {{::data.name}} - {{::data.version}}</span>
+                    <span class="am-icon-angle-double-right" style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169); cursor: pointer"> 子系统名称 ： {{::data.name}} - {{::data.version}}</span>
                     <span class="am-fr" style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169);"> 最后更新：{{data.updated_time}}</span>
                     <table class="am-table am-table-hover table-main">
                         <thead>
@@ -195,7 +195,7 @@
                                     <span class="am-dropdown" ng-mouseover="showProcVer[$index] = true" ng-mouseleave="showProcVer[$index] = false">
                                         {{::child.process}}
                                         <div class="am-dropdown-content" ng-if="child.version.length>0" ng-show="showProcVer[$index]" style="display: block;margin-top: 0;">
-                                            <ul class="am-text-primary" ng-repeat="line in child.version">
+                                            <ul style="color: #93a2a9" ng-repeat="line in child.version">
                                                 <li>{{::line}}</li>
                                             </ul>
                                         </div>
@@ -301,7 +301,7 @@
                     </label>
                 </div>
             </div>
-            <div class="font-green bold am-fr">
+            <div class="font-green bold am-fr am-margin-left-xs">
                 <span class="am-icon-refresh" ng-show="!checking" ng-click="CheckLoginLog()" style="cursor: pointer"></span>
                 <span class="am-icon-refresh am-icon-spin" ng-show="checking"></span>
             </div>
@@ -361,7 +361,7 @@
                     </label>
                 </div>
             </div>
-            <div class="font-green bold am-fr">
+            <div class="font-green bold am-fr am-margin-left-xs">
                 <span class="am-icon-refresh" ng-show="!checking" ng-click="CheckClientSessions()" style="cursor: pointer"></span>
                 <span class="am-icon-refresh am-icon-spin" ng-show="checking"></span>
             </div>

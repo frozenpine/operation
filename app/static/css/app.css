@@ -1471,6 +1471,7 @@ ul.tpl-dropdown-content li>a.tpl-dropdown-content-message:last-child {
     padding-top: 10px;
     padding-bottom: 10px;
     font-size: 18px;
+    overflow-x: auto;
 }
 
 .tpl-alert {
@@ -2078,23 +2079,42 @@ div#cmdBorder {
 .am-dropdown-content_l:after {
     top: -7px
 }
-select#optionGroups{
-	height: 200px;
+
+select#optionGroups {
+    height: 200px;
 }
-div#listBorderBottom ul li{
-	margin-bottom: 0;
+
+div#listBorderBottom ul li {
+    margin-bottom: 0;
 }
-div#listBorderBottom ul li input{
-	font-size: 12px;
-	text-align: center;
-	float: left;
+
+div#listBorderBottom ul li input {
+    font-size: 12px;
+    text-align: center;
+    float: left;
 }
-div.optionEditTitle ul{
-	font-size: 1.4rem;
+
+div.optionEditTitle ul {
+    font-size: 1.4rem;
 }
-div#optionEditTitle ul li{
-	color: #93A2A9;
-	padding: .7rem;
-	line-height: 1.6;
-	border-top: 1px solid #F2F5F8;
+
+div#optionEditTitle ul li {
+    color: #93A2A9;
+    padding: .7rem;
+    line-height: 1.6;
+    border-top: 1px solid #F2F5F8;
+}
+
+#resultTable tr th {
+    line-height: 33.2px;
+}
+
+#resultTable tr th span {
+    float: left;
+    margin-right: 10px;
+}
+
+#resultTable tr th div input {
+    width: 150px;
+    font-size: 12px;
 }

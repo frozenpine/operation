@@ -4,7 +4,7 @@
             <div class="caption font-green bold">
                 <span ng-click="svrShowDetail = !svrShowDetail;" style="cursor: pointer">状态信息 - 服务器 <i ng-class="{true: 'am-icon-angle-double-up am-icon-sm', false: 'am-icon-angle-double-down am-icon-sm'}[svrShowDetail]"></i></span>
             </div>
-            <div class="font-green bold am-fr">
+            <div class="font-green bold am-fr am-margin-left-xs">
                 <span class="am-icon-refresh" ng-show="!checking" ng-click="checkSvrStatics()" style="cursor: pointer"></span>
                 <span class="am-icon-refresh am-icon-spin" ng-show="checking"></span>
             </div>
@@ -156,7 +156,7 @@
         </div>
         <div class="tpl-block">
             <div class="am-g">
-                <div class="am-u-sm-12" style="overflow-x: auto;">
+                <div class="am-u-sm-12">
                     <table class="am-table am-table-hover table-main" ng-show="optionGroupEditShow">
                         <thead>
                             <tr>
@@ -297,10 +297,12 @@
                                         <input type="text" style="padding: 5px 5px 5px 0;border: none;" value="data.description" ng-model="data.description" />
                                     </div>
                                     <div class="am-u-sm-1" style="padding-left: 6px;">
-                                        <input name='startTime{{$index}}' type="text" style="padding: 5px 5px 5px 0;border: none;width: 60px;" value="data.earliest" ng-model="data.earliest" ng-pattern="/^(0\d{1}|1\d{1}|2[0-3]|[0-9]):([0-5]\d{1})/|:([0-5]\d{1})|[None]$/" />
+                                        <input name='startTime{{$index}}' type="text" style="padding: 5px 5px 5px 0;border: none;width: 60px;" value="data.earliest" ng-model="data.earliest" ng-pattern="/^((0\d{1}|1\d{1}|2[0-3]|[0-9]):([0-5]\d{1})|(0\d{1}|1\d{1}|2[0-3]|[0-9]):([0-5]\d{1}):([0-5]\d{1}))$|[N][o][n][e]$/"
+                                        />
                                     </div>
                                     <div class="am-u-sm-1" style="padding-left: 6px;">
-                                        <input name='endTime{{$index}}' type="text" style="padding: 5px 5px 5px 0;border: none;width: 60px;" value="data.latest" ng-model="data.latest" ng-pattern="/^(0\d{1}|1\d{1}|2[0-3]|[0-9]):([0-5]\d{1})/|:([0-5]\d{1})|[None]$/" />
+                                        <input name='endTime{{$index}}' type="text" style="padding: 5px 5px 5px 0;border: none;width: 60px;" value="data.latest" ng-model="data.latest" ng-pattern="/^((0\d{1}|1\d{1}|2[0-3]|[0-9]):([0-5]\d{1})|(0\d{1}|1\d{1}|2[0-3]|[0-9]):([0-5]\d{1}):([0-5]\d{1}))$|[N][o][n][e]$/"
+                                        />
                                     </div>
                                     <div class="am-u-sm-2">
                                         <select id="resetSelect{{$index}}" ng-init="optionGroupSelect='0'" ng-model="optionGroupSelect" ng-change="optionGroupSelectWhich(optionGroupSelect,data,$index)">
@@ -332,7 +334,7 @@
                     <hr/>
                 </div>
                 <div class="am-fr" ng-show="optionGroupEditShow">
-                    <button class="am-btn am-btn-primary am-round am-btn-xs" ng-click="runAll()">
+                    <button class="am-btn am-btn-primary am-round am-btn-sm" ng-click="runAll()">
                         <span>全部执行</span>
                     </button>
                 </div>

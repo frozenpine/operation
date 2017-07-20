@@ -240,7 +240,7 @@ class EmergeOpLoginApi(Resource):
                     cookies=cookies
                 )
                 result = _handlerJsonResponse(rsp)
-            except ApiError, err:
+            except ApiError as err:
                 return {
                     'errorCode': err.status_code,
                     'errorMsg': err.message
@@ -299,7 +299,7 @@ class EmergeOpExecuteApi(EmergeOpListApi):
                         result = _handlerJsonResponse(rsp)
                         if result['errorCode'] != 0:
                             break
-            except ApiError, err:
+            except ApiError as err:
                 self.op_result.error_code = err.status_code
                 self.op_result.detail = [err.message]
                 if op.detail.get('skip'):
@@ -394,7 +394,7 @@ class EmergeOpCSVApi(EmergeOpListApi):
                         cookies=self.session
                     )
                     result = _handlerJsonResponse(rsp)
-                except ApiError, err:
+                except ApiError as err:
                     self.op_result.error_code = err.status_code
                     self.op_result.detail = [err.message]
                     if op.detail.get('skip'):

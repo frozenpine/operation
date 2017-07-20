@@ -682,37 +682,88 @@ app.controller('dashBoardControl', ['$scope', '$rootScope', function($scope, $ro
 }]);
 app.filter('paging', function() {
     return function(listsData, start) {
-        return listsData.slice(start);
+        if (listsData)
+            return listsData.slice(start);
+
     }
 });
 app.controller('optionResultControl', ['$scope', '$operationBooks', function($scope, $operationBooks) {
+    $scope.executeResult = [];
+    $scope.operationName = null;
     $operationBooks.operationRecordsPost({
         onSuccess: function(res) {
             $scope.operationRecordsData = res.records;
-            $scope.listsDataNum = $scope.operationRecordsData.length;
-            $scope.pages = Math.ceil($scope.listsDataNum / 10);
-            $scope.pagesNum = [];
-            for (var i = 0; i < $scope.pages; i++) {
-                $scope.pagesNum.push(i);
+            var filterOperationName = function(value_op, value2_op) {
+                $scope.$watch(value_op, function(newValue, oldValue) {
+                    $scope.operationRecordsData = res.records;
+                    $scope.arr = [];
+                    if (newValue != oldValue) {
+                        $scope.pageShow = true;
+                        angular.forEach($scope.operationRecordsData, function(value, index) {
+                            if (value[value2_op]) {
+                                if (value[value2_op].indexOf(newValue) >= 0 && newValue) {
+                                    $scope.arr.push(value);
+                                }
+                            }
+
+                        })
+                        if ($scope.arr.length != 0) {
+                            $scope.operationRecordsData = $scope.arr;
+                            $scope.pageShow = false;
+                        } else if (newValue) {
+                            $scope.operationRecordsData = null;
+                        } else {
+                            $scope.operationRecordsData = res.records;
+                            $scope.pageShow = false;
+                        }
+                    } else {
+                        $scope.operationRecordsData = res.records;
+                    }
+                    if ($scope.operationRecordsData) {
+                        $scope.listsDataNum = $scope.operationRecordsData.length;
+                        $scope.pages = Math.ceil($scope.listsDataNum / 10);
+                        $scope.pagesNum = [];
+                        for (var i = 0; i < $scope.pages; i++) {
+                            $scope.pagesNum.push(i);
+                        }
+                        $scope.currentPage = 0;
+                        $scope.listsPerPage = 10;
+                        $scope.setPages = function(num) {
+                            $scope.currentPage = num;
+
+                        }
+                        $scope.prePage = function() {
+                            if ($scope.currentPage > 0)
+                                $scope.currentPage--;
+                        }
+                        $scope.nextPage = function() {
+                            if ($scope.currentPage < $scope.pages - 1)
+                                $scope.currentPage++;
+                        }
+                        $scope.firstPage = function() {
+                            $scope.currentPage = 0;
+                        }
+                        $scope.lastPage = function() {
+                            $scope.currentPage = $scope.pages - 1;
+                        }
+                    }
+                })
             }
-            $scope.currentPage = 0;
-            $scope.listsPerPage = 10;
-            $scope.setPages = function(num) {
-                $scope.currentPage = num;
-            }
-            $scope.prePage = function() {
-                if ($scope.currentPage > 0)
-                    $scope.currentPage--;
-            }
-            $scope.nextPage = function() {
-                if ($scope.currentPage < $scope.pages - 1)
-                    $scope.currentPage++;
-            }
+            filterOperationName('operationName', 'operation');
+            filterOperationName('executeTime', 'operated_at');
+            filterOperationName('operationPeople', 'operator');
+            filterOperationName('authorizedTime', 'authorized_at');
+            filterOperationName('authorizedPeople', 'authorizer');
+            angular.forEach($scope.operationRecordsData, function(value, index) {
+                if (value.operation_results.length > 0 && value.operation_results[0].error_code == 0)
+                    $scope.executeResult[index] = true;
+                else
+                    $scope.executeResult[index] = false;
+            })
+
+
         }
     });
-    $scope.recordsIndex = function(index) {
-        $scope.clickIndex = index;
-    }
     $scope.show_result = function(index) {
         $('#op_result' + index).modal({ relatedTarget: this });
     };
@@ -766,14 +817,25 @@ app.controller('EditoptionBookController', ['$scope', '$operationBooks', functio
 
 
                 $scope.optionBookSystemOptBookData = res;
-                $scope.dataCopy = {
-                    "sys_id": $scope.optionBookSystemOptBookData.system.id.toString(),
-                    "catalog_id": $scope.optionBookSystemOptBookData.catalog.id.toString(),
-                    "type": $scope.optionBookSystemOptBookData.type,
-                    "description": $scope.optionBookSystemOptBookData.description,
-                    "name": $scope.optionBookSystemOptBookData.name,
-                    "is_emergency": $scope.optionBookSystemOptBookData.is_emergency.toString()
-                };
+                if ($scope.optionBookSystemOptBookData.catalog) {
+                    $scope.dataCopy = {
+                        "sys_id": $scope.optionBookSystemOptBookData.system.id.toString(),
+                        "catalog_id": $scope.optionBookSystemOptBookData.catalog.id.toString(),
+                        "type": $scope.optionBookSystemOptBookData.type,
+                        "description": $scope.optionBookSystemOptBookData.description,
+                        "name": $scope.optionBookSystemOptBookData.name,
+                        "is_emergency": $scope.optionBookSystemOptBookData.is_emergency.toString()
+                    };
+                } else {
+                    $scope.dataCopy = {
+                        "sys_id": $scope.optionBookSystemOptBookData.system.id.toString(),
+                        "catalog_id": "",
+                        "type": $scope.optionBookSystemOptBookData.type,
+                        "description": $scope.optionBookSystemOptBookData.description,
+                        "name": $scope.optionBookSystemOptBookData.name,
+                        "is_emergency": $scope.optionBookSystemOptBookData.is_emergency.toString()
+                    };
+                }
             },
             onError: function(res) {
                 console.log(res);
@@ -899,7 +961,7 @@ app.controller('optionBookController', ['$scope', '$timeout', '$operationBooks',
         });
     }
 }]);
-app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$window', function($scope, $q, $operationBooks, $window) {
+app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$window', '$message', function($scope, $q, $operationBooks, $window, $message) {
     $operationBooks.operationBookSystemsGet({
         onSuccess: function(res) {
             $scope.optionGroupSystem = res.records;
@@ -964,11 +1026,11 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$wi
         });
     }
     $scope.dbclickFunc = function(index) {
-        $scope.optionGroupConfirm.operations.splice(index, 1);
-    }
-    $scope.tes1 = function(data) {
-        console.log(data);
-    }
+            $scope.optionGroupConfirm.operations.splice(index, 1);
+        }
+        /* $scope.tes1 = function(data) {
+            console.log(data);
+        } */
     $scope.formComfirm = false;
     $scope.loadingIcon = false;
     $scope.test2 = function() {
@@ -979,7 +1041,7 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$wi
             onSuccess: function(response) {
                 $scope.loadingIcon = !$scope.loadingIcon;
                 $message.Success("表单提交成功");
-                window.location.reload();
+                // window.location.reload();
                 $scope.formComfirm = !$scope.formComfirm;
             },
             onError: function(response) {
@@ -989,7 +1051,6 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$wi
             }
         })
     }
-
 }]);
 app.controller('userController', ['$scope', '$http', function($scope, $http) {
     $scope.ModifyPassword = function(usr_id) {
@@ -1269,10 +1330,10 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         if (data.hasOwnProperty('details')) {
             $timeout(function() {
                 $scope.opList = data;
-            }, 0)
-            angular.forEach($scope.opList.details, function(value, index) {
-                delete $sessionStorage[value.uuid];
-            });
+                angular.forEach($scope.opList.details, function(value, index) {
+                    delete $sessionStorage[value.uuid];
+                });
+            }, 0);
             $message.Warning('任务队列被重新初始化');
             $scope.taskQueueRunning = false;
             $scope.batch_run = false;
@@ -1522,33 +1583,19 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     $scope.optionGroupEditPostShow = true;
     $scope.optionGroupEditFinish = function() {
         $operationBooks.optionGroupEditPut({
-                optionGroup_id: $scope.optionGroupCopy.operation_group.id,
-                data: $scope.optionGroupCopy,
-                onSuccess: function(req) {
-                    $scope.optionGroupEditPostShow = !$scope.optionGroupEditPostShow;
-                    $scope.optionGroupEditShow = true;
-                    $message.Success("表单提交成功");
-                    $scope.GetOperationList();
-                },
-                onError: function(req) {
-                    $scope.optionGroupEditPostShow = !$scope.optionGroupEditPostShow;
-                    $message.Alert("表单提交失败，错误代码" + req);
-                }
-            })
-            //  	$http({
-            //  		method: 'put',
-            //  		url: 'http://localhost:5000/api/operation-group/id/' + $scope.optionGroupCopy.operation_group.id,
-            //  		data: $scope.optionGroupCopy
-            //  	}).success(function(req) {
-            //  		if(req.error_code == 0){
-            //  			$scope.optionGroupEditPostShow = !$scope.optionGroupEditPostShow;
-            //	    		alert("表单提交成功");
-            //	    		window.location.reload();
-            //  		}else{
-            //  			$scope.optionGroupEditPostShow = !$scope.optionGroupEditPostShow;
-            //	    		alert("表单提交失败，错误代码"+req.message);
-            //  		}
-            //  	});
+            optionGroup_id: $scope.optionGroupCopy.operation_group.id,
+            data: $scope.optionGroupCopy,
+            onSuccess: function(req) {
+                $scope.optionGroupEditPostShow = !$scope.optionGroupEditPostShow;
+                $scope.optionGroupEditShow = true;
+                $message.Success("表单提交成功");
+                $scope.GetOperationList();
+            },
+            onError: function(req) {
+                $scope.optionGroupEditPostShow = !$scope.optionGroupEditPostShow;
+                $message.Alert("表单提交失败，错误代码" + req);
+            }
+        })
     }
 }]);
 app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', function($scope, $http, $routeParams) {

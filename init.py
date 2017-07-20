@@ -281,7 +281,7 @@ def modify_system(option_file):
         try:
             f = open(option_file)
             options = yaml.load(f)
-        except Exception, err:
+        except Exception as err:
             print err.message
         else:
             if isinstance(options, dict):

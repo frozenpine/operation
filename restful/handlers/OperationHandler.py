@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 import json
 import logging
-import time
+import datetime
 from os import path
 
 import arrow
@@ -120,11 +120,23 @@ class OperationListApi(OperationMixin, Resource):
                 }
             }
             if isinstance(self.snapshot, dict):
-                create_timestampe = time.mktime(
-                    time.strptime(self.snapshot['create_time'], '%Y%m%d-%H%M%S')
+                create_time = datetime.datetime.strptime(
+                    self.snapshot['create_time'], '%Y%m%d-%H%M%S'
                 )
-                now_timestamp = time.time()
-                if now_timestamp - create_timestampe > 20 * 3600:
+                now_time = datetime.datetime.today()
+                if not op_group.is_emergency:
+                    try:
+                        trigger_hour, trigger_minute, trigger_second = \
+                            op_group.trigger_time.split(':')
+                    except (AttributeError, ValueError):
+                        trigger_time = None
+                    else:
+                        trigger_time = datetime.time(
+                            int(trigger_hour), int(trigger_minute), int(trigger_second)
+                        )
+                if op_group.is_emergency or \
+                    (now_time.day - create_time.day >= 1 and \
+                    (isinstance(trigger_time, datetime.time) and now_time.time() > trigger_time)):
                     taskManager.init(task_queue, True)
                     self.snapshot = taskManager.snapshot(op_group.uuid)
                     rtn = self.make_operation_list(op_group)
