@@ -97,6 +97,7 @@ class OperationMixin(object):
         rtn['grp_id'] = op_group.id
         rtn['sys_id'] = op_group.system.id
         rtn['grp_uuid'] = op_group.uuid
+        rtn['trigger_time'] = op_group.trigger_time
         rtn['sys_uuid'] = op_group.system.uuid
         for op in op_group.operations:
             rtn['details'].append(self.make_operation_detail(op))

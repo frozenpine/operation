@@ -12,6 +12,9 @@ class OperateRecordListApi(Resource):
     def __init__(self):
         super(OperateRecordListApi, self).__init__()
 
+    def get(self):
+        return RestProtocol(OperateRecord.query.order_by(OperateRecord.operated_at.desc()).all())
+
     def post(self):
         try:
             data = request.get_json(force=True)
@@ -20,7 +23,7 @@ class OperateRecordListApi(Resource):
         else:
             operate_records = []
             if 'datetime' not in data and 'operator' not in data:
-                operate_records = OperateRecord.query.all()
+                operate_records = OperateRecord.query.order_by(OperateRecord.operated_at.desc()).all()
             elif data.get('operator') and 'datetime' not in data:
                 operator = Operator.find(login=data.get('operator'))
                 if operator:

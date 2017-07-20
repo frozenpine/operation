@@ -1471,7 +1471,6 @@ ul.tpl-dropdown-content li>a.tpl-dropdown-content-message:last-child {
     padding-top: 10px;
     padding-bottom: 10px;
     font-size: 18px;
-    overflow-x: auto;
 }
 
 .tpl-alert {

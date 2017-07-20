@@ -21,7 +21,7 @@
                                     <span>操作名称</span>
                                     <div class="am-form-icon am-fl">
                                         <i class="am-icon-search" style="display: block"></i>
-                                        <input type="text" class="am-form-field" ng-model="operationName">
+                                        <input type="text" class="am-form-field" ng-model="filter_keywords.operation_name">
                                     </div>
                                 </th>
                                 <th width="13%">
@@ -52,15 +52,17 @@
                                         <input style="width: 110px;" type="text" class="am-form-field" ng-model="authorizedTime">
                                     </div>
                                 </th>
-                                <th>操作结果</th>
+                                <th>
+                                    操作结果
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr ng-class="{true: 'am-success',false: 'am-danger'}[executeResult[$index + currentPage*listsPerPage]]" ng-repeat="data in operationRecordsData | paging:currentPage*listsPerPage | limitTo:listsPerPage track by $index">
-                                <td>{{data.operation}}</td>
-                                <td>{{data.operator}}</td>
+                            <tr ng-repeat="data in operationRecordsData | filter: filter_keywords.operation_name | paging:currentPage*listsPerPage | limitTo:listsPerPage track by $index" ng-class="{true: 'am-success',false: 'am-danger'}[data.results[0].error_code==0]">
+                                <td>{{data.operation.name}}</td>
+                                <td>{{data.operator.name}}</td>
                                 <td>{{data.operated_at}}</td>
-                                <td>{{data.authorizer}}</td>
+                                <td>{{data.authorizor}}</td>
                                 <td>{{data.authorized_at}}</td>
                                 <td>
                                     <div class="am-btn-group am-btn-group-xs">
@@ -73,16 +75,15 @@
                                             <div class="am-modal-hd">操作输出</div>
                                             <div class="am-modal-bd">
                                                 <span class="">
-                                                    由 {{data.operator}} 于 {{data.operated_at}} 操作
-                                                    <span class="am-text-danger" ng-show="data.operation_results[0].error_code!=0">{{data.operation_results[0].error_code | exe_result}}</span>
-
+                                                    由 {{data.operator.name}} 于 {{data.operated_at}} 操作
+                                                    <span class="am-text-danger" ng-show="data.results[0].error_code!=0">{{data.results[0].error_code | exe_result}}</span>
                                                 </span>
                                                 <ul class="am-list am-list-static">
-                                                    <li style="text-align: left; padding: 0px 5px; overflow-x: auto" ng-repeat="line in data.operation_results[0].detail track by $index">
+                                                    <li style="text-align: left; padding: 0px 5px; overflow-x: auto" ng-repeat="line in data.results[0].detail track by $index">
                                                         <span class="am-icon-terminal am-icon-sm am-monospace" style="white-space: pre; margin-left: 5px; margin-right: 5px"> {{line}}</span>
                                                     </li>
                                                 </ul>
-                                                <span ng-if="data.operation_results[0].detail.length == 0 || data.operation_results[0].detail == null">无操作回显。</span>
+                                                <span ng-if="data.results[0].detail.length == 0 || data.results[0].detail == null">无操作回显。</span>
                                             </div>
                                             <div class="am-modal-footer">
                                                 <span class="am-modal-btn">确定</span>

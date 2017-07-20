@@ -4,19 +4,25 @@ from os import path
 from sys import argv
 
 from flask import redirect, render_template, request, url_for
+from werkzeug.wrappers import Response
 from flask_login import current_user
 from flask_restful import Resource
 
 from app.auth.privileged import CheckPrivilege
 from app.models import MethodType, Server, SystemType, TradeSystem
+from restful.protocol import RestProtocol
 
 
 class UIDataApi(Resource):
     def get(self, name):
         if hasattr(self, name):
-            return getattr(self, name)()
+            response = getattr(self, name)()
+            if isinstance(response, Response):
+                return response
+            else:
+                return RestProtocol(response)
         else:
-            return {'message': 'resource not found.'}, 404
+            return RestProtocol(message='resource not found.'), 404
 
     def sideBarCtrl(self):
         systems = TradeSystem.query.filter(TradeSystem.parent_sys_id == None).all()

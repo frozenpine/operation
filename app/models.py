@@ -165,7 +165,8 @@ class SQLModelMixin(object):
             return {
                 'id': obj.id,
                 'name': hasattr(obj, 'name') and obj.name or '',
-                'uuid': hasattr(obj, 'uuid') and obj.uuid or None
+                'uuid': hasattr(obj, 'uuid') and obj.uuid or None,
+                'disabled': hasattr(obj, 'disabled') or None and obj.disabled
             }
 
     def to_json(self):

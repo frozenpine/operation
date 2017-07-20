@@ -36,7 +36,7 @@
                                 <td class="table-data" style="max-width: 120px">{{::data.server}}</td>
                                 <td class="table-data" style="max-width: 120px">{{data.uptime}}</td>
                                 <td class="table-data">
-                                    <div class="am-dropdown" style="cursor: pointer" ng-mouseover="showCPUDetail = true" ng-mouseleave="showCPUDetail = false">
+                                    <div class="am-dropdown" style="cursor: pointer" ng-mouseover="showCPUDetail = true" ng-mouseleave="showCPUDetail = false" ng-init="cpuRange={upper: 75}" ng-class="{'am-text-danger': (data.cpu[0].idle|percentStatus:cpuRange)}">
                                         {{data.cpu[0].idle | percent}}
                                         <div class="am-dropdown-content" ng-show="showCPUDetail" style="display: block;margin-top: 0">
                                             <div style="max-height: 300px; overflow-y: auto">
@@ -156,7 +156,7 @@
         </div>
         <div class="tpl-block">
             <div class="am-g">
-                <div class="am-u-sm-12">
+                <div class="am-u-sm-12" style="overflow-x: auto">
                     <table class="am-table am-table-hover table-main" ng-show="optionGroupEditShow">
                         <thead>
                             <tr>

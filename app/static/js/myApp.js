@@ -222,6 +222,27 @@ app.service("fileUpload", ["$http", function($http) {
     }
 }]);
 
+app.service('$uidatas', function($http, $message) {
+    this.SideBarList = function(params) {
+        $http.get('api/UI/sideBarCtrl')
+            .success(function(response) {
+                if (response.error_code == 0) {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(response.data);
+                    };
+                } else if (params.hasOwnProperty('onError')) {
+                    params.onError(response);
+                }
+            })
+            .error(function(response) {
+                console.log(response);
+                if (params.hasOwnProperty('onError')) {
+                    params.onError(response);
+                }
+            })
+    }
+})
+
 app.service('$servers', function($http, $message, $localStorage) {
     this.CheckServerStatics = function(params) {
         if ($localStorage.hasOwnProperty('svrStatics_' + params.sysID)) {
@@ -637,7 +658,7 @@ app.service("$operationBooks", ["$http", function($http) {
             });
     }
     this.operationRecordsPost = function(params) {
-        $http.post('api/operate-records', data = {})
+        $http.get('api/operate-records')
             .success(function(response) {
                 params.onSuccess(response.data);
                 console.log(response);
@@ -690,10 +711,11 @@ app.filter('paging', function() {
 app.controller('optionResultControl', ['$scope', '$operationBooks', function($scope, $operationBooks) {
     $scope.executeResult = [];
     $scope.operationName = null;
+    $scope.filter_keywords = {};
     $operationBooks.operationRecordsPost({
         onSuccess: function(res) {
             $scope.operationRecordsData = res.records;
-            var filterOperationName = function(value_op, value2_op) {
+            /* var filterOperationName = function(value_op, value2_op) {
                 $scope.$watch(value_op, function(newValue, oldValue) {
                     $scope.operationRecordsData = res.records;
                     $scope.arr = [];
@@ -753,15 +775,13 @@ app.controller('optionResultControl', ['$scope', '$operationBooks', function($sc
             filterOperationName('executeTime', 'operated_at');
             filterOperationName('operationPeople', 'operator');
             filterOperationName('authorizedTime', 'authorized_at');
-            filterOperationName('authorizedPeople', 'authorizer');
-            angular.forEach($scope.operationRecordsData, function(value, index) {
+            filterOperationName('authorizedPeople', 'authorizer'); */
+            /* angular.forEach($scope.operationRecordsData, function(value, index) {
                 if (value.operation_results.length > 0 && value.operation_results[0].error_code == 0)
                     $scope.executeResult[index] = true;
                 else
                     $scope.executeResult[index] = false;
-            })
-
-
+            }) */
         }
     });
     $scope.show_result = function(index) {
@@ -961,7 +981,7 @@ app.controller('optionBookController', ['$scope', '$timeout', '$operationBooks',
         });
     }
 }]);
-app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$window', '$message', function($scope, $q, $operationBooks, $window, $message) {
+app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$rootScope', '$message', function($scope, $q, $operationBooks, $rootScope, $message) {
     $operationBooks.operationBookSystemsGet({
         onSuccess: function(res) {
             $scope.optionGroupSystem = res.records;
@@ -1042,6 +1062,7 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$wi
                 $scope.loadingIcon = !$scope.loadingIcon;
                 $message.Success("表单提交成功");
                 // window.location.reload();
+                $rootScope.$broadcast('OperationGroupRenew')
                 $scope.formComfirm = !$scope.formComfirm;
             },
             onError: function(response) {
@@ -1200,7 +1221,7 @@ app.controller('sysStaticsControl', ['$scope', '$systems', '$interval', '$routeP
         }
     })
 }]);
-app.controller('sideBarCtrl', ['$scope', '$http', '$operationBooks', '$rootScope', '$location', function($scope, $http, $operationBooks, $rootScope, $location) {
+app.controller('sideBarCtrl', ['$scope', '$uidatas', '$operationBooks', '$rootScope', '$location', '$timeout', function($scope, $uidatas, $operationBooks, $rootScope, $location, $timeout) {
     $scope.tabList = [];
     var idList = [];
     $scope.$on('$routeChangeStart', function(evt, next, current) {
@@ -1217,14 +1238,27 @@ app.controller('sideBarCtrl', ['$scope', '$http', '$operationBooks', '$rootScope
             }
         }
     });
-    $http.get('api/UI/sideBarCtrl')
+    $scope.$on('OperationGroupRenew', function() {
+        // $timeout(function() {
+        $scope.SideBarList();
+        // }, 0);
+    })
+    $scope.SideBarList = function() {
+        $uidatas.SideBarList({
+            onSuccess: function(data) {
+                $scope.listName = data.records;
+            }
+        });
+    };
+    $scope.SideBarList();
+    /* $http.get('api/UI/sideBarCtrl')
         .success(function(response) {
             $scope.listName = response;
             // console.log($scope.listName);
         })
         .error(function(response) {
             console.log(response);
-        });
+        }); */
     $scope.showListChild = function(id) {
         angular.forEach($scope.listName, function(value, index) {
             if (value.id == id) {
@@ -1867,6 +1901,27 @@ app.filter('percent', function() {
         return (num * multiplier).toFixed(fix).toString() + " %";
     };
 });
+app.filter('percentStatus', ['$rootScope', function($rootScope) {
+    return function(value, range) {
+        var num = parseFloat(value);
+        if (isNaN(num)) {
+            return false;
+        }
+        if (range !== undefined) {
+            if (num > range.upper) {
+                $rootScope.status = 'warning';
+                return true;
+            }
+            if (num < range.lower) {
+                $rootScope.status = 'warning';
+                return true;
+            }
+            return false;
+        }
+        $rootScope.status = 'warning';
+        return true;
+    }
+}]);
 app.filter('mask', function() {
     return function(str) {
         var len = str.length;
@@ -1933,7 +1988,7 @@ app.directive('relamap', [function() {
         myChart.showLoading();
         $.get('api/UI/relation', function(option) {
             myChart.hideLoading();
-            myChart.setOption(option);
+            myChart.setOption(option.data);
         });
 
         $(element[0]).resize(function() {
@@ -2025,7 +2080,7 @@ app.directive('idcmap', [function() {
                                 color: '#ddb926'
                             }
                         },
-                        data: idcs
+                        data: idcs.data.records
                     }]
                 });
             });

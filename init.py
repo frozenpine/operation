@@ -1,14 +1,9 @@
 # -*- coding: UTF-8 -*-
-from __future__ import unicode_literals
-
-import codecs
 import json
 import os
 import re
 import sys
-from datetime import time
 
-import arrow
 import yaml
 from flask import url_for
 from flask.testing import EnvironBuilder
@@ -17,11 +12,6 @@ from flask_script import Manager
 from app import create_app, db
 from app.models import *
 from SysManager.Common import AESCrypto
-
-reload(sys)
-sys.setdefaultencoding("utf-8")
-
-codecs.register(lambda name: name == 'cp65001' and codecs.lookup('utf-8') or None)
 
 test_app = create_app('development')
 manager = Manager(test_app)
@@ -353,31 +343,28 @@ def printsys():
     svr = Server.query.filter()
 
 @manager.command
-def modeltest():
-    #sys = TradeSystem.find(id=1)
-    #svr = Server.find(id=1)
-    #proc = TradeProcess.find(id=1)
-    #usr = Operator.find(id=1)
-    #print sys.to_json()
-    #from SysManager.Parsers import ymlParser
-    #print ymlParser.Dump(sys.to_json())
-    #print svr.to_json()
-    #print proc.to_json()
-    #print usr.to_json()
-    '''
-    op = Operation.find(id=6)
-    records = OperateRecord.query\
-        .filter(OperateRecord.operation_id==op.id)\
-            .order_by(OperateRecord.operated_at.desc())
-    print records.first().operated_at
-    '''
-    conf = ConfigFile(
-        dir='/home/qdp/qtrade/bin',
-        file='qtrade.ini',
-        active=True
-    )
-    db.session.add(conf)
-    db.session.commit()
+def modeltest(page=1, all=False):
+    import time
+    page = int(page)
+    page_size = 10
+    query_begin = time.time()
+    if all:
+        records = OperateRecord.query.order_by(OperateRecord.operated_at.desc()).all()
+    else:
+        if page > 1:
+            records = OperateRecord.query.order_by(OperateRecord.operated_at.desc())\
+                .offset((page-1)*10).limit(10).all()
+        else:
+            records = OperateRecord.query.order_by(OperateRecord.operated_at.desc())\
+                .limit(10).all()
+        print 'page: {}'.format(page)
+    query_end = time.time()
+    print 'Query time: {} seconds.'.format(query_end - query_begin)
+    print_start = time.time()
+    for rec in records:
+        rec.to_json()
+    print_end = time.time()
+    print 'Print time: {} seconds.'.format(print_end - print_start)
 
 @manager.command
 def route_test():
