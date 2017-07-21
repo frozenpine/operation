@@ -4,60 +4,49 @@
             <div class="caption font-green bold">
                 操作结果展示
             </div>
-            <!-- <div class="bold am-fr">
-				<div class="am-form-group am-form-icon">
-					<i class="am-icon-search" style="display: block"></i>
-					<input type="text" class="am-form-field" ng-model="keyword" placeholder="输入以过滤" style="padding-left: 30px!important">
-				</div>
-			</div> -->
         </div>
         <div class="tpl-block">
             <div class="am-g">
-                <div class="am-u-sm-12">
+                <ul class="am-avg-sm-4 am-text-sm">
+                    <li style="padding: 0 3px">
+                        <div class="am-input-group">
+                            <span class="am-input-group-label" style="padding: 0 5px"><i class="am-icon-search am-icon-fw"></i></span>
+                            <input type="text" class="am-form-field" placeholder="操作名称" ng-model="filter_keywords.operation_name">
+                        </div>
+                    </li>
+                    <li style="padding: 0 3px">
+                        <span>From:<input type="date"></span>
+                    </li>
+                    <li style="padding: 0 3px">
+                        <span>To:<input type="date"></span>
+                    </li>
+                    <li style="padding: 0 3px">
+                        <span>操作结果</span>
+                    </li>
+                </ul>
+                <div>
                     <table class="am-table am-table-hover table-main" id="resultTable">
                         <thead>
                             <tr>
-                                <th width="20%">
-                                    <span>操作名称</span>
-                                    <div class="am-form-icon am-fl">
-                                        <i class="am-icon-search" style="display: block"></i>
-                                        <input type="text" class="am-form-field" ng-model="filter_keywords.operation_name">
-                                    </div>
-                                </th>
-                                <th width="13%">
-                                    <span>操作者</span>
-                                    <div class="am-form-icon am-fl">
-                                        <i class="am-icon-search" style="display: block"></i>
-                                        <input style="width: 80px;" type="text" class="am-form-field" ng-model="operationPeople">
-                                    </div>
-                                </th>
-                                <th width="20%">
-                                    <span>执行时间</span>
-                                    <div class="am-form-icon am-fl">
-                                        <i class="am-icon-search" style="display: block"></i>
-                                        <input type="text" class="am-form-field" ng-model="executeTime">
-                                    </div>
-                                </th>
-                                <th width="13%">
-                                    <span>授权人</span>
-                                    <div class="am-form-icon am-fl">
-                                        <i class="am-icon-search" style="display: block"></i>
-                                        <input style="width: 80px" type="text" class="am-form-field" ng-model="authorizedPeople">
-                                    </div>
-                                </th>
-                                <th width="20%">
-                                    <span>授权时间</span>
-                                    <div class="am-form-icon am-fl">
-                                        <i class="am-icon-search" style="display: block"></i>
-                                        <input style="width: 110px;" type="text" class="am-form-field" ng-model="authorizedTime">
-                                    </div>
-                                </th>
-                                <th>
-                                    操作结果
-                                </th>
+                                <th>操作名称</th>
+                                <th>操作人</th>
+                                <th>执行时间</th>
+                                <th>授权人</th>
+                                <th>授权时间</th>
+                                <th>操作结果</th>
                             </tr>
                         </thead>
                         <tbody>
+                            <tr ng-show="loadingShow">
+                                <td colspan="6">
+                                    <div style="width: 100%">
+                                        <div class="am-center">
+                                            <i class="am-icon-spinner am-icon-pulse am-icon-md"></i>
+                                            <span>操作记录查询中...</span>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
                             <tr ng-repeat="data in operationRecordsData | filter: filter_keywords.operation_name | paging:currentPage*listsPerPage | limitTo:listsPerPage track by $index" ng-class="{true: 'am-success',false: 'am-danger'}[data.results[0].error_code==0]">
                                 <td>{{data.operation.name}}</td>
                                 <td>{{data.operator.name}}</td>
@@ -113,7 +102,6 @@
                         </li>
                     </ul>
                 </div>
-
             </div>
         </div>
     </div>

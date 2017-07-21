@@ -1,0 +1,16 @@
+<div ng-controller="globalConfigController">
+    <ul>
+        <li>
+            <div>
+                <span>CPU 告警阈值:</span>
+                <div>
+                    <span class="am-inline-block">上限<input type="number" ng-model="$root.threshold.cpu.upper"></span>
+                    <span class="am-inline-block">下限<input type="number" ng-model="$root.threshold.cpu.lower"></span>
+                </div>
+            </div>
+        </li>
+    </ul>
+</div>
+<script type="text/javascript">
+    app.controller('configCheckControl', ['$scope', '$rootScope', function($scope, $rootScope) {}]);
+</script>

@@ -4,14 +4,29 @@
             <div class="caption font-green bold">
                 <span ng-click="svrShowDetail = !svrShowDetail;" style="cursor: pointer">状态信息 - 服务器 <i ng-class="{true: 'am-icon-angle-double-up am-icon-sm', false: 'am-icon-angle-double-down am-icon-sm'}[svrShowDetail]"></i></span>
             </div>
-            <div class="font-green bold am-fr am-margin-left-xs">
-                <span class="am-icon-refresh" ng-show="!checking" ng-click="checkSvrStatics()" style="cursor: pointer"></span>
-                <span class="am-icon-refresh am-icon-spin" ng-show="checking"></span>
-            </div>
-            <div class="bold am-fr">
-                <div class="am-form-group am-form-icon">
-                    <i class="am-icon-search" style="display: block"></i>
-                    <input type="text" class="am-form-field" ng-model="keyword" placeholder="输入以过滤" style="padding-left: 30px!important">
+            <div class="am-vertical-align am-inline-block am-fr">
+                <div class="am-vertical-align-middle">
+                    <span class="font-green am-inline-block am-margin-left-xs am-icon-refresh am-fl" ng-class="{true: 'am-icon-spin', false: ''}[checking]" ng-click="checkSvrStatics(true)" style="cursor: pointer"></span>
+                    <div class="am-inline-block am-margin-left-xs am-fl">
+                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 148px">
+                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px; border-color: #32c5d2; background: #32c5d2">
+                                <span>
+                                    <input type="checkbox" ng-click="autoRefresh(auto)" ng-model="auto" ng-init="auto=false">
+                                    自动刷新：
+                                </span>
+                            </span>
+                            <input type="text" class="am-form-field font-green am-text-center" minlength="2" ng-model="GlobalConfigs.svrStaticsInterval.current" style="height: 25px">
+                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2">s</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-margin-left-sm am-vertical-align-middle">
+                    <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 150px">
+                        <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2">
+                            <i class="am-icon-search am-icon-fw"></i>
+                        </span>
+                        <input type="text" class="am-form-field" style="height: 25px" placeholder="关键字过滤" ng-model="keyword">
+                    </div>
                 </div>
             </div>
         </div>
@@ -289,8 +304,6 @@
                             <ul sv-root sv-part="optionGroupCopy.operations">
                                 <li ng-repeat="data in optionGroupCopy.operations track by $index" sv-element>
                                     <div class="am-u-sm-2" style="padding: 0;">
-                                        <!--<select id="doc-ipt-3-a" ng-model="data.operation" ng-options="x.operation_book_name for x in optionBooks">
-                    	                </select>-->
                                         <input type="text" style="padding: 5px 5px 5px 0;border: none;" value="data.operation_name" ng-model="data.operation_name" />
                                     </div>
                                     <div class="am-u-sm-3" style="padding-left: 4px;">
@@ -317,7 +330,6 @@
                     					</select>
                                     </div>
                                     <div class="am-u-sm-1" style="background: none;">
-                                        <!--<button style="background-color: none;" ng-click="optionGroupEditDelete($index)">删除</button>-->
                                         <a ng-click="optionGroupEditDelete($index)" class="am-close am-close-alt am-icon-times"></a>
                                     </div>
                                     <div>
@@ -334,9 +346,8 @@
                     <hr/>
                 </div>
                 <div class="am-fr" ng-show="optionGroupEditShow">
-                    <button class="am-btn am-btn-primary am-round am-btn-sm" ng-click="runAll()">
-                        <span>全部执行</span>
-                    </button>
+                    <button ng-click="InitQueue()" type="button" class="am-margin-right am-btn am-btn-primary am-round am-btn-sm">初始化队列</button>
+                    <button class="am-btn am-btn-primary am-round am-btn-sm" ng-click="runAll()">全部执行</button>
                 </div>
                 <div class="am-fr" ng-show="!optionGroupEditShow">
                     <button ng-click="optionGroupEditShow = !optionGroupEditShow" class="am-btn am-btn-primary am-btn-sm am-round">取消</button>

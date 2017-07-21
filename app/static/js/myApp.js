@@ -1,10 +1,4 @@
 var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorage'], function($provide) {
-    /* $provide.factory('globalVar', function() {
-        return {
-            'intervals': []
-        };
-    }); */
-
     $provide.factory('$uuid', function() {
         return {
             uuid4: function() {
@@ -236,26 +230,51 @@ app.service('$uidatas', function($http, $message) {
             })
             .error(function(response) {
                 console.log(response);
-                if (params.hasOwnProperty('onError')) {
-                    params.onError(response);
-                }
+                $message.Alert(response.message);
             })
     }
 })
 
-app.service('$servers', function($http, $message, $localStorage) {
-    this.CheckServerStatics = function(params) {
+app.service('$servers', function($http, $message, $localStorage, $timeout, $rootScope) {
+    this.CheckServerStatics = function(params, force = false) {
+        var request_timestamp = new Date().getTime();
         if ($localStorage.hasOwnProperty('svrStatics_' + params.sysID)) {
-            if (params.hasOwnProperty('onSuccess')) {
-                params.onSuccess(angular.extend(
-                    $localStorage['svrStatics_' + params.sysID], { cached: true }
-                ));
+            if ($localStorage['svrStatics_' + params.sysID].hasOwnProperty('last_request')) {
+                last_request = parseInt($localStorage['svrStatics_' + params.sysID].last_request);
+                if (!force && request_timestamp - last_request <
+                    ($rootScope.GlobalConfigs.svrStaticsInterval.current * 1000)) {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(angular.extend(
+                            $localStorage['svrStatics_' + params.sysID], { cached: false }
+                        ));
+                    }
+                    return false;
+                } else {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(angular.extend(
+                            $localStorage['svrStatics_' + params.sysID], { cached: true }
+                        ));
+                    }
+                }
             }
+            $timeout(function() {
+                angular.extend($localStorage['svrStatics_' + params.sysID], { last_request: request_timestamp });
+            }, 0);
         }
         $http.get('api/system/id/' + params.sysID + '/svr_statics/check')
             .success(function(response) {
                 if (response.error_code == 0) {
-                    $localStorage['svrStatics_' + params.sysID] = response.data;
+                    if ($localStorage.hasOwnProperty('svrStatics_' + params.sysID)) {
+                        $timeout(function() {
+                            angular.merge($localStorage['svrStatics_' + params.sysID], response.data);
+                        })
+                    } else {
+                        $timeout(function() {
+                            $localStorage['svrStatics_' + params.sysID] = angular.merge(
+                                response.data, { last_request: request_timestamp }
+                            );
+                        });
+                    }
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess(response.data);
                     }
@@ -265,12 +284,9 @@ app.service('$servers', function($http, $message, $localStorage) {
             })
             .error(function(response) {
                 console.log(response);
-                if (params.hasOwnProperty('onError')) {
-                    params.onError(response);
-                } else {
-                    $message.Alert(response.message);
-                }
-            })
+                $message.Alert(response.message);
+            });
+        return true;
     };
 
     this.ServerList = function(params) {
@@ -295,23 +311,47 @@ app.service('$servers', function($http, $message, $localStorage) {
     }
 });
 
-app.service('$systems', function($http, $message, $localStorage, $sessionStorage) {
-    this.SystemStaticsCheck = function(params) {
-        if (params.sysID === undefined) {
-            return;
-        }
+app.service('$systems', function($http, $message, $localStorage, $sessionStorage, $timeout, $rootScope) {
+    this.SystemStaticsCheck = function(params, force = false) {
+        var request_timestamp = new Date().getTime();
         if ($localStorage.hasOwnProperty('sysStatics_' + params.sysID)) {
-            if (params.hasOwnProperty('onSuccess')) {
-                params.onSuccess(angular.extend(
-                    $localStorage['sysStatics_' + params.sysID], { cached: true }
-                ));
+            if ($localStorage['sysStatics_' + params.sysID].hasOwnProperty('last_request')) {
+                last_request = parseInt($localStorage['sysStatics_' + params.sysID].last_request);
+                if (!force && request_timestamp - last_request <
+                    ($rootScope.GlobalConfigs.sysStaticsInterval.current * 1000)) {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(angular.extend(
+                            $localStorage['sysStatics_' + params.sysID], { cached: false }
+                        ));
+                    }
+                    return false;
+                } else {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(angular.extend(
+                            $localStorage['sysStatics_' + params.sysID], { cached: true }
+                        ));
+                    }
+                }
             }
+            $timeout(function() {
+                angular.extend($localStorage['sysStatics_' + params.sysID], { last_request: request_timestamp });
+            }, 0);
         }
         $http.get('api/system/id/' + params.sysID + '/sys_statics/check')
             .success(function(response) {
                 if (response.error_code == 0) {
+                    if ($localStorage.hasOwnProperty('sysStatics_' + params.sysID)) {
+                        $timeout(function() {
+                            angular.merge($localStorage['sysStatics_' + params.sysID], response.data);
+                        })
+                    } else {
+                        $timeout(function() {
+                            $localStorage['sysStatics_' + params.sysID] = angular.merge(
+                                response.data, { last_request: request_timestamp }
+                            );
+                        });
+                    }
                     if (params.hasOwnProperty('onSuccess')) {
-                        $localStorage['sysStatics_' + params.sysID] = response.data;
                         params.onSuccess(response.data);
                     }
                 } else if (params.hasOwnProperty('onError')) {
@@ -320,18 +360,12 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                if (params.hasOwnProperty('onError')) {
-                    params.onError(response);
-                } else {
-                    $message.Alert(response.message);
-                }
-            })
+                $message.Alert(response.message);
+            });
+        return true;
     }
 
     this.SystemList = function(params) {
-        if (params.sysID === undefined) {
-            return;
-        }
         $http.get('api/system/id/' + params.sysID + '/sys_statics')
             .success(function(response) {
                 if (response.error_code == 0) {
@@ -344,29 +378,49 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                if (params.hasOwnProperty('onError')) {
-                    params.onError(response);
-                } else {
-                    $message.Alert(response.message);
-                }
+                $message.Alert(response.message);
             });
     }
 
-    this.LoginStaticsCheck = function(params) {
-        if (params.sysID === undefined) {
-            return;
-        }
+    this.LoginStaticsCheck = function(params, force = false) {
+        var request_timestamp = new Date().getTime();
         if ($sessionStorage.hasOwnProperty('loginStatics_' + params.sysID)) {
-            if (params.hasOwnProperty('onSuccess')) {
-                params.onSuccess(angular.extend(
-                    $sessionStorage['loginStatics_' + params.sysID], { cached: true }
-                ))
+            if ($sessionStorage['loginStatics_' + params.sysID].hasOwnProperty('last_request')) {
+                last_request = parseInt($sessionStorage['loginStatics_' + params.sysID].last_request);
+                if (!force && request_timestamp - last_request <
+                    ($rootScope.GlobalConfigs.loginStaticsInterval.current * 1000)) {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(angular.extend(
+                            $sessionStorage['loginStatics_' + params.sysID], { cached: false }
+                        ));
+                    }
+                    return false;
+                } else {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(angular.extend(
+                            $sessionStorage['loginStatics_' + params.sysID], { cached: true }
+                        ));
+                    }
+                }
             }
+            $timeout(function() {
+                angular.extend($sessionStorage['loginStatics_' + params.sysID], { last_request: request_timestamp });
+            }, 0);
         }
         $http.get('api/system/id/' + params.sysID + '/login_statics/check')
             .success(function(response) {
                 if (response.error_code == 0) {
-                    $sessionStorage['loginStatics_' + params.sysID] = response.data;
+                    if ($sessionStorage.hasOwnProperty('loginStatics_' + params.sysID)) {
+                        $timeout(function() {
+                            angular.merge($sessionStorage['loginStatics_' + params.sysID], response.data);
+                        })
+                    } else {
+                        $timeout(function() {
+                            $sessionStorage['loginStatics_' + params.sysID] = angular.merge(
+                                response.data, { last_request: request_timestamp }
+                            );
+                        });
+                    }
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess(response.data);
                     }
@@ -376,16 +430,12 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                if (params.hasOwnProperty('onError')) {
-                    params.onError(response);
-                }
-            })
+                $message.Alert(response.message);
+            });
+        return true;
     }
 
     this.LoginList = function(params) {
-        if (params.sysID === undefined) {
-            return;
-        }
         $http.get('api/system/id/' + params.sysID + '/login_statics')
             .success(function(response) {
                 if (response.error_code == 0) {
@@ -398,27 +448,51 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                if (params.hasOwnProperty('onError')) {
-                    params.onError(response);
-                }
+                $message.Alert(response.message);
             })
     }
 
-    this.ClientSessionCheck = function(params) {
-        if (params.sysID === undefined) {
-            return;
-        }
+    this.ClientSessionCheck = function(params, force = false) {
+        var request_timestamp = new Date().getTime();
         if ($sessionStorage.hasOwnProperty('clientSessions_' + params.sysID)) {
-            if (params.hasOwnProperty('onSuccess')) {
-                params.onSuccess(angular.extend(
-                    $sessionStorage['clientSessions_' + params.sysID], { cached: true }
-                ))
+            if ($sessionStorage['clientSessions_' + params.sysID].hasOwnProperty('last_request')) {
+                last_request = parseInt($sessionStorage['clientSessions_' + params.sysID].last_request);
+                if (!force && request_timestamp - last_request <
+                    ($rootScope.GlobalConfigs.sessionStaticsInterval.current * 1000)) {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(angular.extend(
+                            $sessionStorage['clientSessions_' + params.sysID], { cached: false }
+                        ));
+                    }
+                    return false;
+                } else {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(angular.extend(
+                            $sessionStorage['clientSessions_' + params.sysID], { cached: true }
+                        ));
+                    }
+                }
             }
+            $timeout(function() {
+                angular.extend(
+                    $sessionStorage['clientSessions_' + params.sysID], { last_request: request_timestamp }
+                );
+            }, 0);
         }
         $http.get('api/system/id/' + params.sysID + '/user_sessions')
             .success(function(response) {
                 if (response.error_code == 0) {
-                    $sessionStorage['clientSessions_' + params.sysID] = response.data;
+                    if ($sessionStorage.hasOwnProperty('clientSessions_' + params.sysID)) {
+                        $timeout(function() {
+                            angular.merge($sessionStorage['clientSessions_' + params.sysID], response.data);
+                        })
+                    } else {
+                        $timeout(function() {
+                            $sessionStorage['clientSessions_' + params.sysID] = angular.merge(
+                                response.data, { last_request: request_timestamp }
+                            );
+                        });
+                    }
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess(response.data);
                     }
@@ -428,10 +502,9 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                if (params.hasOwnProperty('onError')) {
-                    params.onError(response);
-                }
-            })
+                $message.Alert(response.message);
+            });
+        return true;
     }
 })
 
@@ -447,15 +520,19 @@ app.service('$operations', function($websocket, $http, $message, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                if (response.hasOwnProperty('message')) {
-                    $message.Alert(response.message);
-                }
+                $message.Alert(response.message);
             });
     }
     this.InitQueue = function(params) {
         $http.post('api/op_group/id/' + params.groupID)
             .success(function(response) {
-                $message.Success(response.message);
+                if (response.err_code == 0) {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(response.data);
+                    }
+                } else if (params.hasOwnProperty('onError')) {
+                    params.onError(response);
+                }
             })
             .error(function(response) {
                 console.log(response);
@@ -467,13 +544,17 @@ app.service('$operations', function($websocket, $http, $message, $sessionStorage
     this.Snapshot = function(params) {
         $http.get('api/op_group/id/' + params.groupID + '/snapshot')
             .success(function(response) {
-                $message.Success(response.message);
+                if (response.err_code == 0) {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(response.data);
+                    }
+                } else if (params.hasOwnProperty('onError')) {
+                    params.onError(response);
+                }
             })
             .error(function(response) {
                 console.log(response);
-                if (response.hasOwnProperty('message')) {
-                    $message.Alert(response.message);
-                }
+                $message.Alert(response.message);
             });
     }
     this.RunNext = function(params) {
@@ -498,9 +579,7 @@ app.service('$operations', function($websocket, $http, $message, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                if (response.hasOwnProperty('message')) {
-                    $message.Alert(response.message);
-                }
+                $message.Alert(response.message);
             });
     }
     this.RunAll = function(params) {
@@ -516,9 +595,7 @@ app.service('$operations', function($websocket, $http, $message, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                if (response.hasOwnProperty('message')) {
-                    $message.Alert(response.message);
-                }
+                $message.Alert(response.message);
             });
     }
 });
@@ -527,11 +604,13 @@ app.service("$operationBooks", ["$http", function($http) {
     this.operationBookSystemsGet = function(params) {
         $http.get('api/systems')
             .success(function(response) {
-                if (response.error_code == 0)
+                if (response.error_code == 0) {
                     params.onSuccess(response.data);
+                }
             })
             .error(function(response) {
                 console.log(response);
+                $message.Alert(response.message);
             });
     }
 
@@ -545,6 +624,7 @@ app.service("$operationBooks", ["$http", function($http) {
                 }
             }).error(function(response) {
                 console.log(response);
+                $message.Alert(response.message);
             });
     }
 
@@ -558,6 +638,7 @@ app.service("$operationBooks", ["$http", function($http) {
                 }
             }).error(function(response) {
                 console.log(response);
+                $message.Alert(response.message);
             });
     }
 
@@ -582,6 +663,7 @@ app.service("$operationBooks", ["$http", function($http) {
                 }
             }).error(function(response) {
                 console.log(response);
+                $message.Alert(response.message);
             });
     }
 
@@ -595,6 +677,7 @@ app.service("$operationBooks", ["$http", function($http) {
                 }
             }).error(function(response) {
                 console.log(response);
+                $message.Alert(response.message);
             });
     }
     this.operationbookCheck = function(params) {
@@ -607,6 +690,7 @@ app.service("$operationBooks", ["$http", function($http) {
                 }
             }).error(function(response) {
                 console.log(response);
+                $message.Alert(response.message);
             });
     }
     this.operationbookDefinePost = function(params) {
@@ -619,6 +703,7 @@ app.service("$operationBooks", ["$http", function($http) {
                 }
             }).error(function(response) {
                 console.log(response);
+                $message.Alert(response.message);
             });
     }
     this.systemOptionBooksGet = function(params) {
@@ -631,6 +716,7 @@ app.service("$operationBooks", ["$http", function($http) {
                 }
             }).error(function(response) {
                 console.log(response);
+                $message.Alert(response.message);
             });
     }
     this.systemOptionGroupPost = function(params) {
@@ -643,6 +729,7 @@ app.service("$operationBooks", ["$http", function($http) {
                 }
             }).error(function(response) {
                 console.log(response);
+                $message.Alert(response.message);
             });
     }
     this.optionGroupEditPut = function(params) {
@@ -655,18 +742,20 @@ app.service("$operationBooks", ["$http", function($http) {
                 }
             }).error(function(response) {
                 console.log(response);
+                $message.Alert(response.message);
             });
     }
     this.operationRecordsPost = function(params) {
         $http.get('api/operate-records')
             .success(function(response) {
                 params.onSuccess(response.data);
-                console.log(response);
             }).error(function(response) {
                 console.log(response);
+                $message.Alert(response.message);
             });
     }
 }]);
+
 app.config(['$routeProvider', function($routeProvider) {
     $routeProvider
         .when('/dashboard', {
@@ -678,25 +767,26 @@ app.config(['$routeProvider', function($routeProvider) {
         .when('/statics/:sysid', {
             templateUrl: 'UI/views/statics'
         })
-        .when('/op_group/:grpid', {
+        .when('/system/:sysid/op_group/:grpid', {
             templateUrl: 'UI/views/op_group'
         })
-        .when('/emerge_ops/system/:sysid', {
+        .when('/system/:sysid/emerge_ops', {
             templateUrl: 'UI/views/emerge_ops'
         })
         .otherwise({
             redirectTo: '/dashboard'
         });
 }]);
+
 app.run(function($rootScope, $websocket, $sessionStorage, $localStorage) {
     $rootScope.tab = 1; //default
     $rootScope.status = "normal";
-    /* if ($rootScope.LoginStatics === undefined) {
-        $rootScope.LoginStatics = {};
-    } */
-    /* if (!$sessionStorage.hasOwnProperty('messages')) {
-        $sessionStorage.messages = [];
-    } */
+    $rootScope.GlobalConfigs = {
+        svrStaticsInterval: { default: 60, current: 60 },
+        sysStaticsInterval: { default: 60, current: 60 },
+        loginStaticsInterval: { default: 60, current: 60 },
+        sessionStaticsInterval: { default: 60, current: 60 }
+    }
 });
 app.controller('dashBoardControl', ['$scope', '$rootScope', function($scope, $rootScope) {
     $rootScope.isShowSideList = false;
@@ -705,83 +795,17 @@ app.filter('paging', function() {
     return function(listsData, start) {
         if (listsData)
             return listsData.slice(start);
-
     }
 });
 app.controller('optionResultControl', ['$scope', '$operationBooks', function($scope, $operationBooks) {
     $scope.executeResult = [];
     $scope.operationName = null;
+    $scope.loadingShow = true;
     $scope.filter_keywords = {};
     $operationBooks.operationRecordsPost({
         onSuccess: function(res) {
             $scope.operationRecordsData = res.records;
-            /* var filterOperationName = function(value_op, value2_op) {
-                $scope.$watch(value_op, function(newValue, oldValue) {
-                    $scope.operationRecordsData = res.records;
-                    $scope.arr = [];
-                    if (newValue != oldValue) {
-                        $scope.pageShow = true;
-                        angular.forEach($scope.operationRecordsData, function(value, index) {
-                            if (value[value2_op]) {
-                                if (value[value2_op].indexOf(newValue) >= 0 && newValue) {
-                                    $scope.arr.push(value);
-                                }
-                            }
-
-                        })
-                        if ($scope.arr.length != 0) {
-                            $scope.operationRecordsData = $scope.arr;
-                            $scope.pageShow = false;
-                        } else if (newValue) {
-                            $scope.operationRecordsData = null;
-                        } else {
-                            $scope.operationRecordsData = res.records;
-                            $scope.pageShow = false;
-                        }
-                    } else {
-                        $scope.operationRecordsData = res.records;
-                    }
-                    if ($scope.operationRecordsData) {
-                        $scope.listsDataNum = $scope.operationRecordsData.length;
-                        $scope.pages = Math.ceil($scope.listsDataNum / 10);
-                        $scope.pagesNum = [];
-                        for (var i = 0; i < $scope.pages; i++) {
-                            $scope.pagesNum.push(i);
-                        }
-                        $scope.currentPage = 0;
-                        $scope.listsPerPage = 10;
-                        $scope.setPages = function(num) {
-                            $scope.currentPage = num;
-
-                        }
-                        $scope.prePage = function() {
-                            if ($scope.currentPage > 0)
-                                $scope.currentPage--;
-                        }
-                        $scope.nextPage = function() {
-                            if ($scope.currentPage < $scope.pages - 1)
-                                $scope.currentPage++;
-                        }
-                        $scope.firstPage = function() {
-                            $scope.currentPage = 0;
-                        }
-                        $scope.lastPage = function() {
-                            $scope.currentPage = $scope.pages - 1;
-                        }
-                    }
-                })
-            }
-            filterOperationName('operationName', 'operation');
-            filterOperationName('executeTime', 'operated_at');
-            filterOperationName('operationPeople', 'operator');
-            filterOperationName('authorizedTime', 'authorized_at');
-            filterOperationName('authorizedPeople', 'authorizer'); */
-            /* angular.forEach($scope.operationRecordsData, function(value, index) {
-                if (value.operation_results.length > 0 && value.operation_results[0].error_code == 0)
-                    $scope.executeResult[index] = true;
-                else
-                    $scope.executeResult[index] = false;
-            }) */
+            $scope.loadingShow = false;
         }
     });
     $scope.show_result = function(index) {
@@ -801,7 +825,6 @@ app.controller('FileUpdateControl', ['$scope', 'fileUpload', function($scope, fi
     }
 }]);
 app.controller('EditoptionBookController', ['$scope', '$operationBooks', function($scope, $operationBooks) {
-
     $operationBooks.operationBookSystemsGet({
         onSuccess: function(res) {
             $scope.optionBookData = res.records;
@@ -1094,9 +1117,9 @@ app.controller('userController', ['$scope', '$http', function($scope, $http) {
 }]);
 app.controller('svrStaticsControl', ['$scope', '$servers', '$interval', '$routeParams', '$localStorage', function($scope, $servers, $interval, $routeParams, $localStorage) {
     $scope.svrShowDetail = true;
-    var sys_id;
-    if ($routeParams.hasOwnProperty('sysid')) {
-        sys_id = $routeParams.sysid;
+    var sys_id = $routeParams.sysid;
+
+    $scope.serverList = function() {
         $servers.ServerList({
             sysID: sys_id,
             onSuccess: function(data) {
@@ -1107,30 +1130,12 @@ app.controller('svrStaticsControl', ['$scope', '$servers', '$interval', '$routeP
                 $scope.checking = false;
             }
         });
-    } else {
-        $scope.$watch('opList', function(newValue, oldValue) {
-            if (newValue !== undefined) {
-                sys_id = newValue.sys_id;
-                $servers.ServerList({
-                    sysID: sys_id,
-                    onSuccess: function(data) {
-                        $scope.serverStatics = data.details;
-                        $scope.checkSvrStatics();
-                    },
-                    onError: function() {
-                        $scope.checking = false;
-                    }
-                });
-            }
-        })
     }
 
-    $scope.checkSvrStatics = function() {
-        angular.forEach($scope.serverStatics, function(value, index) {
-            value.uptime = '检查中...';
-        });
-        $scope.checking = true;
-        $servers.CheckServerStatics({
+    $scope.serverList();
+
+    $scope.checkSvrStatics = function(force = false) {
+        var started = $servers.CheckServerStatics({
             sysID: sys_id,
             onSuccess: function(data) {
                 if (data.sys_id == sys_id) {
@@ -1147,12 +1152,21 @@ app.controller('svrStaticsControl', ['$scope', '$servers', '$interval', '$routeP
             onError: function() {
                 $scope.checking = false;
             }
-        })
+        }, force);
+        if (started) {
+            angular.forEach($scope.serverStatics, function(value, index) {
+                value.uptime = '检查中...';
+            });
+            $scope.checking = true;
+        }
     };
 
     $scope.autoRefresh = function(auto) {
         if (auto) {
-            $scope.svrStaticInterval = $interval(function() { $scope.checkSvrStatics(); }, 60000);
+            $scope.svrStaticInterval = $interval(
+                function() { $scope.checkSvrStatics(); },
+                $rootScope.GlobalConfigs.svrStaticsInterval.current * 1000
+            );
             $scope.checkSvrStatics();
         } else {
             $interval.cancel($scope.svrStaticInterval);
@@ -1171,20 +1185,8 @@ app.controller('sysStaticsControl', ['$scope', '$systems', '$interval', '$routeP
     } else {
 
     }
-    $scope.checkProc = function() {
-        $scope.checking = true;
-        angular.forEach($scope.systemStatics, function(value1, index1) {
-            angular.forEach(value1.detail, function(value2, index2) {
-                value2.status.stat = 'checking';
-                angular.forEach(value2.sockets, function(value3, index3) {
-                    value3.status.stat = '检查中...';
-                });
-                angular.forEach(value2.connections, function(value4, index4) {
-                    value4.status.stat = '检查中...';
-                });
-            });
-        });
-        $systems.SystemStaticsCheck({
+    $scope.checkProc = function(force = false) {
+        var started = $systems.SystemStaticsCheck({
             sysID: sys_id,
             onSuccess: function(data) {
                 $scope.systemStatics = data.records;
@@ -1195,11 +1197,28 @@ app.controller('sysStaticsControl', ['$scope', '$systems', '$interval', '$routeP
             onError: function() {
                 $scope.checking = false;
             }
-        })
+        }, force);
+        if (started) {
+            $scope.checking = true;
+            angular.forEach($scope.systemStatics, function(value1, index1) {
+                angular.forEach(value1.detail, function(value2, index2) {
+                    value2.status.stat = 'checking';
+                    angular.forEach(value2.sockets, function(value3, index3) {
+                        value3.status.stat = '检查中...';
+                    });
+                    angular.forEach(value2.connections, function(value4, index4) {
+                        value4.status.stat = '检查中...';
+                    });
+                });
+            });
+        }
     };
-    $scope.autoRefresh = function(auto) {
+    $scope.autoRefresh = function() {
         if (auto) {
-            $scope.sysStaticInterval = $interval(function() { $scope.checkProc(); }, 30000);
+            $scope.sysStaticInterval = $interval(
+                function() { $scope.checkProc(); },
+                $rootScope.GlobalConfigs.sysStaticsInterval.current * 10000
+            );
             $scope.checkProc();
         } else {
             $interval.cancel($scope.sysStaticInterval);
@@ -1236,6 +1255,9 @@ app.controller('sideBarCtrl', ['$scope', '$uidatas', '$operationBooks', '$rootSc
             } else {
                 $scope.showListChange(next.params.sysid);
             }
+        } else {
+            // $scope.clearTabList();
+            $rootScope.isShowSideList = false;
         }
     });
     $scope.$on('OperationGroupRenew', function() {
@@ -1251,14 +1273,6 @@ app.controller('sideBarCtrl', ['$scope', '$uidatas', '$operationBooks', '$rootSc
         });
     };
     $scope.SideBarList();
-    /* $http.get('api/UI/sideBarCtrl')
-        .success(function(response) {
-            $scope.listName = response;
-            // console.log($scope.listName);
-        })
-        .error(function(response) {
-            console.log(response);
-        }); */
     $scope.showListChild = function(id) {
         angular.forEach($scope.listName, function(value, index) {
             if (value.id == id) {
@@ -1398,6 +1412,12 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         });
     }
 
+    $scope.InitQueue = function() {
+        $operations.InitQueue({
+            groupID: $routeParams.grpid
+        });
+    }
+
     $scope.GetOperationList();
 
     $scope.check_result = function(index) {
@@ -1461,6 +1481,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             $scope.taskQueueRunning = true;
         } else if (data.exec_code == 0) {
             $scope.taskQueueRunning = false;
+            $message.Success('任务全部完成', 10);
         }
     }
 
@@ -1712,12 +1733,11 @@ app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', functi
         }
     };
 }]);
-app.controller('loginStaticsControl', ['$scope', '$systems', '$interval', '$timeout', '$routeParams', function($scope, $systems, $interval, $timeout, $routeParams) {
+app.controller('loginStaticsControl', ['$scope', '$systems', '$interval', '$timeout', '$routeParams', '$rootScope', function($scope, $systems, $interval, $timeout, $routeParams, $rootScope) {
     $scope.loginShowDetail = true;
     $scope.loginStaticsShow = false;
-    $scope.CheckLoginLog = function() {
-        $scope.checking = true;
-        $systems.LoginStaticsCheck({
+    $scope.CheckLoginLog = function(force = false) {
+        var started = $systems.LoginStaticsCheck({
             sysID: $routeParams.sysid,
             onSuccess: function(data) {
                 angular.forEach(data.records, function(rspValue, rspIndex) {
@@ -1734,25 +1754,29 @@ app.controller('loginStaticsControl', ['$scope', '$systems', '$interval', '$time
             onError: function() {
                 $scope.checking = false;
             }
-        })
+        }, force);
+        if (started) {
+            $scope.checking = true;
+        }
     };
-    $scope.$watch('refresh_interval', function(newValue, oldValue) {
-        $interval.cancel($scope.loginStaticInterval);
-        $scope.autoRefresh();
-    })
+    $rootScope.$watch('GlobalConfig.loginStaticsInterval.current', function(newValue, oldValue) {
+        if (newValue != oldValue) {
+            if (isNaN(newValue) || newValue < 30) {
+                $scope.GlobalConfigs.loginStaticsInterval.current =
+                    $scope.GlobalConfigs.loginStaticsInterval.default;
+                return;
+            } else {
+                $interval.cancel($scope.loginStaticInterval);
+                $scope.autoRefresh();
+            }
+        }
+    }, true);
     $scope.autoRefresh = function() {
         if ($scope.auto) {
-            if (isNaN($scope.refresh_interval)) {
-                var interval = 60000;
-            } else {
-                var interval = parseInt($scope.refresh_interval)
-                if (interval <= 30) {
-                    $scope.refresh_interval = 30;
-                    interval = 30;
-                }
-                interval = interval * 1000;
-            }
-            $scope.loginStaticInterval = $interval(function() { $scope.CheckLoginLog(); }, interval);
+            $scope.loginStaticInterval = $interval(
+                function() { $scope.CheckLoginLog(); },
+                $rootScope.GlobalConfigs.loginStaticsInterval.current * 1000
+            );
             $scope.CheckLoginLog();
         } else {
             $interval.cancel($scope.loginStaticInterval);
@@ -1774,9 +1798,8 @@ app.controller('loginStaticsControl', ['$scope', '$systems', '$interval', '$time
 app.controller('clientStaticsControl', ['$scope', '$systems', '$routeParams', '$interval', '$message', function($scope, $systems, $routeParams, $interval, $message) {
     $scope.clientShowDetail = true;
     $scope.userSessionShow = false;
-    $scope.CheckClientSessions = function() {
-        $scope.checking = true;
-        $systems.ClientSessionCheck({
+    $scope.CheckClientSessions = function(force = false) {
+        var started = $systems.ClientSessionCheck({
             sysID: $routeParams.sysid,
             onSuccess: function(data) {
                 $scope.userSessionShow = true;
@@ -1791,11 +1814,18 @@ app.controller('clientStaticsControl', ['$scope', '$systems', '$routeParams', '$
                 }
                 $scope.checking = false;
             }
-        });
+        }, force);
+        if (started) {
+            $scope.checking = true;
+        }
     };
-    $scope.autoRefresh = function(auto) {
+    $scope.autoRefresh = function() {
         if (auto) {
-            $scope.clientSessionInterval = $interval(function() { $scope.CheckClientSessions(); }, 300000);
+            $scope.clientSessionInterval = $interval(
+                function() {
+                    $scope.CheckClientSessions();
+                }, parseInt($rootScope.sessionStaticsInterval) * 1000
+            );
             $scope.CheckClientSessions();
         } else {
             $interval.cancel($scope.clientSessionInterval);

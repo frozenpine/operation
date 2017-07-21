@@ -42,13 +42,13 @@ class UIDataApi(Resource):
                         'id': group.id,
                         'name': group.name,
                         'trigger_time': group.trigger_time,
-                        'Url': '#op_group/{}'.format(group.id)
+                        'Url': '#system/{}/op_group/{}'.format(sys.id, group.id)
                     } for group in sys.operation_groups]
             }
             if privileged:
                 system['secondName'].append({
                     'name': u'系统应急操作',
-                    'Url': '#emerge_ops/system/{}'.format(sys.id)
+                    'Url': '#system/{}/emerge_ops'.format(sys.id)
                 })
             rtn.append(system)
         return rtn
