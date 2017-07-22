@@ -1,12 +1,15 @@
 # -*- coding: UTF-8 -*-
 from flask_restful import Resource
 from app import db
-from app.models import Operator
+from app.models import Operator, MethodType
 from flask import request
 from werkzeug.exceptions import BadRequest
 from werkzeug.security import check_password_hash
-from restful.errors import DataNotJsonError, DataUniqueError, DataNotNullError, DataTypeError, DataNotMatchError
+from restful.errors import DataNotJsonError, DataUniqueError, DataNotNullError, DataTypeError, DataNotMatchError, \
+    ApiError
 from restful.protocol import RestProtocol
+from flask_login import current_user
+from app.auth.privileged import CheckPrivilege
 
 
 class UserApi(Resource):
@@ -26,10 +29,7 @@ class UserApi(Resource):
             try:
                 data = request.get_json(force=True)
             except BadRequest:
-                try:
-                    raise DataNotJsonError
-                except DataNotJsonError:
-                    return RestProtocol(DataNotJsonError())
+                return RestProtocol(DataNotJsonError())
             else:
                 try:
                     if 'old_password' in data:
@@ -45,13 +45,10 @@ class UserApi(Resource):
                                 return RestProtocol(DataNotMatchError('Old password must match.'))
                     else:
                         raise DataNotNullError
-                except DataNotNullError:
-                    return RestProtocol(DataNotNullError())
+                except DataNotNullError as e:
+                    return RestProtocol(e)
                 except TypeError:
-                    try:
-                        raise DataTypeError
-                    except DataTypeError:
-                        return RestProtocol(DataTypeError())
+                    return RestProtocol(DataTypeError())
                 else:
                     db.session.add(user)
                     db.session.commit()
@@ -74,10 +71,7 @@ class UserListApi(Resource):
         try:
             data_list = request.get_json(force=True).get('data')
         except BadRequest:
-            try:
-                raise DataNotJsonError
-            except DataNotJsonError:
-                return RestProtocol(DataNotJsonError())
+            return RestProtocol(DataNotJsonError())
         else:
             try:
                 for i in xrange(len(data_list)):
@@ -89,18 +83,34 @@ class UserListApi(Resource):
                                  name=data_list[i].get('name'),
                                  password=data_list[i].get('password'))
                     user.append(x)
-            except DataNotNullError:
-                return RestProtocol(DataNotNullError())
-            except DataUniqueError:
-                return RestProtocol(DataUniqueError())
+            except ApiError as e:
+                return RestProtocol(e)
             except TypeError:
-                try:
-                    raise DataTypeError
-                except DataTypeError:
-                    return RestProtocol(DataTypeError())
+                return RestProtocol(DataTypeError())
             else:
                 db.session.add_all(user)
                 db.session.commit()
                 for j in xrange(len(user)):
                     result_list.append(RestProtocol(user[j]))
                 return result_list
+
+
+class UserPrivilegeHandler(Resource):
+    def __init__(self):
+        super(UserPrivilegeHandler, self).__init__()
+
+    def get(self):
+        uri_to_action = {"/api/operation-groups": "add_group",
+                         "/api/operation-group/id/*": "edit_group",
+                         "/api/operation-books": "add_edit_ob"}
+        data = {"/api/operation-groups": "Authorize",
+                "/api/operation-group/id/*": "Authorize",
+                "/api/operation-books": "Authorize"}
+
+        privilege_dict = dict()
+        for uri, method in data.iteritems():
+            privilege_dict[uri_to_action[uri]] = CheckPrivilege(current_user, uri, MethodType[method])
+        cur_user = Operator.find(login=current_user.login)
+        add_info = RestProtocol(cur_user)
+        add_info.get('data')['privileges'] = privilege_dict
+        return add_info

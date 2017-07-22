@@ -11,6 +11,30 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
 
     $provide.factory('$message', function($uuid) {
         return {
+            ModelSucess: function(msg, timeout = 3, alertId, id = $uuid.uuid4()) {
+                $('#' + alertId).append('\
+<div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">\
+    <p class="am-text-center">' + msg + '</p>\
+</div>\
+                ');
+                $('#' + id).alert();
+                $('#' + id).addClass('am-alert-success').show();
+                setTimeout(function() {
+                    $('#' + id).alert('close');
+                }, timeout * 1000);
+            },
+            ModelAlert: function(msg, timeout = 3, alertId, id = $uuid.uuid4()) {
+                $('#' + alertId).append('\
+<div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">\
+    <p class="am-text-center">' + msg + '</p>\
+</div>\
+                ');
+                $('#' + id).alert();
+                $('#' + id).addClass('am-alert-danger').show();
+                setTimeout(function() {
+                    $('#' + id).alert('close');
+                }, timeout * 1000);
+            },
             Alert: function(msg, timeout = 3, id = $uuid.uuid4()) {
                 $('#alertMessage').append('\
 <div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">\
@@ -237,6 +261,9 @@ app.service('$uidatas', function($http, $message) {
 
 app.service('$servers', function($http, $message, $localStorage, $timeout, $rootScope) {
     this.CheckServerStatics = function(params, force = false) {
+        if (params.sysID === undefined) {
+            return false;
+        }
         var request_timestamp = new Date().getTime();
         if ($localStorage.hasOwnProperty('svrStatics_' + params.sysID)) {
             if ($localStorage['svrStatics_' + params.sysID].hasOwnProperty('last_request')) {
@@ -290,6 +317,9 @@ app.service('$servers', function($http, $message, $localStorage, $timeout, $root
     };
 
     this.ServerList = function(params) {
+        if (params.sysID === undefined) {
+            return;
+        }
         $http.get('api/system/id/' + params.sysID + '/svr_statics')
             .success(function(response) {
                 if (response.error_code == 0) {
@@ -313,6 +343,9 @@ app.service('$servers', function($http, $message, $localStorage, $timeout, $root
 
 app.service('$systems', function($http, $message, $localStorage, $sessionStorage, $timeout, $rootScope) {
     this.SystemStaticsCheck = function(params, force = false) {
+        if (params.sysID === undefined) {
+            return false;
+        }
         var request_timestamp = new Date().getTime();
         if ($localStorage.hasOwnProperty('sysStatics_' + params.sysID)) {
             if ($localStorage['sysStatics_' + params.sysID].hasOwnProperty('last_request')) {
@@ -366,6 +399,9 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
     }
 
     this.SystemList = function(params) {
+        if (params.sysID === undefined) {
+            return;
+        }
         $http.get('api/system/id/' + params.sysID + '/sys_statics')
             .success(function(response) {
                 if (response.error_code == 0) {
@@ -383,6 +419,9 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
     }
 
     this.LoginStaticsCheck = function(params, force = false) {
+        if (params.sysID === undefined) {
+            return false;
+        }
         var request_timestamp = new Date().getTime();
         if ($sessionStorage.hasOwnProperty('loginStatics_' + params.sysID)) {
             if ($sessionStorage['loginStatics_' + params.sysID].hasOwnProperty('last_request')) {
@@ -436,6 +475,9 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
     }
 
     this.LoginList = function(params) {
+        if (params.sysID === undefined) {
+            return;
+        }
         $http.get('api/system/id/' + params.sysID + '/login_statics')
             .success(function(response) {
                 if (response.error_code == 0) {
@@ -453,6 +495,9 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
     }
 
     this.ClientSessionCheck = function(params, force = false) {
+        if (params.sysID === undefined) {
+            return false;
+        }
         var request_timestamp = new Date().getTime();
         if ($sessionStorage.hasOwnProperty('clientSessions_' + params.sysID)) {
             if ($sessionStorage['clientSessions_' + params.sysID].hasOwnProperty('last_request')) {
@@ -554,7 +599,9 @@ app.service('$operations', function($websocket, $http, $message, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                $message.Alert(response.message);
+                if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                }
             });
     }
     this.RunNext = function(params) {
@@ -579,7 +626,9 @@ app.service('$operations', function($websocket, $http, $message, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                $message.Alert(response.message);
+                if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                }
             });
     }
     this.RunAll = function(params) {
@@ -595,7 +644,9 @@ app.service('$operations', function($websocket, $http, $message, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                $message.Alert(response.message);
+                if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                }
             });
     }
 });
@@ -642,17 +693,6 @@ app.service("$operationBooks", ["$http", function($http) {
             });
     }
 
-    //  this.operationbooksGet = function(params) {
-    //      $http.get('api/system/id/' + params.sys_id + 'operation-books')
-    //          .success(function(response) {
-    //              if (response.error_code == 0)
-    //                  params.onSuccess(response.data);
-    //          })
-    //          .error(function(response) {
-    //              console.log(response);
-    //          });
-    //  }
-    //  
     this.operationbookGet = function(params) {
         $http.get('api/operation-book/id/' + params.optBook_id)
             .success(function(response) {
@@ -680,19 +720,21 @@ app.service("$operationBooks", ["$http", function($http) {
                 $message.Alert(response.message);
             });
     }
+
     this.operationbookCheck = function(params) {
         $http.post('api/system/id/' + params.sys_id + '/operation-book/script-check', data = params.data)
             .success(function(response) {
                 if (response.error_code == 0) {
                     params.onSuccess(response.data);
                 } else {
-                    params.onError(response.message)
+                    params.onError(response)
                 }
             }).error(function(response) {
                 console.log(response);
                 $message.Alert(response.message);
             });
     }
+
     this.operationbookDefinePost = function(params) {
         $http.post('api/operation-books', data = params.data)
             .success(function(response) {
@@ -751,8 +793,28 @@ app.service("$operationBooks", ["$http", function($http) {
                 params.onSuccess(response.data);
             }).error(function(response) {
                 console.log(response);
-                $message.Alert(response.message);
             });
+    }
+    this.operationPriviGet = function(params) {
+        $http.get('api/user/privileges')
+            .success(function(response) {
+                params.onSuccess(response.data);
+                console.log(response);
+            }).error(function(response) {
+                console.log(response);
+            });
+    }
+    this.operationBookEditPut = function(params) {
+        $http.put('api/operation-books', data = params.data)
+            .success(function(response) {
+                if (response.error_code == 0) {
+                    params.onSuccess(response.data);
+                } else {
+                    params.onError(response.message);
+                }
+            }).error(function(response) {
+                console.log(response);
+            })
     }
 }]);
 
@@ -778,19 +840,137 @@ app.config(['$routeProvider', function($routeProvider) {
         });
 }]);
 
-app.run(function($rootScope, $websocket, $sessionStorage, $localStorage) {
+app.run(function($rootScope, $websocket, $sessionStorage, $localStorage, $operationBooks) {
     $rootScope.tab = 1; //default
     $rootScope.status = "normal";
     $rootScope.GlobalConfigs = {
         svrStaticsInterval: { default: 60, current: 60 },
         sysStaticsInterval: { default: 60, current: 60 },
         loginStaticsInterval: { default: 60, current: 60 },
-        sessionStaticsInterval: { default: 60, current: 60 }
+        sessionStaticsInterval: { default: 60, current: 60 },
+        cpuIdleThreshold: { upper: 100, lower: 50 }
     }
+    $operationBooks.operationPriviGet({
+        onSuccess: function(res) {
+            $rootScope.privileges = res.privileges;
+            console.log($rootScope.privileges);
+        },
+        onError: function(res) {
+            console.log(res);
+        }
+    });
 });
 app.controller('dashBoardControl', ['$scope', '$rootScope', function($scope, $rootScope) {
     $rootScope.isShowSideList = false;
 }]);
+app.filter('resultFilter', function() {
+    return function(ListData, filterLimit) {
+        var limitValue = {
+            "operation": "",
+            "operator": "",
+            "authorizor": "",
+            "executeStartDate": "",
+            "executeEndDate": "",
+            "executeStartTime": "",
+            "executeEndTime": ""
+        };
+        var count = 0;
+        if (filterLimit.operation)
+            limitValue.operation = filterLimit.operation;
+        if (filterLimit.operator)
+            limitValue.operator = filterLimit.operator;
+        if (filterLimit.authorizor)
+            limitValue.authorizor = filterLimit.authorizor;
+        if (filterLimit.executeStartDate) {
+            var start = new Date(filterLimit.executeStartDate);
+            limitValue.executeStartDate = start.getTime();
+        }
+        if (filterLimit.executeEndDate) {
+            var end = new Date(filterLimit.executeEndDate);
+            limitValue.executeEndDate = end.getTime();
+        }
+        if (filterLimit.executeStartTime) {
+            var start = new Date(filterLimit.executeStartTime);
+            limitValue.executeStartTime = start.getTime();
+        }
+        if (filterLimit.executeEndTime) {
+            var end = new Date(filterLimit.executeEndTime);
+            limitValue.executeEndTime = end.getTime();
+        }
+        var newArr = new Array();
+        var filterFunc = function(data, str1, str2, str3, str4, str5, str6, str7, str8, str9) {
+            newArr = [];
+            angular.forEach(data, function(value, index) {
+                if (limitValue[str3] != "" && value[str3] != null) {
+                    if (value[str1][str4].toLowerCase().indexOf(limitValue[str1]) >= 0 &&
+                        value[str2][str4].toLowerCase().indexOf(limitValue[str2]) >= 0 &&
+                        value[str3][str4].toLowerCase().indexOf(limitValue[str3]) >= 0) {
+                        var start = new Date(value[str5]);
+                        if (limitValue[str6] != "" && limitValue[str7] != "") {
+                            if (start.getTime() >= limitValue[str6] && start.getTime() <= limitValue[str7]) {
+                                newArr.push(value);
+                            }
+
+                        } else if (limitValue[str6] == "" && limitValue[str7] != "") {
+                            if (start.getTime() <= limitValue[str7])
+                                newArr.push(value);
+                        } else if (limitValue[str6] != "" && limitValue[str7] == "") {
+                            if (start.getTime() >= limitValue[str6])
+                                newArr.push(value);
+                        } else {
+                            newArr.push(value);
+                        }
+                    }
+
+                }
+                if (limitValue[str3] == "") {
+                    if (value[str1][str4].toLowerCase().indexOf(limitValue[str1]) >= 0 &&
+                        value[str2][str4].toLowerCase().indexOf(limitValue[str2]) >= 0) {
+                        var start = new Date(value[str5]);
+                        if (limitValue[str6] != "" && limitValue[str7] != "") {
+                            if (start.getTime() >= limitValue[str6] && start.getTime() <= limitValue[str7]) {
+                                var time = start.getTime().toString();
+                                var sliceTime = parseInt(time.substring(5));
+                                if (limitValue[str8] != "" && limitValue[str9] != "") {
+                                    if (sliceTime >= limitValue[str8] && sliceTime <= limitValue[str9])
+                                        newArr.push(value);
+                                } else if (limitValue[str8] == "" && limitValue[str9] != "") {
+                                    if (sliceTime <= limitValue[str9])
+                                        newArr.push(value);
+                                } else if (limitValue[str8] != "" && limitValue[str9] == "") {
+                                    if (sliceTime >= limitValue[str8])
+                                        newArr.push(value);
+                                } else {
+                                    newArr.push(value);
+                                }
+                            }
+
+                        } else if (limitValue[str6] == "" && limitValue[str7] != "") {
+                            if (start.getTime() <= limitValue[str7])
+                                newArr.push(value);
+                        } else if (limitValue[str6] != "" && limitValue[str7] == "") {
+                            if (start.getTime() >= limitValue[str6])
+                                newArr.push(value);
+                        } else {
+                            newArr.push(value);
+                        }
+                    }
+
+                }
+
+
+            });
+        }
+        filterFunc(ListData, "operation", "operator", "authorizor", "name", "operated_at", "executeStartDate", "executeEndDate", "executeStartTime", "executeEndTime");
+        if (newArr.length > 0) {
+            //			ListData = angular.copy(newArr);
+            return newArr;
+        } else {
+            return newArr;
+        }
+
+    }
+})
 app.filter('paging', function() {
     return function(listsData, start) {
         if (listsData)
@@ -805,6 +985,34 @@ app.controller('optionResultControl', ['$scope', '$operationBooks', function($sc
     $operationBooks.operationRecordsPost({
         onSuccess: function(res) {
             $scope.operationRecordsData = res.records;
+            if ($scope.operationRecordsData) {
+                $scope.listsDataNum = $scope.operationRecordsData.length;
+                $scope.pages = Math.ceil($scope.listsDataNum / 10);
+                $scope.pagesNum = [];
+                for (var i = 0; i < $scope.pages; i++) {
+                    $scope.pagesNum.push(i);
+                }
+                $scope.currentPage = 0;
+                $scope.listsPerPage = 10;
+                $scope.setPages = function(num) {
+                    $scope.currentPage = num;
+
+                }
+                $scope.prePage = function() {
+                    if ($scope.currentPage > 0)
+                        $scope.currentPage--;
+                }
+                $scope.nextPage = function() {
+                    if ($scope.currentPage < $scope.pages - 1)
+                        $scope.currentPage++;
+                }
+                $scope.firstPage = function() {
+                    $scope.currentPage = 0;
+                }
+                $scope.lastPage = function() {
+                    $scope.currentPage = $scope.pages - 1;
+                }
+            }
             $scope.loadingShow = false;
         }
     });
@@ -906,7 +1114,7 @@ app.controller('EditoptionBookController', ['$scope', '$operationBooks', functio
         });
     }
 }]);
-app.controller('optionBookController', ['$scope', '$timeout', '$operationBooks', function($scope, $timeout, $operationBooks) {
+app.controller('optionBookController', ['$scope', '$timeout', '$operationBooks', '$message', function($scope, $timeout, $operationBooks, $message) {
     $operationBooks.operationBookSystemsGet({
         onSuccess: function(res) {
             $scope.optionBookData = res.records;
@@ -954,29 +1162,29 @@ app.controller('optionBookController', ['$scope', '$timeout', '$operationBooks',
     }
     $scope.optionBookShellIs = false;
     $scope.optionBookCheckShell = function(index, id) {
+        if (id === undefined) {
+            $message.ModelAlert("请选择系统", 1, "modalInfoShowDefine");
+            return;
+        }
         $scope.optionBookShellIs = false;
         $scope.checkShow = true;
         $operationBooks.operationbookCheck({
             sys_id: id,
             data: $scope.optionBookCommand[index],
             onSuccess: function(response) {
-                if (response == 0) {
-                    alert("检查成功");
-                    $scope.checkShow = false;
-                    $scope.optionBookShellIs = true;
-                } else {
-                    alert("检查失败,脚本文件不存在");
-                    $scope.checkShow = false;
-                    if ($scope.optionBookCommand.length != 1)
-                        $scope.optionBookCommand.splice(index, 1);
-                    else {
-                        $scope.optionBookCommand[index].shell = "";
-                        $scope.optionBookCommand[index].chdir = "";
-                    }
-                }
+                $message.ModelSucess("检查成功", 2, "modalInfoShowDefine");
+                $scope.checkShow = false;
+                $scope.optionBookShellIs = true;
             },
             onError: function(response) {
-                console.log(response);
+                $message.ModelAlert("检查失败,脚本文件不存在", 2, "modalInfoShowDefine");
+                $scope.checkShow = false;
+                if ($scope.optionBookCommand.length != 1)
+                    $scope.optionBookCommand.splice(index, 1);
+                else {
+                    $scope.optionBookCommand[index].shell = "";
+                    $scope.optionBookCommand[index].chdir = "";
+                }
             }
         });
     }
@@ -995,14 +1203,17 @@ app.controller('optionBookController', ['$scope', '$timeout', '$operationBooks',
         $operationBooks.operationbookDefinePost({
             data: $scope.optionBookEditDataPost,
             onSuccess: function(response) {
-                alert("表单提交成功");
+                $message.ModelSucess("表单提交成功", 2, "modalInfoShowAdd");
                 window.location.reload();
             },
             onError: function(response) {
-                alert("表单提交失败，错误代码" + response);
+                $message.ModelAlert("表单提交失败，错误信息" + response, 2, "modalInfoShowAdd");
             }
         });
     }
+}]);
+app.controller('Privileges', ['$rootScope', function($rootScope) {
+    /*不可删除,用于获取$rootScope*/
 }]);
 app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$rootScope', '$message', function($scope, $q, $operationBooks, $rootScope, $message) {
     $operationBooks.operationBookSystemsGet({
@@ -1050,7 +1261,7 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
         $scope.optionShow = true;
         angular.forEach($scope.optionGroupDataBackup, function(value, index) {
             if (id == value.book_id) {
-                $scope.optionNowSelect = value;
+                $scope.optionNowSelect = angular.copy(value);
                 $scope.detailInfo = value.description;
             }
         });
@@ -1068,12 +1279,17 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
             // console.log(promises);
         });
     }
-    $scope.dbclickFunc = function(index) {
-            $scope.optionGroupConfirm.operations.splice(index, 1);
+    $scope.indexRight = null;
+    $scope.optionSelectDel = function(index) {
+        $scope.indexRight = index;
+        console.log($scope.indexRight);
+    }
+    $scope.dbclickFunc = function() {
+        if ($scope.indexRight) {
+            $scope.optionGroupConfirm.operations.splice($scope.indexRight, 1);
+            $scope.indexRight = null;
         }
-        /* $scope.tes1 = function(data) {
-            console.log(data);
-        } */
+    }
     $scope.formComfirm = false;
     $scope.loadingIcon = false;
     $scope.test2 = function() {
@@ -1096,7 +1312,7 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
         })
     }
 }]);
-app.controller('userController', ['$scope', '$http', function($scope, $http) {
+app.controller('userController', ['$scope', '$http', '$rootScope', '$operationBooks', function($scope, $http, $rootScope, $operationBooks) {
     $scope.ModifyPassword = function(usr_id) {
         $('#modifyPassword').modal({
             relatedTarget: this,
@@ -1115,7 +1331,7 @@ app.controller('userController', ['$scope', '$http', function($scope, $http) {
         });
     };
 }]);
-app.controller('svrStaticsControl', ['$scope', '$servers', '$interval', '$routeParams', '$localStorage', function($scope, $servers, $interval, $routeParams, $localStorage) {
+app.controller('svrStaticsControl', ['$scope', '$servers', '$interval', '$routeParams', '$localStorage', '$rootScope', function($scope, $servers, $interval, $routeParams, $localStorage, $rootScope) {
     $scope.svrShowDetail = true;
     var sys_id = $routeParams.sysid;
 
@@ -1162,7 +1378,7 @@ app.controller('svrStaticsControl', ['$scope', '$servers', '$interval', '$routeP
     };
 
     $scope.autoRefresh = function(auto) {
-        if (auto) {
+        if ($scope.auto) {
             $scope.svrStaticInterval = $interval(
                 function() { $scope.checkSvrStatics(); },
                 $rootScope.GlobalConfigs.svrStaticsInterval.current * 1000
@@ -1177,7 +1393,7 @@ app.controller('svrStaticsControl', ['$scope', '$servers', '$interval', '$routeP
         $interval.cancel($scope.svrStaticInterval);
     });
 }]);
-app.controller('sysStaticsControl', ['$scope', '$systems', '$interval', '$routeParams', function($scope, $systems, $interval, $routeParams) {
+app.controller('sysStaticsControl', ['$scope', '$systems', '$interval', '$routeParams', '$rootScope', function($scope, $systems, $interval, $routeParams, $rootScope) {
     $scope.sysShowDetail = true;
     var sys_id;
     if ($routeParams.hasOwnProperty('sysid')) {
@@ -1214,7 +1430,7 @@ app.controller('sysStaticsControl', ['$scope', '$systems', '$interval', '$routeP
         }
     };
     $scope.autoRefresh = function() {
-        if (auto) {
+        if ($scope.auto) {
             $scope.sysStaticInterval = $interval(
                 function() { $scope.checkProc(); },
                 $rootScope.GlobalConfigs.sysStaticsInterval.current * 10000
@@ -1355,9 +1571,6 @@ app.controller('sideBarCtrl', ['$scope', '$uidatas', '$operationBooks', '$rootSc
             return true;
         }
     };
-    $scope.operateChange = function(id) {
-        $rootScope.isShowSideList = false;
-    };
 }]);
 
 app.controller('opGroupController', ['$scope', '$operationBooks', '$operations', '$routeParams', '$location', '$rootScope', '$timeout', '$message', '$sessionStorage', function($scope, $operationBooks, $operations, $routeParams, $location, $rootScope, $timeout, $message, $sessionStorage) {
@@ -1388,7 +1601,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         } else {
             angular.forEach($scope.opList.details, function(value, index) {
                 if (data.uuid == value.uuid) {
-                    if (data.user_session != $scope.user_uuid) {
+                    if (data.operator.operator_uuid != $scope.user_uuid) {
                         $scope.triggered_ouside = true;
                         if (data.exec_code == -2) {
                             $message.Warning('任务 "' + data.op_name + '" 被外部触发执行', 5);
@@ -1567,6 +1780,10 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     $scope.optionGroupEditShow = true;
     $scope.optionGroupSelect = 0;
     $scope.optionGroupEdit = function(data) {
+        if ($rootScope.privileges.edit_group == false) {
+            $message.Warning('该用户无编辑权限，无法编辑队列内容');
+            return;
+        }
         if ($scope.taskQueueRunning) {
             $message.Warning('任务队列未完成，无法编辑队列内容');
             return;
@@ -1611,8 +1828,8 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
 
         $scope.optionGroupSelectWhich = function(Id, data, index_id) {
             angular.forEach($scope.optionBooks, function(value, index) {
-                if (value.book_id == Id) {
-                    data.book_id = value.book_id;
+                if (value.id == Id) {
+                    data.book_id = value.id;
                     data.description = value.description;
                     data.operation_name = value.name;
                     data.operation_id = "";
@@ -1653,14 +1870,98 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         })
     }
 }]);
-app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', function($scope, $http, $routeParams) {
-    $http.get('api/emerge_ops/system/id/' + $routeParams.sysid)
+app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$operationBooks', '$message', function($scope, $http, $routeParams, $operationBooks, $message) {
+    $scope.optionBookEditDataList = new Array();
+    $scope.optionBookEditShow = new Array();
+    $http.get('api/system/id/' + $routeParams.sysid + '/operation-books')
         .success(function(response) {
-            $scope.emergeopList = response;
+            $scope.emergeopList = response.data.records;
+            for (var i = 0; i < $scope.emergeopList.length; i++) {
+                $scope.optionBookEditDataList.push(null);
+                $scope.optionBookEditShow.push(true);
+            }
         })
         .error(function(response) {
             console.log(response);
         });
+
+    $scope.optionBookEdit = function(data, index) {
+        $scope.optionBookCatalog_id = data[0].catalog_id.toString();
+        $scope.isEmergency = [{
+            "name": "紧急操作",
+            "value": true
+        }, {
+            "name": "非紧急操作",
+            "value": false
+        }];
+        $scope.optionBookEditShow[index] = false;
+        console.log($scope.optionGroupEditShow);
+        $operationBooks.systemOptionBooksGet({
+            sys_id: $routeParams.sysid,
+            onSuccess: function(res) {
+                $scope.optionBookData = res.records;
+            }
+        });
+        $operationBooks.operationCatalogs({
+            onSuccess: function(res) {
+                $scope.operationCatalogs = res.records;
+            }
+        });
+        $operationBooks.operationBookSystemListGet({
+            sys_id: $routeParams.sysid,
+            onSuccess: function(res) {
+                $scope.systemListData = res.records;
+            }
+        });
+
+        $scope.optionBookEditDataList[index] = new Array();
+        $scope.optionOldData = angular.copy(data);
+        angular.forEach($scope.optionOldData, function(value) {
+            var data = new Object;
+            data.op_name = value.op_name.toString();
+            data.op_desc = value.op_desc.toString();
+            data.type = value.type.toString();
+            data.catalog_id = value.catalog_id.toString();
+            // data.is_emergency = value.is_emergency.toString();
+            data.disabled = value.disabled.toString();
+            data.id = value.id;
+            data.sys_id = value.sys_id.toString();
+            data.connection = value.connection;
+            $scope.optionBookEditDataList[index].push(data);
+        })
+        $scope.optionBookEditCancel = function(index) {
+            $scope.optionBookEditShow[index] = true;
+        }
+        $scope.optionBookEditDelete = function(index_del) {
+            $scope.optionBookEditDataList[index][index_del].disabled = "true";
+        }
+        $scope.optionBookEditPut = function() {
+            $scope.optionBookEditDataListNew = {
+                "data": $scope.optionBookEditDataList[index],
+                "catalog_id": $scope.optionBookCatalog_id
+            }
+            $operationBooks.operationBookEditPut({
+                data: $scope.optionBookEditDataListNew,
+                onSuccess: function(res) {
+                    $message.Success("提交成功");
+                    $http.get('api/system/id/' + $routeParams.sysid + '/operation-books')
+                        .success(function(response) {
+                            $scope.emergeopList = response.data.records;
+                            $scope.optionBookEditShow[index] = true;
+                            console.log(response);
+                        })
+                        .error(function(response) {
+                            console.log(response);
+                        });
+
+                },
+                onError: function(res) {
+                    console.log(res);
+                }
+            })
+
+        }
+    }
 
     $scope.openshell = function(sys_id) {
         $http.get('api/webshell/system/id/' + sys_id)
@@ -1795,7 +2096,7 @@ app.controller('loginStaticsControl', ['$scope', '$systems', '$interval', '$time
         }
     })
 }]);
-app.controller('clientStaticsControl', ['$scope', '$systems', '$routeParams', '$interval', '$message', function($scope, $systems, $routeParams, $interval, $message) {
+app.controller('clientStaticsControl', ['$scope', '$systems', '$routeParams', '$interval', '$message', '$rootScope', function($scope, $systems, $routeParams, $interval, $message, $rootScope) {
     $scope.clientShowDetail = true;
     $scope.userSessionShow = false;
     $scope.CheckClientSessions = function(force = false) {
@@ -1820,7 +2121,7 @@ app.controller('clientStaticsControl', ['$scope', '$systems', '$routeParams', '$
         }
     };
     $scope.autoRefresh = function() {
-        if (auto) {
+        if ($scope.auto) {
             $scope.clientSessionInterval = $interval(
                 function() {
                     $scope.CheckClientSessions();

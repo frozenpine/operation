@@ -1,10 +1,10 @@
 # -*- coding: UTF-8 -*-
 from flask_restful import Resource
-from app.models import TradeSystem, DataSource, DataSourceType
+from app.models import TradeSystem, DataSource, DataSourceType, OperationBook, EmergeOpRecord, MethodType
 from app import db
 from flask import request
 from werkzeug.exceptions import BadRequest
-from ..errors import DataNotJsonError, DataUniqueError, DataNotNullError, DataNotMatchError
+from ..errors import DataNotJsonError, DataUniqueError, DataNotNullError, DataNotMatchError, ApiError
 import json
 import re
 from ..protocol import RestProtocol
@@ -27,17 +27,14 @@ class SystemApi(Resource):
             try:
                 data = request.get_json(force=True)
             except BadRequest:
-                try:
-                    raise DataNotJsonError
-                except DataNotJsonError:
-                    return RestProtocol(DataNotJsonError())
+                return RestProtocol(DataNotJsonError())
             else:
                 try:
                     if sys.name != data.get('name') and TradeSystem.query.filter_by(
                             name=data.get('name')).first() is not None:
                         raise DataUniqueError
-                except DataUniqueError:
-                    return RestProtocol(DataUniqueError())
+                except DataUniqueError as e:
+                    return RestProtocol(e)
                 else:
                     sys.name = data.get('name', sys.name)
                     sys.user = data.get('username', sys.user)
@@ -92,10 +89,7 @@ class SystemListApi(Resource):
         try:
             data_list = request.get_json(force=True).get('data')
         except BadRequest:
-            try:
-                raise DataNotJsonError
-            except DataNotJsonError:
-                return RestProtocol(DataNotJsonError())
+            return RestProtocol(DataNotJsonError())
         else:
             try:
                 for i in xrange(len(data_list)):
@@ -117,10 +111,8 @@ class SystemListApi(Resource):
                     system[i].vendor_id = data_list[i].get('vendor_id')
                     # system[i].uuid = data_list[i].get('uuid')
                     system[i].parent_sys_id = data_list[i].get('parent_sys_id')
-            except DataNotNullError:
-                return RestProtocol(DataNotNullError())
-            except DataUniqueError:
-                return RestProtocol(DataUniqueError())
+            except ApiError as e:
+                return RestProtocol(e)
             else:
                 db.session.add_all(system)
                 db.session.commit()
@@ -129,9 +121,9 @@ class SystemListApi(Resource):
                 return result_list
 
 
-class ParentSystemFindOperationBookApi(Resource):
+class ParentSystemFindOperationBookListApi(Resource):
     def __init__(self):
-        super(ParentSystemFindOperationBookApi, self).__init__()
+        super(ParentSystemFindOperationBookListApi, self).__init__()
 
     def get(self, **kwargs):
         system = TradeSystem.find(**kwargs)
@@ -140,18 +132,94 @@ class ParentSystemFindOperationBookApi(Resource):
                 sys_list = [system]
                 for child_sys in system.child_systems:
                     sys_list.append(child_sys)
-                ob_result = []
+                ob_list = []
                 for sys in sys_list:
                     for ob in sys.operation_book:
-                        ob_result.append(dict(name=ob.name, book_id=ob.id, description=ob.description))
-                return {'message': 'All data listed.',
-                        'error_code': 0,
-                        'data': {'count': len(ob_result),
-                                 'records': ob_result}}
+                        ob_list.append(ob)
+                return RestProtocol(ob_list)
             else:
                 return RestProtocol(DataNotMatchError('The system is not a parent system.'))
         else:
             return {'message': 'System not found.'}, 404
+
+
+class SystemFindOperationBookApi(Resource):
+    def __init__(self):
+        super(SystemFindOperationBookApi, self).__init__()
+        self.op_book_groups = {}
+        self.system_list = []
+        self.count = 0
+
+    def find_systems(self, sys):
+        self.system_list.append(sys.id)
+        for child_sys in sys.child_systems:
+            self.find_systems(child_sys)
+
+    def find_operation_books(self):
+        op_books = OperationBook.query.filter(
+            OperationBook.sys_id.in_(self.system_list)
+        ).filter(OperationBook.disabled==False).order_by(OperationBook.order).all()
+        self.count = len(op_books)
+        for ob in op_books:
+            record = self.find_op_record(ob)
+            if ob.catalog not in self.op_book_groups:
+                self.op_book_groups[ob.catalog] = {
+                    'name': ob.catalog.name,
+                    'details': []
+                }
+            dtl = {
+                'id': ob.id,
+                'op_name': ob.name,
+                'op_desc': ob.description,
+                'type': str(ob.type).split('.')[1],
+                'catalog_id': ob.catalog.id,
+                'sys_id': ob.sys_id,
+                'disabled': ob.disabled,
+                'connection': ob.detail['remote']['name'],
+                'err_code': -1,
+                'interactivator': {
+                    'isTrue': ob.type.IsInteractivator()
+                }
+            }
+            # dtl = ob.to_json()
+            # dtl['err_code'] = -1
+            # dtl['interactivator'] = {
+            #     'isTrue': ob.type.IsInteractivator()
+            # }
+            if record:
+                dtl['his_results'] = {
+                    'err_code': record.results[-1].error_code,
+                    'operated_at': record.operated_at.humanize(),
+                    'operator': record.operator.name,
+                    'lines': record.results[-1].detail or []
+                }
+            self.op_book_groups[ob.catalog]['details'].append(dtl)
+
+    def find_op_record(self, op):
+        record = EmergeOpRecord.query \
+            .filter(EmergeOpRecord.emergeop_id == op.id) \
+            .order_by(EmergeOpRecord.operated_at.desc()).first()
+        return record
+
+    def get(self, **kwargs):
+        sys = TradeSystem.find(**kwargs)
+        if sys:
+            self.find_systems(sys)
+            self.find_operation_books()
+            res = [
+                self.op_book_groups[key] for key in sorted(
+                    self.op_book_groups.keys(), key=lambda key: key.order
+                )
+            ]
+            return {'message': 'There is not Christ at all',
+                    'error_code': 0,
+                    'data': {'count': self.count,
+                             'records': res}
+                    }
+        else:
+            return {
+                       'message': 'system not found.'
+                   }, 404
 
 
 class SystemSystemListInformationApi(Resource):

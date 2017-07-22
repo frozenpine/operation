@@ -793,7 +793,7 @@ class OperationBook(SQLModelMixin, db.Model):
     catalog_id = db.Column(db.Integer, db.ForeignKey('operation_catalogs.id'), index=True)
     detail = db.Column(JSONType, nullable=False, default={})
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
-    is_emergency = db.Column(db.Boolean, default=False)
+    disabled = db.Column(db.Boolean, default=False)
     order = db.Column(db.Integer)
     operations = db.relationship(
         'Operation', backref='operate_define',

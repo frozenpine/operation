@@ -51,7 +51,7 @@
                                 <td class="table-data" style="max-width: 120px">{{::data.server}}</td>
                                 <td class="table-data" style="max-width: 120px">{{data.uptime}}</td>
                                 <td class="table-data">
-                                    <div class="am-dropdown" style="cursor: pointer" ng-mouseover="showCPUDetail = true" ng-mouseleave="showCPUDetail = false" ng-init="cpuRange={upper: 75}" ng-class="{'am-text-danger': (data.cpu[0].idle|percentStatus:cpuRange)}">
+                                    <div class="am-dropdown" style="cursor: pointer" ng-mouseover="showCPUDetail = true" ng-mouseleave="showCPUDetail = false" ng-class="{'am-text-danger': (data.cpu[0].idle|percentStatus:GlobalConfigs.cpuIdleThreshold)}">
                                         {{data.cpu[0].idle | percent}}
                                         <div class="am-dropdown-content" ng-show="showCPUDetail" style="display: block;margin-top: 0">
                                             <div style="max-height: 300px; overflow-y: auto">
@@ -266,7 +266,10 @@
                                     </div>
                                     <div class="am-modal" ng-class="{true: 'am-modal-confirm', false: 'am-modal-alert'}[data.checker.isTrue]" tabindex="-1" id="{{'result' + $index}}">
                                         <div class="am-modal-dialog">
-                                            <div class="am-modal-hd">操作输出</div>
+                                            <div class="am-modal-hd">
+                                                操作输出
+                                                <div class="am-text-sm" ng-show="data.hasOwnProperty('operated_at')">{{data.operator.operator_name}} 操作于 {{data.operated_at}}</div>
+                                            </div>
                                             <div class="am-modal-bd">
                                                 <span ng-if="!(data.checker.checked || !data.checker.isTrue) && data.exec_code==0">操作结果是否正确？</span>
                                                 <ul class="am-list am-list-static">

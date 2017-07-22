@@ -28,12 +28,13 @@ from .handlers.SysStaticsHandler import (ConfigCheckApi, ConfigListApi,
                                          ServerStaticListApi,
                                          SystemStaticListApi,
                                          UserSessionListApi)
-from .handlers.SystemHandler import (ParentSystemFindOperationBookApi,
-                                     SystemApi, SystemListApi,
+from .handlers.SystemHandler import (ParentSystemFindOperationBookListApi,
+                                     SystemApi, SystemFindOperationBookApi,
+                                     SystemListApi,
                                      SystemSystemListInformationApi)
 from .handlers.TradingDayHandler import NextTradingDayApi
 from .handlers.UIDataHandler import UIDataApi
-from .handlers.UserHandler import UserApi, UserListApi
+from .handlers.UserHandler import UserApi, UserListApi, UserPrivilegeHandler
 from .handlers.WebshellHandler import WebshellUIApi
 
 resources.add_resource(
@@ -318,8 +319,15 @@ resources.add_resource(
     endpoint='operation_group'
 )
 
+''' resources.add_resource(
+    ParentSystemFindOperationBookListApi,
+    '/system/id/<int:id>/operation-book-list',
+    methods=['GET'],
+    endpoint='sys_ob_list'
+) '''
+
 resources.add_resource(
-    ParentSystemFindOperationBookApi,
+    SystemFindOperationBookApi,
     '/system/id/<int:id>/operation-books',
     methods=['GET'],
     endpoint='sys_ob'
@@ -337,7 +345,7 @@ resources.add_resource(
     OperationBookListApi,
     '/operation-books',
     '/operation-books/',
-    methods=['GET', 'POST'],
+    methods=['GET', 'POST','PUT'],
     endpoint='operation_books'
 )
 
@@ -377,4 +385,12 @@ resources.add_resource(
     '/operation-catalogs/',
     methods=['GET', 'POST'],
     endpoint='operation_catalogs'
+)
+
+resources.add_resource(
+    UserPrivilegeHandler,
+    '/user/privileges',
+    '/user/privileges/',
+    methods=['GET'],
+    endpoint='user_privileges'
 )

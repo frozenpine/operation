@@ -44,7 +44,7 @@ class OperationMixin(object):
                 return idx, TaskStatus(self.snapshot['task_status_list'][idx])
         return -1, None
 
-    def make_operation_detail(self, op, session=None):
+    def make_operation_detail(self, op, op_session=None):
         lower, upper = op.time_range
         dtl = {
             'id': op.id,
@@ -63,17 +63,33 @@ class OperationMixin(object):
                 'lower': unicode(lower),
                 'upper': unicode(upper)
             },
-            'need_authorized': op.need_authorization,
-            'user_session': session
+            'need_authorized': op.need_authorization
         }
         idx, status = self.find_op_status(op)
         if status == TaskStatus.InQueue:
             dtl['exec_code'] = -1
         elif status == TaskStatus.Running:
             dtl['exec_code'] = -2
+            operator = Operator.find(id=op_session['operator_id'])
+            dtl['operator'] = {
+                'operator_id': operator.id,
+                'operator_uuid': operator.uuid,
+                'operator_name': operator.name
+            }
+            dtl['operated_at'] = arrow.get(op_session['operated_at'])\
+                .to('Asia/Shanghai').strftime('%Y-%m-%d %H:%M:%S')
         elif status == TaskStatus.Success or status == TaskStatus.Failed:
             dtl['exec_code'] = 0
             dtl['output_lines'] = self.snapshot['task_result_list'][idx]['task_result']['lines']
+            op_session = json.loads(self.snapshot['task_result_list'][idx]['session'])
+            operator = Operator.find(id=op_session['operator_id'])
+            dtl['operator'] = {
+                'operator_id': operator.id,
+                'operator_uuid': operator.uuid,
+                'operator_name': operator.name
+            }
+            dtl['operated_at'] = arrow.get(op_session['operated_at'])\
+                .to('Asia/Shanghai').strftime('%Y-%m-%d %H:%M:%S')
         elif status == TaskStatus.Skipped:
             dtl['exec_code'] = -3
         else:
@@ -237,7 +253,7 @@ class OperationListRunAllApi(OperationMixin, Resource):
             if ret_code == DispatchResult.Dispatched:
                 op = Operation.find(uuid=task_uuid)
                 self.snapshot = taskManager.snapshot(op_group.uuid)
-                return RestProtocol(self.make_operation_detail(op, operator.uuid))
+                return RestProtocol(self.make_operation_detail(op))
             else:
                 return RestProtocol(
                     message=dispatchMessage[ret_code],
@@ -289,7 +305,7 @@ class OperationApi(OperationMixin, Resource):
                         })
                     )
                     self.snapshot = taskManager.snapshot(op.group.uuid)
-                    return RestProtocol(self.make_operation_detail(op, current_user.uuid))
+                    return RestProtocol(self.make_operation_detail(op))
                 else:
                     raise ApiError(dispatchMessage[DispatchResult(ret)])
             except AuthError as err:
@@ -318,7 +334,6 @@ class OperationCallbackApi(OperationMixin, Resource):
                 self.snapshot = taskManager.snapshot(op.group.uuid)
                 status = TaskStatus(int(result['task_status']))
                 record_params = json.loads(result['session'])
-                operator = Operator.find(id=record_params['operator_id'])
                 if status == TaskStatus.Running:
                     if not record_params.has_key('operation_id'):
                         record_params['operation_id'] = op.id
@@ -334,7 +349,7 @@ class OperationCallbackApi(OperationMixin, Resource):
                     )
                     db.session.add(res)
                     db.session.commit()
-                msgQueues['tasks'].send_object(self.make_operation_detail(op, operator.uuid))
+                msgQueues['tasks'].send_object(self.make_operation_detail(op, record_params))
         else:
             return RestProtocol(error_code=-1, message='Operation not found.'), 404
 

@@ -133,9 +133,7 @@
             "pythonPath": "${config:python.pythonPath}",
             "program": "${workspaceRoot}/run.py",
             "cwd": "${workspaceRoot}",
-            "env": {
-                "FLASK_APP": "${workspaceRoot}/quickstart/app.py"
-            },
+            "env": {},
             "args": [
                 "development"
             ],

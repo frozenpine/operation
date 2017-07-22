@@ -1,12 +1,15 @@
 # -*- coding: UTF-8 -*-
-from flask_restful import Resource
-from app.models import OperationBook, ScriptType, TradeSystem, PlatformType
-from flask import request
-from werkzeug.exceptions import BadRequest
-from app import db
-from restful.errors import DataNotJsonError, DataUniqueError, DataNotNullError, DataEnumValueError, PlatFormNotFoundError
-from restful.protocol import RestProtocol
 import paramiko
+from flask import request
+from flask_restful import Resource
+from werkzeug.exceptions import BadRequest
+
+from app import db
+from app.models import OperationBook, PlatformType, ScriptType, TradeSystem
+from restful.errors import (ApiError, DataEnumValueError, DataNotJsonError,
+                            DataNotNullError, DataUniqueError,
+                            PlatFormNotFoundError)
+from restful.protocol import RestProtocol
 
 
 class OperationBookListApi(Resource):
@@ -24,7 +27,8 @@ class OperationBookListApi(Resource):
             return RestProtocol(DataNotJsonError())
         else:
             try:
-                if not data.get('name') or not data.get('sys_id') or not data.get('mod'):
+                if not data.get('name') or not data.get('sys_id') or not data.get('mod') or not data.get(
+                        'catalog_id') or not data.get('type'):
                     raise DataNotNullError
                 elif OperationBook.query.filter_by(name=data.get('name')).first() is not None:
                     raise DataUniqueError
@@ -37,10 +41,8 @@ class OperationBookListApi(Resource):
                 ob.name = data.get('name')
                 ob.description = data.get('description')
                 ob.type = ScriptType[data.get('type')]
-                # ob.order = data.get('order')
                 ob.catalog_id = data.get('catalog_id')
                 ob.sys_id = data.get('sys_id')
-                # ob.is_emergency = data.get('is_emergency')
                 if data.get('is_emergency') == 'false':
                     ob.is_emergency = 0
                 elif data.get('is_emergency') == 'true':
@@ -70,16 +72,64 @@ class OperationBookListApi(Resource):
                 else:
                     return {'message': 'System not found.'}, 404
 
-            except DataNotNullError:
-                return RestProtocol(DataNotNullError())
-            except DataUniqueError:
-                return RestProtocol(DataUniqueError())
-            except DataEnumValueError:
-                return RestProtocol(DataEnumValueError())
+            except ApiError as e:
+                return RestProtocol(e)
             else:
                 db.session.add(ob)
+
+                # Add order of operation book
+                op_list = OperationBook.query.filter(OperationBook.catalog_id == ob.catalog_id).order_by(
+                    OperationBook.order).all()
+                if len(op_list):
+                    ob.order = (op_list[-1].order + 10) / 10 * 10
+                else:
+                    ob.order = 10
+
                 db.session.commit()
                 return RestProtocol(ob)
+
+    def put(self):
+        try:
+            data = request.get_json(force=True)
+        except BadRequest:
+            return RestProtocol(DataNotJsonError())
+        else:
+            cata_id = data.get('catalog_id')
+            ob_data = data.get('data')
+            ob_list = []
+            ob_temp = []
+            for i, v in enumerate(ob_data):
+                # ob = OperationBook.find(id=v.get('id'))
+                ob = OperationBook.query.filter_by(id=v.get('id')).first()
+                if ob:
+                    if v.get('catalog_id') == cata_id:
+                        ob_list.append(ob)
+                        ob.order = (ob_list.index(ob) + 1) * 10
+                    else:
+                        ob_temp.append(ob)
+                        obs = OperationBook.query.filter(OperationBook.catalog_id == v.get('catalog_id')).filter(OperationBook.disabled==False).order_by(
+                            OperationBook.order).all()
+                        if len(obs):
+                            ob.order = (obs[-1].order + 10) / 10 * 10
+                        else:
+                            ob.order = 10
+                    ob.name = v.get('op_name', ob.name)
+                    ob.description = v.get('op_desc', ob.description)
+                    ob.type = ScriptType[v.get('type')] or ob.type
+                    ob.catalog_id = v.get('catalog_id', ob.catalog_id)
+                    ob.sys_id = v.get('sys_id', ob.sys_id)
+                    if v.get('is_emergency') == 'false':
+                        ob.is_emergency = 0
+                    elif v.get('is_emergency') == 'true':
+                        ob.is_emergency = 1
+                    if v.get('disabled') == 'false':
+                        ob.disabled = 0
+                    elif v.get('disabled') == 'true':
+                        ob.disabled = 1
+            db.session.add_all(ob_list)
+            db.session.add_all(ob_temp)
+            db.session.commit()
+            return RestProtocol(ob_list)
 
 
 class OperationBookCheckApi(Resource):
@@ -106,7 +156,6 @@ class OperationBookCheckApi(Resource):
                     file_name, chdir = data.get('shell'), data.get('chdir')
                     ssh = paramiko.SSHClient()
                     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                    # ssh.connect('192.168.101.126', 22, 'qdam', 'qdam')
                     ssh.connect('{}'.format(system.ip), 22, '{}'.format(system.user), '{}'.format(system.password))
                     if chdir:
                         stdin, stdout, stderr = ssh.exec_command(
@@ -119,8 +168,6 @@ class OperationBookCheckApi(Resource):
                     return {'error_code': '0',
                             'data': ans,
                             'message': 'Script Check successfully'}
-                else:
-                    pass
 
 
 class OperationBookApi(Resource):
