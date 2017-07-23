@@ -3,6 +3,7 @@ import logging
 import zerorpc
 import sys
 import zmq.green as zmq
+from os import environ
 from logging.handlers import TimedRotatingFileHandler
 from flask import Flask, Blueprint
 from flask_login import LoginManager
@@ -44,10 +45,13 @@ logging.getLogger('').addHandler(Rthandler)
 db = SQLAlchemy()
 db_list = {}
 
+tm_host = environ.get('TM_HOST') or '127.0.0.1'
+tm_port = environ.get('TM_PORT') or 6000
+
 msgQueues = MessageQueues
 globalEncryptKey = None
 taskManager = zerorpc.Client()
-taskManager.connect("tcp://127.0.0.1:2017")
+taskManager.connect("tcp://{ip}:{port}".format(ip=tm_host, port=tm_port))
 taskRequests = {}
 
 from auth import auth as auth_blueprint, login_manager

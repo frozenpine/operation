@@ -864,113 +864,78 @@ app.controller('dashBoardControl', ['$scope', '$rootScope', function($scope, $ro
     $rootScope.isShowSideList = false;
 }]);
 app.filter('resultFilter', function() {
-    return function(ListData, filterLimit) {
-        var limitValue = {
-            "operation": "",
-            "operator": "",
-            "authorizor": "",
-            "executeStartDate": "",
-            "executeEndDate": "",
-            "executeStartTime": "",
-            "executeEndTime": ""
-        };
-        var count = 0;
-        if (filterLimit.operation)
-            limitValue.operation = filterLimit.operation;
-        if (filterLimit.operator)
-            limitValue.operator = filterLimit.operator;
-        if (filterLimit.authorizor)
-            limitValue.authorizor = filterLimit.authorizor;
-        if (filterLimit.executeStartDate) {
-            var start = new Date(filterLimit.executeStartDate);
-            limitValue.executeStartDate = start.getTime();
-        }
-        if (filterLimit.executeEndDate) {
-            var end = new Date(filterLimit.executeEndDate);
-            limitValue.executeEndDate = end.getTime();
-        }
-        if (filterLimit.executeStartTime) {
-            var start = new Date(filterLimit.executeStartTime);
-            limitValue.executeStartTime = start.getTime();
-        }
-        if (filterLimit.executeEndTime) {
-            var end = new Date(filterLimit.executeEndTime);
-            limitValue.executeEndTime = end.getTime();
-        }
+    return function(ListData, filterLimit, scope) {
         var newArr = new Array();
-        var filterFunc = function(data, str1, str2, str3, str4, str5, str6, str7, str8, str9) {
-            newArr = [];
-            angular.forEach(data, function(value, index) {
-                if (limitValue[str3] != "" && value[str3] != null) {
-                    if (value[str1][str4].toLowerCase().indexOf(limitValue[str1]) >= 0 &&
-                        value[str2][str4].toLowerCase().indexOf(limitValue[str2]) >= 0 &&
-                        value[str3][str4].toLowerCase().indexOf(limitValue[str3]) >= 0) {
-                        var start = new Date(value[str5]);
-                        if (limitValue[str6] != "" && limitValue[str7] != "") {
-                            if (start.getTime() >= limitValue[str6] && start.getTime() <= limitValue[str7]) {
-                                newArr.push(value);
-                            }
-
-                        } else if (limitValue[str6] == "" && limitValue[str7] != "") {
-                            if (start.getTime() <= limitValue[str7])
-                                newArr.push(value);
-                        } else if (limitValue[str6] != "" && limitValue[str7] == "") {
-                            if (start.getTime() >= limitValue[str6])
-                                newArr.push(value);
-                        } else {
-                            newArr.push(value);
-                        }
-                    }
-
+        angular.forEach(ListData, function(value, index) {
+            var filted = false;
+            if (value.operation.name.toLowerCase().match(filterLimit.operation) === null) {
+                filted = true;
+            }
+            if (value.operator.name.toLowerCase().match(filterLimit.operator) === null) {
+                filted = true;
+            }
+            if (value.authorizor) {
+                if (value.authorizor.name.toLowerCase().match(filterLimit.authorizor) === null) {
+                    filted = true;;
                 }
-                if (limitValue[str3] == "") {
-                    if (value[str1][str4].toLowerCase().indexOf(limitValue[str1]) >= 0 &&
-                        value[str2][str4].toLowerCase().indexOf(limitValue[str2]) >= 0) {
-                        var start = new Date(value[str5]);
-                        if (limitValue[str6] != "" && limitValue[str7] != "") {
-                            if (start.getTime() >= limitValue[str6] && start.getTime() <= limitValue[str7]) {
-                                var time = start.getTime().toString();
-                                var sliceTime = parseInt(time.substring(5));
-                                if (limitValue[str8] != "" && limitValue[str9] != "") {
-                                    if (sliceTime >= limitValue[str8] && sliceTime <= limitValue[str9])
-                                        newArr.push(value);
-                                } else if (limitValue[str8] == "" && limitValue[str9] != "") {
-                                    if (sliceTime <= limitValue[str9])
-                                        newArr.push(value);
-                                } else if (limitValue[str8] != "" && limitValue[str9] == "") {
-                                    if (sliceTime >= limitValue[str8])
-                                        newArr.push(value);
-                                } else {
-                                    newArr.push(value);
-                                }
-                            }
-
-                        } else if (limitValue[str6] == "" && limitValue[str7] != "") {
-                            if (start.getTime() <= limitValue[str7])
-                                newArr.push(value);
-                        } else if (limitValue[str6] != "" && limitValue[str7] == "") {
-                            if (start.getTime() >= limitValue[str6])
-                                newArr.push(value);
-                        } else {
-                            newArr.push(value);
-                        }
+            } else if (filterLimit.authorizor && filterLimit.authorizor !== "") {
+                filted = true;
+            }
+            if (value.results[0] && value.results[0].error_code == 0 ? filterLimit.result == 'false' : filterLimit.result == 'true') {
+                filted = true;;
+            }
+            if (filterLimit.executeStartDate) {
+                if (filterLimit.executeStartTime) {
+                    var startDateTimestampe = filterLimit.executeStartDate.getTime() +
+                        filterLimit.executeStartTime.getTime() + 8 * 3600 * 1000;
+                    var recordDateTimestampe = Date.parse(value.operated_at);
+                    if (recordDateTimestampe < startDateTimestampe) {
+                        filted = true;;
                     }
-
+                } else {
+                    var startDateTimestampe = filterLimit.executeStartDate.getTime();
+                    var recordDateTimestampe = Date.parse(value.operated_at.match(/\d{4}-\d{2}-\d{2}/))
+                    if (recordDateTimestampe < startDateTimestampe) {
+                        filted = true;;
+                    }
                 }
-
-
-            });
-        }
-        filterFunc(ListData, "operation", "operator", "authorizor", "name", "operated_at", "executeStartDate", "executeEndDate", "executeStartTime", "executeEndTime");
-        if (newArr.length > 0) {
-            //			ListData = angular.copy(newArr);
-            return newArr;
-        } else {
-            return newArr;
-        }
-
+            } else if (filterLimit.executeStartTime) {
+                var startTimestamp = filterLimit.executeStartTime.getTime();
+                var recordTimestamp = Date.parse('The Jan 01 1970 ' + value.operated_at.match(/\d{2}:\d{2}:\d{2}/) + ' GMT+0800');
+                if (recordTimestamp < startTimestamp) {
+                    filted = true;
+                }
+            }
+            if (filterLimit.executeEndDate) {
+                if (filterLimit.executeEndTime) {
+                    var endDateTimestampe = filterLimit.executeEndDate.getTime() +
+                        filterLimit.executeEndTime.getTime() + 8 * 3600 * 1000;
+                    var recordDateTimestampe = Date.parse(value.operated_at);
+                    if (recordDateTimestampe > endDateTimestampe) {
+                        filted = true;;
+                    }
+                } else {
+                    var endDateTimestampe = filterLimit.executeEndDate.getTime() + 24 * 3600 * 1000 - 1;
+                    var recordDateTimestampe = Date.parse(value.operated_at.match(/\d{4}-\d{2}-\d{2}/));
+                    if (recordDateTimestampe > endDateTimestampe) {
+                        filted = true;;
+                    }
+                }
+            } else if (filterLimit.executeEndTime) {
+                var endTimestamp = filterLimit.executeEndTime.getTime();
+                var recordTimestamp = Date.parse('The Jan 01 1970 ' + value.operated_at.match(/\d{2}:\d{2}:\d{2}/) + ' GMT+0800');
+                if (recordTimestamp > endTimestamp) {
+                    filted = true;
+                }
+            }
+            if (!filted) {
+                newArr.push(value);
+            }
+        })
+        scope.pages = Math.ceil(newArr.length / scope.listsPerPage);
+        return newArr;
     }
-})
+});
 app.filter('paging', function() {
     return function(listsData, start) {
         if (listsData)
@@ -982,45 +947,49 @@ app.controller('optionResultControl', ['$scope', '$operationBooks', function($sc
     $scope.operationName = null;
     $scope.loadingShow = true;
     $scope.filter_keywords = {};
+    $scope.currentPage = 0;
+    $scope.listsPerPage = 10;
     $operationBooks.operationRecordsPost({
         onSuccess: function(res) {
             $scope.operationRecordsData = res.records;
-            if ($scope.operationRecordsData) {
-                $scope.listsDataNum = $scope.operationRecordsData.length;
-                $scope.pages = Math.ceil($scope.listsDataNum / 10);
-                $scope.pagesNum = [];
-                for (var i = 0; i < $scope.pages; i++) {
-                    $scope.pagesNum.push(i);
-                }
-                $scope.currentPage = 0;
-                $scope.listsPerPage = 10;
-                $scope.setPages = function(num) {
-                    $scope.currentPage = num;
-
-                }
-                $scope.prePage = function() {
-                    if ($scope.currentPage > 0)
-                        $scope.currentPage--;
-                }
-                $scope.nextPage = function() {
-                    if ($scope.currentPage < $scope.pages - 1)
-                        $scope.currentPage++;
-                }
-                $scope.firstPage = function() {
-                    $scope.currentPage = 0;
-                }
-                $scope.lastPage = function() {
-                    $scope.currentPage = $scope.pages - 1;
-                }
-            }
+            $scope.pages = Math.ceil($scope.operationRecordsData.length / $scope.listsPerPage);
             $scope.loadingShow = false;
         }
     });
+    $scope.$watch('pages', function() {
+        $scope.pagesNum = [];
+        for (var i = 0; i < $scope.pages; i++) {
+            $scope.pagesNum.push(i);
+        }
+        $scope.currentPage = 0;
+    });
+    /* $scope.makePageList = function(length) {
+        $scope.pages = Math.ceil(length / $scope.listsPerPage);
+        $scope.pagesNum = [];
+        for (var i = 0; i < $scope.pages; i++) {
+            $scope.pagesNum.push(i);
+        }
+    } */
+    $scope.setPages = function(num) {
+        $scope.currentPage = num;
+    }
+    $scope.prePage = function() {
+        if ($scope.currentPage > 0)
+            $scope.currentPage--;
+    }
+    $scope.nextPage = function() {
+        if ($scope.currentPage < $scope.pages - 1)
+            $scope.currentPage++;
+    }
+    $scope.firstPage = function() {
+        $scope.currentPage = 0;
+    }
+    $scope.lastPage = function() {
+        $scope.currentPage = $scope.pages - 1;
+    }
     $scope.show_result = function(index) {
         $('#op_result' + index).modal({ relatedTarget: this });
     };
-
-
 }]);
 app.controller('FileUpdateControl', ['$scope', 'fileUpload', function($scope, fileUpload) {
     $scope.sendFile = function() {
