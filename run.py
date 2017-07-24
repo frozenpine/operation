@@ -16,7 +16,7 @@ from TaskManager.worker import Worker
 
 
 app_host = environ.get('FLASK_HOST') or '0.0.0.0'
-app_port = environ.get('FLASK_PORT') or 5000
+app_port = environ.get('FLASK_PORT') or 6001
 
 def taskManagerStarter():
     monkey.patch_all(socket=False, thread=False)

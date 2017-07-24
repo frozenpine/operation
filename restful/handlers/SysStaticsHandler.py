@@ -47,7 +47,7 @@ class ServerList(object):
             self.rtn['details'].append({
                 'id': data[0].id,
                 'server': data[0].ip,
-                'updated_time': arrow.now().format('HH:mm:ss'),
+                'updated_time': arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss'),
                 'uptime': data[1]['status'].get('uptime'),
                 'cpu': data[1]['status'].get('cpu'),
                 'disks': data[1]['status'].get('disks'),
@@ -140,7 +140,7 @@ class SystemList(object):
             self.rtn.append(
                 {
                     'name': each_sys.name,
-                    'updated_time': arrow.now().format('HH:mm:ss'),
+                    'updated_time': arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss'),
                     'version': each_sys.version,
                     'detail': [{
                         'id': proc.id,
@@ -390,7 +390,7 @@ class LoginListApi(Resource, SystemList):
                             except IndexError:
                                 tmp[src.source['formatter'][idx]['key']] = \
                                     src.source['formatter'][idx]['default']
-                            tmp['updated_time'] = arrow.now().format('HH:mm:ss')
+                            tmp['updated_time'] = arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss')
                         rtn.append(tmp)
                     sys_db.close()
                     return RestProtocol(rtn)
@@ -470,7 +470,7 @@ class LoginCheckApi(Resource):
                     data[datas['formatter'][idx]['key']] = \
                         datas['formatter'][idx]['default']
                 data['seat_id'] = k
-                data['updated_time'] = arrow.now().format('HH:mm:ss')
+                data['updated_time'] = arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss')
                 for each in v:
                     try:
                         message = each.get('message').decode('utf-8')
@@ -550,7 +550,7 @@ class UserSessionListApi(Resource, SystemList):
                                 tmp[src.source['formatter'][idx]['key']] = \
                                     src.source['formatter'][idx]['default']
                             finally:
-                                tmp['updated_time'] = arrow.now().strftime('%H:%M:%S')
+                                tmp['updated_time'] = arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss')
                         rtn.append(tmp)
                     sys_db.close()
                     return rtn
