@@ -75,6 +75,7 @@ tm_stop(){
     if [[ $? == 0 ]]; then
         kill ${_PID} &>/dev/null && kill -9 ${_PID} &>/dev/null
         _LOG "TaskManager stopped[PID:${_PID}]."
+        rm -f "${TM_PID}"
     else
         _ERR "TaskManager already stopped."
         exit 1

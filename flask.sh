@@ -78,6 +78,7 @@ flask_stop(){
     if [[ $? == 0 ]]; then
         kill ${_PID} &>/dev/null && kill -9 ${_PID} &>/dev/null
         _LOG "Flask stopped[PID:${_PID}]."
+        rm -f "${FLASK_PID}"
     else
         _ERR "Flask already stopped."
         exit 1
