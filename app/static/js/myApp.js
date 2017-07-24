@@ -11,8 +11,8 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
 
     $provide.factory('$message', function($uuid) {
         return {
-            ModelSucess: function(msg, timeout = 3, alertId, id = $uuid.uuid4()) {
-                $('#' + alertId).append('\
+            ModelSucess: function(msg, moduleID, timeout = 3, id = $uuid.uuid4()) {
+                $('#' + moduleID).append('\
 <div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">\
     <p class="am-text-center">' + msg + '</p>\
 </div>\
@@ -23,8 +23,8 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
                     $('#' + id).alert('close');
                 }, timeout * 1000);
             },
-            ModelAlert: function(msg, timeout = 3, alertId, id = $uuid.uuid4()) {
-                $('#' + alertId).append('\
+            ModelAlert: function(msg, moduleID, timeout = 3, id = $uuid.uuid4()) {
+                $('#' + moduleID).append('\
 <div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">\
     <p class="am-text-center">' + msg + '</p>\
 </div>\
@@ -1132,7 +1132,7 @@ app.controller('optionBookController', ['$scope', '$timeout', '$operationBooks',
     $scope.optionBookShellIs = false;
     $scope.optionBookCheckShell = function(index, id) {
         if (id === undefined) {
-            $message.ModelAlert("请选择系统", 1, "modalInfoShowDefine");
+            $message.ModelAlert("请选择系统", "modalInfoShowDefine");
             return;
         }
         $scope.optionBookShellIs = false;
@@ -1141,18 +1141,25 @@ app.controller('optionBookController', ['$scope', '$timeout', '$operationBooks',
             sys_id: id,
             data: $scope.optionBookCommand[index],
             onSuccess: function(response) {
-                $message.ModelSucess("检查成功", 2, "modalInfoShowDefine");
-                $scope.checkShow = false;
-                $scope.optionBookShellIs = true;
+                if (response.error_code == 0) {
+                    $message.ModelSucess("检查成功", "modalInfoShowDefine");
+                    $scope.checkShow = false;
+                    $scope.optionBookShellIs = true;
+                } else {
+                    $message.ModelAlert("检查失败,脚本文件不存在", "modalInfoShowDefine");
+                    $scope.checkShow = false;
+                    if ($scope.optionBookCommand.length != 1)
+                        $scope.optionBookCommand.splice(index, 1);
+                    else {
+                        $scope.optionBookCommand[index].shell = "";
+                        $scope.optionBookCommand[index].chdir = "";
+                    }
+                }
             },
             onError: function(response) {
-                $message.ModelAlert("检查失败,脚本文件不存在", 2, "modalInfoShowDefine");
-                $scope.checkShow = false;
-                if ($scope.optionBookCommand.length != 1)
-                    $scope.optionBookCommand.splice(index, 1);
-                else {
-                    $scope.optionBookCommand[index].shell = "";
-                    $scope.optionBookCommand[index].chdir = "";
+                console.log(response);
+                if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
                 }
             }
         });
