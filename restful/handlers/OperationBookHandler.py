@@ -43,10 +43,10 @@ class OperationBookListApi(Resource):
                 ob.type = ScriptType[data.get('type')]
                 ob.catalog_id = data.get('catalog_id')
                 ob.sys_id = data.get('sys_id')
-                if data.get('is_emergency') == 'false':
-                    ob.is_emergency = 0
-                elif data.get('is_emergency') == 'true':
-                    ob.is_emergency = 1
+                # if data.get('is_emergency') == 'false':
+                #     ob.is_emergency = 0
+                # elif data.get('is_emergency') == 'true':
+                #     ob.is_emergency = 1
 
                 system = TradeSystem.find(id=data.get('sys_id'))
                 if system:
@@ -107,7 +107,8 @@ class OperationBookListApi(Resource):
                         ob.order = (ob_list.index(ob) + 1) * 10
                     else:
                         ob_temp.append(ob)
-                        obs = OperationBook.query.filter(OperationBook.catalog_id == v.get('catalog_id')).filter(OperationBook.disabled==False).order_by(
+                        obs = OperationBook.query.filter(OperationBook.catalog_id == v.get('catalog_id')).filter(
+                            OperationBook.disabled == False).order_by(
                             OperationBook.order).all()
                         if len(obs):
                             ob.order = (obs[-1].order + 10) / 10 * 10
@@ -118,10 +119,10 @@ class OperationBookListApi(Resource):
                     ob.type = ScriptType[v.get('type')] or ob.type
                     ob.catalog_id = v.get('catalog_id', ob.catalog_id)
                     ob.sys_id = v.get('sys_id', ob.sys_id)
-                    if v.get('is_emergency') == 'false':
-                        ob.is_emergency = 0
-                    elif v.get('is_emergency') == 'true':
-                        ob.is_emergency = 1
+                    # if v.get('is_emergency') == 'false':
+                    #     ob.is_emergency = 0
+                    # elif v.get('is_emergency') == 'true':
+                    #     ob.is_emergency = 1
                     if v.get('disabled') == 'false':
                         ob.disabled = 0
                     elif v.get('disabled') == 'true':
@@ -140,18 +141,15 @@ class OperationBookCheckApi(Resource):
         try:
             data = request.get_json(force=True)
         except BadRequest:
-            try:
-                raise DataNotJsonError
-            except DataNotJsonError:
-                return RestProtocol(DataNotJsonError())
+            return RestProtocol(DataNotJsonError())
         else:
             try:
                 if not data.get('shell'):
                     raise DataNotNullError
-            except DataNotNullError:
-                return RestProtocol(DataNotNullError())
+            except DataNotNullError as e:
+                return RestProtocol(e)
             else:
-                system=TradeSystem.find(**kwargs)
+                system = TradeSystem.find(**kwargs)
                 if system:
                     file_name, chdir = data.get('shell'), data.get('chdir')
                     ssh = paramiko.SSHClient()
@@ -163,11 +161,14 @@ class OperationBookCheckApi(Resource):
                     else:
                         stdin, stdout, stderr = ssh.exec_command(
                             'if [ -f {0} ];then echo 0;else echo 1;fi'.format(file_name))
-                    ans = stdout.readlines()[0]
+                    res = stdout.readlines()[0].strip('\n')
                     ssh.close()
-                    return {'error_code': '0',
-                            'data': ans,
-                            'message': 'Script Check successfully'}
+                    if res == '0':
+                        return RestProtocol(error_code=0,
+                                            message='Script check success.')
+                    else:
+                        return RestProtocol(error_code=1,
+                                            message='Script check fails.')
 
 
 class OperationBookApi(Resource):

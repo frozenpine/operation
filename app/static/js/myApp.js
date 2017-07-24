@@ -103,7 +103,10 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
 
         var init = function() {
             if ("WebSocket" in window) {
-                ws = new WebSocket("ws://" + $location.host() + ":5000/websocket");
+                var websocket_protocol = $location.protocol() == "http" ? "ws://" : "wss://";
+                var websocket_uri = websocket_protocol + $location.host() + ":" + $location.port() + "/websocket";
+                console.log(websocket_uri);
+                ws = new WebSocket(websocket_uri);
                 ws.onopen = function() {
                     console.log("[Client] Websocket connected successfully.");
                     $message.Success('Websocket connected successfully.');
