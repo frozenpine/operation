@@ -519,9 +519,9 @@ class Socket(SQLModelMixin, db.Model):
             self.type = SocketType.TCP
         if parse['ip'] in ['127.0.0.1', 'localhost'] \
             and self.direction == SocketDirection.Listen.value:
-            self.address = ip_address('0.0.0.0')
+            self.address = ip_address(u'0.0.0.0')
         else:
-            self.address = ip_address(parse['ip'])
+            self.address = ip_address(unicode(parse['ip']))
         self.port = int(parse['port'])
 
 class SystemType(SQLModelMixin, db.Model):
@@ -548,7 +548,7 @@ class TradeSystem(SQLModelMixin, db.Model):
         return self.manage_ip.exploded
     @ip.setter
     def ip(self, addr):
-        self.manage_ip = ip_address(addr)
+        self.manage_ip = ip_address(unicode(addr))
 
     login_user = db.Column(db.String, index=True)
     @property
@@ -680,7 +680,7 @@ class Server(SQLModelMixin, db.Model):
         return self.manage_ip.exploded
     @ip.setter
     def ip(self, addr):
-        self.manage_ip = addr
+        self.manage_ip = ip_address(unicode(addr))
 
     admin_user = db.Column(db.String, index=True)
     @property

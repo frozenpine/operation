@@ -47,7 +47,7 @@ def init_auth():
 
     roles = {}
     for role in auth['Roles']:
-        roles[role['name']] = OpRole(role['name'])
+        roles[role['name']] = OpRole(name=role['name'])
     db.session.add_all(roles.values())
     db.session.commit()
 
@@ -139,9 +139,13 @@ def init_inventory():
 
     sockets = {}
     for sock  in inventory['Sockets']:
+        if sock.has_key('direction'):
+            typ, cat = sock['direction'].split('.')
+            sock['direction'] = getattr(globals()[typ], cat).value
         if sock.has_key('process'):
-            proc = processes[sock.pop('process')]
-            sock['proc_id'] = proc.id
+            proc = TradeProcess.find(name=sock.pop('process'))
+            if proc:
+                sock['proc_id'] = proc.id
         sockets[sock['uri']] = Socket(**sock)
     db.session.add_all(sockets.values())
     db.session.commit()
@@ -167,15 +171,6 @@ def init_inventory():
             )
         datasources.append(DataSource(**ds))
     db.session.add_all(datasources)
-    db.session.commit()
-
-
-    operations = Operation.query.filter(Operation.sys_id == 3).all()
-    for op in operations:
-        params = op.detail['remote']['params']
-        params['ip'] = '192.168.56.1'
-        params['password'] = 'qdamqdam'
-    db.session.add_all(operations)
     db.session.commit()
 
 @manager.command

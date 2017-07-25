@@ -10,7 +10,7 @@ Users:
       - *admin
   - login: sonny
     name: Yuan Yang
-    password: "********"
+    password: 022010144blue
     roles:
       - *first
       - *second
