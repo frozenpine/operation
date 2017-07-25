@@ -162,7 +162,7 @@ class SystemList(object):
                             'tty': self.proc_status.has_key(proc) and \
                                 self.proc_status[proc].get('tty') or None,
                             'stat': self.proc_status.has_key(proc) and \
-                                self.proc_status[proc].get('stat') or None,
+                                self.proc_status[proc].get('stat') or 'stopped',
                             'start': self.proc_status.has_key(proc) and \
                                 self.proc_status[proc].get('start') or None,
                             'time': self.proc_status.has_key(proc) and \
