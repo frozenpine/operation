@@ -47,8 +47,8 @@ class UIDataApi(Resource):
             }
             if privileged:
                 system['secondName'].append({
-                    'name': u'系统应急操作',
-                    'Url': '#system/{}/emerge_ops'.format(sys.id)
+                    'name': u'全部操作节点',
+                    'Url': '#system/{}/operate-books'.format(sys.id)
                 })
             rtn.append(system)
         return rtn

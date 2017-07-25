@@ -15,15 +15,6 @@ from models import MethodType, Operator
 
 from . import main
 
-user = ""
-
-@main.route('/hello')
-@main.route('/hello/<string:name>')
-def hello_world(**kwargs):
-    global user
-    if kwargs.has_key('name'):
-        user = kwargs['name']
-    return render_template('hello.html', name=user)
 
 @main.route('/')
 @main.route('/index')

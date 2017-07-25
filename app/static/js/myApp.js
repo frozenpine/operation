@@ -925,8 +925,8 @@ app.config(['$routeProvider', function($routeProvider) {
         .when('/system/:sysid/op_group/:grpid', {
             templateUrl: 'UI/views/op_group'
         })
-        .when('/system/:sysid/emerge_ops', {
-            templateUrl: 'UI/views/emerge_ops'
+        .when('/system/:sysid/operate-books', {
+            templateUrl: 'UI/views/operate-books'
         })
         .otherwise({
             redirectTo: '/dashboard'
@@ -1446,7 +1446,7 @@ app.controller('svrStaticsControl', ['$scope', '$servers', '$interval', '$routeP
         }
     };
 
-    $scope.autoRefresh = function(auto) {
+    $scope.autoRefresh = function() {
         if ($scope.auto) {
             $scope.svrStaticInterval = $interval(
                 function() { $scope.checkSvrStatics(); },
@@ -1502,7 +1502,7 @@ app.controller('sysStaticsControl', ['$scope', '$systems', '$interval', '$routeP
         if ($scope.auto) {
             $scope.sysStaticInterval = $interval(
                 function() { $scope.checkProc(); },
-                $rootScope.GlobalConfigs.sysStaticsInterval.current * 10000
+                $rootScope.GlobalConfigs.sysStaticsInterval.current * 1000
             );
             $scope.checkProc();
         } else {
@@ -2192,9 +2192,8 @@ app.controller('clientStaticsControl', ['$scope', '$systems', '$routeParams', '$
     $scope.autoRefresh = function() {
         if ($scope.auto) {
             $scope.clientSessionInterval = $interval(
-                function() {
-                    $scope.CheckClientSessions();
-                }, parseInt($rootScope.sessionStaticsInterval) * 1000
+                function() { $scope.CheckClientSessions(); },
+                $rootScope.sessionStaticsInterval.current * 1000
             );
             $scope.CheckClientSessions();
         } else {
