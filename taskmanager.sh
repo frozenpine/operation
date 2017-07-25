@@ -94,6 +94,7 @@ case $1 in
     ;;
     'restart')
         tm_stop
+        sleep 3
         tm_start
     ;;
     *)

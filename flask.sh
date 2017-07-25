@@ -76,7 +76,12 @@ flask_start(){
 flask_stop(){
     flask_status &>/dev/null
     if [[ $? == 0 ]]; then
-        kill ${_PID} &>/dev/null && kill -9 ${_PID} &>/dev/null
+        kill ${_PID} &>/dev/null
+        flask_status
+        if [[ $? != 0 ]]; then
+            kill -9 ${_PID} &>/dev/null
+            sleep 1
+        fi
         _LOG "Flask stopped[PID:${_PID}]."
         rm -f "${FLASK_PID}"
     else
@@ -97,6 +102,7 @@ case $1 in
     ;;
     'restart')
         flask_stop
+        sleep 3
         flask_start
     ;;
     *)

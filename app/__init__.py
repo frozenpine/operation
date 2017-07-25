@@ -15,16 +15,14 @@ from MessageQueue.msgserver import MessageQueues
 sys.modules['zmq'] = zmq
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s %(filename)s-%(funcName)s[line:%(lineno)d] %(levelname)s %(message)s',
-    datefmt='%a, %d %b %Y %H:%M:%S',
-    filename='Logs/Syslog.log',
-    filemode='a'
+    datefmt='%a, %d %b %Y %H:%M:%S'
 )
 
 console = logging.StreamHandler()
 console.setLevel(logging.INFO)
-formatter = logging.Formatter('%(name)s: %(levelname)s %(message)s')
+formatter = logging.Formatter('%(asctime)s %(filename)s-%(funcName)s[line:%(lineno)d] %(levelname)s %(message)s')
 console.setFormatter(formatter)
 logging.getLogger('').addHandler(console)
 

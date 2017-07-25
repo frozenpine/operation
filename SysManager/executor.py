@@ -1,5 +1,4 @@
 # -*- coding: UTF-8 -*-
-import logging
 import sys
 import urllib
 from os import path
@@ -16,6 +15,7 @@ from winrm.exceptions import (WinRMError, WinRMOperationTimeoutError,
 
 from configs import HttpConfig, RemoteConfig, Result, SSHConfig, WinRmConfig
 from excepts import ImportRSAkeyFaild, ModuleNotFound
+from app import logging
 
 sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
 
@@ -151,10 +151,16 @@ if __name__ == '__main__':
     conf = SSHConfig('192.168.101.126', 'qdam', 'qdam')
     exe = Executor.Create(conf)
     mod = {
-        'name': 'quantdoVersion',
+        'name': 'psaux',
         'args': {
-            'dir': '/home/qdam/qtrade/bin',
-            'file': 'qtrade'
+            'processes': [
+                'qtrade',
+                'qdata',
+                'qmdb',
+                'qquery',
+                'qicegateway 1',
+                'qicegateway 2'
+            ]
         }
     }
     '''

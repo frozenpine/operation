@@ -1,13 +1,12 @@
 # coding=utf-8
 
-import logging
-
 from enum import Enum
 from gevent.queue import JoinableQueue
+from app import logging
 
 import get_time
 
-logging.basicConfig(level="INFO")
+# logging.basicConfig(level="INFO")
 
 
 class DispatchResult(Enum):

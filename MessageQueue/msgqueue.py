@@ -5,6 +5,8 @@ import time
 from Queue import Queue
 from threading import Thread
 
+from MessageQueue import logging
+
 
 class MessageQueue(Thread):
     def __init__(self, filename, timer=10):

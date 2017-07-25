@@ -1,15 +1,18 @@
 # coding=utf-8
 
 import json as pickle
-import logging
 import os
+from app import logging
+
+app_host = os.environ.get('FLASK_HOST') or '127.0.0.1'
+app_port = os.environ.get('FLASK_PORT') or 6001
 
 import requests
 
 from controller_queue import ControllerQueue
 from msg_queue import msg_queue
 
-logging.basicConfig(level="INFO")
+# logging.basicConfig(level="INFO")
 
 
 class Controller(object):
@@ -228,7 +231,11 @@ class Controller(object):
             ))
         logging.info(result.to_str())
         requests.post(
-            'http://localhost:5000/api/operation/uuid/{id}/callback'.format(id=result.task_uuid),
+            'http://{ip}:{port}/api/operation/uuid/{id}/callback'.format(
+                ip=app_host,
+                port=app_port,
+                id=result.task_uuid
+            ),
             json=result.to_dict()
         )
         # 非阻塞队列开始执行后
@@ -249,7 +256,11 @@ class Controller(object):
             ))
         logging.info(result.to_str())
         requests.post(
-            'http://localhost:5000/api/operation/uuid/{id}/callback'.format(id=result.task_uuid),
+            'http://{ip}:{port}/api/operation/uuid/{id}/callback'.format(
+                ip=app_host,
+                port=app_port,
+                id=result.task_uuid
+            ),
             json=result.to_dict()
         )
         # 阻塞队列执行完成后

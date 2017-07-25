@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import json
-import logging
 import re
 
 import arrow
+from app import logging
 from enum import Enum
 from sqlalchemy import create_engine
 

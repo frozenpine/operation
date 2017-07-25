@@ -90,7 +90,7 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
         }
     });
 
-    $provide.factory('$websocket', function($rootScope, $location, $interval, $timeout, $message, $sessionStorage) {
+    $provide.factory('$websocket', function($rootScope, $location, $interval, $timeout, $message, $sessionStorage, $uuid) {
         if (!$sessionStorage.hasOwnProperty('messages')) {
             $sessionStorage.messages = [];
         }
@@ -99,15 +99,17 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
         var heartbeat_interval;
         var unload = false;
         var ws;
-        var topic_callbacks = {}
+        var request_list = {};
 
         var init = function() {
             if ("WebSocket" in window) {
+                if (ws) { delete ws; }
                 var websocket_protocol = $location.protocol() == "http" ? "ws://" : "wss://";
                 var websocket_uri = websocket_protocol + $location.host() + ":" + $location.port() + "/websocket";
                 console.log(websocket_uri);
                 ws = new WebSocket(websocket_uri);
                 ws.onopen = function() {
+                    unload = false;
                     console.log("[Client] Websocket connected successfully.");
                     $message.Success('Websocket connected successfully.');
                     connected = true;
@@ -157,7 +159,6 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
 
         window.onbeforeunload = function() {
             unload = true;
-            console.log('[Client] Closing websocket.')
             ws.close();
         };
 
@@ -166,7 +167,6 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
                 console.log('[Server] Heartbeat: ' + msg.heartbeat);
             } else if (msg.hasOwnProperty('topics')) {
                 msg.topics.forEach(function(topic_name) {
-                    topic_callbacks[topic_name] = new Set();
                     console.log('[Client] Subscribing topic: ' + topic_name);
                     ws.send(JSON.stringify({
                         method: 'subscribe',
@@ -174,8 +174,16 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
                     }));
                 });
             } else if (msg.hasOwnProperty('message')) {
-                console.log('[Server] Message from server: ' + msg.message)
+                console.log('[Server] Message from server: ' + msg.message);
                 $message.Info(msg.message);
+            } else if (msg.hasOwnProperty('error')) {
+                console.log('[Server] Message from server: ' + msg.error);
+                $message.Alert(msg.error);
+            } else if (msg.hasOwnProperty('response')) {
+                response = JSON.parse(msg.response);
+                console.log(response);
+                request_list[msg.session](response);
+                delete request_list[msg.session];
             } else if (msg.hasOwnProperty('topic')) {
                 switch (msg.topic) {
                     case "public":
@@ -196,12 +204,20 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
         };
 
         return {
-            Send: function(msg) {
-                ws.send(JSON.stringify(msg));
+            Request: function(params) {
+                var session = $uuid.uuid4();
+                request_list[session] = params.callback;
+                ws.send(JSON.stringify({
+                    request: params.uri,
+                    method: params.method,
+                    session: session
+                }));
             },
-            Close: function() { ws.close(); },
-            Subscribe: function(topic_name, callback) {},
-            UnSubscribe: function(topic_name, callback) {}
+            Close: function() {
+                unload = true;
+                console.log('[Client] Closing websocket.')
+                ws.close();
+            }
         };
     });
 });
@@ -262,7 +278,7 @@ app.service('$uidatas', function($http, $message) {
     }
 })
 
-app.service('$servers', function($http, $message, $localStorage, $timeout, $rootScope) {
+app.service('$servers', function($http, $websocket, $message, $localStorage, $timeout, $rootScope) {
     this.CheckServerStatics = function(params, force = false) {
         if (params.sysID === undefined) {
             return false;
@@ -291,7 +307,31 @@ app.service('$servers', function($http, $message, $localStorage, $timeout, $root
                 angular.extend($localStorage['svrStatics_' + params.sysID], { last_request: request_timestamp });
             }, 0);
         }
-        $http.get('api/system/id/' + params.sysID + '/svr_statics/check')
+        $websocket.Request({
+            uri: 'api/system/id/' + params.sysID + '/svr_statics/check',
+            method: 'get',
+            callback: function(response) {
+                if (response.error_code == 0) {
+                    if ($localStorage.hasOwnProperty('svrStatics_' + params.sysID)) {
+                        $timeout(function() {
+                            angular.merge($localStorage['svrStatics_' + params.sysID], response.data);
+                        })
+                    } else {
+                        $timeout(function() {
+                            $localStorage['svrStatics_' + params.sysID] = angular.merge(
+                                response.data, { last_request: request_timestamp }
+                            );
+                        });
+                    }
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(response.data);
+                    }
+                } else if (params.hasOwnProperty('onError')) {
+                    params.onError(response);
+                }
+            }
+        });
+        /* $http.get('api/system/id/' + params.sysID + '/svr_statics/check')
             .success(function(response) {
                 if (response.error_code == 0) {
                     if ($localStorage.hasOwnProperty('svrStatics_' + params.sysID)) {
@@ -315,7 +355,7 @@ app.service('$servers', function($http, $message, $localStorage, $timeout, $root
             .error(function(response) {
                 console.log(response);
                 $message.Alert(response.message);
-            });
+            }); */
         return true;
     };
 
@@ -323,6 +363,19 @@ app.service('$servers', function($http, $message, $localStorage, $timeout, $root
         if (params.sysID === undefined) {
             return;
         }
+        /* $websocket.Request({
+            uri: 'api/system/id/' + params.sysID + '/svr_statics',
+            method: 'get',
+            callback: function(response) {
+                if (response.error_code == 0) {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(response.data);
+                    }
+                } else if (params.hasOwnProperty('onError')) {
+                    params.onError(response);
+                }
+            }
+        }); */
         $http.get('api/system/id/' + params.sysID + '/svr_statics')
             .success(function(response) {
                 if (response.error_code == 0) {
@@ -344,7 +397,7 @@ app.service('$servers', function($http, $message, $localStorage, $timeout, $root
     }
 });
 
-app.service('$systems', function($http, $message, $localStorage, $sessionStorage, $timeout, $rootScope) {
+app.service('$systems', function($http, $websocket, $message, $localStorage, $sessionStorage, $timeout, $rootScope) {
     this.SystemStaticsCheck = function(params, force = false) {
         if (params.sysID === undefined) {
             return false;
@@ -373,7 +426,31 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
                 angular.extend($localStorage['sysStatics_' + params.sysID], { last_request: request_timestamp });
             }, 0);
         }
-        $http.get('api/system/id/' + params.sysID + '/sys_statics/check')
+        $websocket.Request({
+            uri: 'api/system/id/' + params.sysID + '/sys_statics/check',
+            method: 'get',
+            callback: function(response) {
+                if (response.error_code == 0) {
+                    if ($localStorage.hasOwnProperty('sysStatics_' + params.sysID)) {
+                        $timeout(function() {
+                            angular.merge($localStorage['sysStatics_' + params.sysID], response.data);
+                        })
+                    } else {
+                        $timeout(function() {
+                            $localStorage['sysStatics_' + params.sysID] = angular.merge(
+                                response.data, { last_request: request_timestamp }
+                            );
+                        });
+                    }
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(response.data);
+                    }
+                } else if (params.hasOwnProperty('onError')) {
+                    params.onError(response);
+                }
+            }
+        });
+        /* $http.get('api/system/id/' + params.sysID + '/sys_statics/check')
             .success(function(response) {
                 if (response.error_code == 0) {
                     if ($localStorage.hasOwnProperty('sysStatics_' + params.sysID)) {
@@ -397,7 +474,7 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
             .error(function(response) {
                 console.log(response);
                 $message.Alert(response.message);
-            });
+            }); */
         return true;
     }
 
@@ -405,6 +482,19 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
         if (params.sysID === undefined) {
             return;
         }
+        /* $websocket.Request({
+            uri: 'api/system/id/' + params.sysID + '/sys_statics',
+            method: 'get',
+            callback: function(response) {
+                if (response.error_code == 0) {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(response.data);
+                    }
+                } else if (params.hasOwnProperty('onError')) {
+                    params.onError(response);
+                }
+            }
+        }); */
         $http.get('api/system/id/' + params.sysID + '/sys_statics')
             .success(function(response) {
                 if (response.error_code == 0) {

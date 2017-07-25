@@ -2,9 +2,12 @@
 import json
 import time
 
+from flask import current_app
+from flask.testing import EnvironBuilder
 from geventwebsocket import WebSocketError
 
-from msgsink import LogSinker, JSONSinker
+from MessageQueue import logging
+from msgsink import JSONSinker, LogSinker
 
 
 def req_subscribe(request):
@@ -12,7 +15,7 @@ def req_subscribe(request):
         topic = request['topic']
     except KeyError:
         request['ws'].send(json.dumps({
-            'error': 'Missing topic.'
+            'message': 'Missing topic.'
         }))
     else:
         if MessageQueues.has_key(topic):
@@ -22,7 +25,7 @@ def req_subscribe(request):
             }))
         else:
             request['ws'].send(json.dumps({
-                'error': 'Topic {} not exist.'.format(topic)
+                'message': 'Topic {} not exist.'.format(topic)
             }))
 
 def req_unsubscribe(request):
@@ -30,7 +33,7 @@ def req_unsubscribe(request):
         topic = request['topic']
     except KeyError:
         request['ws'].send(json.dumps({
-            'error': 'Missing topic.'
+            'message': 'Missing topic.'
         }))
     else:
         if MessageQueues.has_key(topic):
@@ -51,6 +54,23 @@ def req_heartbeat(request):
     request['ws'].send(json.dumps({
         'heartbeat': time.strftime('%Y-%m-%d %H:%M:%S')
     }))
+
+def req_get(request):
+    try:
+        uri = request['request']
+    except KeyError:
+        request['ws'].send(json.dumps({
+            'error': 'Missing request uri.'
+        }))
+    else:
+        urls = current_app.url_map.bind('localhost')
+        match = urls.match(request['request'])
+        with current_app.request_context(EnvironBuilder().get_environ()):
+            result = current_app.view_functions[match[0]](**match[1])
+            request['ws'].send(json.dumps({
+                'response': result.data,
+                'session': request['session']
+            }))
 
 def req_topics(request):
     request['ws'].send(json.dumps({

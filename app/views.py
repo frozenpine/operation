@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
 import json
-import logging
 from time import time
 
 from flask import Response, abort, current_app, render_template, request
@@ -8,6 +7,7 @@ from flask_login import current_user, login_required
 from geventwebsocket import WebSocketError
 
 from app.auth.privileged import CheckPrivilege
+from app import logging
 from common import wssh
 from common.cmdbuffer import CommandBuffer
 from MessageQueue.msgserver import MessageServer

@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
-import json
-import logging
 import datetime
+import json
 from os import path
 
 import arrow
@@ -12,7 +11,8 @@ from flask_login import current_user
 from flask_restful import Resource
 from sqlalchemy import text
 
-from app import db, globalEncryptKey, msgQueues, taskManager, taskRequests
+from app import (db, globalEncryptKey, logging, msgQueues, taskManager,
+                 taskRequests)
 from app.auth.errors import (AuthError, InvalidUsernameOrPassword,
                              LoopAuthorization, NoPrivilege)
 from app.auth.privileged import CheckPrivilege
