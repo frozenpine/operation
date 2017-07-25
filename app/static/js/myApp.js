@@ -181,7 +181,6 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
                 $message.Alert(msg.error);
             } else if (msg.hasOwnProperty('response')) {
                 response = JSON.parse(msg.response);
-                console.log(response);
                 request_list[msg.session](response);
                 delete request_list[msg.session];
             } else if (msg.hasOwnProperty('topic')) {
@@ -221,6 +220,7 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
         };
     });
 });
+
 app.directive("fileModel", ["$parse", function($parse) {
     return {
         restrict: "A",
@@ -237,6 +237,7 @@ app.directive("fileModel", ["$parse", function($parse) {
         }
     }
 }]);
+
 app.service("fileUpload", ["$http", function($http) {
     this.uploadFileToUrl = function(file, uploadUrl) {
         var fd = new FormData();
@@ -956,6 +957,7 @@ app.run(function($rootScope, $websocket, $sessionStorage, $localStorage, $operat
 app.controller('dashBoardControl', ['$scope', '$rootScope', function($scope, $rootScope) {
     $rootScope.isShowSideList = false;
 }]);
+
 app.filter('resultFilter', function() {
     return function(ListData, filterLimit, scope) {
         var newArr = new Array();
@@ -1029,12 +1031,14 @@ app.filter('resultFilter', function() {
         return newArr;
     }
 });
+
 app.filter('paging', function() {
     return function(listsData, start) {
         if (listsData)
             return listsData.slice(start);
     }
 });
+
 app.controller('optionResultControl', ['$scope', '$operationBooks', function($scope, $operationBooks) {
     $scope.executeResult = [];
     $scope.operationName = null;
@@ -1084,6 +1088,7 @@ app.controller('optionResultControl', ['$scope', '$operationBooks', function($sc
         $('#op_result' + index).modal({ relatedTarget: this });
     };
 }]);
+
 app.controller('FileUpdateControl', ['$scope', 'fileUpload', function($scope, fileUpload) {
     $scope.sendFile = function() {
         var url = "api/global-config",
@@ -1094,6 +1099,7 @@ app.controller('FileUpdateControl', ['$scope', 'fileUpload', function($scope, fi
             fileUpload.uploadFileToUrl(file, url);
     }
 }]);
+
 app.controller('EditoptionBookController', ['$scope', '$operationBooks', function($scope, $operationBooks) {
     $operationBooks.operationBookSystemsGet({
         onSuccess: function(res) {
@@ -1176,6 +1182,7 @@ app.controller('EditoptionBookController', ['$scope', '$operationBooks', functio
         });
     }
 }]);
+
 app.controller('optionBookController', ['$scope', '$timeout', '$operationBooks', '$message', function($scope, $timeout, $operationBooks, $message) {
     $operationBooks.operationBookSystemsGet({
         onSuccess: function(res) {
@@ -1281,9 +1288,11 @@ app.controller('optionBookController', ['$scope', '$timeout', '$operationBooks',
         });
     }
 }]);
+
 app.controller('Privileges', ['$rootScope', function($rootScope) {
     /*不可删除,用于获取$rootScope*/
 }]);
+
 app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$rootScope', '$message', function($scope, $q, $operationBooks, $rootScope, $message) {
     $operationBooks.operationBookSystemsGet({
         onSuccess: function(res) {
@@ -1381,6 +1390,7 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
         })
     }
 }]);
+
 app.controller('userController', ['$scope', '$http', '$rootScope', '$operationBooks', function($scope, $http, $rootScope, $operationBooks) {
     $scope.ModifyPassword = function(usr_id) {
         $('#modifyPassword').modal({
@@ -1400,6 +1410,7 @@ app.controller('userController', ['$scope', '$http', '$rootScope', '$operationBo
         });
     };
 }]);
+
 app.controller('svrStaticsControl', ['$scope', '$servers', '$interval', '$routeParams', '$localStorage', '$rootScope', function($scope, $servers, $interval, $routeParams, $localStorage, $rootScope) {
     $scope.svrShowDetail = true;
     var sys_id = $routeParams.sysid;
@@ -1462,6 +1473,7 @@ app.controller('svrStaticsControl', ['$scope', '$servers', '$interval', '$routeP
         $interval.cancel($scope.svrStaticInterval);
     });
 }]);
+
 app.controller('sysStaticsControl', ['$scope', '$systems', '$interval', '$routeParams', '$rootScope', function($scope, $systems, $interval, $routeParams, $rootScope) {
     $scope.sysShowDetail = true;
     var sys_id;
@@ -1525,6 +1537,7 @@ app.controller('sysStaticsControl', ['$scope', '$systems', '$interval', '$routeP
         }
     })
 }]);
+
 app.controller('sideBarCtrl', ['$scope', '$uidatas', '$operationBooks', '$rootScope', '$location', '$timeout', function($scope, $uidatas, $operationBooks, $rootScope, $location, $timeout) {
     $scope.tabList = [];
     var idList = [];
@@ -1939,6 +1952,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         })
     }
 }]);
+
 app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$operationBooks', '$message', function($scope, $http, $routeParams, $operationBooks, $message) {
     $scope.optionBookEditDataList = new Array();
     $scope.optionBookEditShow = new Array();
@@ -2103,6 +2117,7 @@ app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$oper
         }
     };
 }]);
+
 app.controller('loginStaticsControl', ['$scope', '$systems', '$interval', '$timeout', '$routeParams', '$rootScope', function($scope, $systems, $interval, $timeout, $routeParams, $rootScope) {
     $scope.loginShowDetail = true;
     $scope.loginStaticsShow = false;
@@ -2165,6 +2180,7 @@ app.controller('loginStaticsControl', ['$scope', '$systems', '$interval', '$time
         }
     })
 }]);
+
 app.controller('clientStaticsControl', ['$scope', '$systems', '$routeParams', '$interval', '$message', '$rootScope', function($scope, $systems, $routeParams, $interval, $message, $rootScope) {
     $scope.clientShowDetail = true;
     $scope.userSessionShow = false;
@@ -2205,6 +2221,7 @@ app.controller('clientStaticsControl', ['$scope', '$systems', '$routeParams', '$
     })
     $scope.CheckClientSessions();
 }]);
+
 /* app.controller('warningCtrl', ['$scope', '$http', function($scope, $http) {
     $scope.isRadioClick = false;
     $scope.tagSele = {
@@ -2244,10 +2261,13 @@ app.controller('clientStaticsControl', ['$scope', '$systems', '$routeParams', '$
         });
     };
 }]); */
+
 // app.controller('taskControl', ['$scope', '$rootScope', function($scope, $rootScope) {}]);
+
 app.controller('messageControl', ['$scope', '$sessionStorage', function($scope, $sessionStorage) {
     $scope.messages = $sessionStorage.messages;
 }]);
+
 app.filter('KB2', function() {
     return function(value, dst) {
         var num = parseFloat(value);
@@ -2278,11 +2298,13 @@ app.filter('KB2', function() {
         }
     };
 });
+
 app.filter('html_trust', ['$sce', function($sce) {
     return function(template) {
         return $sce.trustAsHtml(template);
     };
 }]);
+
 app.filter('percent', function() {
     return function(value, len, multi) {
         var num = parseFloat(value);
@@ -2300,6 +2322,7 @@ app.filter('percent', function() {
         return (num * multiplier).toFixed(fix).toString() + " %";
     };
 });
+
 app.filter('percentStatus', ['$rootScope', function($rootScope) {
     return function(value, range) {
         var num = parseFloat(value);
@@ -2321,6 +2344,7 @@ app.filter('percentStatus', ['$rootScope', function($rootScope) {
         return true;
     }
 }]);
+
 app.filter('mask', function() {
     return function(str) {
         var len = str.length;
@@ -2333,6 +2357,7 @@ app.filter('mask', function() {
         }
     };
 });
+
 app.filter('status', function() {
     return function(stat) {
         if (stat != "stopped") {
@@ -2358,6 +2383,7 @@ app.filter('status', function() {
         }
     };
 });
+
 app.filter('exe_result', function() {
     return function(value) {
         switch (value) {
@@ -2376,6 +2402,7 @@ app.filter('exe_result', function() {
         }
     };
 });
+
 app.directive('relamap', [function() {
     return {
         restrict: 'A',
@@ -2395,6 +2422,7 @@ app.directive('relamap', [function() {
         });
     }
 }]);
+
 app.directive('idcmap', [function() {
     return {
         restrict: 'A',
