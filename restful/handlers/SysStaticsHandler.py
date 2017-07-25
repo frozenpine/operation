@@ -250,20 +250,35 @@ class ProcStaticApi(Resource, SystemList):
         )
         executor = Executor.Create(conf)
         for proc in processes:
-            process_list.add(proc.exec_file)
+            process_list.add('{} {}'.format(proc.exec_file, proc.param or '').rstrip(' '))
             port_list |= set([socket.port for socket in proc.sockets])
-            mod = {
-                'name': 'psaux',
-                'args': {
-                    'processes': [proc.exec_file],
-                    'param': [proc.param]
+            if proc.version_method:
+                mod = {
+                    'name': proc.version_method,
+                    'args': {
+                        'dir': proc.base_dir,
+                        'file': proc.exec_file
+                    }
                 }
+                proc.version = executor.run(mod).lines
+                gevent.sleep(0)
+        mod = {
+            'name': 'psaux',
+            'args': {
+                'processes': list(process_list),
             }
-            result = executor.run(mod).data
-            gevent.sleep(0)
-            if len(result) > 0:
-                self.proc_status[proc] = result[0]
-            else:
+        }
+        results = executor.run(mod).data
+        gevent.sleep(0)
+        for proc in processes:
+            match = False
+            for result in results:
+                if '{} {}'.format(proc.exec_file, proc.param or '').rstrip(' ') \
+                    in result['command']:
+                    self.proc_status[proc] = result
+                    match = True
+                    break
+            if not match:
                 self.proc_status[proc] = {
                     'user': None,
                     'pid': None,
@@ -277,16 +292,7 @@ class ProcStaticApi(Resource, SystemList):
                     'time': None,
                     'command': None
                 }
-            if proc.version_method:
-                mod = {
-                    'name': proc.version_method,
-                    'args': {
-                        'dir': proc.base_dir,
-                        'file': proc.exec_file
-                    }
-                }
-                proc.version = executor.run(mod).lines
-                gevent.sleep(0)
+            match = False
         mod = {'name': 'netstat'}
         if len(port_list) > 0:
             if not mod.has_key('args'):
