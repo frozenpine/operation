@@ -54,7 +54,7 @@
                                 <td class="table-data" style="max-width: 120px">{{::data.server}}</td>
                                 <td class="table-data" style="max-width: 120px">{{data.uptime}}</td>
                                 <td class="table-data">
-                                    <div class="am-dropdown" style="cursor: pointer" ng-mouseover="showCPUDetail = true" ng-mouseleave="showCPUDetail = false">
+                                    <div class="am-dropdown" style="cursor: pointer" ng-mouseover="showCPUDetail = true" ng-mouseleave="showCPUDetail = false" ng-class="{'am-text-danger': (data.cpu[0].idle|percentStatus:GlobalConfigs.cpuIdleThreshold)}">
                                         {{data.cpu[0].idle | percent}}
                                         <div class="am-dropdown-content" ng-show="showCPUDetail" style="display: block;margin-top: 0">
                                             <div style="max-height: 300px; overflow-y: auto">
