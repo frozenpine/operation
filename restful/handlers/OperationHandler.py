@@ -30,7 +30,8 @@ dispatchMessage = {
     DispatchResult.Dispatched: u'任务调度成功',
     DispatchResult.EmptyQueue: u'队列任务已完成',
     DispatchResult.QueueBlock: u'上一项任务未完成，无法调度新任务',
-    DispatchResult.QueueMissing: u'队列不存在'
+    DispatchResult.QueueMissing: u'队列不存在',
+    DispatchResult.QueueNoError: u'队列无失败任务'
 }
 
 
@@ -197,6 +198,15 @@ class OperationListSnapshotApi(Resource):
             else:
                 ret = DispatchResult(snap)
                 return RestProtocol(message=dispatchMessage[ret], error_code=ret.value)
+        else:
+            return RestProtocol(message='Operation group not found', error_code=-1), 404
+
+class OperationListResumeApi(Resource):
+    def get(self, **kwargs):
+        op_group = OperationGroup.find(**kwargs)
+        if op_group:
+            ret = DispatchResult(taskManager.resume(op_group.uuid))
+            return RestProtocol(message=dispatchMessage[ret], error_code=ret.value)
         else:
             return RestProtocol(message='Operation group not found', error_code=-1), 404
 

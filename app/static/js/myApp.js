@@ -678,6 +678,24 @@ app.service('$operations', function($websocket, $http, $message, $sessionStorage
                 $message.Alert(response.message);
             });
     }
+    this.ResumeQueue = function(params) {
+        $http.get('api/op_group/id/' + params.groupID + '/restoration')
+            .success(function(response) {
+                if (response.error_code == 0) {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(response);
+                    }
+                } else if (params.hasOwnProperty('onError')) {
+                    params.onError(response);
+                }
+            })
+            .error(function(response) {
+                console.log(response);
+                if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                }
+            })
+    }
     this.SkipCurrent = function(params) {}
     this.ResumeQueue = function(params) {}
     this.Snapshot = function(params) {
@@ -1664,6 +1682,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     $scope.batch_run = false;
     $scope.user_uuid = $('#user_uuid').text();
     $scope.taskQueueRunning = false;
+    $scope.queue_blocked = false;
 
     $scope.$on('TaskStatusChanged', function(event, data) {
         if (data.hasOwnProperty('details')) {
@@ -1726,7 +1745,26 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         });
     };
 
+    $scope.resumeQueue = function() {
+        $operations.ResumeQueue({
+            groupID: $routeParams.grpid,
+            onSuccess: function() {
+                $timeout(function() {
+                    $scope.queue_blocked = false;
+                }, 0);
+                $message.Success('队列已恢复');
+            },
+            onError: function(data) {
+                $message.Warning(data.message);
+            }
+        })
+    }
+
     $scope.runAll = function() {
+        if ($scope.queue_blocked) {
+            $message.Warning('队列执行失败已阻塞，请先恢复队列。');
+            return;
+        }
         var authorizor;
         $scope.batch_run = true;
         var terminate = false;
@@ -1757,8 +1795,9 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                 $scope.check_result(index);
             }
             if (index < $scope.opList.details.length - 1 && (!data.checker.isTrue || data.checker.checked)) {
-                $scope.opList.details[index + 1].enabled = data.exec_code === 0;
+                $scope.opList.details[index + 1].enabled = data.exec_code == 0;
             }
+            $scope.queue_blocked = data.exec_code != 0;
         } else {
             $timeout(function() {
                 $scope.opList.details[index].enabled = false;
@@ -1797,6 +1836,10 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     }
 
     $scope.execute = function(index, id) {
+        if ($scope.queue_blocked) {
+            $message.Warning('队列执行失败已阻塞，请先恢复队列。');
+            return;
+        }
         $scope.batch_run = false;
         if ($scope.opList.details[index].interactivator.isTrue) {
             $http.get('api/operation/id/' + id + '/ui')

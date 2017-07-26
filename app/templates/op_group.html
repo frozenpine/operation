@@ -349,12 +349,17 @@
                     <hr/>
                 </div>
                 <div class="am-fr" ng-show="optionGroupEditShow">
-                    <button ng-click="InitQueue()" type="button" class="am-margin-right am-btn am-btn-primary am-round am-btn-sm">初始化队列</button>
-                    <button class="am-btn am-btn-primary am-round am-btn-sm" ng-click="runAll()">全部执行</button>
+                    <div class="am-btn-group am-btn-group-sm">
+                        <button ng-click="InitQueue()" type="button" class="am-btn am-btn-primary am-round">初始化队列</button>
+                        <button ng-click="resumeQueue()" type="button" class="am-btn am-btn-primary am-round" ng-class="{true: '', false: 'am-disabled'}[queue_blocked]">恢复队列</button>
+                        <button class="am-btn am-btn-primary am-round" ng-click="runAll()">全部执行</button>
+                    </div>
                 </div>
                 <div class="am-fr" ng-show="!optionGroupEditShow">
-                    <button ng-click="optionGroupEditShow = !optionGroupEditShow" class="am-btn am-btn-primary am-btn-sm am-round">取消</button>
-                    <button ng-click="optionGroupEditFinish()" type="submit" class="am-btn am-btn-primary am-btn-sm am-round" ng-disabled="!optionGroupEditSub.$valid && optionGroupEditPostShow">确定</button>
+                    <div class="am-btn-group am-btn-group-sm">
+                        <button ng-click="optionGroupEditShow = !optionGroupEditShow" class="am-btn am-btn-primary am-round">取消</button>
+                        <button ng-click="optionGroupEditFinish()" type="submit" class="am-btn am-btn-primary am-round" ng-disabled="!optionGroupEditSub.$valid && optionGroupEditPostShow">确定</button>
+                    </div>
                 </div>
             </div>
 

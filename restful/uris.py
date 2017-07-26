@@ -17,6 +17,7 @@ from .handlers.OperationGroupHandler import (OperationGroupApi,
 from .handlers.OperationHandler import (OperationApi, OperationCallbackApi,
                                         OperationCaptchaApi, OperationCSVApi,
                                         OperationExecuteApi, OperationListApi,
+                                        OperationListResumeApi,
                                         OperationListRunAllApi,
                                         OperationListRunApi,
                                         OperationListSnapshotApi,
@@ -101,6 +102,13 @@ resources.add_resource(
     '/op_group/id/<int:id>',
     methods=['GET', 'POST', 'PUT'],
     endpoint='operations'
+)
+
+resources.add_resource(
+    OperationListResumeApi,
+    '/op_group/id/<int:id>/restoration',
+    methods=['GET'],
+    endpoint='operations_resume'
 )
 
 resources.add_resource(
