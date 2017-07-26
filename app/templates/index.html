@@ -100,12 +100,16 @@
                     </div>
                     <div class="am-form-group am-form-icon font-green am-g">
                         <label for="doc-ipt-3-b" class="am-u-sm-2 am-form-label font-green">操作组描述</label>
-                        <div class="am-u-sm-6">
+                        <div class="am-u-sm-3">
                             <input type="text" name="optionGroup_des" ng-model="optionGroupDescription">
                         </div>
                         <label for="doc-ipt-3-b" class="am-u-sm-2 am-form-label font-green">初始化时间</label>
                         <div class="am-u-sm-2">
                             <input type="time" name="optionGroup_time" ng-model="optionGroupInittime">
+                        </div>
+                        <label for="doc-ipt-3-b" class="am-u-sm-2 am-form-label font-green">是否应急</label>
+                        <div class="am-u-sm-1">
+                            <input type="checkbox" ng-init="optionGroupEmerge=false" name="optionGroup_emerge" ng-model="optionGroupEmerge">
                         </div>
                     </div>
                     <div class="am-form-group am-form-icon am-g">

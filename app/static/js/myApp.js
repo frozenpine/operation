@@ -1314,7 +1314,8 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
             sys_id: null,
             name: null,
             description: null,
-            init_time: null
+            trigger_time: null,
+            is_emergency: false
         },
         operations: []
     };
@@ -1344,8 +1345,9 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
         }
         $scope.optionGroupConfirm.operation_group.name = $scope.optionGroupName;
         $scope.optionGroupConfirm.operation_group.description = $scope.optionGroupDescription;
-        $scope.optionGroupConfirm.operation_group.init_time =
-            $scope.optionGroupInittime.getHours() + ':' + $scope.optionGroupInittime.getMinutes();
+        $scope.optionGroupConfirm.operation_group.trigger_time =
+            $scope.optionGroupInittime !== undefined ? $scope.optionGroupInittime.getHours() + ':' + $scope.optionGroupInittime.getMinutes() : '';
+        $scope.optionGroupConfirm.operation_group.is_emergency = $scope.optionGroupEmerge;
         $scope.optionShow = true;
         angular.forEach($scope.optionGroupDataBackup, function(value, index) {
             if (id == value.id) {

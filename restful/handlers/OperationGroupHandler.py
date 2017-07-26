@@ -1,16 +1,25 @@
 # -*- coding: UTF-8 -*-
-from flask_restful import Resource
+import re
+
 from flask import request
-from app import db
-from app.models import OperationGroup, Operation
+from flask_restful import Resource
 from werkzeug.exceptions import BadRequest
+
+from app import db
+from app.models import Operation, OperationGroup
+from restful.errors import DataNotJsonError, DataNotNullError, DataTypeError
 from restful.protocol import RestProtocol
-from restful.errors import DataNotJsonError, DataNotNullError
 
 
 class OperationGroupListApi(Resource):
     def __init__(self):
         super(OperationGroupListApi, self).__init__()
+        self.pattern = re.compile('^([0-1]?\d|2[0-3]):[0-5]?\d$')
+        self.eng_to_chi = {
+            'name': '操作组名',
+            'sys_id': '系统',
+            'trigger_time': '触发时间'
+        }
 
     def get(self):
         op_groups = OperationGroup.query.all()
@@ -25,28 +34,29 @@ class OperationGroupListApi(Resource):
             except DataNotJsonError:
                 return RestProtocol(DataNotJsonError())
         else:
-            # Add operation group
-            og = OperationGroup()
             try:
-                if not data['operation_group'].get('name') or not data['operation_group'].get('sys_id'):
-                    raise DataNotNullError
-            except DataNotNullError:
-                return RestProtocol(DataNotNullError())
-            og.name = data['operation_group'].get('name')
+                not_null_list = ['name', 'sys_id', 'trigger_time']
+                for param in not_null_list:
+                    if not data['operation_group'].get(param):
+                        raise DataNotNullError
+                if not self.pattern.match(data['operation_group'].get('trigger_time')):
+                    raise DataTypeError("请输入例如'HH:MM'格式的时间.")
+            except DataNotNullError as err:
+                return RestProtocol(err)
+            except DataTypeError as err:
+                return RestProtocol(err)
+            og = OperationGroup(**data['operation_group'])
+            ''' og.name = data['operation_group'].get('name')
             og.description = data['operation_group'].get('description')
             og.sys_id = data['operation_group'].get('sys_id')
-            ogs = OperationGroup.query.all()
-            if len(ogs):
-                ogs_order = [op_group.order for op_group in ogs]
-                og.order = max(ogs_order) + 10
-            else:
-                og.order = 10
+            og.trigger_time = data['operation_group'].get('trigger_time') '''
+            last = OperationGroup.query\
+                .filter(OperationGroup.sys_id == data['operation_group']['sys_id'])\
+                .order_by(OperationGroup.order.desc()).limit(1).first()
+            og.order = last.order + 10
             db.session.add(og)
             db.session.commit()
-
-            # Add operations
             operations = []
-            # order_base = 0
             op_list = data['operations']
             for i in xrange(len(op_list)):
                 op = Operation()
