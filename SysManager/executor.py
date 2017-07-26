@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+import logging
 import sys
 import urllib
 from os import path
@@ -8,14 +9,16 @@ import requests
 import winrm
 from paramiko import (AutoAddPolicy, PasswordRequiredException, RSAKey,
                       SSHClient)
-from paramiko.ssh_exception import NoValidConnectionsError, AuthenticationException
+from paramiko.ssh_exception import (AuthenticationException,
+                                    NoValidConnectionsError)
 from winrm import Response
 from winrm.exceptions import (WinRMError, WinRMOperationTimeoutError,
                               WinRMTransportError)
 
 from configs import HttpConfig, RemoteConfig, Result, SSHConfig, WinRmConfig
 from excepts import ImportRSAkeyFaild, ModuleNotFound
-from app import logging
+
+# from app import logging
 
 sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
 

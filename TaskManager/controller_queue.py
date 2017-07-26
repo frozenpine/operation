@@ -1,10 +1,13 @@
 # coding=utf-8
 
+# from app import logging
+import logging
+
 from enum import Enum
 from gevent.queue import JoinableQueue
-from app import logging
 
 import get_time
+
 
 # logging.basicConfig(level="INFO")
 

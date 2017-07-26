@@ -807,8 +807,7 @@ class OperationBook(SQLModelMixin, db.Model):
         if sys:
             params = self.detail['remote']['params']
             params['ip'] = sys.ip
-            if not (self.type & ScriptType.Interactivator.value
-                    == ScriptType.Interactivator.value):
+            if not self.type.IsInteractivator():
                 params['user'] = sys.login_user
                 params['password'] = sys.login_pwd
 

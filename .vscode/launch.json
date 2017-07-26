@@ -1,38 +1,6 @@
 {
     "version": "0.2.0",
     "configurations": [{
-            "name": "Python",
-            "type": "python",
-            "request": "launch",
-            "stopOnEntry": true,
-            "pythonPath": "${config:python.pythonPath}",
-            "program": "${file}",
-            "cwd": "${workspaceRoot}",
-            "env": {},
-            "envFile": "${workspaceRoot}/.env",
-            "debugOptions": [
-                "WaitOnAbnormalExit",
-                "WaitOnNormalExit",
-                "RedirectOutput"
-            ]
-        },
-        {
-            "name": "Python Module",
-            "type": "python",
-            "request": "launch",
-            "stopOnEntry": true,
-            "pythonPath": "${config:python.pythonPath}",
-            "module": "module.name",
-            "cwd": "${workspaceRoot}",
-            "env": {},
-            "envFile": "${workspaceRoot}/.env",
-            "debugOptions": [
-                "WaitOnAbnormalExit",
-                "WaitOnNormalExit",
-                "RedirectOutput"
-            ]
-        },
-        {
             "name": "TaskManager",
             "type": "python",
             "request": "launch",
@@ -60,6 +28,38 @@
             "args": [
                 "development"
             ],
+            "envFile": "${workspaceRoot}/.env",
+            "debugOptions": [
+                "WaitOnAbnormalExit",
+                "WaitOnNormalExit",
+                "RedirectOutput"
+            ]
+        },
+        {
+            "name": "Python",
+            "type": "python",
+            "request": "launch",
+            "stopOnEntry": true,
+            "pythonPath": "${config:python.pythonPath}",
+            "program": "${file}",
+            "cwd": "${workspaceRoot}",
+            "env": {},
+            "envFile": "${workspaceRoot}/.env",
+            "debugOptions": [
+                "WaitOnAbnormalExit",
+                "WaitOnNormalExit",
+                "RedirectOutput"
+            ]
+        },
+        {
+            "name": "Python Module",
+            "type": "python",
+            "request": "launch",
+            "stopOnEntry": true,
+            "pythonPath": "${config:python.pythonPath}",
+            "module": "module.name",
+            "cwd": "${workspaceRoot}",
+            "env": {},
             "envFile": "${workspaceRoot}/.env",
             "debugOptions": [
                 "WaitOnAbnormalExit",

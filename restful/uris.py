@@ -319,18 +319,18 @@ resources.add_resource(
     endpoint='operation_group'
 )
 
-''' resources.add_resource(
-    ParentSystemFindOperationBookListApi,
-    '/system/id/<int:id>/operation-book-list',
+resources.add_resource(
+    OperationBookListApi,
+    '/system/id/<int:id>/operation-books',
     methods=['GET'],
     endpoint='sys_ob_list'
-) '''
+)
 
 resources.add_resource(
     SystemFindOperationBookApi,
-    '/system/id/<int:id>/operation-books',
+    '/system/id/<int:id>/catalogs/operation-books',
     methods=['GET'],
-    endpoint='sys_ob'
+    endpoint='sys_ob_catalog_list'
 )
 
 resources.add_resource(
@@ -345,13 +345,12 @@ resources.add_resource(
     OperationBookListApi,
     '/operation-books',
     '/operation-books/',
-    methods=['GET', 'POST','PUT'],
+    methods=['GET', 'POST', 'PUT'],
     endpoint='operation_books'
 )
 
 resources.add_resource(
     OperationBookCheckApi,
-    '/system/id/<int:id>/operation-book/script-check',
     '/system/id/<int:id>/operation-book/script-check',
     methods=['POST'],
     endpoint='sys_ob_check'

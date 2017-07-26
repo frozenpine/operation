@@ -1,21 +1,22 @@
 # -*- coding: UTF-8 -*-
 import json
+import logging
 import re
-
 import threading
+
 import arrow
 import gevent
 from flask_restful import Resource
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
 
-from app import globalEncryptKey, logging
+from app import globalEncryptKey
 from app.models import (ConfigType, DataSource, DataSourceModel,
                         DataSourceType, SocketDirection, TradeSystem)
+from restful.protocol import RestProtocol
 from SysManager.Common import AESCrypto
 from SysManager.configs import SSHConfig, WinRmConfig
 from SysManager.executor import Executor
-from restful.protocol import RestProtocol
 
 
 def _decrypt(match):

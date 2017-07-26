@@ -15,16 +15,16 @@ from MessageQueue.msgserver import MessageQueues
 sys.modules['zmq'] = zmq
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s %(filename)s-%(funcName)s[line:%(lineno)d] %(levelname)s %(message)s',
     datefmt='%a, %d %b %Y %H:%M:%S'
 )
 
 console = logging.StreamHandler()
-console.setLevel(logging.INFO)
+console.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s %(filename)s-%(funcName)s[line:%(lineno)d] %(levelname)s %(message)s')
 console.setFormatter(formatter)
-logging.getLogger('').addHandler(console)
+logging.getLogger().addHandler(console)
 
 Rthandler = TimedRotatingFileHandler(
     'Logs/Syslog.log',
@@ -38,7 +38,7 @@ formatter = logging.Formatter(
     '%(asctime)s %(filename)s-%(funcName)s[line:%(lineno)d] %(levelname)s %(message)s'
 )
 Rthandler.setFormatter(formatter)
-logging.getLogger('').addHandler(Rthandler)
+logging.getLogger().addHandler(Rthandler)
 
 db = SQLAlchemy()
 db_list = {}
