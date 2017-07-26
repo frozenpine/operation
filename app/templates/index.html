@@ -92,9 +92,9 @@
                         </div>
                         <label for="doc-ipt-3-b" class="am-u-sm-2 am-form-label font-green">操作组名</label>
                         <div class="am-u-sm-5">
-                            <input type="text" name="optionGroup_name" id="doc-ipt-3-b" ng-model="optionGroupName" ng-minlength="5" required>
+                            <input type="text" name="optionGroup_name" id="doc-ipt-3-b" ng-model="optionGroupName" ng-minlength="2" required>
                             <span style="float: left;color: red;font-size: 12px;" ng-show="!optionSubmitName.optionGroup_name.$valid&&optionSubmitName.optionGroup_name.$dirty">
-                                组名长度应大于5位
+                                组名长度应大于2位
                             </span>
                         </div>
                     </div>
@@ -102,9 +102,9 @@
                         <label for="doc-ipt-3-b" class="am-u-sm-2 am-form-label font-green">操作组描述</label>
                         <div class="am-u-sm-10">
                             <input type="text" name="optionGroup_des" id="doc-ipt-3-b" ng-model="optionGroupDescription">
-                            <span style="float: left;color: red;font-size: 12px;" ng-show="!optionSubmitName.optionGroup_des.$valid&&optionSubmitName.optionGroup_des.$dirty">
+                            <!-- <span style="float: left;color: red;font-size: 12px;" ng-show="!optionSubmitName.optionGroup_des.$valid&&optionSubmitName.optionGroup_des.$dirty">
                                 组名长度应大于5位
-                            </span>
+                            </span> -->
                         </div>
                     </div>
                     <div class="am-form-group am-form-icon am-g">
@@ -116,7 +116,7 @@
                                 <div class="am-panel-bd" style="padding: 0px;">
                                     <select ng-model="selectId" multiple id="optionGroups">
                                         <option ng-dblclick="optionSelectAdd()" ng-click="infOfDetail(selectId)" 
-                                            ng-repeat="x in optionGroupDataBackup" value="{{x.book_id}}" 
+                                            ng-repeat="x in optionGroupDataBackup" value="{{x.id}}" 
                                             style="font-size: 14px;">{{x.name}}</option>
                                     </select>
                                 </div>
@@ -146,10 +146,10 @@
                                         <ul sv-root sv-part="optionGroupConfirm.operations">
                                             <li ng-repeat="data in optionGroupConfirm.operations track by $index" sv-element>
                                                 <div class="am-u-sm-3" style="padding: 1px">
-                                                    <input type="text" style="border: none;" value="{{data.name}}" ng-model="data.name" />
+                                                    <input type="text" style="border: none;" ng-model="data.name" />
                                                 </div>
                                                 <div class="am-u-sm-4" style="padding: 1px">
-                                                    <input type="text" style="border: none" value="{{data.description}}" ng-model="data.description"></input>
+                                                    <input type="text" style="border: none" ng-model="data.description"></input>
                                                 </div>
                                                 <div class="am-u-sm-2" style="padding: 1px">
                                                     <input name="startTime{{$index}}" type="text" style="border: none;" value="{{data.earliest}}" ng-model="data.earliest" ng-pattern="/^(0\d{1}|1\d{1}|2[0-3]):([0-5]\d{1})$/" />
@@ -225,18 +225,18 @@
                         <div class="am-u-sm-3">
                             <input type="text" name="optionGroup_name" id="doc-ipt-3-b" value="optionBookEditData.name" ng-model="optionBookEditData.name">
                         </div>
-                        <label for="doc-ipt-3-c" class="am-u-sm-2 am-form-label">描述</label>
-                        <div class="am-u-sm-5">
-                            <input type="text" name="optionGroup_des" id="doc-ipt-3-c" ng-model="optionBookEditData.description" value="optionBookEditData.description">
-                        </div>
-                    </div>
-                    <div class="am-form-group am-form-icon font-green">
                         <label for="doc-ipt-3-d" class="am-u-sm-2 am-form-label">分类</label>
-                        <div class="am-u-sm-3">
+                        <div class="am-u-sm-5">
                             <select ng-model="optionBookEditData.catalog" ng-options="x.name for x in operationCatalogs">
                             </select>
                         </div>
-                        <label class="am-u-sm-2 am-form-label">操作类型</label>
+                    </div>
+                    <div class="am-form-group am-form-icon font-green">
+                        <label for="doc-ipt-3-c" class="am-u-sm-2 am-form-label">描述</label>
+                        <div class="am-u-sm-10">
+                            <input type="text" name="optionGroup_des" id="doc-ipt-3-c" ng-model="optionBookEditData.description" value="optionBookEditData.description">
+                        </div>
+                        <!-- <label class="am-u-sm-2 am-form-label">操作类型</label>
                         <div class="am-u-sm-5">
                             <div class="am-radio am-u-sm-6">
                                 <label>
@@ -248,7 +248,7 @@
                         		    <input type="radio" ng-model="optionBookEditData.is_emergency" name="doc-radio-1" value="false">非紧急操作
                         		</label>
                             </div>
-                        </div>
+                        </div> -->
                     </div>
                     <div class="am-form-group am-form-icon font-green" ng-repeat="data in optionBookCommand track by $index">
                         <label for="doc-ta-1" class="am-u-sm-2 am-form-label font-green">命令输入</label>
@@ -262,7 +262,7 @@
                             </div>
                         </div>
                         <div class="am-u-sm-2">
-                            <button ng-disabled="checkShow" ng-click="optionBookCheckShell($index,optionBookEditData.main_sys.id)" type="button" class="am-btn am-btn-default">检查</button>
+                            <button ng-click="optionBookCheckShell($index,optionBookEditData.main_sys.id)" type="button" class="am-btn am-btn-default">检查</button>
                         </div>
                     </div>
                     <!-- {{optionBookEditDataPost}} -->

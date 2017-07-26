@@ -15,10 +15,25 @@ from restful.protocol import RestProtocol
 class OperationBookListApi(Resource):
     def __init__(self):
         super(OperationBookListApi, self).__init__()
+        self.op_books = []
+        self.system_list = []
 
-    def get(self):
-        operation_books = OperationBook.query.all()
-        return RestProtocol(operation_books)
+    def find_systems(self, sys):
+        self.system_list.append(sys.id)
+        for child_sys in sys.child_systems:
+            self.find_systems(child_sys)
+
+    def find_operation_books(self):
+        self.op_books = OperationBook.query.filter(
+            OperationBook.sys_id.in_(self.system_list)
+        ).filter(OperationBook.disabled == False).all()
+
+    def get(self, **kwargs):
+        sys = TradeSystem.find(**kwargs)
+        if sys:
+            self.find_systems(sys)
+            self.find_operation_books()
+            return RestProtocol(self.op_books)
 
     def post(self):
         try:
@@ -75,8 +90,6 @@ class OperationBookListApi(Resource):
             except ApiError as e:
                 return RestProtocol(e)
             else:
-                db.session.add(ob)
-
                 # Add order of operation book
                 op_list = OperationBook.query.filter(OperationBook.catalog_id == ob.catalog_id).order_by(
                     OperationBook.order).all()
@@ -84,7 +97,7 @@ class OperationBookListApi(Resource):
                     ob.order = (op_list[-1].order + 10) / 10 * 10
                 else:
                     ob.order = 10
-
+                db.session.add(ob)
                 db.session.commit()
                 return RestProtocol(ob)
 
@@ -151,7 +164,7 @@ class OperationBookCheckApi(Resource):
             else:
                 system = TradeSystem.find(**kwargs)
                 if system:
-                    file_name, chdir = data.get('shell'), data.get('chdir')
+                    file_name, chdir = data.get('shell').split(' ')[0], data.get('chdir')
                     ssh = paramiko.SSHClient()
                     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                     ssh.connect('{}'.format(system.ip), 22, '{}'.format(system.user), '{}'.format(system.password))

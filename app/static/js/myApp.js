@@ -745,7 +745,7 @@ app.service('$operations', function($websocket, $http, $message, $sessionStorage
     }
 });
 
-app.service("$operationBooks", ["$http", function($http) {
+app.service("$operationBooks", ["$http", '$message', function($http, $message) {
     this.operationBookSystemsGet = function(params) {
         $http.get('api/systems')
             .success(function(response) {
@@ -1241,25 +1241,18 @@ app.controller('optionBookController', ['$scope', '$timeout', '$operationBooks',
             sys_id: id,
             data: $scope.optionBookCommand[index],
             onSuccess: function(response) {
-                if (response.error_code == 0) {
-                    $message.ModelSucess("检查成功", "modalInfoShowDefine");
-                    $scope.checkShow = false;
-                    $scope.optionBookShellIs = true;
-                } else {
-                    $message.ModelAlert("检查失败,脚本文件不存在", "modalInfoShowDefine");
-                    $scope.checkShow = false;
-                    if ($scope.optionBookCommand.length != 1)
-                        $scope.optionBookCommand.splice(index, 1);
-                    else {
-                        $scope.optionBookCommand[index].shell = "";
-                        $scope.optionBookCommand[index].chdir = "";
-                    }
-                }
+                $message.ModelSucess("检查成功", "modalInfoShowDefine");
+                // $scope.checkShow = false;
+                $scope.optionBookShellIs = true;
             },
             onError: function(response) {
-                console.log(response);
-                if (response.hasOwnProperty('message')) {
-                    $message.Alert(response.message);
+                $message.ModelAlert("检查失败,脚本文件不存在", "modalInfoShowDefine");
+                // $scope.checkShow = false;
+                if ($scope.optionBookCommand.length != 1) {
+                    $scope.optionBookCommand.splice(index, 1);
+                } else {
+                    $scope.optionBookCommand[index].shell = "";
+                    $scope.optionBookCommand[index].chdir = "";
                 }
             }
         });
@@ -1272,18 +1265,17 @@ app.controller('optionBookController', ['$scope', '$timeout', '$operationBooks',
             "type": $scope.optionBookEditData.type,
             "catalog_id": $scope.optionBookEditData.catalog.id,
             "sys_id": $scope.optionBookEditData.sys.id,
-            "is_emergency": $scope.optionBookEditData.is_emergency,
             "mod": $scope.optionBookCommand
         };
         console.log($scope.optionBookEditDataPost);
         $operationBooks.operationbookDefinePost({
             data: $scope.optionBookEditDataPost,
             onSuccess: function(response) {
-                $message.ModelSucess("表单提交成功", 2, "modalInfoShowAdd");
-                window.location.reload();
+                $message.Success("表单提交成功");
+                // window.location.reload();
             },
             onError: function(response) {
-                $message.ModelAlert("表单提交失败，错误信息" + response, 2, "modalInfoShowAdd");
+                $message.ModelAlert("表单提交失败，错误信息" + response, "modalInfoShowAdd");
             }
         });
     }
@@ -1338,8 +1330,13 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
         $scope.optionGroupConfirm.operation_group.description = $scope.optionGroupDescription;
         $scope.optionShow = true;
         angular.forEach($scope.optionGroupDataBackup, function(value, index) {
-            if (id == value.book_id) {
-                $scope.optionNowSelect = angular.copy(value);
+            if (id == value.id) {
+                $scope.optionNowSelect = {
+                    name: value.name,
+                    description: value.description,
+                    earliest: null,
+                    latest: null
+                };
                 $scope.detailInfo = value.description;
             }
         });
@@ -1380,7 +1377,7 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
                 $message.Success("表单提交成功");
                 // window.location.reload();
                 $rootScope.$broadcast('OperationGroupRenew')
-                $scope.formComfirm = !$scope.formComfirm;
+                $scope.formComfirm = true;
             },
             onError: function(response) {
                 $scope.loadingIcon = !$scope.loadingIcon;
@@ -1956,7 +1953,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
 app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$operationBooks', '$message', function($scope, $http, $routeParams, $operationBooks, $message) {
     $scope.optionBookEditDataList = new Array();
     $scope.optionBookEditShow = new Array();
-    $http.get('api/system/id/' + $routeParams.sysid + '/operation-books')
+    $http.get('api/system/id/' + $routeParams.sysid + '/catalogs/operation-books')
         .success(function(response) {
             $scope.emergeopList = response.data.records;
             for (var i = 0; i < $scope.emergeopList.length; i++) {
