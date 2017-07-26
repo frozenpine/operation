@@ -1107,14 +1107,12 @@ app.controller('EditoptionBookController', ['$scope', '$operationBooks', functio
         }
     });
     $scope.selectWhichSystem = function(id) {
-
         $operationBooks.operationBookSystemListGet({
             sys_id: id,
             onSuccess: function(res) {
                 $scope.optionBookSystemData = res.records;
             }
         });
-
         $operationBooks.systemOptionBooksGet({
             sys_id: id,
             onSuccess: function(res) {
@@ -1127,14 +1125,11 @@ app.controller('EditoptionBookController', ['$scope', '$operationBooks', functio
         $operationBooks.operationbookGet({
             optBook_id: id,
             onSuccess: function(res) {
-
                 $operationBooks.operationCatalogs({
                     onSuccess: function(res) {
                         $scope.optionBookEditBookData = res.records;
                     }
                 });
-
-
                 $scope.optionBookSystemOptBookData = res;
                 if ($scope.optionBookSystemOptBookData.catalog) {
                     $scope.dataCopy = {
@@ -1183,7 +1178,7 @@ app.controller('EditoptionBookController', ['$scope', '$operationBooks', functio
     }
 }]);
 
-app.controller('optionBookController', ['$scope', '$timeout', '$operationBooks', '$message', function($scope, $timeout, $operationBooks, $message) {
+app.controller('optionBookController', ['$scope', '$rootScope', '$timeout', '$operationBooks', '$message', function($scope, $rootScope, $timeout, $operationBooks, $message) {
     $operationBooks.operationBookSystemsGet({
         onSuccess: function(res) {
             $scope.optionBookData = res.records;
@@ -1219,7 +1214,7 @@ app.controller('optionBookController', ['$scope', '$timeout', '$operationBooks',
         "chdir": ""
     }];
     $scope.checkDataFull = function(data) {
-        if (data.name == "" || data.sys == "" || data.type == "" || !$scope.optionBookShellIs)
+        if (data.name == "" || data.sys == "" || data.type == "" || data.catalog === null || data.catalog === undefined || !$scope.optionBookShellIs)
             return true;
         else
             return false;
@@ -1272,7 +1267,9 @@ app.controller('optionBookController', ['$scope', '$timeout', '$operationBooks',
             data: $scope.optionBookEditDataPost,
             onSuccess: function(response) {
                 $message.Success("表单提交成功");
-                // window.location.reload();
+                $scope.formComfirm = true;
+                $rootScope.$broadcast('addNewOperateNode');
+                $('#defineOptionBook').modal('close');
             },
             onError: function(response) {
                 $message.ModelAlert("表单提交失败，错误信息" + response, "modalInfoShowAdd");
@@ -1295,12 +1292,13 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
         }
     })
     $scope.optionGroupConfirm = {
-        "operation_group": {
-            "sys_id": null,
-            "name": null,
-            "description": null
+        operation_group: {
+            sys_id: null,
+            name: null,
+            description: null,
+            init_time: null
         },
-        "operations": []
+        operations: []
     };
     $scope.optionGroupDataBackup = [];
     $scope.optionBookInSysId = function(id) {
@@ -1328,12 +1326,15 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
         }
         $scope.optionGroupConfirm.operation_group.name = $scope.optionGroupName;
         $scope.optionGroupConfirm.operation_group.description = $scope.optionGroupDescription;
+        $scope.optionGroupConfirm.operation_group.init_time =
+            $scope.optionGroupInittime.getHours() + ':' + $scope.optionGroupInittime.getMinutes();
         $scope.optionShow = true;
         angular.forEach($scope.optionGroupDataBackup, function(value, index) {
             if (id == value.id) {
                 $scope.optionNowSelect = {
                     name: value.name,
                     description: value.description,
+                    book_id: value.id,
                     earliest: null,
                     latest: null
                 };
@@ -1367,7 +1368,7 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
     }
     $scope.formComfirm = false;
     $scope.loadingIcon = false;
-    $scope.test2 = function() {
+    $scope.addNewGroup = function() {
         $scope.formComfirm = !$scope.formComfirm;
         $scope.loadingIcon = !$scope.loadingIcon;
         $operationBooks.systemOptionGroupPost({
@@ -1376,12 +1377,12 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
                 $scope.loadingIcon = !$scope.loadingIcon;
                 $message.Success("表单提交成功");
                 // window.location.reload();
-                $rootScope.$broadcast('OperationGroupRenew')
-                $scope.formComfirm = true;
+                $rootScope.$broadcast('OperationGroupRenew');
+                $('#addNewGroups').modal('close');
             },
             onError: function(response) {
                 $scope.loadingIcon = !$scope.loadingIcon;
-                $message.Alert("表单提交失败，错误代码" + response);
+                $message.ModelAlert("表单提交失败，错误代码" + response, 'modalInfoShowAdd');
                 $scope.formComfirm = !$scope.formComfirm;
             }
         })
@@ -1556,9 +1557,7 @@ app.controller('sideBarCtrl', ['$scope', '$uidatas', '$operationBooks', '$rootSc
         }
     });
     $scope.$on('OperationGroupRenew', function() {
-        // $timeout(function() {
         $scope.SideBarList();
-        // }, 0);
     })
     $scope.SideBarList = function() {
         $uidatas.SideBarList({
@@ -1953,17 +1952,25 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
 app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$operationBooks', '$message', function($scope, $http, $routeParams, $operationBooks, $message) {
     $scope.optionBookEditDataList = new Array();
     $scope.optionBookEditShow = new Array();
-    $http.get('api/system/id/' + $routeParams.sysid + '/catalogs/operation-books')
-        .success(function(response) {
-            $scope.emergeopList = response.data.records;
-            for (var i = 0; i < $scope.emergeopList.length; i++) {
-                $scope.optionBookEditDataList.push(null);
-                $scope.optionBookEditShow.push(true);
-            }
-        })
-        .error(function(response) {
-            console.log(response);
-        });
+
+    $scope.$on('addNewOperateNode', function() {
+        $scope.getOperateBookList();
+    });
+
+    $scope.getOperateBookList = function() {
+        $http.get('api/system/id/' + $routeParams.sysid + '/catalogs/operation-books')
+            .success(function(response) {
+                $scope.emergeopList = response.data.records;
+                for (var i = 0; i < $scope.emergeopList.length; i++) {
+                    $scope.optionBookEditDataList.push(null);
+                    $scope.optionBookEditShow.push(true);
+                }
+            })
+            .error(function(response) {
+                console.log(response);
+            });
+    }
+    $scope.getOperateBookList();
 
     $scope.optionBookEdit = function(data, index) {
         $scope.optionBookCatalog_id = data[0].catalog_id.toString();

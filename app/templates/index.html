@@ -77,7 +77,7 @@
 
     <div ng-if="privileges.add_group" class="am-modal am-modal-confirm" tabindex="-1" id="addNewGroups" ng-controller="optionGroupController">
         <div class="am-modal-dialog">
-            <form class="am-form am-form-horizontal" name="optionSubmitName" ng-submit="test2()">
+            <form class="am-form am-form-horizontal" name="optionSubmitName" ng-submit="addNewGroup()">
                 <div class="am-modal-hd font-green bold">新增组操作
                     <a href="javascript: void(0)" class="am-close am-close-spin" data-am-modal-close>&times;</a>
                 </div>
@@ -92,7 +92,7 @@
                         </div>
                         <label for="doc-ipt-3-b" class="am-u-sm-2 am-form-label font-green">操作组名</label>
                         <div class="am-u-sm-5">
-                            <input type="text" name="optionGroup_name" id="doc-ipt-3-b" ng-model="optionGroupName" ng-minlength="2" required>
+                            <input type="text" name="optionGroup_name" ng-model="optionGroupName" ng-minlength="2" required>
                             <span style="float: left;color: red;font-size: 12px;" ng-show="!optionSubmitName.optionGroup_name.$valid&&optionSubmitName.optionGroup_name.$dirty">
                                 组名长度应大于2位
                             </span>
@@ -100,11 +100,12 @@
                     </div>
                     <div class="am-form-group am-form-icon font-green am-g">
                         <label for="doc-ipt-3-b" class="am-u-sm-2 am-form-label font-green">操作组描述</label>
-                        <div class="am-u-sm-10">
-                            <input type="text" name="optionGroup_des" id="doc-ipt-3-b" ng-model="optionGroupDescription">
-                            <!-- <span style="float: left;color: red;font-size: 12px;" ng-show="!optionSubmitName.optionGroup_des.$valid&&optionSubmitName.optionGroup_des.$dirty">
-                                组名长度应大于5位
-                            </span> -->
+                        <div class="am-u-sm-6">
+                            <input type="text" name="optionGroup_des" ng-model="optionGroupDescription">
+                        </div>
+                        <label for="doc-ipt-3-b" class="am-u-sm-2 am-form-label font-green">初始化时间</label>
+                        <div class="am-u-sm-2">
+                            <input type="time" name="optionGroup_time" ng-model="optionGroupInittime">
                         </div>
                     </div>
                     <div class="am-form-group am-form-icon am-g">

@@ -323,7 +323,7 @@
                                     <div class="am-u-sm-2">
                                         <select id="resetSelect{{$index}}" ng-init="optionGroupSelect='0'" ng-model="optionGroupSelect" ng-change="optionGroupSelectWhich(optionGroupSelect,data,$index)">
                     						<option value="0" ng-bind="data.operation_name"></option>
-                    						<option value="{{x.book_id}}" ng-repeat="x in optionBooks">
+                    						<option value="{{x.id}}" ng-repeat="x in optionBooks">
                     							{{x.name}}
                     						</option>
                     	            </select>
