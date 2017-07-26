@@ -2,3 +2,13 @@
 2017-07-26 12:12:26,493 gevent_zmq.py-recv[line:183] ERROR /!\ gevent_zeromq BUG /!\ catching up after missing event (RECV) /!\
 2017-07-26 12:24:27,924 gevent_zmq.py-recv[line:183] ERROR /!\ gevent_zeromq BUG /!\ catching up after missing event (RECV) /!\
 2017-07-26 13:09:23,040 gevent_zmq.py-recv[line:183] ERROR /!\ gevent_zeromq BUG /!\ catching up after missing event (RECV) /!\
+2017-07-26 13:40:22,217 gevent_zmq.py-recv[line:183] ERROR /!\ gevent_zeromq BUG /!\ catching up after missing event (RECV) /!\
+2017-07-26 13:41:35,183 gevent_zmq.py-recv[line:183] ERROR /!\ gevent_zeromq BUG /!\ catching up after missing event (RECV) /!\
+2017-07-26 13:48:39,145 gevent_zmq.py-recv[line:183] ERROR /!\ gevent_zeromq BUG /!\ catching up after missing event (RECV) /!\
+2017-07-26 14:19:21,444 gevent_zmq.py-recv[line:183] ERROR /!\ gevent_zeromq BUG /!\ catching up after missing event (RECV) /!\
+2017-07-26 14:22:41,361 gevent_zmq.py-recv[line:183] ERROR /!\ gevent_zeromq BUG /!\ catching up after missing event (RECV) /!\
+2017-07-26 14:52:07,374 gevent_zmq.py-recv[line:183] ERROR /!\ gevent_zeromq BUG /!\ catching up after missing event (RECV) /!\
+2017-07-26 14:53:46,322 gevent_zmq.py-recv[line:183] ERROR /!\ gevent_zeromq BUG /!\ catching up after missing event (RECV) /!\
+2017-07-26 14:53:47,740 gevent_zmq.py-recv[line:183] ERROR /!\ gevent_zeromq BUG /!\ catching up after missing event (RECV) /!\
+2017-07-26 15:00:04,849 gevent_zmq.py-recv[line:183] ERROR /!\ gevent_zeromq BUG /!\ catching up after missing event (RECV) /!\
+2017-07-26 15:31:49,605 gevent_zmq.py-recv[line:183] ERROR /!\ gevent_zeromq BUG /!\ catching up after missing event (RECV) /!\
