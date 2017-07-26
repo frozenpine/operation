@@ -697,7 +697,6 @@ app.service('$operations', function($websocket, $http, $message, $sessionStorage
             })
     }
     this.SkipCurrent = function(params) {}
-    this.ResumeQueue = function(params) {}
     this.Snapshot = function(params) {
         $http.get('api/op_group/id/' + params.groupID + '/snapshot')
             .success(function(response) {
@@ -1725,6 +1724,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     }
 
     $scope.InitQueue = function() {
+        $scope.queue_blocked = false;
         $operations.InitQueue({
             groupID: $routeParams.grpid
         });
@@ -1791,6 +1791,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     function TaskStatus(data, index) {
         $timeout(function() {
             $scope.opList.details[index] = data;
+            $scope.queue_blocked = data.exec_code > 0;
         }, 0);
         if (!$scope.batch_run) {
             if (!$scope.triggered_ouside && data.hasOwnProperty('output_lines') && data.output_lines.length > 0) {
@@ -1799,7 +1800,6 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             if (index < $scope.opList.details.length - 1 && (!data.checker.isTrue || data.checker.checked)) {
                 $scope.opList.details[index + 1].enabled = data.exec_code == 0;
             }
-            $scope.queue_blocked = data.exec_code != 0;
         } else {
             $timeout(function() {
                 $scope.opList.details[index].enabled = false;
@@ -1819,6 +1819,9 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
 
     function TaskQueueStatus() {
         angular.forEach($scope.opList.details, function(value, index) {
+            if (value.exec_code > 0) {
+                $scope.queue_blocked = true;
+            }
             if (index > 0 && $scope.opList.details[index - 1].checker.isTrue) {
                 checked = $sessionStorage[$scope.opList.details[index - 1].uuid];
                 $scope.opList.details[index].enabled = value.enabled && checked === true;

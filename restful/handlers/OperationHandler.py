@@ -80,7 +80,7 @@ class OperationMixin(object):
             dtl['operated_at'] = arrow.get(op_session['operated_at'])\
                 .to('Asia/Shanghai').strftime('%Y-%m-%d %H:%M:%S')
         elif status == TaskStatus.Success or status == TaskStatus.Failed:
-            dtl['exec_code'] = 0
+            dtl['exec_code'] = self.snapshot['task_result_list'][idx]['task_result']['return_code']
             dtl['output_lines'] = self.snapshot['task_result_list'][idx]['task_result']['lines']
             op_session = json.loads(self.snapshot['task_result_list'][idx]['session'])
             operator = Operator.find(id=op_session['operator_id'])

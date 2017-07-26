@@ -226,7 +226,7 @@
                                 <td>{{data.time_range.lower}} ~ {{data.time_range.upper}}</td>
                                 <td>
                                     <div class="am-btn-group am-btn-group-xs">
-                                        <button class="am-btn am-btn-default am-btn-xs am-text-secondary" ng-class="{true: '', false: 'am-disabled'}[data.enabled && data.re_enter]" ng-click="execute($index, data.id)">
+                                        <button class="am-btn am-btn-default am-btn-xs am-text-secondary" ng-class="{true: '', false: 'am-disabled'}[data.enabled && data.re_enter && !queue_blocked]" ng-click="execute($index, data.id)">
                                             <span class="am-icon-pencil-square-o"></span> 执行
                                         </button>
                                     </div>
