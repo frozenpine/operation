@@ -500,7 +500,7 @@ class Socket(SQLModelMixin, db.Model):
         return self.address.exploded
     @ip.setter
     def ip(self, addr):
-        self.address = ip_address(addr)
+        self.address = ip_address(unicode(addr))
 
     @observes('uri')
     def uriObserver(self, uri):
@@ -805,11 +805,22 @@ class OperationBook(SQLModelMixin, db.Model):
     def remoteConfigObserver(self, sys_id):
         sys = TradeSystem.find(id=sys_id)
         if sys:
-            params = self.detail['remote']['params']
-            params['ip'] = sys.ip
+            ''' params = self.detail['remote']['params']
+            params['ip'] = sys.ip '''
             if not self.type.IsInteractivator():
-                params['user'] = sys.login_user
-                params['password'] = sys.login_pwd
+                new_dtl = {
+                    'remote': {
+                        'params': {
+                            'ip': sys.ip,
+                            'user': sys.login_user,
+                            'password': sys.login_pwd
+                        },
+                        'name': self.detail['remote']['name']
+                    }
+                }
+                self.detail.update(new_dtl)
+                ''' params['user'] = sys.login_user
+                params['password'] = sys.login_pwd '''
 
 
 class OperationGroup(SQLModelMixin, db.Model):
