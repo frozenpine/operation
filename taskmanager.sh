@@ -9,6 +9,10 @@ TM_PID="${BASE_DIR}/run/taskmanager.pid"
 TM_USER="devops"
 _PID=
 
+if [[ ! -d "${BASE_DIR}/run" ]]; then
+    mkdir -p "${BASE_DIR}/run"
+fi
+
 # switch to python virtual env
 source "${BASE_DIR}/bin/activate"
 
