@@ -131,7 +131,7 @@
                                 </ul>
                             </div>
                             <ul sv-root sv-part="optionBookEditDataList[$index]">
-                                <li ng-repeat="dtl in optionBookEditDataList[$index] track by $index" sv-element>
+                                <li ng-repeat="dtl in optionBookEditDataList[$index] track by $index" ng-show="!dtl.disabled" sv-element>
                                     <div class="am-u-sm-2" style="padding: 3px;">
                                         <select ng-model="dtl.sys_id" style="width: 100%;">
                     	                	<option value="{{x.id}}" ng-repeat="x in systemListData">

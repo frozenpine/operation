@@ -1231,7 +1231,7 @@ app.controller('optionBookController', ['$scope', '$rootScope', '$timeout', '$op
         "chdir": ""
     }];
     $scope.checkDataFull = function(data) {
-        if (data.name == "" || data.sys == "" || data.type == "" || data.catalog === null || data.catalog === undefined || !$scope.optionBookShellIs)
+        if (data.name == "" || data.sys == "" || data.type == "" || data.remote_name == "" || data.catalog === null || data.catalog === undefined || !$scope.optionBookShellIs)
             return true;
         else
             return false;
@@ -1283,10 +1283,26 @@ app.controller('optionBookController', ['$scope', '$rootScope', '$timeout', '$op
         $operationBooks.operationbookDefinePost({
             data: $scope.optionBookEditDataPost,
             onSuccess: function(response) {
-                $message.Success("表单提交成功");
                 $scope.formComfirm = true;
+                $scope.optionBookEditData = {
+                    "main_sys": "",
+                    "name": "",
+                    "description": "",
+                    "remote_name": "",
+                    "type": "",
+                    "catalog": "",
+                    "sys": "",
+                    "is_emergency": "",
+                    "mod": ""
+                };
+                $scope.optionBookCommand = [{
+                    "shell": "",
+                    "chdir": ""
+                }];
+                $scope.optionBookEditDataPost = {};
                 $rootScope.$broadcast('addNewOperateNode');
                 $('#defineOptionBook').modal('close');
+                $message.Success("表单提交成功");
             },
             onError: function(response) {
                 $message.ModelAlert("表单提交失败，错误信息" + response, "modalInfoShowAdd");
@@ -1307,7 +1323,7 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
         onError: function(res) {
             console.log(res);
         }
-    })
+    });
     $scope.optionGroupConfirm = {
         operation_group: {
             sys_id: null,
@@ -1337,11 +1353,6 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
     $scope.detailInfo = "";
     $scope.optionGroupConfirmIsNull = false;
     $scope.infOfDetail = function(id) {
-        if ($scope.optionGroupConfirm.operations.length != 0) {
-            $scope.optionGroupConfirmIsNull = true;
-        } else {
-            $scope.optionGroupConfirmIsNull = false;
-        }
         $scope.optionGroupConfirm.operation_group.name = $scope.optionGroupName;
         $scope.optionGroupConfirm.operation_group.description = $scope.optionGroupDescription;
         $scope.optionGroupConfirm.operation_group.trigger_time =
@@ -1364,6 +1375,11 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
     }
     $scope.optionSelectAdd = function() {
         $scope.optionGroupConfirm.operations.push($scope.optionNowSelect);
+        if ($scope.optionGroupConfirm.operations.length > 0) {
+            $scope.optionGroupConfirmIsNull = true;
+        } else {
+            $scope.optionGroupConfirmIsNull = false;
+        }
     };
     activate();
 
@@ -1374,15 +1390,12 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
             // console.log(promises);
         });
     }
-    $scope.indexRight = null;
-    $scope.optionSelectDel = function(index) {
-        $scope.indexRight = index;
-        console.log($scope.indexRight);
-    }
-    $scope.dbclickFunc = function() {
-        if ($scope.indexRight) {
-            $scope.optionGroupConfirm.operations.splice($scope.indexRight, 1);
-            $scope.indexRight = null;
+    $scope.dbclickFunc = function(index) {
+        $scope.optionGroupConfirm.operations.splice(index, 1);
+        if ($scope.optionGroupConfirm.operations.length > 0) {
+            $scope.optionGroupConfirmIsNull = true;
+        } else {
+            $scope.optionGroupConfirmIsNull = false;
         }
     }
     $scope.formComfirm = false;
@@ -1394,10 +1407,19 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
             data: $scope.optionGroupConfirm,
             onSuccess: function(response) {
                 $scope.loadingIcon = !$scope.loadingIcon;
-                $message.Success("表单提交成功");
-                // window.location.reload();
+                $scope.optionGroupConfirm = {
+                    operation_group: {
+                        sys_id: null,
+                        name: null,
+                        description: null,
+                        trigger_time: null,
+                        is_emergency: false
+                    },
+                    operations: []
+                };
                 $rootScope.$broadcast('OperationGroupRenew');
                 $('#addNewGroups').modal('close');
+                $message.Success("表单提交成功");
             },
             onError: function(response) {
                 $scope.loadingIcon = !$scope.loadingIcon;
@@ -1997,7 +2019,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     }
 }]);
 
-app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$operationBooks', '$message', function($scope, $http, $routeParams, $operationBooks, $message) {
+app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$operationBooks', '$message', '$timeout', function($scope, $http, $routeParams, $operationBooks, $message, $timeout) {
     $scope.optionBookEditDataList = new Array();
     $scope.optionBookEditShow = new Array();
 
@@ -2057,8 +2079,7 @@ app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$oper
             data.op_desc = value.op_desc.toString();
             data.type = value.type.toString();
             data.catalog_id = value.catalog_id.toString();
-            // data.is_emergency = value.is_emergency.toString();
-            data.disabled = value.disabled.toString();
+            data.disabled = value.disabled;
             data.id = value.id;
             data.sys_id = value.sys_id.toString();
             data.connection = value.connection;
@@ -2068,7 +2089,7 @@ app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$oper
             $scope.optionBookEditShow[index] = true;
         }
         $scope.optionBookEditDelete = function(index_del) {
-            $scope.optionBookEditDataList[index][index_del].disabled = "true";
+            $scope.optionBookEditDataList[index][index_del].disabled = true;
         }
         $scope.optionBookEditPut = function() {
             $scope.optionBookEditDataListNew = {
@@ -2078,17 +2099,10 @@ app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$oper
             $operationBooks.operationBookEditPut({
                 data: $scope.optionBookEditDataListNew,
                 onSuccess: function(res) {
+                    $scope.optionBookEditShow[index] = true;
                     $message.Success("提交成功");
-                    $http.get('api/system/id/' + $routeParams.sysid + '/operation-books')
-                        .success(function(response) {
-                            $scope.emergeopList = response.data.records;
-                            $scope.optionBookEditShow[index] = true;
-                            console.log(response);
-                        })
-                        .error(function(response) {
-                            console.log(response);
-                        });
-
+                    $scope.emergeopList = [];
+                    $scope.getOperateBookList();
                 },
                 onError: function(res) {
                     console.log(res);
