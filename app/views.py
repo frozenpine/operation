@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 import json
-# from app import logging
-import logging
+from app import flask_logger
 from time import time
 
 from flask import Response, abort, current_app, render_template, request

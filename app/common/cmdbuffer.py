@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import json
-# from app import logging
-import logging
 import re
 
 import arrow
 from enum import Enum
 from sqlalchemy import create_engine
+
+from app import flask_logger
 
 
 class CommandBuffer(object):
@@ -147,7 +147,7 @@ class CommandBuffer(object):
                     )
                 self._db.execute(command)
             except Exception as err:
-                logging.warning(err.message)
+                flask_logger.warning(err.message)
             if not self.skip:
                 if len(self.command_lines) < 2 \
                     or self.command_lines[-2] != self._shadowCommand:

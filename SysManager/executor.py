@@ -1,8 +1,7 @@
 # -*- coding: UTF-8 -*-
-import logging
 import sys
-import urllib
 from os import path
+sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
 
 import gevent
 import requests
@@ -15,12 +14,10 @@ from winrm import Response
 from winrm.exceptions import (WinRMError, WinRMOperationTimeoutError,
                               WinRMTransportError)
 
+from SysManager import logger as logging
 from configs import HttpConfig, RemoteConfig, Result, SSHConfig, WinRmConfig
 from excepts import ImportRSAkeyFaild, ModuleNotFound
 
-# from app import logging
-
-sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
 
 class Executor():
     def __init__(self, remote_config, parser=None):

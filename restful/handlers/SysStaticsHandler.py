@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
 import json
-import logging
 import re
 import threading
 
@@ -10,6 +9,7 @@ from flask_restful import Resource
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
 
+from app import flask_logger as logging
 from app import globalEncryptKey
 from app.models import (ConfigType, DataSource, DataSourceModel,
                         DataSourceType, SocketDirection, TradeSystem)

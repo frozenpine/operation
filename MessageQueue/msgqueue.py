@@ -5,7 +5,7 @@ import time
 from Queue import Queue
 from threading import Thread
 
-from MessageQueue import logging
+from MessageQueue import logger
 
 
 class MessageQueue(Thread):

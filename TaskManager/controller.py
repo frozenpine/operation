@@ -1,7 +1,6 @@
 # coding=utf-8
 
 import json as pickle
-# from app import logging
 import logging
 import os
 
@@ -13,7 +12,7 @@ from msg_queue import msg_queue
 app_host = os.environ.get('FLASK_HOST') or '127.0.0.1'
 app_port = os.environ.get('FLASK_PORT') or 6001
 
-# logging.basicConfig(level="INFO")
+logging.basicConfig(level="INFO")
 
 
 class Controller(object):

@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
 import json
-import logging
 
 import arrow
 import requests
@@ -10,6 +9,7 @@ from flask_login import current_user
 from flask_restful import Resource
 from sqlalchemy import text
 
+from app import flask_logger as logging
 from app import db, globalEncryptKey
 from app.auth.errors import (AuthError, InvalidUsernameOrPassword,
                              LoopAuthorization, NoPrivilege)

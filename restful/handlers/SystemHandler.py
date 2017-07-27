@@ -121,7 +121,7 @@ class SystemListApi(Resource):
                 return result_list
 
 
-class ParentSystemFindOperationBookListApi(Resource):
+''' class ParentSystemFindOperationBookListApi(Resource):
     def __init__(self):
         super(ParentSystemFindOperationBookListApi, self).__init__()
 
@@ -140,7 +140,7 @@ class ParentSystemFindOperationBookListApi(Resource):
             else:
                 return RestProtocol(DataNotMatchError('The system is not a parent system.'))
         else:
-            return {'message': 'System not found.'}, 404
+            return {'message': 'System not found.'}, 404 '''
 
 
 class SystemFindOperationBookApi(Resource):
@@ -148,7 +148,6 @@ class SystemFindOperationBookApi(Resource):
         super(SystemFindOperationBookApi, self).__init__()
         self.op_book_groups = {}
         self.system_list = []
-        self.count = 0
 
     def find_systems(self, sys):
         self.system_list.append(sys.id)
@@ -157,9 +156,9 @@ class SystemFindOperationBookApi(Resource):
 
     def find_operation_books(self):
         op_books = OperationBook.query.filter(
-            OperationBook.sys_id.in_(self.system_list)
-        ).filter(OperationBook.disabled==False).order_by(OperationBook.order).all()
-        self.count = len(op_books)
+            OperationBook.sys_id.in_(self.system_list),
+            OperationBook.disabled == False
+        ).order_by(OperationBook.order).all()
         for ob in op_books:
             record = self.find_op_record(ob)
             if ob.catalog not in self.op_book_groups:
@@ -181,11 +180,6 @@ class SystemFindOperationBookApi(Resource):
                     'isTrue': ob.type.IsInteractivator()
                 }
             }
-            # dtl = ob.to_json()
-            # dtl['err_code'] = -1
-            # dtl['interactivator'] = {
-            #     'isTrue': ob.type.IsInteractivator()
-            # }
             if record:
                 dtl['his_results'] = {
                     'err_code': record.results[-1].error_code,
@@ -206,20 +200,12 @@ class SystemFindOperationBookApi(Resource):
         if sys:
             self.find_systems(sys)
             self.find_operation_books()
-            res = [
-                self.op_book_groups[key] for key in sorted(
-                    self.op_book_groups.keys(), key=lambda key: key.order
-                )
-            ]
-            return {'message': 'There is not Christ at all',
-                    'error_code': 0,
-                    'data': {'count': self.count,
-                             'records': res}
-                    }
+            res = [self.op_book_groups[key] for key in sorted(
+                self.op_book_groups.keys(), key=lambda key: key.order
+            )]
+            return RestProtocol(res)
         else:
-            return {
-                       'message': 'system not found.'
-                   }, 404
+            return RestProtocol(message='System not found.', error_code=-1), 404
 
 
 class SystemSystemListInformationApi(Resource):

@@ -25,8 +25,9 @@ class OperationBookListApi(Resource):
 
     def find_operation_books(self):
         self.op_books = OperationBook.query.filter(
-            OperationBook.sys_id.in_(self.system_list)
-        ).filter(OperationBook.disabled == False).all()
+            OperationBook.sys_id.in_(self.system_list),
+            OperationBook.disabled == False
+        ).all()
 
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
@@ -42,57 +43,52 @@ class OperationBookListApi(Resource):
             return RestProtocol(DataNotJsonError())
         else:
             try:
-                if not data.get('name') or not data.get('sys_id') or not data.get('mod') or not data.get(
-                        'catalog_id') or not data.get('type'):
+                if not data.get('name') or not data.get('sys_id') or \
+                    not data.get('mod') or not data.get('catalog_id') or not data.get('type'):
                     raise DataNotNullError
-                elif OperationBook.query.filter_by(name=data.get('name')).first() is not None:
-                    raise DataUniqueError
-                elif data.get('type') is not None:
-                    try:
-                        ScriptType[data.get('type')]
-                    except KeyError:
-                        raise DataEnumValueError
-                ob = OperationBook()
-                ob.name = data.get('name')
-                ob.description = data.get('description')
-                ob.type = ScriptType[data.get('type')]
-                ob.catalog_id = data.get('catalog_id')
-                ob.sys_id = data.get('sys_id')
-                # if data.get('is_emergency') == 'false':
-                #     ob.is_emergency = 0
-                # elif data.get('is_emergency') == 'true':
-                #     ob.is_emergency = 1
-
-                system = TradeSystem.find(id=data.get('sys_id'))
-                if system:
-                    if system.servers.first().platform is not None:
-                        if system.servers.first().platform == PlatformType.Linux or data.get(
-                                        'remote_name' == 'SSHConfig'):
-                            params_dict = dict(ip=system.ip, user=system.user, password=system.password)
-                            remote_dict = dict(name='SSHConfig', params=params_dict)
-                            mod_list = []
-                            mod_data = data.get('mod')
-                            for j in xrange(len(mod_data)):
-                                if mod_data[j].get('chdir'):
-                                    mod_list.append(dict(name='shell',
-                                                         shell=mod_data[j].get('shell'),
-                                                         args=dict(chdir=mod_data[j].get('chdir'))))
-                                else:
-                                    mod_list.append(dict(name='shell', shell=mod_data[j].get('shell')))
-                            detail_dict = dict(remote=remote_dict, mod=mod_list)
-                    else:
-                        return RestProtocol(PlatFormNotFoundError())
-
-                    ob.detail = detail_dict
-                else:
-                    return {'message': 'System not found.'}, 404
-
+                try:
+                    ScriptType[data.get('type')]
+                except KeyError:
+                    raise DataEnumValueError('操作节点类型定义不正确.')
             except ApiError as e:
                 return RestProtocol(e)
             else:
-                # Add order of operation book
-                op_list = OperationBook.query.filter(OperationBook.catalog_id == ob.catalog_id).order_by(
-                    OperationBook.order).all()
+                mod_data = data.pop('mod')
+                method = data.pop('remote_name')
+                ob_type = ScriptType[data.pop('type')]
+                if len(mod_data) > 1:
+                    data['detail'] = [{
+                        'remote': {
+                            'name': method
+                        },
+                        'mod': {
+                            'name': 'shell',
+                            'shell': x.pop('shell'),
+                            'args': x.has_key('chdir') and {
+                                'chdir': x.pop('chdir')
+                            } or {}
+                        }
+                    } for x in mod_data]
+                else:
+                    data['detail'] = {
+                        'remote': {
+                            'name': method
+                        },
+                        'mod': {
+                            'name': 'shell',
+                            'shell': mod_data[0].pop('shell'),
+                            'args': mod_data[0].has_key('chdir') and {
+                                'chdir': mod_data[0].pop('chdir')
+                            } or {}
+                        }
+                    }
+                ob = OperationBook(**data)
+                ob.type = ob_type
+                self.find_systems(TradeSystem.find(id=data.get('sys_id')))
+                op_list = OperationBook.query.filter(
+                    OperationBook.catalog_id == ob.catalog_id,
+                    OperationBook.sys_id.in_(self.system_list)
+                ).order_by(OperationBook.order).all()
                 if len(op_list):
                     ob.order = (op_list[-1].order + 10) / 10 * 10
                 else:
@@ -112,7 +108,6 @@ class OperationBookListApi(Resource):
             ob_list = []
             ob_temp = []
             for i, v in enumerate(ob_data):
-                # ob = OperationBook.find(id=v.get('id'))
                 ob = OperationBook.query.filter_by(id=v.get('id')).first()
                 if ob:
                     if v.get('catalog_id') == cata_id:
@@ -120,9 +115,10 @@ class OperationBookListApi(Resource):
                         ob.order = (ob_list.index(ob) + 1) * 10
                     else:
                         ob_temp.append(ob)
-                        obs = OperationBook.query.filter(OperationBook.catalog_id == v.get('catalog_id')).filter(
-                            OperationBook.disabled == False).order_by(
-                            OperationBook.order).all()
+                        obs = OperationBook.query.filter(
+                            OperationBook.catalog_id == v.get('catalog_id'),
+                            OperationBook.disabled == False
+                        ).order_by(OperationBook.order).all()
                         if len(obs):
                             ob.order = (obs[-1].order + 10) / 10 * 10
                         else:
@@ -132,14 +128,7 @@ class OperationBookListApi(Resource):
                     ob.type = ScriptType[v.get('type')] or ob.type
                     ob.catalog_id = v.get('catalog_id', ob.catalog_id)
                     ob.sys_id = v.get('sys_id', ob.sys_id)
-                    # if v.get('is_emergency') == 'false':
-                    #     ob.is_emergency = 0
-                    # elif v.get('is_emergency') == 'true':
-                    #     ob.is_emergency = 1
-                    if v.get('disabled') == 'false':
-                        ob.disabled = 0
-                    elif v.get('disabled') == 'true':
-                        ob.disabled = 1
+                    ob.disabled = v.get('disabled')
             db.session.add_all(ob_list)
             db.session.add_all(ob_temp)
             db.session.commit()

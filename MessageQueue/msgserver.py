@@ -6,7 +6,7 @@ from flask import current_app
 from flask.testing import EnvironBuilder
 from geventwebsocket import WebSocketError
 
-from MessageQueue import logging
+from MessageQueue import logger
 from msgsink import JSONSinker, LogSinker
 
 

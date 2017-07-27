@@ -14,20 +14,22 @@ from MessageQueue.msgserver import MessageQueues
 
 sys.modules['zmq'] = zmq
 
-logging.basicConfig(
+''' logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s %(filename)s-%(funcName)s[line:%(lineno)d] %(levelname)s %(message)s',
     datefmt='%a, %d %b %Y %H:%M:%S'
-)
+) '''
+
+flask_logger = logging.getLogger('flask')
 
 console = logging.StreamHandler()
 console.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s %(filename)s-%(funcName)s[line:%(lineno)d] %(levelname)s %(message)s')
 console.setFormatter(formatter)
-logging.getLogger().addHandler(console)
+flask_logger.addHandler(console)
 
 Rthandler = TimedRotatingFileHandler(
-    'Logs/Syslog.log',
+    'Logs/flaskSyslog.log',
     when='midnight',
     interval=1,
     backupCount=15,
@@ -38,7 +40,7 @@ formatter = logging.Formatter(
     '%(asctime)s %(filename)s-%(funcName)s[line:%(lineno)d] %(levelname)s %(message)s'
 )
 Rthandler.setFormatter(formatter)
-logging.getLogger().addHandler(Rthandler)
+flask_logger.addHandler(Rthandler)
 
 db = SQLAlchemy()
 db_list = {}

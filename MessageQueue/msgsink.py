@@ -6,7 +6,7 @@ import threading
 import time
 from Queue import Queue
 
-from MessageQueue import logging
+from MessageQueue import logger
 
 
 class BaseSinker(threading.Thread):
@@ -18,7 +18,7 @@ class BaseSinker(threading.Thread):
         self.establish_date = time.strftime("%Y-%m-%d")
         if not os.path.exists("Flows"):
             os.mkdir("Flows")
-            logging.warning('Directory(Flows) not exist, re-build.')
+            logger.warning('Directory(Flows) not exist, re-build.')
         if os.path.exists("Flows/{}.out".format(filename)):
             timestamp = time.localtime(os.stat("Flows/{}.out".format(filename)).st_ctime)
             create_date = "{}-{}-{}".format(timestamp[0], timestamp[1], timestamp[2])
@@ -28,10 +28,10 @@ class BaseSinker(threading.Thread):
                     "Flows/{0}.out".format(filename),
                     "Flows/{0}_{1}.out".format(filename, create_date)
                 )
-                logging.info('New flow file({0}.out) created'.format(filename))
+                logger.info('New flow file({0}.out) created'.format(filename))
 
     def run(self):
-        logging.info('Message sinker started.')
+        logger.info('Message sinker started.')
         while True:
             current_date = time.strftime("%Y-%m-%d")
             if current_date != self.establish_date:
