@@ -355,7 +355,9 @@ app.service('$servers', function($http, $websocket, $message, $localStorage, $ti
             })
             .error(function(response) {
                 console.log(response);
-                $message.Alert(response.message);
+                if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                }
             });
         return true;
     };
