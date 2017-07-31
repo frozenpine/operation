@@ -251,8 +251,12 @@ class ProcStaticApi(Resource, SystemList):
         executor = Executor.Create(conf)
         if not executor:
             logging.warning(
-                'ip: {ip}, user: {user}'.format(ip=conf.remote_host, user=conf.remote_user)
+                'Executor init failed with ip: {ip}, user: {user}'\
+                .format(ip=conf.remote_host, user=conf.remote_user)
             )
+            return
+        if not executor:
+            logging.warning('ip: {ip}, user: {user}'.format(ip=conf.remote_host, user=conf.remote_user))
             return
         for proc in processes:
             process_list.add('{} {}'.format(proc.exec_file, proc.param or '').rstrip(' '))
@@ -273,6 +277,7 @@ class ProcStaticApi(Resource, SystemList):
                 'processes': list(process_list),
             }
         }
+        results = executor.run(mod).data
         gevent.sleep(0)
         for proc in processes:
             match = False
