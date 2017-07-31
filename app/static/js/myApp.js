@@ -308,7 +308,7 @@ app.service('$servers', function($http, $websocket, $message, $localStorage, $ti
                 angular.extend($localStorage['svrStatics_' + params.sysID], { last_request: request_timestamp });
             }, 0);
         }
-        $websocket.Request({
+        /* $websocket.Request({
             uri: 'api/system/id/' + params.sysID + '/svr_statics/check',
             method: 'get',
             callback: function(response) {
@@ -331,8 +331,8 @@ app.service('$servers', function($http, $websocket, $message, $localStorage, $ti
                     params.onError(response);
                 }
             }
-        });
-        /* $http.get('api/system/id/' + params.sysID + '/svr_statics/check')
+        }); */
+        $http.get('api/system/id/' + params.sysID + '/svr_statics/check')
             .success(function(response) {
                 if (response.error_code == 0) {
                     if ($localStorage.hasOwnProperty('svrStatics_' + params.sysID)) {
@@ -356,7 +356,7 @@ app.service('$servers', function($http, $websocket, $message, $localStorage, $ti
             .error(function(response) {
                 console.log(response);
                 $message.Alert(response.message);
-            }); */
+            });
         return true;
     };
 
@@ -427,7 +427,7 @@ app.service('$systems', function($http, $websocket, $message, $localStorage, $se
                 angular.extend($localStorage['sysStatics_' + params.sysID], { last_request: request_timestamp });
             }, 0);
         }
-        $websocket.Request({
+        /* $websocket.Request({
             uri: 'api/system/id/' + params.sysID + '/sys_statics/check',
             method: 'get',
             callback: function(response) {
@@ -450,8 +450,8 @@ app.service('$systems', function($http, $websocket, $message, $localStorage, $se
                     params.onError(response);
                 }
             }
-        });
-        /* $http.get('api/system/id/' + params.sysID + '/sys_statics/check')
+        }); */
+        $http.get('api/system/id/' + params.sysID + '/sys_statics/check')
             .success(function(response) {
                 if (response.error_code == 0) {
                     if ($localStorage.hasOwnProperty('sysStatics_' + params.sysID)) {
@@ -474,8 +474,10 @@ app.service('$systems', function($http, $websocket, $message, $localStorage, $se
             })
             .error(function(response) {
                 console.log(response);
-                $message.Alert(response.message);
-            }); */
+                if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                }
+            });
         return true;
     }
 
