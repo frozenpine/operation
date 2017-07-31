@@ -6,15 +6,18 @@ def run(client, module):
     args = module.get('args')
     if args:
         if args.has_key('processes'):
-            process_list = args['processes'][0]
+            ''' process_list = args['processes'][0]
             for proc in args['processes'][1:]:
-                process_list += '|{}'.format(proc)
+                process_list += '|{}'.format(proc) '''
+            process_list = reduce(lambda x, y: x.split(' ')[0] + '|' + y.split(' ')[0],
+                                  args['processes'])
         else:
             process_list = ''
         if args.has_key('ports'):
-            port_list = ':{}'.format(args['ports'][0])
+            ''' port_list = ':{}'.format(args['ports'][0])
             for port in args['ports'][1:]:
-                port_list += '|:{}'.format(port)
+                port_list += '|:{}'.format(port) '''
+            port_list = reduce(lambda x, y: unicode(x) + u'|' + unicode(y), args['ports'])
         else:
             port_list = ''
         mod = {
