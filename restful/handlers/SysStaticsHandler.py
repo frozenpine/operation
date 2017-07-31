@@ -259,7 +259,7 @@ class ProcStaticApi(Resource, SystemList):
             logging.warning('ip: {ip}, user: {user}'.format(ip=conf.remote_host, user=conf.remote_user))
             return
         for proc in processes:
-            process_list.add('{} {}'.format(proc.exec_file, proc.param or '').rstrip(' '))
+            process_list.add((proc.exec_file, proc.param or ''))
             port_list |= set([socket.port for socket in proc.sockets])
             if proc.version_method:
                 mod = {
@@ -279,11 +279,19 @@ class ProcStaticApi(Resource, SystemList):
         }
         results = executor.run(mod).data
         gevent.sleep(0)
+        find = lambda x, y: x and x in y
         for proc in processes:
             match = False
             for result in results:
-                if '{} {}'.format(proc.exec_file, proc.param or '').rstrip(' ') \
-                    in result['command']:
+                ''' if '{} {}'.format(proc.exec_file, proc.param or '').rstrip(' ') \
+                    in result['command']: '''
+                exec_list = result['command'].split(' ')
+                if proc.exec_file in exec_list[0] and \
+                    reduce(
+                        lambda x, y: x or y,
+                        [find(proc.param, param) for param in exec_list[1:]],
+                        len(exec_list) <= 1
+                    ):
                     self.proc_status[proc] = result
                     match = True
                     break

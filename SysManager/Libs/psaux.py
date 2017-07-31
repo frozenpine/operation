@@ -9,7 +9,19 @@ def run(client, module):
         else:
             userlist = ""
         if args.has_key('processes'):
-            proclist = reduce(lambda x, y: x + '|' + y, args['processes'])
+            ''' proclist = reduce(
+                lambda x, y: '{exe1} .*{param1}|{exe2} .*{param2}'\
+                    .format(
+                        exe1=x[0], param1=x[1],
+                        exe2=y[0], param2=y[1]
+                    ),
+                args['processes']
+            ) '''
+            exe_list, param_list = zip(*args['processes'])
+            proclist = reduce(
+                lambda x, y: x + '|' + y,
+                map(lambda x, y: x + '.*' + y + '.*', exe_list, param_list)
+            )
         else:
             proclist = ""
         mod = {

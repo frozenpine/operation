@@ -9,7 +9,7 @@ def run(client, module):
             ''' process_list = args['processes'][0]
             for proc in args['processes'][1:]:
                 process_list += '|{}'.format(proc) '''
-            process_list = reduce(lambda x, y: x.split(' ')[0] + '|' + y.split(' ')[0],
+            process_list = reduce(lambda x, y: x[0] + '|' + y[0],
                                   args['processes'])
         else:
             process_list = ''

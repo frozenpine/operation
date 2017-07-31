@@ -62,7 +62,7 @@ class Executor():
                 self.result.data = self.parser(self.result.lines).format2json()
                 self.parser = None
         else:
-            self.result.lines = [line for line in stderr.readlines()]
+            self.result.lines = [line for line in stdout.readlines()]
         return self.result
 
 class WinRmExecutor(Executor):
