@@ -480,7 +480,7 @@ class Socket(SQLModelMixin, db.Model):
         db.String, index=True,
         default=lambda: unicode(uuid4()).lower()
     )
-    name = db.Column(db.String, unique=True, index=True)
+    name = db.Column(db.String, index=True)
     description = db.Column(db.String)
     type = db.Column(
         ChoiceType(SocketType, impl=db.Integer()),
