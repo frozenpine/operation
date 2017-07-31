@@ -517,8 +517,10 @@ class Socket(SQLModelMixin, db.Model):
             self.type = SocketType.UDP
         else:
             self.type = SocketType.TCP
-        if parse['ip'] in ['127.0.0.1', 'localhost'] \
-            and self.direction == SocketDirection.Listen.value:
+        if parse['ip'] in ['127.0.0.1', 'localhost', u'127.0.0.1', u'localhost'] \
+            and (self.direction == SocketDirection.Listen.value or
+                 self.direction == SocketDirection.Listen or
+                 self.direction == None):
             self.address = ip_address(u'0.0.0.0')
         else:
             self.address = ip_address(unicode(parse['ip']))

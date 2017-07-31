@@ -59,13 +59,13 @@ Processes:
     server: *svr01
     exec_file: qmarket
   - name: &ice1 事前风控进程
-    system: *child1_2
+    system: *parent1
     server: *svr01
     exec_file: qicegateway
     param: 1  #可选配置，可执行文件的第一个参数，此处用于标识主备进程
   - name: &ice2 事中风控进程
     type: HaType.Master
-    system: *child1_2
+    system: *parent1
     server: *svr01
     exec_file: qicegateway
     param: 2
@@ -112,7 +112,7 @@ Sockets:
     process: *qquery
 #  - name: qoffer
 #    description: 提供方(qoffer/qkaymay/qgwuft/qgwpats/...)，使用方(qtrade))
-#    socket_uri: tcp://127.0.0.1:30300
+#    uri: tcp://127.0.0.1:30300
 #    process: *qoffer
 Relations:
   Parents:
