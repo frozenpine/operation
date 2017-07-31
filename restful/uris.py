@@ -29,8 +29,7 @@ from .handlers.SysStaticsHandler import (ConfigCheckApi, ConfigListApi,
                                          ServerStaticListApi,
                                          SystemStaticListApi,
                                          UserSessionListApi)
-from .handlers.SystemHandler import (ParentSystemFindOperationBookListApi,
-                                     SystemApi, SystemFindOperationBookApi,
+from .handlers.SystemHandler import (SystemApi, SystemFindOperationBookApi,
                                      SystemListApi,
                                      SystemSystemListInformationApi)
 from .handlers.TradingDayHandler import NextTradingDayApi
