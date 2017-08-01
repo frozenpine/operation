@@ -2024,8 +2024,8 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
 }]);
 
 app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$operationBooks', '$message', '$timeout', function($scope, $http, $routeParams, $operationBooks, $message, $timeout) {
-    $scope.optionBookEditDataList = new Array();
-    $scope.optionBookEditShow = new Array();
+    /* $scope.optionBookEditDataList = new Array();
+    $scope.optionBookEditShow = new Array(); */
 
     $scope.$on('addNewOperateNode', function() {
         $scope.getOperateBookList();
@@ -2034,7 +2034,10 @@ app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$oper
     $scope.getOperateBookList = function() {
         $http.get('api/system/id/' + $routeParams.sysid + '/catalogs/operation-books')
             .success(function(response) {
+                $scope.emergeopList = [];
                 $scope.emergeopList = response.data.records;
+                $scope.optionBookEditDataList = [];
+                $scope.optionBookEditShow = [];
                 for (var i = 0; i < $scope.emergeopList.length; i++) {
                     $scope.optionBookEditDataList.push(null);
                     $scope.optionBookEditShow.push(true);

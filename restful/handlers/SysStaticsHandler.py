@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 import json
+import logging
 import re
 import threading
 
@@ -91,7 +92,7 @@ class ServerStaticApi(Resource, ServerList):
             for tr in self.checker:
                 tr.setDaemon(True)
                 tr.start()
-                gevent.sleep(0)
+                # gevent.sleep(0)
                 tr.join()
             # gevent.joinall(self.checker)
             self.make_response()
@@ -129,13 +130,16 @@ class SystemList(object):
         self.proc_status = {}
 
     def find_systems(self, sys):
+        logging.info('SystemStatic find_systems started: {}'.format(arrow.now()))
         if len(sys.processes) > 0:
             self.system_list.append(sys)
         if len(sys.child_systems) > 0:
             for child_sys in sys.child_systems:
                 self.find_systems(child_sys)
+        logging.info('SystemStatic find_systems finished: {}'.format(arrow.now()))
 
     def make_response(self):
+        logging.info('SystemList make_response started: {}'.format(arrow.now()))
         for each_sys in self.system_list:
             self.rtn.append(
                 {
@@ -208,6 +212,7 @@ class SystemList(object):
                     } for proc in each_sys.processes]
                 }
             )
+        logging.info('SystemList make_response finished: {}'.format(arrow.now()))
 
 class SystemStaticListApi(Resource, SystemList):
     def __init__(self):
@@ -233,14 +238,17 @@ class ProcStaticApi(Resource, SystemList):
         self.connection_status = {}
 
     def find_processes(self):
+        logging.info('ProcStatic find_processess started: {}'.format(arrow.now()))
         for child_sys in self.system_list:
             for proc in child_sys.processes:
                 key = (proc.server.ip, proc.system.user, proc.system.password)
                 if not self.proc_list.has_key(key):
                     self.proc_list[key] = []
                 self.proc_list[key].append(proc)
+        logging.info('ProcStatic find_processess finished: {}'.format(arrow.now()))
 
     def check_proc(self, entry, processes):
+        logging.info('ProcStatic check_proc started: {} {}'.format(arrow.now(), threading.currentThread().getName()))
         port_list = set()
         process_list = set()
         conf = SSHConfig(
@@ -258,6 +266,7 @@ class ProcStaticApi(Resource, SystemList):
         if not executor:
             logging.warning('ip: {ip}, user: {user}'.format(ip=conf.remote_host, user=conf.remote_user))
             return
+        logging.info('ProcStatic check_proc_version started: {} {}'.format(arrow.now(), threading.currentThread().getName()))
         for proc in processes:
             process_list.add((proc.exec_file, proc.param or ''))
             port_list |= set([socket.port for socket in proc.sockets])
@@ -270,7 +279,9 @@ class ProcStaticApi(Resource, SystemList):
                     }
                 }
                 proc.version = executor.run(mod).lines
-                gevent.sleep(0)
+                # gevent.sleep(0)
+        logging.info('ProcStatic check_proc_version finishied: {} {}'.format(arrow.now(), threading.currentThread().getName()))
+        logging.info('ProcStatic check_proc_state started: {} {}'.format(arrow.now(), threading.currentThread().getName()))
         mod = {
             'name': 'psaux',
             'args': {
@@ -278,7 +289,7 @@ class ProcStaticApi(Resource, SystemList):
             }
         }
         results = executor.run(mod).data
-        gevent.sleep(0)
+        # gevent.sleep(0)
         find = lambda x, y: x and x in y
         for proc in processes:
             match = False
@@ -310,6 +321,8 @@ class ProcStaticApi(Resource, SystemList):
                     'command': None
                 }
             match = False
+        logging.info('ProcStatic check_proc_state finished: {} {}'.format(arrow.now(), threading.currentThread().getName()))
+        logging.info('ProcStatic check_proc_socket started: {} {}'.format(arrow.now(), threading.currentThread().getName()))
         mod = {'name': 'netstat'}
         if len(port_list) > 0:
             if not mod.has_key('args'):
@@ -321,7 +334,7 @@ class ProcStaticApi(Resource, SystemList):
             mod['args']['processes'] = list(process_list)
         if mod.has_key('args'):
             socket_result = executor.run(mod)
-            gevent.sleep(0)
+            # gevent.sleep(0)
             if 'LISTEN' in socket_result.data.keys():
                 # 处理Windows Linux平台的不同
                 try:
@@ -351,7 +364,9 @@ class ProcStaticApi(Resource, SystemList):
                         'port': socket['remote_port'],
                         'stat': u'已连接'
                     }
+        logging.info('ProcStatic check_proc_socket finished: {} {}'.format(arrow.now(), threading.currentThread().getName()))
         executor.client.close()
+        logging.info('ProcStatic check_proc finished: {} {}'.format(arrow.now(), threading.currentThread().getName()))
 
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
@@ -369,7 +384,7 @@ class ProcStaticApi(Resource, SystemList):
             for tr in self.checker:
                 tr.setDaemon(True)
                 tr.start()
-                gevent.sleep(0)
+                # gevent.sleep(0)
                 tr.join()
             # gevent.joinall(self.checker)
             self.make_response()
@@ -681,7 +696,7 @@ class ConfigCheckApi(Resource, ConfigList):
             for tr in self.checker:
                 tr.setDaemon(True)
                 tr.start()
-                gevent.sleep(0)
+                # gevent.sleep(0)
                 tr.join()
             # gevent.joinall(self.checker)
             self.make_response()

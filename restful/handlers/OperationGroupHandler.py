@@ -53,7 +53,10 @@ class OperationGroupListApi(Resource):
             last = OperationGroup.query\
                 .filter(OperationGroup.sys_id == data['operation_group']['sys_id'])\
                 .order_by(OperationGroup.order.desc()).limit(1).first()
-            og.order = last.order + 10
+            if last:
+                og.order = last.order + 10
+            else:
+                og.order = 10
             db.session.add(og)
             db.session.commit()
             operations = []
