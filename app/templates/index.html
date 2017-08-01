@@ -436,12 +436,16 @@
                             <a href="{{data.Url}}" class="nav-link am-dropdown-toggle" data-am-dropdown-toggle>
                                 <i class="{{data.icon}}"></i>
                             </a>
-                            <ul class="am-dropdown-content" id="second{{data.id}}" ng-if="data.isSecond" style="display: block" ng-show="showListIcon">
-                                <li style="margin-left: 15px; font-size: 10pt; font-weight: bold; color: #7FB0DA;">
+                            <ul class="am-dropdown-content" id="second{{data.id}}" ng-if="data.isSecond" style="display: block" ng-show="showListIcon" sv-root sv-part="data.secondName">
+                                <span style="margin-left: 15px; font-size: 10pt; font-weight: bold; color: #7FB0DA;">
                                     {{::data.name}}
-                                </li>
-                                <li ng-repeat="children in data.secondName">
-                                    <a href="{{children.Url}}">{{::children.name}} - {{::children.trigger_time}}</a>
+                                    <i class="am-icon-edit am-margin-left" style="cursor: pointer" ng-show="!grpOrderEdit[data.id]" ng-click="grpOrderEdit[data.id]=true"></i>
+                                    <i class="am-icon-check-circle-o am-margin-left" style="cursor: pointer" ng-show="grpOrderEdit[data.id]" ng-click="grpOrderEdit[data.id]=false"></i>
+                                    <i class="am-icon-close am-margin-left-xs" style="cursor: pointer" ng-show="grpOrderEdit[data.id]" ng-click="grpOrderEdit[data.id]=false"></i>
+                                </span>
+                                <li ng-repeat="children in data.secondName track by $index" sv-element>
+                                    <a href="{{children.Url}}" class="am-inline-block">{{::children.name}} - {{::children.trigger_time}}</a>
+                                    <span style="cursor: pointer;" ng-show="grpOrderEdit[data.id]" sv-handle class="am-icon-bars am-inline-block"></span>
                                 </li>
                             </ul>
                         </div>
@@ -457,7 +461,7 @@
             </div>
             <div class="tpl-left-nav-list">
                 <ul class="tpl-left-nav-menu">
-                    <li class="tpl-left-nav-item" ng-repeat="data in listName">
+                    <li class="tpl-left-nav-item" ng-repeat="data in listName track by $index">
                         <div class="nav-link tpl-left-nav-link-list">
                             <a href="{{data.Url}}">
                                 <i class="{{data.icon}} am-icon-fw"></i>
@@ -466,13 +470,19 @@
                             <span ng-switch="data.isShow">
                                 <i ng-class="{true: 'am-icon-angle-right tpl-left-nav-more-ico am-fr am-margin-right',false: ''}[data.isSecond]" style="cursor: pointer" ng-click="showListChild(data.id)" ng-switch-when="false"></i>
                                 <i ng-class="{true: 'am-icon-angle-down tpl-left-nav-more-ico am-fr am-margin-right',false: ''}[data.isSecond]" style="cursor: pointer" ng-click="showListChild(data.id)" ng-switch-when="true"></i>
+                                <i class="am-icon-edit am-fr am-margin-right" style="cursor: pointer" ng-show="data.isShow && !grpOrderEdit[data.id]" ng-click="grpOrderEdit[data.id]=true"></i>
+                                <i class="am-icon-close am-fr am-margin-right" style="cursor: pointer" ng-show="data.isShow && grpOrderEdit[data.id]" ng-click="grpOrderEdit[data.id]=false"></i>
+                                <i class="am-icon-check-circle-o am-fr am-margin-right" style="cursor: pointer" ng-show="data.isShow && grpOrderEdit[data.id]" ng-click="grpOrderEdit[data.id]=false"></i>
                             </span>
                         </div>
-                        <ul class="tpl-left-nav-sub-menu" id="{{data.id}}" ng-if="data.isSecond" style="display: block" ng-show="data.isShow">
-                            <li ng-repeat="children in data.secondName" ng-click="operateChange(children.id)" style="vertical-align: center;">
-                                <a href="{{children.Url}}">
-                                    <span class="am-icon-circle"> {{children.name}} - {{::children.trigger_time}}</span>
-                                </a>
+                        <ul class="tpl-left-nav-sub-menu" id="{{data.id}}" ng-if="data.isSecond" style="display: block" ng-show="data.isShow" sv-root sv-part="data.secondName">
+                            <li ng-repeat="children in data.secondName track by $index" ng-click="operateChange(children.id)" style="vertical-align: center;" sv-element>
+                                <div>
+                                    <a href="{{children.Url}}" class="am-inline-block" style="padding-left: 20px;">
+                                        <span class="am-icon-circle" style="width: 165px;"> {{children.name}} - {{::children.trigger_time}}</span>
+                                    </a>
+                                    <span style="cursor: pointer;" ng-show="grpOrderEdit[data.id]" sv-handle class="am-icon-bars am-inline-block"></span>
+                                </div>
                             </li>
                         </ul>
                     </li>

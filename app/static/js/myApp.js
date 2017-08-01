@@ -1587,6 +1587,7 @@ app.controller('sysStaticsControl', ['$scope', '$systems', '$interval', '$routeP
 
 app.controller('sideBarCtrl', ['$scope', '$uidatas', '$operationBooks', '$rootScope', '$location', '$timeout', function($scope, $uidatas, $operationBooks, $rootScope, $location, $timeout) {
     $scope.tabList = [];
+    $scope.grpOrderEdit = {};
     var idList = [];
     $scope.$on('$routeChangeStart', function(evt, next, current) {
         if (next.params.hasOwnProperty('sysid')) {
@@ -1612,6 +1613,10 @@ app.controller('sideBarCtrl', ['$scope', '$uidatas', '$operationBooks', '$rootSc
         $uidatas.SideBarList({
             onSuccess: function(data) {
                 $scope.listName = data.records;
+                $scope.grpOrderEdit = [];
+                angular.forEach($scope.listName, function(value, index) {
+                    $scope.grpOrderEdit[value.id] = false;
+                });
             }
         });
     };
