@@ -40,9 +40,10 @@ class OperationMixin(object):
         self.snapshot = {}
 
     def find_op_status(self, op):
-        for idx in xrange(len(self.snapshot['task_list'])):
-            if op.uuid == self.snapshot['task_list'][idx]['task_uuid']:
-                return idx, TaskStatus(self.snapshot['task_status_list'][idx])
+        if isinstance(self.snapshot, dict):
+            for idx in xrange(len(self.snapshot['task_list'])):
+                if op.uuid == self.snapshot['task_list'][idx]['task_uuid']:
+                    return idx, TaskStatus(self.snapshot['task_status_list'][idx])
         return -1, None
 
     def make_operation_detail(self, op, op_session=None):
@@ -137,21 +138,20 @@ class OperationListApi(OperationMixin, Resource):
                     } for task in op_group.operations]
                 }
             }
+            now_time = datetime.datetime.today()
+            try:
+                trigger_hour, trigger_minute, trigger_second = \
+                    op_group.trigger_time.split(':')
+            except (AttributeError, ValueError):
+                trigger_time = None
+            else:
+                trigger_time = datetime.time(
+                    int(trigger_hour), int(trigger_minute), int(trigger_second)
+                )
             if isinstance(self.snapshot, dict):
                 create_time = datetime.datetime.strptime(
                     self.snapshot['create_time'], '%Y%m%d-%H%M%S'
                 )
-                now_time = datetime.datetime.today()
-                if not op_group.is_emergency:
-                    try:
-                        trigger_hour, trigger_minute, trigger_second = \
-                            op_group.trigger_time.split(':')
-                    except (AttributeError, ValueError):
-                        trigger_time = None
-                    else:
-                        trigger_time = datetime.time(
-                            int(trigger_hour), int(trigger_minute), int(trigger_second)
-                        )
                 if op_group.is_emergency or \
                     (now_time.day - create_time.day >= 1 and \
                     (isinstance(trigger_time, datetime.time) and now_time.time() > trigger_time)):
@@ -160,10 +160,11 @@ class OperationListApi(OperationMixin, Resource):
                     rtn = self.make_operation_list(op_group)
                     msgQueues['tasks'].send_object(rtn)
             else:
-                taskManager.init(task_queue, True)
-                self.snapshot = taskManager.snapshot(op_group.uuid)
-                rtn = self.make_operation_list(op_group)
-                msgQueues['tasks'].send_object(rtn)
+                if isinstance(trigger_time, datetime.time) and (now_time.time() > trigger_time):
+                    taskManager.init(task_queue, True)
+                    self.snapshot = taskManager.snapshot(op_group.uuid)
+                    rtn = self.make_operation_list(op_group)
+                    msgQueues['tasks'].send_object(rtn)
             return RestProtocol(self.make_operation_list(op_group))
         else:
             return RestProtocol(error_code=-1, message='Operation group not found.'), 404

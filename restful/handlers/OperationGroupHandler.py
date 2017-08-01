@@ -4,6 +4,7 @@ import re
 from flask import request
 from flask_restful import Resource
 from werkzeug.exceptions import BadRequest
+from datetime import time
 
 from app import db
 from app.models import Operation, OperationGroup
@@ -45,6 +46,8 @@ class OperationGroupListApi(Resource):
                 return RestProtocol(err)
             except DataTypeError as err:
                 return RestProtocol(err)
+            hour, minute = data['operation_group'].pop('trigger_time').split(':')
+            data['operation_group']['trigger_time'] = unicode(time(int(hour), int(minute)))
             og = OperationGroup(**data['operation_group'])
             ''' og.name = data['operation_group'].get('name')
             og.description = data['operation_group'].get('description')
