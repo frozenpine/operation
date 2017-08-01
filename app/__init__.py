@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 import logging
-import zerorpc
 import sys
-import zmq.green as zmq
-from os import environ
 from logging.handlers import TimedRotatingFileHandler
-from flask import Flask, Blueprint
-from flask_login import LoginManager
-from flask_sqlalchemy import SQLAlchemy
-from settings import config
-from MessageQueue.msgserver import MessageQueues
+from os import environ
 
+import zerorpc
+import zmq.green as zmq
+from flask import Flask, Blueprint
+from flask_sqlalchemy import SQLAlchemy
+
+from MessageQueue.msgserver import MessageQueues
+from settings import config
 
 sys.modules['zmq'] = zmq
 
@@ -59,6 +59,7 @@ from restful import restapi as restapi_blueprint
 
 main = Blueprint('main', __name__)
 
+
 def create_app(config_name):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
@@ -74,5 +75,6 @@ def create_app(config_name):
     app.register_blueprint(restapi_blueprint, url_prefix='/api')
 
     return app
+
 
 from . import views, errors

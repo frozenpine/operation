@@ -36,9 +36,10 @@ client.connect({
 
 */
 
-function WSSHClient() {};
+function WSSHClient() {
+};
 
-WSSHClient.prototype._generateEndpoint = function(options) {
+WSSHClient.prototype._generateEndpoint = function (options) {
     /*
     if (window.location.protocol == 'https:') {
         var protocol = 'wss://';
@@ -66,7 +67,7 @@ WSSHClient.prototype._generateEndpoint = function(options) {
     return endpoint;
 };
 
-WSSHClient.prototype.connect = function(options) {
+WSSHClient.prototype.connect = function (options) {
     var endpoint = this._generateEndpoint(options);
 
     if (window.WebSocket) {
@@ -78,11 +79,11 @@ WSSHClient.prototype.connect = function(options) {
         return;
     }
 
-    this._connection.onopen = function() {
+    this._connection.onopen = function () {
         options.onConnect();
     };
 
-    this._connection.onmessage = function(evt) {
+    this._connection.onmessage = function (evt) {
         var data = JSON.parse(evt.data.toString());
         if (data.error !== undefined) {
             options.onError(data.error);
@@ -95,19 +96,19 @@ WSSHClient.prototype.connect = function(options) {
         }
     };
 
-    this._connection.onclose = function(evt) {
+    this._connection.onclose = function (evt) {
         options.onClose();
     };
 };
 
-WSSHClient.prototype.send = function(data) {
-    this._connection.send(JSON.stringify({ 'data': data }));
+WSSHClient.prototype.send = function (data) {
+    this._connection.send(JSON.stringify({'data': data}));
 };
 
-WSSHClient.prototype.changeCodec = function(codec) {
-    this._connection.send(JSON.stringify({ 'codec': codec }));
+WSSHClient.prototype.changeCodec = function (codec) {
+    this._connection.send(JSON.stringify({'codec': codec}));
 };
 
-WSSHClient.prototype.resize = function(cols, rows) {
-    this._connection.send(JSON.stringify({ resize: { width: cols, height: rows } }));
+WSSHClient.prototype.resize = function (cols, rows) {
+    this._connection.send(JSON.stringify({resize: {width: cols, height: rows}}));
 };

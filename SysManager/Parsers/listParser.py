@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 import re
 
+
 class OutputParser(object):
     def __init__(self, output_lines, re_str="",
                  key_list=None, primary_key=None, skip_headline=True):
@@ -41,7 +42,7 @@ class OutputParser(object):
                 self.result_list.append(temp_dict)
             else:
                 if self.result_dict.has_key(each_list[primary_position]):
-                    self.result_dict[each_list[primary_position]]\
+                    self.result_dict[each_list[primary_position]] \
                         .append(temp_dict)
                 else:
                     self.result_dict[each_list[primary_position]] = [temp_dict]

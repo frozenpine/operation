@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 import powershell
 
+
 def run(client, module):
     mod = {
         'ps': """\

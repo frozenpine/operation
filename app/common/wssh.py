@@ -11,9 +11,7 @@ from StringIO import StringIO
 
 import gevent
 import paramiko
-from gevent.event import Event
-from gevent.select import select
-from gevent.socket import wait_read, wait_write
+from gevent.socket import wait_read
 from paramiko import PasswordRequiredException
 from paramiko.dsskey import DSSKey
 from paramiko.rsakey import RSAKey
@@ -23,7 +21,6 @@ try:
     import simplejson as json
 except ImportError:
     import json
-
 
 
 class WSSHBridge(object):
@@ -76,7 +73,7 @@ class WSSHBridge(object):
             username=None, password=None,
             private_key=None, key_passphrase=None,
             allow_agent=False, timeout=None
-        ):
+    ):
         """ Open a connection to a remote SSH server
 
         In order to connect, either one of these credentials must be
@@ -128,7 +125,7 @@ class WSSHBridge(object):
                         data['resize'].get('width', 80),
                         data['resize'].get('height', 24))
                     self._windowsize = data['resize'].get('width', 80) * \
-                        data['resize'].get('height', 24)
+                                       data['resize'].get('height', 24)
                 if 'codec' in data:
                     self._encoder = data['codec']
                     print self._encoder

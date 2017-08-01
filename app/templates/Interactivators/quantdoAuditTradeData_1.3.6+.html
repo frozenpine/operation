@@ -1,30 +1,35 @@
 <div id="auditTradeData_Alert"></div>
 {% if not session %}
-<fieldset class="am-center login-form" id="auditTradeData_LoginForm" style="width: 350px">
-    <div class="am-form-group am-form-icon" style="margin-bottom: 3px">
-        <i class="am-icon-user am-icon-fw"></i>
-        <input type="text" class="am-form-field" id="auditTradeData_User" style="height: 40px" placeholder="请输入用户名" value="[[login_user]]" />
-    </div>
-    <div class="am-form-group am-form-icon" style="margin-bottom: 3px">
-        <i class="am-icon-lock am-icon-fw"></i>
-        <input type="password" class="am-form-field" id="auditTradeData_Password" style="height: 40px" placeholder="请输入密码" value="[[login_password]]" />
-    </div>
-    {% if captcha %}
-    <div>
-        <input type="text" class="am-form-field" id="auditTradeData_Captcha" style="width: 248px; height: 40px" placeholder="请输入验证码" />
-        <img src="javascript: void(0)" style="width: 100px; position: relative; right: -117px; top: -40px" onclick="if(!$('#auditTradeData_LoginForm').is(':hidden')) this.src='[[captcha_uri]]?d='+Date.parse(new Date())"></img>
-    </div>
-    <div style="margin-top: -35px">
-        <button type="submit" class="am-btn am-btn-default" style="width: 100%" onclick="login()">登录</button>
-    </div>
-    {% else %}
-    <div>
-        <button type="submit" class="am-btn am-btn-default" style="width: 100%" onclick="login()">登录</button>
-    </div>
-    {% endif %}
-</fieldset>
+    <fieldset class="am-center login-form" id="auditTradeData_LoginForm" style="width: 350px">
+        <div class="am-form-group am-form-icon" style="margin-bottom: 3px">
+            <i class="am-icon-user am-icon-fw"></i>
+            <input type="text" class="am-form-field" id="auditTradeData_User" style="height: 40px" placeholder="请输入用户名"
+                   value="[[login_user]]"/>
+        </div>
+        <div class="am-form-group am-form-icon" style="margin-bottom: 3px">
+            <i class="am-icon-lock am-icon-fw"></i>
+            <input type="password" class="am-form-field" id="auditTradeData_Password" style="height: 40px"
+                   placeholder="请输入密码" value="[[login_password]]"/>
+        </div>
+        {% if captcha %}
+            <div>
+                <input type="text" class="am-form-field" id="auditTradeData_Captcha" style="width: 248px; height: 40px"
+                       placeholder="请输入验证码"/>
+                <img src="javascript: void(0)" style="width: 100px; position: relative; right: -117px; top: -40px"
+                     onclick="if(!$('#auditTradeData_LoginForm').is(':hidden')) this.src='[[captcha_uri]]?d='+Date.parse(new Date())"></img>
+            </div>
+            <div style="margin-top: -35px">
+                <button type="submit" class="am-btn am-btn-default" style="width: 100%" onclick="login()">登录</button>
+            </div>
+        {% else %}
+            <div>
+                <button type="submit" class="am-btn am-btn-default" style="width: 100%" onclick="login()">登录</button>
+            </div>
+        {% endif %}
+    </fieldset>
 {% endif %}
-<fieldset class="am-center module-form" id="auditTradeData_TradingDayPicker" style="{% if not session %}display: none;{% endif %}width: 350px">
+<fieldset class="am-center module-form" id="auditTradeData_TradingDayPicker"
+          style="{% if not session %}display: none;{% endif %}width: 350px">
     <div>
         <button type="submit" class="am-btn am-btn-default" style="width: 100%" onclick="auditTradeData()">
             上场数据稽核
@@ -33,7 +38,7 @@
     </div>
 </fieldset>
 <script type="text/javascript">
-    $('.am-alert').on('closed.alert.amui', function() {
+    $('.am-alert').on('closed.alert.amui', function () {
         $('.am-alert').removeClass('am-alert-success am-alert-danger');
     });
 
@@ -50,7 +55,7 @@
         } else {
             $('.am-alert').addClass('am-alert-danger').show();
         }
-        setTimeout(function() {
+        setTimeout(function () {
             $('.am-alert').alert('close');
         }, 3000);
     }
@@ -68,7 +73,7 @@
                     verification_code: captcha
                 })
             },
-            function(response) {
+            function (response) {
                 console.log(response);
                 if (response.errorCode == 0) {
                     showMessage("登录成功", true);
@@ -87,7 +92,7 @@
         $('#auditTradeData_Spinner').toggle();
         $.post("[[execute_uri]]", {
             params: JSON.stringify([])
-        }, function(response) {
+        }, function (response) {
             prompt.trigger('results.quantdo', [response]);
             prompt.modal('close');
         });

@@ -1,11 +1,12 @@
 # -*- coding: UTF-8 -*-
-from flask_restful import Resource
-from app.models import OperateRecord, Operator, Operation
+import arrow
 from flask import request
+from flask_restful import Resource
 from werkzeug.exceptions import BadRequest
+
+from app.models import OperateRecord, Operator, Operation
 from restful.errors import DataNotJsonError
 from restful.protocol import RestProtocol
-import arrow
 
 
 class OperateRecordListApi(Resource):

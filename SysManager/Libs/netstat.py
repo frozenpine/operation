@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 import shell
 
+
 def run(client, module):
     protocol = module.get('netstat', 'tcp').lower()[0]
     args = module.get('args')
@@ -27,10 +28,10 @@ awk '
     $0 ~/{ports}/ && $NF ~/{procs}/ && $NF !~/^-/ {{print}}
 '
                 """.format(
-                    proto=protocol,
-                    ports=port_list,
-                    procs=process_list
-                )
+                proto=protocol,
+                ports=port_list,
+                procs=process_list
+            )
         }
     else:
         mod = {

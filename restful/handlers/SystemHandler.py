@@ -1,12 +1,14 @@
 # -*- coding: UTF-8 -*-
-from flask_restful import Resource
-from app.models import TradeSystem, DataSource, DataSourceType, OperationBook, EmergeOpRecord, MethodType
-from app import db
-from flask import request
-from werkzeug.exceptions import BadRequest
-from ..errors import DataNotJsonError, DataUniqueError, DataNotNullError, DataNotMatchError, ApiError
 import json
 import re
+
+from flask import request
+from flask_restful import Resource
+from werkzeug.exceptions import BadRequest
+
+from app import db
+from app.models import TradeSystem, DataSource, DataSourceType, OperationBook, EmergeOpRecord
+from ..errors import DataNotJsonError, DataUniqueError, DataNotNullError, DataNotMatchError, ApiError
 from ..protocol import RestProtocol
 
 

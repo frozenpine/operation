@@ -1,15 +1,17 @@
 # -*- coding: UTF-8 -*-
-from flask_restful import Resource
-from flask import request, render_template, make_response, redirect, url_for
-from app.models import Socket, TradeProcess, Server, SystemType, TradeSystem, PlatformType, HaType, DataSource, \
-    DataSourceType, DataSourceModel, OpRole, Operator, OperationBook, ScriptType, Operation, OperationGroup, \
-    SocketDirection, OperationCatalog, OpPrivilege, MethodType
-from app import db
-from restful.protocol import RestProtocol
-from restful.errors import DataUniqueError, LoaderNotFoundError, DataNotNullError
 import os
 import time
+
 import yaml
+from flask import request
+from flask_restful import Resource
+
+from app import db
+from app.models import Socket, TradeProcess, Server, SystemType, TradeSystem, PlatformType, HaType, DataSource, \
+    DataSourceType, DataSourceModel, OpRole, Operator, OperationBook, ScriptType, Operation, OperationGroup, \
+    OperationCatalog, OpPrivilege, MethodType
+from restful.errors import DataUniqueError, LoaderNotFoundError, DataNotNullError
+from restful.protocol import RestProtocol
 
 
 class FilePostApi(Resource):

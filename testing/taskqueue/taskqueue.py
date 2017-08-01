@@ -1,6 +1,7 @@
 from Queue import Queue
-from threading import Thread
 from datetime import datetime
+from threading import Thread
+
 
 class TaskQueue(Thread, Queue):
     def __init__(self):

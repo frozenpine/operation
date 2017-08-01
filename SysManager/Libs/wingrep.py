@@ -1,6 +1,8 @@
 # -*- coding: UTF-8 -*-
-import powershell
 import re
+
+import powershell
+
 
 def run(client, module):
     dest = module.get('grep')
@@ -14,13 +16,13 @@ def run(client, module):
         if ignoreCase:
             if (isinstance(ignoreCase, str) and
                     re.match(r'[n|N](o)?|[F|f]alse', ignoreCase)) or \
-                (isinstance(ignoreCase, bool) and ignoreCase):
+                    (isinstance(ignoreCase, bool) and ignoreCase):
                 param += " -CaseSensitive"
         revers = args.get('reverse_match')
         if revers:
             if (isinstance(revers, str) and
                     re.match(r'[y|Y](es)?|[T|t]rue', revers)) or \
-                (isinstance(revers, bool) and revers):
+                    (isinstance(revers, bool) and revers):
                 param += " -NotMatch"
         mod = {
             'ps': """\

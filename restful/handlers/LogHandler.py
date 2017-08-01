@@ -7,9 +7,9 @@ from app import msgQueues
 class LogApi(Resource):
     def post(self):
         msg = request.json['msg']
-        #source = request.headers.get('src')
-        #topic = request.headers.get('topic')
-        #print msg, source
+        # source = request.headers.get('src')
+        # topic = request.headers.get('topic')
+        # print msg, source
         '''
         if topic:
             print topic

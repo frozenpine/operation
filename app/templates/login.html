@@ -7,50 +7,53 @@
     <meta name="keywords" content="index">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="renderer" content="webkit">
-    <meta http-equiv="Cache-Control" content="no-siteapp" />
+    <meta http-equiv="Cache-Control" content="no-siteapp"/>
     <link rel="icon" type="image/png" href="[[ url_for('static', filename='i/favicon.png', _external=True) ]]">
-    <link rel="apple-touch-icon-precomposed" href="[[ url_for('static', filename='i/app-icon72x72@2x.png', _external=True) ]]">
-    <meta name="apple-mobile-web-app-title" content="Amaze UI" />
-    <link rel="stylesheet" href="[[ url_for('static', filename='css/amazeui.min.css', _external=True) ]]" />
+    <link rel="apple-touch-icon-precomposed"
+          href="[[ url_for('static', filename='i/app-icon72x72@2x.png', _external=True) ]]">
+    <meta name="apple-mobile-web-app-title" content="Amaze UI"/>
+    <link rel="stylesheet" href="[[ url_for('static', filename='css/amazeui.min.css', _external=True) ]]"/>
     <link rel="stylesheet" href="[[ url_for('static', filename='css/admin.css', _external=True) ]]">
     <link rel="stylesheet" href="[[ url_for('static', filename='css/app.css', _external=True) ]]"> {% if title %}
     <title>[[title]] - Quantdo</title>
-    {% else %}
+{% else %}
     <title>Welcome to Quantdo Ops Platform</title>
-    {% endif %}
+{% endif %}
 </head>
 
 <body data-type="login">
-    <div class="am-g myapp-login">
-        <div class="myapp-login-logo-block  tpl-login-max">
+<div class="am-g myapp-login">
+    <div class="myapp-login-logo-block  tpl-login-max">
+        <div class="myapp-login-logo-text">
             <div class="myapp-login-logo-text">
-                <div class="myapp-login-logo-text">
-                    用户<span> 登录</span> <i class="am-icon-skyatlas"></i>
-                </div>
-            </div>
-
-            <div class="am-u-sm-10 login-am-center">
-                <form class="am-form" action="" name="login" method="POST">
-                    [[ form.hidden_tag() ]]
-                    <fieldset>
-                        <div class="am-form-group">
-                            [[ form.login() ]]
-                        </div>
-                        <div class="am-form-group">
-                            [[ form.password() ]]
-                        </div>
-                        {% with messages = get_flashed_messages() %} {% for message in get_flashed_messages() %}
-                        <div style="color: red">[[ message ]]</div>
-                        {% endfor %} {% endwith %}
-                        <p><button type="submit" class="am-btn am-btn-default">登录</button></p>
-                    </fieldset>
-                </form>
+                用户<span> 登录</span> <i class="am-icon-skyatlas"></i>
             </div>
         </div>
+
+        <div class="am-u-sm-10 login-am-center">
+            <form class="am-form" action="" name="login" method="POST">
+                [[ form.hidden_tag() ]]
+                <fieldset>
+                    <div class="am-form-group">
+                        [[ form.login() ]]
+                    </div>
+                    <div class="am-form-group">
+                        [[ form.password() ]]
+                    </div>
+                    {% with messages = get_flashed_messages() %} {% for message in get_flashed_messages() %}
+                        <div style="color: red">[[ message ]]</div>
+                    {% endfor %} {% endwith %}
+                    <p>
+                        <button type="submit" class="am-btn am-btn-default">登录</button>
+                    </p>
+                </fieldset>
+            </form>
+        </div>
     </div>
-    <script src="[[ url_for('static', filename='js/jquery.min.js', _external=True) ]]"></script>
-    <script src="[[ url_for('static', filename='js/amazeui.min.js', _external=True) ]]"></script>
-    <script src="[[ url_for('static', filename='js/app.js', _external=True) ]]"></script>
+</div>
+<script src="[[ url_for('static', filename='js/jquery.min.js', _external=True) ]]"></script>
+<script src="[[ url_for('static', filename='js/amazeui.min.js', _external=True) ]]"></script>
+<script src="[[ url_for('static', filename='js/app.js', _external=True) ]]"></script>
 </body>
 
 </html>

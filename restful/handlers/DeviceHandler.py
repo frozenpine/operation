@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-from flask_restful import Resource, reqparse, request
+from flask_restful import Resource
 
 from app.models import Server
 
@@ -21,6 +21,7 @@ class DeviceApi(Resource):
             }
         else:
             return {'message': 'server not found'}, 404
+
     '''
     def put(self, **kwargs):
         try:
@@ -37,6 +38,7 @@ class DeviceApi(Resource):
         else:
             return {'message': 'server not found'}, 404
     '''
+
 
 class DeviceListApi(Resource):
     def get(self):
@@ -57,7 +59,8 @@ class DeviceListApi(Resource):
             }
         else:
             return {
-                'message': 'no servers.'
-            }, 204
+                       'message': 'no servers.'
+                   }, 204
+
     def post(self):
         pass

@@ -3,13 +3,13 @@ import json
 from os import path
 from sys import argv
 
-from flask import redirect, render_template, request, url_for
-from werkzeug.wrappers import Response
+from flask import redirect, request, url_for
 from flask_login import current_user
 from flask_restful import Resource
+from werkzeug.wrappers import Response
 
 from app.auth.privileged import CheckPrivilege
-from app.models import MethodType, Server, SystemType, TradeSystem
+from app.models import MethodType, TradeSystem
 from restful.protocol import RestProtocol
 
 
@@ -58,8 +58,8 @@ class UIDataApi(Resource):
             name = request.values['name']
         except KeyError:
             return {
-                'message': 'no name specified.'
-            }, 404
+                       'message': 'no name specified.'
+                   }, 404
         uri = url_for('static', filename='json/map/{}.json'.format(name))
         base_path = path.dirname(argv[0])
         abs_path = path.join(base_path, 'app{}'.format(uri))
@@ -67,8 +67,8 @@ class UIDataApi(Resource):
             return redirect(uri)
         else:
             return {
-                'message': 'no map data for {}.'.format(name)
-            }, 404
+                       'message': 'no map data for {}.'.format(name)
+                   }, 404
 
     def idc(self):
         return [

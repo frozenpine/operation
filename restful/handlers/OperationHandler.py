@@ -9,22 +9,19 @@ from flask import (current_app, make_response, render_template, request,
                    session, url_for)
 from flask_login import current_user
 from flask_restful import Resource
-from sqlalchemy import text
 
-from app import flask_logger as logging
+from SysManager.Common import AESCrypto
+from TaskManager.controller_queue import DispatchResult, TaskStatus
 from app import db, globalEncryptKey, msgQueues, taskManager, taskRequests
+from app import flask_logger as logging
 from app.auth.errors import (AuthError, InvalidUsernameOrPassword,
                              LoopAuthorization, NoPrivilege)
 from app.auth.privileged import CheckPrivilege
 from app.models import (MethodType, OperateRecord, OperateResult, Operation,
-                        OperationGroup, Operator, ScriptType)
-from restful.errors import (ApiError, ExecuteError, ExecuteTimeOutOfRange,
+                        OperationGroup, Operator)
+from restful.errors import (ApiError, ExecuteTimeOutOfRange,
                             InvalidParams, ProxyExecuteError)
 from restful.protocol import RestProtocol
-from SysManager.Common import AESCrypto
-from SysManager.configs import RemoteConfig, Result, SSHConfig
-from SysManager.executor import Executor, HttpExecutor
-from TaskManager.controller_queue import DispatchResult, TaskStatus
 
 dispatchMessage = {
     DispatchResult.Dispatched: u'任务调度成功',
@@ -78,7 +75,7 @@ class OperationMixin(object):
                 'operator_uuid': operator.uuid,
                 'operator_name': operator.name
             }
-            dtl['operated_at'] = arrow.get(op_session['operated_at'])\
+            dtl['operated_at'] = arrow.get(op_session['operated_at']) \
                 .to('Asia/Shanghai').strftime('%Y-%m-%d %H:%M:%S')
         elif status == TaskStatus.Success or status == TaskStatus.Failed:
             dtl['exec_code'] = self.snapshot['task_result_list'][idx]['task_result']['return_code']
@@ -90,7 +87,7 @@ class OperationMixin(object):
                 'operator_uuid': operator.uuid,
                 'operator_name': operator.name
             }
-            dtl['operated_at'] = arrow.get(op_session['operated_at'])\
+            dtl['operated_at'] = arrow.get(op_session['operated_at']) \
                 .to('Asia/Shanghai').strftime('%Y-%m-%d %H:%M:%S')
         elif status == TaskStatus.Skipped:
             dtl['exec_code'] = -3
@@ -99,8 +96,8 @@ class OperationMixin(object):
         if idx > 0:
             dtl['enabled'] = (self.snapshot['task_status_list'][idx - 1]
                               == TaskStatus.Success.value) and \
-                (not self.snapshot['task_status_list'][idx]
-                 == TaskStatus.Success.value)
+                             (not self.snapshot['task_status_list'][idx]
+                                  == TaskStatus.Success.value)
         elif idx == 0:
             dtl['enabled'] = not self.snapshot['task_status_list'][0] == TaskStatus.Success.value
         else:
@@ -120,6 +117,7 @@ class OperationMixin(object):
         for op in op_group.operations:
             rtn['details'].append(self.make_operation_detail(op))
         return rtn
+
 
 class OperationListApi(OperationMixin, Resource):
     def __init__(self):
@@ -153,8 +151,8 @@ class OperationListApi(OperationMixin, Resource):
                     self.snapshot['create_time'], '%Y%m%d-%H%M%S'
                 )
                 if op_group.is_emergency or \
-                    (now_time.day - create_time.day >= 1 and \
-                    (isinstance(trigger_time, datetime.time) and now_time.time() > trigger_time)):
+                        (now_time.day - create_time.day >= 1 and \
+                                 (isinstance(trigger_time, datetime.time) and now_time.time() > trigger_time)):
                     taskManager.init(task_queue, True)
                     self.snapshot = taskManager.snapshot(op_group.uuid)
                     rtn = self.make_operation_list(op_group)
@@ -189,6 +187,7 @@ class OperationListApi(OperationMixin, Resource):
         else:
             return RestProtocol(message='Operation group not found', error_code=-1), 404
 
+
 class OperationListSnapshotApi(Resource):
     def get(self, **kwargs):
         op_group = OperationGroup.find(**kwargs)
@@ -202,6 +201,7 @@ class OperationListSnapshotApi(Resource):
         else:
             return RestProtocol(message='Operation group not found', error_code=-1), 404
 
+
 class OperationListResumeApi(Resource):
     def get(self, **kwargs):
         op_group = OperationGroup.find(**kwargs)
@@ -210,6 +210,7 @@ class OperationListResumeApi(Resource):
             return RestProtocol(message=dispatchMessage[ret], error_code=ret.value)
         else:
             return RestProtocol(message='Operation group not found', error_code=-1), 404
+
 
 class OperationListRunApi(OperationMixin, Resource):
     def __init__(self):
@@ -242,6 +243,7 @@ class OperationListRunApi(OperationMixin, Resource):
         else:
             return RestProtocol(message='Operation group not found', error_code=-1), 404
 
+
 class OperationListRunAllApi(OperationMixin, Resource):
     def __init__(self):
         super(OperationListRunAllApi, self).__init__()
@@ -272,6 +274,7 @@ class OperationListRunAllApi(OperationMixin, Resource):
                 )
         else:
             return RestProtocol(message='Operation group not found', error_code=-1), 404
+
 
 class OperationApi(OperationMixin, Resource):
     def __init__(self):
@@ -326,6 +329,7 @@ class OperationApi(OperationMixin, Resource):
         else:
             return RestProtocol(error_code=-1, message="Operation not found"), 404
 
+
 class OperationCallbackApi(OperationMixin, Resource):
     def __init__(self):
         super(OperationCallbackApi, self).__init__()
@@ -376,7 +380,7 @@ class OperationUIApi(Resource):
             )
             if session.has_key(key):
                 if arrow.utcnow().timestamp >= \
-                    arrow.get(session[key].get('timeout')).timestamp:
+                        arrow.get(session[key].get('timeout')).timestamp:
                     session.pop(key)
                     valid_session = False
                 else:
@@ -413,6 +417,7 @@ class OperationUIApi(Resource):
         else:
             return "<h1>no ui template found</h1>"
 
+
 class OperationCaptchaApi(Resource):
     def get(self, id):
         op = Operation.find(id=id)
@@ -438,8 +443,9 @@ class OperationCaptchaApi(Resource):
             return rtn
         else:
             return {
-                'message': 'operation not found.'
-            }, 404
+                       'message': 'operation not found.'
+                   }, 404
+
 
 class OperationLoginApi(Resource):
     def post(self, id):
@@ -466,7 +472,7 @@ class OperationLoginApi(Resource):
                 return {
                     'errorCode': err.error_code,
                     'errorMsg': err.message
-                }   # 模拟HTTP接口的返回数据，用于前端UI模块正确显示数据。
+                }  # 模拟HTTP接口的返回数据，用于前端UI模块正确显示数据。
             else:
                 session[key] = {
                     'origin': rsp.cookies.get_dict(),
@@ -476,8 +482,9 @@ class OperationLoginApi(Resource):
                 return result
         else:
             return {
-                'message': 'operation not found.'
-            }, 404
+                       'message': 'operation not found.'
+                   }, 404
+
 
 class OperationExecuteApi(OperationApi):
     def post(self, id):
@@ -538,9 +545,9 @@ class OperationExecuteApi(OperationApi):
                 self.rtn['err_code'] = self.op_result.error_code
                 self.rtn['output_lines'] = self.op_result.detail
                 self.rtn['re_enter'] = (
-                    op.operate_define.type.IsChecker() and \
-                        not op.operate_define.type.IsBatcher()
-                ) or CheckPrivilege(
+                                           op.operate_define.type.IsChecker() and \
+                                           not op.operate_define.type.IsBatcher()
+                                       ) or CheckPrivilege(
                     current_user,
                     '/api/operation/id/',
                     MethodType.ReExecute
@@ -548,8 +555,9 @@ class OperationExecuteApi(OperationApi):
                 return self.rtn
         else:
             return {
-                'message': 'operation not found.'
-            }, 404
+                       'message': 'operation not found.'
+                   }, 404
+
 
 def _handlerJsonResponse(response):
     if response.ok:
@@ -565,6 +573,7 @@ def _handlerJsonResponse(response):
     else:
         raise ApiError('request failed.')
 
+
 def _format2json(data):
     formater = u'{0:0>2d}. {1[name]:15}{1[flag]:3}'
     rtn = []
@@ -578,6 +587,7 @@ def _format2json(data):
         else:
             rtn.append(data)
     return rtn
+
 
 class OperationCSVApi(OperationApi):
     def post(self, id):
@@ -633,9 +643,9 @@ class OperationCSVApi(OperationApi):
                     self.rtn['err_code'] = self.op_result.error_code
                     self.rtn['output_lines'] = self.op_result.detail
                     self.rtn['re_enter'] = (
-                        op.operate_define.type.IsChecker() and \
-                            not op.operate_define.type.IsBatcher()
-                    ) or CheckPrivilege(
+                                               op.operate_define.type.IsChecker() and \
+                                               not op.operate_define.type.IsBatcher()
+                                           ) or CheckPrivilege(
                         current_user,
                         '/api/operation/id/',
                         MethodType.ReExecute
@@ -643,9 +653,9 @@ class OperationCSVApi(OperationApi):
                     return self.rtn
             else:
                 return {
-                    'message': 'no file found.'
-                }, 412
+                           'message': 'no file found.'
+                       }, 412
         else:
             return {
-                'message': 'operation not found.'
-            }, 404
+                       'message': 'operation not found.'
+                   }, 404

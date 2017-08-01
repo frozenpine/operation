@@ -1,21 +1,18 @@
 # -*- coding: UTF-8 -*-
 import sys
 from os import path
+
 sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
 
-import gevent
 import requests
 import winrm
 from paramiko import (AutoAddPolicy, PasswordRequiredException, RSAKey,
                       SSHClient)
 from paramiko.ssh_exception import (AuthenticationException,
                                     NoValidConnectionsError)
-from winrm import Response
-from winrm.exceptions import (WinRMError, WinRMOperationTimeoutError,
-                              WinRMTransportError)
 
 from SysManager import logger as logging
-from configs import HttpConfig, RemoteConfig, Result, SSHConfig, WinRmConfig
+from configs import HttpConfig, Result, SSHConfig, WinRmConfig
 from excepts import ImportRSAkeyFaild, ModuleNotFound
 
 
@@ -43,7 +40,7 @@ class Executor():
         except ImportError:
             raise ModuleNotFound(module.get('name'))
         if not self.parser:
-            import_parser = 'from Parsers.{0}Parser import {0}Parser as par'\
+            import_parser = 'from Parsers.{0}Parser import {0}Parser as par' \
                 .format(module.get('name'))
             try:
                 exec import_parser
@@ -65,6 +62,7 @@ class Executor():
             self.result.lines = [line for line in stdout.readlines()]
         return self.result
 
+
 class WinRmExecutor(Executor):
     def __init__(self, remote_config, parser=None):
         Executor.__init__(self, remote_config, parser)
@@ -85,6 +83,7 @@ class WinRmExecutor(Executor):
                 ':'.join([remote_config.remote_host, str(remote_config.remote_port)]),
                 auth=(remote_config.remote_user, remote_config.remote_password)
             )
+
 
 class SSHExecutor(Executor):
     def __init__(self, remote_config, parser=None):
@@ -118,7 +117,7 @@ class SSHExecutor(Executor):
                     password=ssh_config.ssh_key_pass
                 )
             else:
-                err_msg = 'Fail to Load RSAKey({}), make sure password for key is correct.'\
+                err_msg = 'Fail to Load RSAKey({}), make sure password for key is correct.' \
                     .format(ssh_config.ssh_key)
                 logging.warning(err_msg)
                 raise ImportRSAkeyFaild(err_msg)
@@ -138,6 +137,7 @@ class SSHExecutor(Executor):
             password=ssh_config.remote_password
         )
 
+
 class HttpExecutor(Executor):
     def __init__(self, remote_config, parser=None, session=None):
         Executor.__init__(self, remote_config, parser)
@@ -146,6 +146,7 @@ class HttpExecutor(Executor):
 
     def run(self, module):
         pass
+
 
 if __name__ == '__main__':
     conf = SSHConfig('192.168.101.126', 'qdam', 'qdam')

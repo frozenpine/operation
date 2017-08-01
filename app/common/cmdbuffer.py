@@ -103,14 +103,14 @@ class CommandBuffer(object):
             self._shadowCommand = self._shadowCommand[:-1]
         elif self.x > 0:
             self._shadowCommand = self._shadowCommand[:self.x - 1] + \
-                self._shadowCommand[self.x:]
+                                  self._shadowCommand[self.x:]
         self.ArrowLeft()
         print 'backspace: {}, x: {}, y: {}'.format(self.CurrentCommand, self.x, self.y)
 
     def Delete(self):
         if self.x < len(self._shadowCommand) - 1:
             self._shadowCommand = self._shadowCommand[:self.x] + \
-                self._shadowCommand[self.x + 1:]
+                                  self._shadowCommand[self.x + 1:]
         elif self.x == len(self._shadowCommand):
             self._shadowCommand = self._shadowCommand[:self.x]
         print 'delete: {}, x: {}, y: {}'.format(self.CurrentCommand, self.x, self.y)
@@ -127,8 +127,8 @@ class CommandBuffer(object):
             self.skip = reduce(
                 lambda x, y: x | y,
                 [find(cmd, keyword) \
-                    for cmd in self.SplitCommand(self._shadowCommand) \
-                        for keyword in self.filter_keyword],
+                 for cmd in self.SplitCommand(self._shadowCommand) \
+                 for keyword in self.filter_keyword],
                 False
             )
             if self._shadowCommand.split(' ')[0] in self._interactive_commands:
@@ -138,19 +138,19 @@ class CommandBuffer(object):
                     (command_line, host, username, operator_id, operated_at, skip) \
                     VALUES('{command_line}', '{host}', '{username}', {operator_id}, \
                     '{operated_at}', {skip})".format(
-                        command_line=self._shadowCommand,
-                        host=self._host,
-                        username=self._user,
-                        operator_id=self._operator.id,
-                        operated_at=arrow.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f'),
-                        skip=self.skip and 1 or 0
-                    )
+                    command_line=self._shadowCommand,
+                    host=self._host,
+                    username=self._user,
+                    operator_id=self._operator.id,
+                    operated_at=arrow.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f'),
+                    skip=self.skip and 1 or 0
+                )
                 self._db.execute(command)
             except Exception as err:
                 flask_logger.warning(err.message)
             if not self.skip:
                 if len(self.command_lines) < 2 \
-                    or self.command_lines[-2] != self._shadowCommand:
+                        or self.command_lines[-2] != self._shadowCommand:
                     self.command_lines[-1] = self._shadowCommand
                 else:
                     self.command_lines.pop()
@@ -168,9 +168,9 @@ class CommandBuffer(object):
             EscapeKey(response)
         except ValueError:
             if not re.match(r'^[\x00-\x1f\x7f]$', response) \
-                and self._tab and not self._interactive and '\n' not in response:
+                    and self._tab and not self._interactive and '\n' not in response:
                 self._shadowCommand = self._shadowCommand[:self.x] + \
-                    response.replace('\x07', '') + self._shadowCommand[self.x:]
+                                      response.replace('\x07', '') + self._shadowCommand[self.x:]
                 self.x += len(response)
                 self.ArrowRight()
             if self._interactive and '\x07' in response:
@@ -190,7 +190,7 @@ class CommandBuffer(object):
         except ValueError:
             if re.match(r'[\x20-\x7e]', key) and not self._interactive:
                 self._shadowCommand = self._shadowCommand[:self.x] + \
-                    key + self._shadowCommand[self.x:]
+                                      key + self._shadowCommand[self.x:]
                 self.ArrowRight()
         else:
             method = getattr(self, esckey.name)
@@ -207,6 +207,7 @@ class CommandBuffer(object):
                 key = EscapeKey.Ctrl_C.value
         finally:
             return key
+
 
 class EscapeKey(Enum):
     Null = u'\x00'

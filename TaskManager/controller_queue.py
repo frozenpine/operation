@@ -18,6 +18,7 @@ class DispatchResult(Enum):
     QueueMissing = -3
     QueueNoError = -4
 
+
 class TaskStatus(Enum):
     InQueue = 0
     Running = 1

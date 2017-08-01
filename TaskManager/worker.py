@@ -145,6 +145,12 @@ class Worker(object):
             task = ret["task"]
             start_time = get_time.current_timestamp()
             t = RunTask(controller_queue_uuid, task_uuid, task, pipe_child, session, run_all)
+            # todo: 加一层初始化回调
+            """
+            第一层分配完 任务初始化 判断时间，进程池
+            第二层回调 sleep以后start以后真正开始做
+            第三层回调 做完
+            """
             while 1:
                 for k in self.process_dict.keys():
                     if not self.process_dict[k][0].is_alive():

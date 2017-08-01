@@ -1,15 +1,16 @@
 # -*- coding: UTF-8 -*-
-from flask_restful import Resource
-from app import db
-from app.models import Operator, MethodType
 from flask import request
+from flask_login import current_user
+from flask_restful import Resource
 from werkzeug.exceptions import BadRequest
 from werkzeug.security import check_password_hash
+
+from app import db
+from app.auth.privileged import CheckPrivilege
+from app.models import Operator, MethodType
 from restful.errors import DataNotJsonError, DataUniqueError, DataNotNullError, DataTypeError, DataNotMatchError, \
     ApiError
 from restful.protocol import RestProtocol
-from flask_login import current_user
-from app.auth.privileged import CheckPrivilege
 
 
 class UserApi(Resource):

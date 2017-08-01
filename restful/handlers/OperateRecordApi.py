@@ -1,9 +1,10 @@
 # -*- coding: UTF-8 -*-
-from flask_restful import Resource
-from app.models import OperateRecord, Operator
 from flask import request
+from flask_restful import Resource
 from werkzeug.exceptions import BadRequest
-from restful.errors import DataNotJsonError, DataUniqueError, DataNotNullError, DataEnumValueError, PlatFormNotFoundError
+
+from app.models import OperateRecord, Operator
+from restful.errors import DataNotJsonError
 from restful.protocol import RestProtocol
 
 
@@ -81,4 +82,3 @@ class OperateRecordListApi(Resource):
                                                 operation_results=result_list))
                     return {'count': len(record_list),
                             'records': record_list}
-

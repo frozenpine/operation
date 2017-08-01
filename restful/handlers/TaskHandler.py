@@ -3,9 +3,7 @@ import json
 import time
 
 from flask import Response
-from flask_restful import Resource, reqparse, request
-
-from app.models import OperateRecord, OperateResult, Operation, OperationGroup
+from flask_restful import Resource
 
 
 class TaskApi(Resource):

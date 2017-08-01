@@ -1,15 +1,16 @@
 # -*- coding: UTF-8 -*-
 import os
 
-#from neomodel import config as neoconfig
+# from neomodel import config as neoconfig
 base_dir = os.path.abspath(os.path.dirname(__file__))
+
 
 class Config:
     WTF_CSRF_ENABLED = True
     SECRET_KEY = os.environ.get('FLASK_SECRET_KEY') or 'SOMEthing-you-WILL-never-Guess'
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    GLOBAL_ENCRYPT = False   #全局开启密码加密，注：密码长度不能超过16位
+    GLOBAL_ENCRYPT = False  # 全局开启密码加密，注：密码长度不能超过16位
     '''
     NEO4J_DATABASE_URI = 'bolt://{0}:{1}@{2}:{3}'
     NEO4J_HOST = os.environ.get('NEO4J_HOST')
@@ -32,16 +33,19 @@ class Config:
         app.jinja_env.variable_start_string = cls.JINJA_VAR_START
         app.jinja_env.variable_end_string = cls.JINJA_VAR_STOP
 
+
 class DevelopmentConfig(Config):
     DEBUG = True
-    #NEO4J_HOST = '192.168.101.152'
+    # NEO4J_HOST = '192.168.101.152'
     SQLALCHEMY_DATABASE_URI = os.environ.get('FLASK_SQLALCHEMY_DATABASE_URI') or \
-         'sqlite:///' + os.path.join(base_dir, 'database/flask.db')
+                              'sqlite:///' + os.path.join(base_dir, 'database/flask.db')
+
 
 class ProductionConfig(Config):
     DEBUG = False
     SQLALCHEMY_DATABASE_URI = os.environ.get('FLASK_SQLALCHEMY_DATABASE_URI') or \
-         'sqlite:///' + os.path.join(base_dir, 'database/flask.db')
+                              'sqlite:///' + os.path.join(base_dir, 'database/flask.db')
+
 
 config = {
     'development': DevelopmentConfig,

@@ -1,5 +1,4 @@
 # -*- coding: UTF-8 -*-
-import json
 import logging
 import re
 import threading
@@ -10,23 +9,24 @@ from flask_restful import Resource
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
 
-from app import flask_logger as logging
-from app import globalEncryptKey
-from app.models import (ConfigType, DataSource, DataSourceModel,
-                        DataSourceType, SocketDirection, TradeSystem)
-from restful.protocol import RestProtocol
 from SysManager.Common import AESCrypto
 from SysManager.configs import SSHConfig, WinRmConfig
 from SysManager.executor import Executor
+from app import flask_logger as logging
+from app import globalEncryptKey
+from app.models import (DataSource, DataSourceModel,
+                        DataSourceType, SocketDirection, TradeSystem)
+from restful.protocol import RestProtocol
 
 
 def _decrypt(match):
     return match.group(1) + \
-        AESCrypto.decrypt(
-            match.group(2),
-            globalEncryptKey
-        ) + \
-        match.group(3)
+           AESCrypto.decrypt(
+               match.group(2),
+               globalEncryptKey
+           ) + \
+           match.group(3)
+
 
 class ServerList(object):
     def __init__(self):
@@ -56,6 +56,7 @@ class ServerList(object):
                 'swap': data[1]['status'].get('swap')
             })
 
+
 class ServerStaticListApi(Resource, ServerList):
     def __init__(self):
         super(ServerStaticListApi, self).__init__()
@@ -72,6 +73,7 @@ class ServerStaticListApi(Resource, ServerList):
                 message='System not found',
                 error_code=-1
             ), 404
+
 
 class ServerStaticApi(Resource, ServerList):
     def __init__(self):
@@ -123,6 +125,7 @@ class ServerStaticApi(Resource, ServerList):
         entry[1]['status'] = result
         executor.client.close()
 
+
 class SystemList(object):
     def __init__(self):
         self.system_list = []
@@ -153,27 +156,27 @@ class SystemList(object):
                         'version': proc.version,
                         'status': {
                             'user': self.proc_status.has_key(proc) and \
-                                self.proc_status[proc].get('user') or None,
+                                    self.proc_status[proc].get('user') or None,
                             'pid': self.proc_status.has_key(proc) and \
-                                self.proc_status[proc].get('pid') or None,
+                                   self.proc_status[proc].get('pid') or None,
                             'cpu': self.proc_status.has_key(proc) and \
-                                self.proc_status[proc].get('cpu%') or None,
+                                   self.proc_status[proc].get('cpu%') or None,
                             'mem': self.proc_status.has_key(proc) and \
-                                self.proc_status[proc].get('mem%') or None,
+                                   self.proc_status[proc].get('mem%') or None,
                             'vsz': self.proc_status.has_key(proc) and \
-                                self.proc_status[proc].get('vsz') or None,
+                                   self.proc_status[proc].get('vsz') or None,
                             'rss': self.proc_status.has_key(proc) and \
-                                self.proc_status[proc].get('rss') or None,
+                                   self.proc_status[proc].get('rss') or None,
                             'tty': self.proc_status.has_key(proc) and \
-                                self.proc_status[proc].get('tty') or None,
+                                   self.proc_status[proc].get('tty') or None,
                             'stat': self.proc_status.has_key(proc) and \
-                                self.proc_status[proc].get('stat') or 'stopped',
+                                    self.proc_status[proc].get('stat') or 'stopped',
                             'start': self.proc_status.has_key(proc) and \
-                                self.proc_status[proc].get('start') or None,
+                                     self.proc_status[proc].get('start') or None,
                             'time': self.proc_status.has_key(proc) and \
-                                self.proc_status[proc].get('time') or None,
+                                    self.proc_status[proc].get('time') or None,
                             'command': self.proc_status.has_key(proc) and \
-                                self.proc_status[proc].get('command') or None
+                                       self.proc_status[proc].get('command') or None
                         },
                         'server':
                             proc.server.name + "({})".format(proc.server.ip),
@@ -214,6 +217,7 @@ class SystemList(object):
             )
         logging.info('SystemList make_response finished: {}'.format(arrow.now()))
 
+
 class SystemStaticListApi(Resource, SystemList):
     def __init__(self):
         super(SystemStaticListApi, self).__init__()
@@ -228,6 +232,7 @@ class SystemStaticListApi(Resource, SystemList):
             return RestProtocol(self.rtn)
         else:
             return RestProtocol(message='System not found', error_code=-1), 404
+
 
 class ProcStaticApi(Resource, SystemList):
     def __init__(self):
@@ -259,14 +264,15 @@ class ProcStaticApi(Resource, SystemList):
         executor = Executor.Create(conf)
         if not executor:
             logging.warning(
-                'Executor init failed with ip: {ip}, user: {user}'\
-                .format(ip=conf.remote_host, user=conf.remote_user)
+                'Executor init failed with ip: {ip}, user: {user}' \
+                    .format(ip=conf.remote_host, user=conf.remote_user)
             )
             return
         if not executor:
             logging.warning('ip: {ip}, user: {user}'.format(ip=conf.remote_host, user=conf.remote_user))
             return
-        logging.info('ProcStatic check_proc_version started: {} {}'.format(arrow.now(), threading.currentThread().getName()))
+        logging.info(
+            'ProcStatic check_proc_version started: {} {}'.format(arrow.now(), threading.currentThread().getName()))
         for proc in processes:
             process_list.add((proc.exec_file, proc.param or ''))
             port_list |= set([socket.port for socket in proc.sockets])
@@ -280,8 +286,10 @@ class ProcStaticApi(Resource, SystemList):
                 }
                 proc.version = executor.run(mod).lines
                 # gevent.sleep(0)
-        logging.info('ProcStatic check_proc_version finishied: {} {}'.format(arrow.now(), threading.currentThread().getName()))
-        logging.info('ProcStatic check_proc_state started: {} {}'.format(arrow.now(), threading.currentThread().getName()))
+        logging.info(
+            'ProcStatic check_proc_version finishied: {} {}'.format(arrow.now(), threading.currentThread().getName()))
+        logging.info(
+            'ProcStatic check_proc_state started: {} {}'.format(arrow.now(), threading.currentThread().getName()))
         mod = {
             'name': 'psaux',
             'args': {
@@ -298,11 +306,11 @@ class ProcStaticApi(Resource, SystemList):
                     in result['command']: '''
                 exec_list = result['command'].split(' ')
                 if proc.exec_file in exec_list[0] and \
-                    reduce(
-                        lambda x, y: x or y,
-                        [find(proc.param, param) for param in exec_list[1:]],
-                        len(exec_list) <= 1
-                    ):
+                        reduce(
+                            lambda x, y: x or y,
+                            [find(proc.param, param) for param in exec_list[1:]],
+                                    len(exec_list) <= 1
+                        ):
                     self.proc_status[proc] = result
                     match = True
                     break
@@ -321,8 +329,10 @@ class ProcStaticApi(Resource, SystemList):
                     'command': None
                 }
             match = False
-        logging.info('ProcStatic check_proc_state finished: {} {}'.format(arrow.now(), threading.currentThread().getName()))
-        logging.info('ProcStatic check_proc_socket started: {} {}'.format(arrow.now(), threading.currentThread().getName()))
+        logging.info(
+            'ProcStatic check_proc_state finished: {} {}'.format(arrow.now(), threading.currentThread().getName()))
+        logging.info(
+            'ProcStatic check_proc_socket started: {} {}'.format(arrow.now(), threading.currentThread().getName()))
         mod = {'name': 'netstat'}
         if len(port_list) > 0:
             if not mod.has_key('args'):
@@ -364,7 +374,8 @@ class ProcStaticApi(Resource, SystemList):
                         'port': socket['remote_port'],
                         'stat': u'已连接'
                     }
-        logging.info('ProcStatic check_proc_socket finished: {} {}'.format(arrow.now(), threading.currentThread().getName()))
+        logging.info(
+            'ProcStatic check_proc_socket finished: {} {}'.format(arrow.now(), threading.currentThread().getName()))
         executor.client.close()
         logging.info('ProcStatic check_proc finished: {} {}'.format(arrow.now(), threading.currentThread().getName()))
 
@@ -392,6 +403,7 @@ class ProcStaticApi(Resource, SystemList):
         else:
             return RestProtocol(message='System not found', error_code=-1), 404
 
+
 class LoginListApi(Resource, SystemList):
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
@@ -416,8 +428,8 @@ class LoginListApi(Resource, SystemList):
                     sys_db = create_engine(uri).connect()
                 except Exception:
                     return {
-                        'message': 'faild to connect to database.'
-                    }, 404
+                               'message': 'faild to connect to database.'
+                           }, 404
                 else:
                     results = sys_db.execute(text(src.source['sql'])).fetchall()
                     for result in results:
@@ -440,12 +452,13 @@ class LoginListApi(Resource, SystemList):
         else:
             return RestProtocol(message='system not found', error_code=-1), 404
 
+
 class LoginCheckApi(Resource):
     def __init__(self):
         self.syslog_list = {}
         self.rtn = []
         self.checker = []
-        #self.mutex = threading.Lock()
+        # self.mutex = threading.Lock()
 
     def find_syslog(self, sys):
         log_srcs = DataSource.query.filter(
@@ -519,7 +532,7 @@ class LoginCheckApi(Resource):
                         data['conn_count'] += 1
                     elif datas['key_words']['login'] in message:
                         try:
-                            pars_message = pattern.match(each.get('message'))\
+                            pars_message = pattern.match(each.get('message')) \
                                 .groupdict()
                         except AttributeError:
                             pass
@@ -536,9 +549,9 @@ class LoginCheckApi(Resource):
                         data['disconn_count'] += 1
                     else:
                         data['seat_status'] = u'未连接'
-                #self.mutex.acquire()
+                # self.mutex.acquire()
                 self.rtn.append(data)
-                #self.mutex.release()
+                # self.mutex.release()
         executor.client.close()
 
     def get(self, **kwargs):
@@ -551,6 +564,7 @@ class LoginCheckApi(Resource):
             return RestProtocol(self.rtn)
         else:
             return RestProtocol(message='system not found', error_code=-1), 404
+
 
 class UserSessionListApi(Resource, SystemList):
     def get(self, **kwargs):
@@ -600,6 +614,7 @@ class UserSessionListApi(Resource, SystemList):
         else:
             return RestProtocol(message='System not found', error_code=-1), 404
 
+
 class ConfigList(object):
     def __init__(self):
         self.system_list = []
@@ -629,11 +644,12 @@ class ConfigList(object):
                         conf.pre_timestamp.to('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss'),
                     'hash': conf.hash_code,
                     'hash_changed': conf.pre_hash_code and \
-                        conf.pre_hash_code != conf.hash_code or False,
+                                    conf.pre_hash_code != conf.hash_code or False,
                     'timestamp': conf.timestamp and \
-                        conf.timestamp.to('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss')
+                                 conf.timestamp.to('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss')
                 } for conf in each_sys.config_files.all()]
             })
+
 
 class ConfigListApi(Resource, ConfigList):
     def __init__(self):
@@ -648,8 +664,9 @@ class ConfigListApi(Resource, ConfigList):
         else:
             return {'message': 'system not found'}, 404
 
+
 class ConfigCheckApi(Resource, ConfigList):
-    def  __init__(self):
+    def __init__(self):
         super(ConfigCheckApi, self).__init__()
         self.config_file_list = {}
         self.checker = []
@@ -691,7 +708,7 @@ class ConfigCheckApi(Resource, ConfigList):
                 )'''
                 self.checker.append(threading.Thread(
                     target=self.checkConfig,
-                    args=(remote, configs, )
+                    args=(remote, configs,)
                 ))
             for tr in self.checker:
                 tr.setDaemon(True)

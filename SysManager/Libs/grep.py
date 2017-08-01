@@ -18,13 +18,13 @@ def run(client, module):
         if ignoreCase:
             if (isinstance(ignoreCase, str) and
                     re.match(r'[y|Y](es)?|[T|t]rue', ignoreCase)) or \
-                (isinstance(ignoreCase, bool) and ignoreCase):
+                    (isinstance(ignoreCase, bool) and ignoreCase):
                 param += " -i"
         revers = args.get('reverse_match')
         if revers:
             if (isinstance(revers, str) and
                     re.match(r'[y|Y](es)?|[T|t]rue', revers)) or \
-                (isinstance(revers, bool) and revers):
+                    (isinstance(revers, bool) and revers):
                 param += " -v"
         mod = {
             'shell': 'grep{0} {1} {2}'.format(param, pattern, dest)

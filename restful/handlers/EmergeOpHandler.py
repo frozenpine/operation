@@ -7,24 +7,19 @@ from flask import (current_app, make_response, render_template, request,
                    session, url_for)
 from flask_login import current_user
 from flask_restful import Resource
-from sqlalchemy import text
 
-from app import flask_logger as logging
+from SysManager.Common import AESCrypto
+from SysManager.configs import RemoteConfig
+from SysManager.executor import Executor
 from app import db, globalEncryptKey
-from app.auth.errors import (AuthError, InvalidUsernameOrPassword,
-                             LoopAuthorization, NoPrivilege)
 from app.auth.privileged import CheckPrivilege
 from app.models import (EmergeOpRecord, EmergeOpResult, MethodType,
-                        OperationBook, Operator, ScriptType, TradeSystem)
-from restful.errors import (ApiError, ExecuteError, ExecuteTimeOutOfRange,
+                        OperationBook, TradeSystem)
+from restful.errors import (ApiError, ExecuteTimeOutOfRange,
                             InvalidParams, ProxyExecuteError)
-from SysManager.Common import AESCrypto
-from SysManager.configs import RemoteConfig, Result, SSHConfig
-from SysManager.excepts import ExecuteError
-from SysManager.executor import Executor, HttpExecutor
 
 
-class  EmergeOpListApi(Resource):
+class EmergeOpListApi(Resource):
     def __init__(self):
         super(EmergeOpListApi, self).__init__()
         self.emerge_groups = {}
@@ -66,9 +61,9 @@ class  EmergeOpListApi(Resource):
             self.emerge_groups[op.catalog]['details'].append(dtl)
 
     def find_op_record(self, op):
-        record = EmergeOpRecord.query\
-            .filter(EmergeOpRecord.emergeop_id == op.id)\
-                .order_by(EmergeOpRecord.operated_at.desc()).first()
+        record = EmergeOpRecord.query \
+            .filter(EmergeOpRecord.emergeop_id == op.id) \
+            .order_by(EmergeOpRecord.operated_at.desc()).first()
         return record
 
     def get(self, **kwargs):
@@ -83,8 +78,9 @@ class  EmergeOpListApi(Resource):
             ]
         else:
             return {
-                'message': 'system not found.'
-            }, 404
+                       'message': 'system not found.'
+                   }, 404
+
 
 class EmergeOpApi(Resource):
     def __init__(self):
@@ -140,8 +136,9 @@ class EmergeOpApi(Resource):
                 return self.rtn
         else:
             return {
-                'message': 'operation not found.'
-            }, 404
+                       'message': 'operation not found.'
+                   }, 404
+
 
 class EmergeOpUIApi(Resource):
     def get(self, id):
@@ -154,7 +151,7 @@ class EmergeOpUIApi(Resource):
             )
             if session.has_key(key):
                 if arrow.utcnow().timestamp >= \
-                    arrow.get(session[key].get('timeout')).timestamp:
+                        arrow.get(session[key].get('timeout')).timestamp:
                     session.pop(key)
                     valid_session = False
                 else:
@@ -191,6 +188,7 @@ class EmergeOpUIApi(Resource):
         else:
             return "<h1>no ui template found</h1>"
 
+
 class EmergeOpCaptchaApi(Resource):
     def get(self, id):
         op = OperationBook.find(id=id)
@@ -216,8 +214,9 @@ class EmergeOpCaptchaApi(Resource):
             return rtn
         else:
             return {
-                'message': 'operation not found.'
-            }, 404
+                       'message': 'operation not found.'
+                   }, 404
+
 
 class EmergeOpLoginApi(Resource):
     def post(self, id):
@@ -244,7 +243,7 @@ class EmergeOpLoginApi(Resource):
                 return {
                     'errorCode': err.status_code,
                     'errorMsg': err.message
-                }   # 模拟HTTP接口的返回数据，用于前端UI模块正确显示数据。
+                }  # 模拟HTTP接口的返回数据，用于前端UI模块正确显示数据。
             else:
                 session[key] = {
                     'origin': rsp.cookies.get_dict(),
@@ -254,8 +253,9 @@ class EmergeOpLoginApi(Resource):
                 return result
         else:
             return {
-                'message': 'operation not found.'
-            }, 404
+                       'message': 'operation not found.'
+                   }, 404
+
 
 class EmergeOpExecuteApi(EmergeOpListApi):
     def post(self, id):
@@ -316,9 +316,9 @@ class EmergeOpExecuteApi(EmergeOpListApi):
                 self.rtn['err_code'] = self.op_result.error_code
                 self.rtn['output_lines'] = self.op_result.detail
                 self.rtn['re_enter'] = (
-                    op.type.IsChecker() and \
-                        not op.type.IsBatcher()
-                ) or CheckPrivilege(
+                                           op.type.IsChecker() and \
+                                           not op.type.IsBatcher()
+                                       ) or CheckPrivilege(
                     current_user,
                     '/api/operation/id/',
                     MethodType.ReExecute
@@ -326,8 +326,9 @@ class EmergeOpExecuteApi(EmergeOpListApi):
                 return self.rtn
         else:
             return {
-                'message': 'operation not found.'
-            }, 404
+                       'message': 'operation not found.'
+                   }, 404
+
 
 def _handlerJsonResponse(response):
     if response.ok:
@@ -343,6 +344,7 @@ def _handlerJsonResponse(response):
     else:
         raise ApiError('request failed.')
 
+
 def _format2json(data):
     formater = u'{0:0>2d}. {1[name]:15}{1[flag]:3}'
     rtn = []
@@ -356,6 +358,7 @@ def _format2json(data):
         else:
             rtn.append(data)
     return rtn
+
 
 class EmergeOpCSVApi(EmergeOpListApi):
     def post(self, id):
@@ -411,9 +414,9 @@ class EmergeOpCSVApi(EmergeOpListApi):
                     self.rtn['err_code'] = self.op_result.error_code
                     self.rtn['output_lines'] = self.op_result.detail
                     self.rtn['re_enter'] = (
-                        op.type.IsChecker() and \
-                            not op.type.IsBatcher()
-                    ) or CheckPrivilege(
+                                               op.type.IsChecker() and \
+                                               not op.type.IsBatcher()
+                                           ) or CheckPrivilege(
                         current_user,
                         '/api/operation/id/',
                         MethodType.ReExecute
@@ -421,9 +424,9 @@ class EmergeOpCSVApi(EmergeOpListApi):
                     return self.rtn
             else:
                 return {
-                    'message': 'no file found.'
-                }, 412
+                           'message': 'no file found.'
+                       }, 412
         else:
             return {
-                'message': 'operation not found.'
-            }, 404
+                       'message': 'operation not found.'
+                   }, 404

@@ -1,10 +1,10 @@
 # -*- coding: UTF-8 -*-
 import re
+from datetime import time
 
 from flask import request
 from flask_restful import Resource
 from werkzeug.exceptions import BadRequest
-from datetime import time
 
 from app import db
 from app.models import Operation, OperationGroup
@@ -53,8 +53,8 @@ class OperationGroupListApi(Resource):
             og.description = data['operation_group'].get('description')
             og.sys_id = data['operation_group'].get('sys_id')
             og.trigger_time = data['operation_group'].get('trigger_time') '''
-            last = OperationGroup.query\
-                .filter(OperationGroup.sys_id == data['operation_group']['sys_id'])\
+            last = OperationGroup.query \
+                .filter(OperationGroup.sys_id == data['operation_group']['sys_id']) \
                 .order_by(OperationGroup.order.desc()).limit(1).first()
             if last:
                 og.order = last.order + 10

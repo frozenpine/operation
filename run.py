@@ -3,20 +3,17 @@ import sys
 from os import environ
 
 import zerorpc
-
 from gevent import monkey, joinall, spawn
 from gevent.pywsgi import WSGIServer
 from geventwebsocket.handler import WebSocketHandler
 
-from multiprocessing import Process
-
-from app import create_app, tm_host, tm_port
 from TaskManager.controller import Controller
 from TaskManager.worker import Worker
-
+from app import create_app, tm_host, tm_port
 
 app_host = environ.get('FLASK_HOST') or '0.0.0.0'
 app_port = environ.get('FLASK_PORT') or 6001
+
 
 def taskManagerStarter():
     monkey.patch_all(socket=False, thread=False)
@@ -27,6 +24,7 @@ def taskManagerStarter():
     worker.register_callback("start_callback", controller.worker_start_callback)
     worker.register_callback("end_callback", controller.worker_end_callback)
     joinall([spawn(server.run), spawn(worker.loop)])
+
 
 if __name__ == '__main__':
     ''' proc = Process(target=taskManagerStarter)

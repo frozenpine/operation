@@ -1,44 +1,45 @@
 # -*- coding: UTF-8 -*-
-import json
 import os
-import re
-import sys
 
 import yaml
 from flask import url_for
 from flask.testing import EnvironBuilder
 from flask_script import Manager
 
-from app import create_app, db
+from app import create_app
 from app.models import *
-from SysManager.Common import AESCrypto
 
 test_app = create_app('development')
 manager = Manager(test_app)
 
+
 def _encrypt(match):
     return match.group(1) + \
-        AESCrypto.encrypt(
-            match.group(2),
-            current_app.config['SECRET_KEY']
-        ) + \
-        match.group(3)
+           AESCrypto.encrypt(
+               match.group(2),
+               current_app.config['SECRET_KEY']
+           ) + \
+           match.group(3)
+
 
 def _decrypt(match):
     return match.group(1) + \
-        AESCrypto.decrypt(
-            match.group(2),
-            current_app.config['SECRET_KEY']
-        ) + \
-        match.group(3)
+           AESCrypto.decrypt(
+               match.group(2),
+               current_app.config['SECRET_KEY']
+           ) + \
+           match.group(3)
+
 
 @manager.command
 def create_db():
     db.create_all()
 
+
 @manager.command
 def drop_db():
     db.drop_all()
+
 
 @manager.command
 def init_auth():
@@ -93,6 +94,7 @@ def init_auth():
     db.session.add_all(roles.values())
     db.session.commit()
 
+
 @manager.command
 def init_inventory():
     f = open('inventory.yml')
@@ -138,7 +140,7 @@ def init_inventory():
     db.session.commit()
 
     sockets = {}
-    for sock  in inventory['Sockets']:
+    for sock in inventory['Sockets']:
         if sock.has_key('direction'):
             typ, cat = sock['direction'].split('.')
             sock['direction'] = getattr(globals()[typ], cat).value
@@ -173,13 +175,14 @@ def init_inventory():
     db.session.add_all(datasources)
     db.session.commit()
 
+
 @manager.command
 def init_sockets():
     f = open('inventory.yml')
     inventory = yaml.load(f)
 
     sockets = {}
-    for sock  in inventory['Sockets']:
+    for sock in inventory['Sockets']:
         if sock.has_key('process'):
             proc = TradeProcess.find(name=sock.pop('process'))
             if proc:
@@ -187,6 +190,7 @@ def init_sockets():
         sockets[sock['uri']] = Socket(**sock)
     db.session.add_all(sockets.values())
     db.session.commit()
+
 
 @manager.command
 def init_operation():
@@ -256,9 +260,11 @@ def init_operation():
     db.session.add_all(operations)
     db.session.commit() '''
 
+
 @manager.command
 def global_encrypt():
     pass
+
 
 @manager.command
 def modify_system(option_file):
@@ -295,11 +301,13 @@ def modify_system(option_file):
     else:
         print "file({}) not exists.".format(option_file)
 
+
 @manager.command
-def printurl():     
+def printurl():
     print url_for('main.index'), url_for('main.adddevice')
     print url_for('auth.login'), url_for('auth.register')
     print url_for('api.users'), url_for('api.user', login='admin'), url_for('api.user', id=1)
+
 
 @manager.command
 def printuser():
@@ -310,6 +318,7 @@ def printuser():
             print u"\t\tprivileges : "
             for pri in role.privileges:
                 print u"\t\t\t", pri.uri, pri.bit
+
 
 @manager.command
 def printsys():
@@ -337,6 +346,7 @@ def printsys():
     '''
     svr = Server.query.filter()
 
+
 @manager.command
 def modeltest(page=1, all=False):
     import time
@@ -347,10 +357,10 @@ def modeltest(page=1, all=False):
         records = OperateRecord.query.order_by(OperateRecord.operated_at.desc()).all()
     else:
         if page > 1:
-            records = OperateRecord.query.order_by(OperateRecord.operated_at.desc())\
-                .offset((page-1)*10).limit(10).all()
+            records = OperateRecord.query.order_by(OperateRecord.operated_at.desc()) \
+                .offset((page - 1) * 10).limit(10).all()
         else:
-            records = OperateRecord.query.order_by(OperateRecord.operated_at.desc())\
+            records = OperateRecord.query.order_by(OperateRecord.operated_at.desc()) \
                 .limit(10).all()
         print 'page: {}'.format(page)
     query_end = time.time()
@@ -361,9 +371,10 @@ def modeltest(page=1, all=False):
     print_end = time.time()
     print 'Print time: {} seconds.'.format(print_end - print_start)
 
+
 @manager.command
 def route_test():
-    #print dir(test_app)
+    # print dir(test_app)
     '''
     urls = test_app.url_map.bind('localhost')
     a = urls.match('api/user/id/1')
@@ -374,10 +385,11 @@ def route_test():
     urls = test_app.url_map.bind('localhost')
     match = urls.match('api/user/id/1')
     with test_app.request_context(
-        EnvironBuilder().get_environ()
+            EnvironBuilder().get_environ()
     ):
         rsp = test_app.view_functions[match[0]](**match[1])
         print json.dumps(rsp.response)
+
 
 if __name__ == '__main__':
     manager.run()
