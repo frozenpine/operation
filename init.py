@@ -200,7 +200,7 @@ def init_operation():
     db.session.add_all(catalogs.values())
     db.session.commit()
 
-    operation_book = {}
+    ''' operation_book = {}
     for bk in opers['OperationBook']:
         typ, cat = bk['type'].split('.')
         bk['type'] = getattr(globals()[typ], cat).value
@@ -254,7 +254,7 @@ def init_operation():
             op['book_id'] = operation_book[op.pop('op_book')].id
         operations.append(Operation(**op))
     db.session.add_all(operations)
-    db.session.commit()
+    db.session.commit() '''
 
 @manager.command
 def global_encrypt():

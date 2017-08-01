@@ -1421,6 +1421,10 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
                     },
                     operations: []
                 };
+                $scope.optionGroupName = null;
+                $scope.optionGroupDescription = null;
+                $scope.optionGroupInittime = null;
+                $scope.optionGroupEmerge = false;
                 $rootScope.$broadcast('OperationGroupRenew');
                 $('#addNewGroups').modal('close');
                 $message.Success("表单提交成功");
