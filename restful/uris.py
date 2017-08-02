@@ -43,7 +43,7 @@ from .handlers.SystemTypeHandler import (SystemTypeApi,
                                          SystemTypeListApi)
 from .handlers.ProcessHandler import (ProcessApi,
                                       ProcessListApi)
-                                         
+
 
 resources.add_resource(
     UserApi,

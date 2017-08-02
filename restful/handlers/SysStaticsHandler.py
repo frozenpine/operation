@@ -415,9 +415,10 @@ class LoginListApi(Resource, SystemList):
                         uri = src.source['uri']
                     sys_db = create_engine(uri).connect()
                 except Exception:
-                    return {
-                        'message': 'faild to connect to database.'
-                    }, 404
+                    return RestProtocol(
+                        message='faild to connect to database.',
+                        error_code=-1
+                    ), 404
                 else:
                     results = sys_db.execute(text(src.source['sql'])).fetchall()
                     for result in results:
@@ -591,7 +592,7 @@ class UserSessionListApi(Resource, SystemList):
                                 tmp['updated_time'] = arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss')
                         rtn.append(tmp)
                     sys_db.close()
-                    return rtn
+                    return RestProtocol(rtn)
             else:
                 return RestProtocol(
                     message=u'No data source for system {}'.format(sys.name),

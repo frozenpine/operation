@@ -48,7 +48,7 @@
             </div>
         </div>
     </div>
-    <div ng-controller="Privileges">
+    <div ng-init="currentId = [[user_id]]" ng-controller="Privileges">
         <div ng-if="!privileges.add_group" class="am-modal am-modal-confirm" tabindex="-1" id="addNewGroups">
             <div class="am-modal-dialog" style="max-width: 700px;">
                 <div class="am-modal-hd font-red bold">
@@ -383,6 +383,12 @@
                             </a>
                         </li>
                         <li>
+                            <a href="#sys_ser">
+                                <i class="am-icon-clone am-icon-fw"></i>
+                                <span>系统服务器配置</span>
+                            </a>
+                        </li>
+                        <li>
                             <a href="" data-am-modal="{target: '#FileUpdate', closeViaDimmer: 0, width: 600}">
                                 <i class="am-icon-wrench am-icon-fw"></i>
                                 <span>配置文件导入</span>
@@ -512,11 +518,32 @@
     <script src="[[ url_for('static', filename='js/amazeui.min.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/echarts.min.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/app.js', _external=True) ]]" type="text/javascript" charset="utf-8"></script>
-    <!-- <script>
-        document.write("<s" + "cript type='text/javascript' src='[[ url_for('static', filename='js/myApp.js', _external=True) ]]?" + Math.random() + "'></scr" + "ipt>");
-    </script> -->
-
     <script src="[[ url_for('static', filename='js/myApp.js', _external=True) ]]" type="text/javascript" charset="utf-8"></script>
+    <script src="[[ url_for('static', filename='js/service/systemServer.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/service/operationBooks.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/service/operations.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/service/systems.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/service/servers.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/service/fileUpload.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/service/uidatas.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/filter/resultFilter.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/directive/fileModel.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/directive/idcmap.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/directive/relamap.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/controller/addServerControl.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/controller/clientStaticsControl.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/controller/EditoptionBookController.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/controller/emergeOpsController.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/controller/loginStaticsControl.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/controller/opGroupController.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/controller/optionBookController.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/controller/optionGroupController.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/controller/optionResultControl.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/controller/Privileges.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/controller/sideBarCtrl.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/controller/svrStaticsControl.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/controller/sysStaticsControl.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/controller/userController.js', _external=True) ]]"></script>
 </body>
 
 </html>
