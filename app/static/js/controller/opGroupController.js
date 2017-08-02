@@ -21,10 +21,10 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                 angular.forEach($scope.opList.details, function(value, index) {
                     delete $sessionStorage[value.uuid];
                 });
+                $scope.taskQueueRunning = false;
+                $scope.batch_run = false;
             }, 0);
             $message.Warning('任务队列被重新初始化');
-            $scope.taskQueueRunning = false;
-            $scope.batch_run = false;
         } else {
             angular.forEach($scope.opList.details, function(value, index) {
                 if (data.uuid == value.uuid) {

@@ -1,5 +1,5 @@
 var app = angular.module('myApp');
-app.controller('optionBookController', ['$scope', '$timeout', '$operationBooks', '$message', function($scope, $timeout, $operationBooks, $message) {
+app.controller('optionBookController', ['$scope', '$rootScope', '$timeout', '$operationBooks', '$message', '$timeout', function($scope, $rootScope, $timeout, $operationBooks, $message, $timeout) {
     $operationBooks.operationBookSystemsGet({
         onSuccess: function(res) {
             $scope.optionBookData = res.records;
@@ -87,23 +87,26 @@ app.controller('optionBookController', ['$scope', '$timeout', '$operationBooks',
         $operationBooks.operationbookDefinePost({
             data: $scope.optionBookEditDataPost,
             onSuccess: function(response) {
-                $scope.formComfirm = true;
-                $scope.optionBookEditData = {
-                    "main_sys": "",
-                    "name": "",
-                    "description": "",
-                    "remote_name": "",
-                    "type": "",
-                    "catalog": "",
-                    "sys": "",
-                    "is_emergency": "",
-                    "mod": ""
-                };
-                $scope.optionBookCommand = [{
-                    "shell": "",
-                    "chdir": ""
-                }];
-                $scope.optionBookEditDataPost = {};
+                $timeout(function() {
+                    $scope.formComfirm = true;
+                    $scope.optionBookEditData = {
+                        "main_sys": "",
+                        "name": "",
+                        "description": "",
+                        "remote_name": "",
+                        "type": "",
+                        "catalog": "",
+                        "sys": "",
+                        "is_emergency": "",
+                        "mod": ""
+                    };
+                    $scope.optionBookCommand = [{
+                        "shell": "",
+                        "chdir": ""
+                    }];
+                    $scope.optionBookEditDataPost = {};
+                }, 0);
+
                 $rootScope.$broadcast('addNewOperateNode');
                 $('#defineOptionBook').modal('close');
                 $message.Success("表单提交成功");

@@ -21,7 +21,7 @@ app.controller('sideBarCtrl', ['$scope', '$uidatas', '$operationBooks', '$rootSc
         }
     });
     $scope.$on('OperationGroupRenew', function() {
-        $scope.SideBarList();
+        $timeout($scope.SideBarList(), 0);
     })
     $scope.SideBarList = function() {
         $uidatas.SideBarList({
