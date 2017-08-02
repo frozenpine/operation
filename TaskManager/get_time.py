@@ -21,9 +21,7 @@ def current_ymd_hms():
 
 # 计算两个hhmmss的差值
 def calc_diff(curr, task):
-    task[0] = curr[0]
-    task[1] = curr[1]
-    task[2] = curr[2]
+    task[0], task[1], task[2] = curr[0], curr[1], curr[2]
     curr = map(lambda x: int(x), curr)
     task = map(lambda x: int(x), task)
     curr = datetime.datetime(*tuple(curr))
@@ -32,43 +30,102 @@ def calc_diff(curr, task):
 
 
 # 比较时间戳先后顺序
-def compare_timestamps(queue, task):
+def compare_timestamps(queue, earliest, latest):
     """
     :return 1 立即执行
             2 等待时间
+            3 不能执行
     """
-    # 处理curr_timestamp
-    curr = current_ymd_hms()
-    curr_info = curr.split("-")[0].split("/") + curr.split("-")[1].split(":")
-    # 处理timestamp1
-    queue_info = queue.split("-")[0].split("/") + queue.split("-")[1].split(":")
-    # 处理timestamp2
-    task_info = ["", "", ""] + task.split(":")
-    if len(task_info) == 5:
-        task_info.append("00")
-    # 均获取最后三位
-    curr_temp = "".join(curr_info[-3:])
-    queue_temp = "".join(queue_info[-3:])
-    task_temp = "".join(task_info[-3:])
-    if curr_temp < queue_temp < task_temp:
-        # 当前12 队列13 任务14
-        return 1, None
-    if curr_temp < task_temp < queue_temp:
-        # 当前12 任务13 队列14 等待task-curr
-        return 2, calc_diff(curr_info, task_info)
-    if queue_temp < curr_temp < task_temp:
-        # 队列12 当前13 任务14 等待task-curr
-        return 2, calc_diff(curr_info, task_info)
-    if queue_temp < task_temp < curr_temp:
-        # 队列12 任务13 当前14
-        return 1, None
-    if task_temp < curr_temp < queue_temp:
-        # 任务12 当前13 队列14
-        return 1, None
-    if task_temp < queue_temp < curr_temp:
-        # 任务12 队列13 当前14 等待task+24-curr
-        return 2, calc_diff(curr_info, task_info) + 86400
+    if not earliest and latest:
+        # 当前时间
+        curr = current_ymd_hms()
+        curr_info = ["1970", "01", "01"] + curr.split("-")[1].split(":")
+        # 队列时间
+        queue_info = ["1970", "01", "01"] + queue.split("-")[1].split(":")
+        # 任务最早时间
+        earliest_info = queue_info
+        # 任务最晚时间
+        latest_info = ["1970", "01", "01"] + latest.split(":")
+        if len(latest_info) == 5:
+            latest_info.append("00")
+        # 均获取最后三位
+        curr_temp = "".join(curr_info[-3:])
+        queue_temp = "".join(queue_info[-3:])
+        earliest_temp = str(int(queue_temp) + 1)
+        latest_temp = "".join(latest_info[-3:])
+    elif not latest and earliest:
+        # 当前时间
+        curr = current_ymd_hms()
+        curr_info = ["1970", "01", "01"] + curr.split("-")[1].split(":")
+        # 队列时间
+        queue_info = ["1970", "01", "01"] + queue.split("-")[1].split(":")
+        # 任务最早时间
+        earliest_info = ["1970", "01", "01"] + earliest.split(":")
+        if len(earliest_info) == 5:
+            earliest_info.append("00")
+        # 均获取最后三位
+        curr_temp = "".join(curr_info[-3:])
+        queue_temp = "".join(queue_info[-3:])
+        earliest_temp = "".join(earliest_info[-3:])
+        latest_temp = str(int(queue_temp) - 1)
+    else:
+        # 当前时间
+        curr = current_ymd_hms()
+        curr_info = ["1970", "01", "01"] + curr.split("-")[1].split(":")
+        # 队列时间
+        queue_info = ["1970", "01", "01"] + queue.split("-")[1].split(":")
+        # 任务最早时间
+        earliest_info = ["1970", "01", "01"] + earliest.split(":")
+        # 任务最晚时间
+        latest_info = ["1970", "01", "01"] + latest.split(":")
+        if len(earliest_info) == 5:
+            earliest_info.append("00")
+        if len(latest_info) == 5:
+            latest_info.append("00")
+        # 均获取最后三位
+        curr_temp = "".join(curr_info[-3:])
+        queue_temp = "".join(queue_info[-3:])
+        earliest_temp = "".join(earliest_info[-3:])
+        latest_temp = "".join(latest_info[-3:])
+    if curr_temp <= queue_temp <= earliest_temp:
+        # 当前12 队列13 任务开始14
+        # 任务结束15 不能执行
+        if latest_temp > queue_temp:
+            return 3, None
+        # 任务结束12.5 立即执行
+        if latest_temp <= queue_temp:
+            return 1, None
+    if curr_temp <= earliest_temp <= queue_temp:
+        # 当前12 任务开始13 队列14 等待task-curr
+        return 2, calc_diff(curr_info, earliest_info)
+    if queue_temp <= curr_temp <= earliest_temp:
+        # 队列12 当前13 任务开始14 等待task-curr
+        return 2, calc_diff(curr_info, earliest_info)
+    if queue_temp <= earliest_temp <= curr_temp:
+        # 队列12 任务开始13 当前14
+        # 任务结束13.5 不能执行
+        if latest_temp < curr_temp:
+            return 3, None
+        # 任务结束15 立即执行
+        if latest_temp >= curr_temp:
+            return 1, None
+    if earliest_temp <= curr_temp <= queue_temp:
+        # 任务开始12 当前13 队列14
+        # 任务结束12.5 不能执行
+        if latest_temp < curr_temp:
+            return 3, None
+        # 任务结束13.5 立即执行
+        if latest_temp >= curr_temp:
+            return 1, None
+    if earliest_temp <= queue_temp <= curr_temp:
+        # 任务开始12 队列13 当前14 等待task+24-curr
+        return 2, calc_diff(curr_info, earliest_info) + 86400
 
 
 if __name__ == "__main__":
-    print compare_timestamps("2017/08/01-16:00:00", "18:00")
+    print compare_timestamps("2017/08/01-13:00:00", "", "11:00")
+    print compare_timestamps("2017/08/01-13:00:00", "", "15:00")
+    print compare_timestamps("2017/08/01-13:00:00", "11:00", "")
+    print compare_timestamps("2017/08/01-13:00:00", "15:00", "")
+    print compare_timestamps("2017/08/01-13:00:00", "11:00", "12:00")
+    print compare_timestamps("2017/08/01-13:00:00", "14:00", "15:00")
