@@ -217,6 +217,14 @@ class Controller(object):
         """
         self.controller_queue_dict[controller_queue_uuid].change_task_info(task_uuid, task_status, result)
 
+    def worker_init_callback(self, result):
+        """
+        任务初始化 回调函数
+        :param result: 回调结果
+        :return:
+        """
+        logging.info("task {0} init, user {1}".format(result.task_uuid, result.session))
+
     def worker_start_callback(self, result):
         """
         任务开始执行 回调函数
