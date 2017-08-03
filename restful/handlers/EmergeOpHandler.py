@@ -59,7 +59,7 @@ class  EmergeOpListApi(Resource):
             if record:
                 dtl['his_results'] = {
                     'err_code': record.results[-1].error_code,
-                    'operated_at': record.operated_at.humanize(),
+                    'operated_at': record.operated_at.to('Asia/Shanghai').strftime('%Y-%m-%d %H:%M:%S'),
                     'operator': record.operator.name,
                     'lines': record.results[-1].detail or []
                 }
