@@ -7,7 +7,7 @@ import zmq.green as zmq
 from gevent import monkey
 
 monkey.patch_all()
-sys.modules['zmq'] = zmq
+sys.modules["zmq"] = zmq
 
 if __name__ == "__main__":
     # 非阻塞
