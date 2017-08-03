@@ -28,4 +28,5 @@ if __name__ == "__main__":
     worker.register_callback("init_callback", controller.worker_init_callback)
     worker.register_callback("start_callback", controller.worker_start_callback)
     worker.register_callback("end_callback", controller.worker_end_callback)
+    controller.register_callback("kill_callback", worker.kill_process_callback)
     gevent.joinall([gevent.spawn(server.run), gevent.spawn(worker.loop)])

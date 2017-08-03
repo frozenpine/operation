@@ -211,6 +211,16 @@ class Worker(object):
                     gevent.sleep(0)
             gevent.sleep(0)
 
+    def kill_process_callback(self, task_uuid):
+        """
+        删除进程回调
+        :param task_uuid: task的uuid
+        :return:
+        """
+        for (k, v) in self.process_dict.iteritems():
+            if k == task_uuid:
+                self.process_dict.pop(k)
+
     def register_callback(self, event, callback):
         """
         向worker注册事件回调

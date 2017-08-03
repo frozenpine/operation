@@ -92,30 +92,33 @@ class ControllerQueue(object):
         将失败任务压入待做队列
         """
         # 寻找到失败任务的uuid
-        fail_task_uuid_list = list()
-        for each in self.controller_task_status_list:
-            if each.values()[0] in (1, 2, 3):
-                # 如果出现执行失败或者执行超时
-                each.update({each.keys()[0]: None})
-                fail_task_uuid_list.append(each.keys()[0])
-        if not fail_task_uuid_list:
-            return -1, u"队列无失败任务"
-        # 将失败任务先压入队列中
-        temp_queue = JoinableQueue()
-        for each in self.controller_task_list:
-            if each["task_uuid"] in fail_task_uuid_list:
-                temp_queue.put(
-                    {"controller_queue_uuid": self.controller_queue_uuid,
-                     "controller_queue_create_time": self.create_time,
-                     "task_uuid": each["task_uuid"], "task_earliest": each["earliest"],
-                     "task_latest": each["latest"], "task": each["detail"]}
-                )
-        # 将原先任务也压入队列中
-        while not self.controller_todo_task_queue.empty():
-            temp_queue.put(self.controller_todo_task_queue.get())
-        self.controller_todo_task_queue = temp_queue
-        self.controller_queue_status = 0
-        return 0, None
+        if self.controller_queue_status == -13:
+            return -1, msg_dict[-13]
+        else:
+            fail_task_uuid_list = list()
+            for each in self.controller_task_status_list:
+                if each.values()[0] in (1, 2, 3):
+                    # 如果出现执行失败或者执行超时
+                    each.update({each.keys()[0]: None})
+                    fail_task_uuid_list.append(each.keys()[0])
+            if not fail_task_uuid_list:
+                return -1, u"队列无失败任务"
+            # 将失败任务先压入队列中
+            temp_queue = JoinableQueue()
+            for each in self.controller_task_list:
+                if each["task_uuid"] in fail_task_uuid_list:
+                    temp_queue.put(
+                        {"controller_queue_uuid": self.controller_queue_uuid,
+                         "controller_queue_create_time": self.create_time,
+                         "task_uuid": each["task_uuid"], "task_earliest": each["earliest"],
+                         "task_latest": each["latest"], "task": each["detail"]}
+                    )
+            # 将原先任务也压入队列中
+            while not self.controller_todo_task_queue.empty():
+                temp_queue.put(self.controller_todo_task_queue.get())
+            self.controller_todo_task_queue = temp_queue
+            self.controller_queue_status = 0
+            return 0, None
 
     def pop_controller_todo_task_queue(self):
         """

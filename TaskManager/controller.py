@@ -21,19 +21,6 @@ class Controller(object):
         self.controller_queue_dict = dict()
         self.callback_dict = dict()
 
-    def get_snapshot(self, controller_queue_uuid):
-        """
-        获取controller_queue的快照
-        :param controller_queue_uuid: controller_queue的controller_queue_uuid
-        """
-        if not self.__controller_queue_exists(controller_queue_uuid):
-            return -1, msg_dict[-12]
-        else:
-            snap = self.controller_queue_dict[controller_queue_uuid].to_dict()
-            snap["task_result_list"] = map(lambda x: x.values()[0], snap["task_result_list"])
-            snap["task_status_list"] = map(lambda x: x.values()[0], snap["task_status_list"])
-            return 0, snap
-
     def __get_create_time(self, controller_queue_uuid):
         """
         私有函数
@@ -74,6 +61,28 @@ class Controller(object):
         :param controller_queue_uuid: controller_queue的controller_queue_uuid
         """
         return self.__get_create_time(controller_queue_uuid)
+
+    def register_callback(self, event, callback):
+        """
+        向worker注册事件回调
+        :param event: 事件
+        :param callback: 回调
+        :return:
+        """
+        self.callback_dict[event] = callback
+
+    def get_snapshot(self, controller_queue_uuid):
+        """
+        获取controller_queue的快照
+        :param controller_queue_uuid: controller_queue的controller_queue_uuid
+        """
+        if not self.__controller_queue_exists(controller_queue_uuid):
+            return -1, msg_dict[-12]
+        else:
+            snap = self.controller_queue_dict[controller_queue_uuid].to_dict()
+            snap["task_result_list"] = map(lambda x: x.values()[0], snap["task_result_list"])
+            snap["task_status_list"] = map(lambda x: x.values()[0], snap["task_status_list"])
+            return 0, snap
 
     def init_controller_queue(self, task_dict, force=False):
         """
@@ -285,7 +294,7 @@ class Controller(object):
         #     json=result.to_dict()
         # )
         # 阻塞队列执行完成后
-        if result.run_all and self.__get_group_block(result.controller_queue_uuid) and result.task_status == 0:
+        if result.run_all and self.__get_group_block(result.controller_queue_uuid) and result.task_status[0] == 0:
             self.get_task_from_controller_queue(result.controller_queue_uuid, result.session, True)
 
     def deserialize(self):
