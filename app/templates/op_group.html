@@ -220,7 +220,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <tr ng-repeat="data in opList.details track by $index">
+                            <tr ng-repeat="data in opList.details">
                                 <td>{{data.op_name}}</td>
                                 <td>{{data.op_desc}}</td>
                                 <td>{{data.time_range.lower}} ~ {{data.time_range.upper}}</td>
@@ -305,7 +305,7 @@
                                 </ul>
                             </div>
                             <ul sv-root sv-part="optionGroupCopy.operations">
-                                <li ng-repeat="data in optionGroupCopy.operations track by $index" sv-element>
+                                <li ng-repeat="data in optionGroupCopy.operations" sv-element>
                                     <div class="am-u-sm-2" style="padding: 0;">
                                         <input type="text" style="padding: 5px 5px 5px 0;border: none;" value="data.operation_name" ng-model="data.operation_name" />
                                     </div>

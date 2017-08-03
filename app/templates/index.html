@@ -92,16 +92,13 @@
                         </div>
                         <label for="doc-ipt-3-b" class="am-u-sm-2 am-form-label font-green">操作组名</label>
                         <div class="am-u-sm-5">
-                            <input type="text" name="optionGroup_name" ng-model="optionGroupName" ng-minlength="2" ng-disabled="optionGroupConfirm.operation_group.sys_id===null" required>
-                            <span style="float: left;color: red;font-size: 12px;" ng-show="!optionSubmitName.optionGroup_name.$valid&&optionSubmitName.optionGroup_name.$dirty">
-                                组名长度应大于2位
-                            </span>
+                            <input type="text" name="optionGroup_name" ng-model="optionGroupName" ng-disabled="optionGroupConfirm.operation_group.sys_id===null" placeholder="必填项" required>
                         </div>
                     </div>
                     <div class="am-form-group am-form-icon font-green am-g">
                         <label for="doc-ipt-3-b" class="am-u-sm-2 am-form-label font-green">操作组描述</label>
                         <div class="am-u-sm-3">
-                            <input type="text" name="optionGroup_des" ng-model="optionGroupDescription" ng-disabled="optionGroupConfirm.operation_group.sys_id===null">
+                            <input type="text" name="optionGroup_des" ng-model="optionGroupDescription" ng-disabled="optionGroupConfirm.operation_group.sys_id===null" placeholder="选填项">
                         </div>
                         <label for="doc-ipt-3-b" class="am-u-sm-2 am-form-label font-green">初始化时间</label>
                         <div class="am-u-sm-2">
@@ -152,7 +149,7 @@
                                 <div class="am-panel-bd" style="padding: 0px;">
                                     <div id="listBorderBottom" class="am-panel-bd am-u-sm-12" style="overflow-y: auto;background-color:#FFFFFF; padding: 0px; height: 260px">
                                         <ul sv-root sv-part="optionGroupConfirm.operations">
-                                            <li ng-repeat="data in optionGroupConfirm.operations track by $index" sv-element>
+                                            <li ng-repeat="data in optionGroupConfirm.operations" sv-element>
                                                 <div class="am-u-sm-3" style="padding: 1px">
                                                     <input type="text" style="border: none;" ng-model="data.name" />
                                                 </div>
@@ -180,7 +177,7 @@
                 </div>
                 <div class="am-modal-footer am-u-sm-12">
                     <span class="am-modal-btn am-u-sm-6" data-am-modal-cancel>取消</span>
-                    <button type="submit" class="am-btn am-btn-primary am-u-sm-6" style="height: 44px;" ng-disabled="!optionSubmitName.$valid || formComfirm || !optionGroupConfirmIsNull">
+                    <button type="submit" class="am-btn am-btn-primary am-u-sm-6" style="height: 44px;" ng-disabled="optionGroupName == undefined || optionGroupInittime == undefined || optionGroupConfirmIsNull">
                         确定  
                         <span class="am-icon-refresh am-icon-spin" ng-show="loadingIcon"></span>
                     </button>
@@ -449,7 +446,7 @@
                                     <i class="am-icon-check-circle-o am-margin-left" style="cursor: pointer" ng-show="grpOrderEdit[data.id]" ng-click="grpOrderEdit[data.id]=false"></i>
                                     <i class="am-icon-close am-margin-left-xs" style="cursor: pointer" ng-show="grpOrderEdit[data.id]" ng-click="grpOrderEdit[data.id]=false"></i>
                                 </span>
-                                <li ng-repeat="children in data.secondName track by $index" sv-element>
+                                <li ng-repeat="children in data.secondName" sv-element>
                                     <a href="{{children.Url}}" class="am-inline-block">{{::children.name}} - {{::children.trigger_time}}</a>
                                     <span style="cursor: pointer;" ng-show="grpOrderEdit[data.id]" sv-handle class="am-icon-bars am-inline-block"></span>
                                 </li>
@@ -482,7 +479,7 @@
                             </span>
                         </div>
                         <ul class="tpl-left-nav-sub-menu" id="{{data.id}}" ng-if="data.isSecond" style="display: block" ng-show="data.isShow" sv-root sv-part="data.secondName">
-                            <li ng-repeat="children in data.secondName track by $index" ng-click="operateChange(children.id)" style="vertical-align: center;" sv-element>
+                            <li ng-repeat="children in data.secondName" ng-click="operateChange(children.id)" style="vertical-align: center;" sv-element>
                                 <div>
                                     <a href="{{children.Url}}" class="am-inline-block" style="padding-left: 20px;">
                                         <span class="am-icon-circle" style="width: 165px;"> {{children.name}} - {{::children.trigger_time}}</span>

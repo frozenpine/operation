@@ -35,13 +35,8 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
     $scope.optionNowSelect = null;
     $scope.optionShow = false;
     $scope.detailInfo = "";
-    $scope.optionGroupConfirmIsNull = false;
+    $scope.optionGroupConfirmIsNull = true;
     $scope.infOfDetail = function(id) {
-        $scope.optionGroupConfirm.operation_group.name = $scope.optionGroupName;
-        $scope.optionGroupConfirm.operation_group.description = $scope.optionGroupDescription;
-        $scope.optionGroupConfirm.operation_group.trigger_time =
-            $scope.optionGroupInittime !== undefined ? $scope.optionGroupInittime.getHours() + ':' + $scope.optionGroupInittime.getMinutes() : '';
-        $scope.optionGroupConfirm.operation_group.is_emergency = $scope.optionGroupEmerge;
         $scope.optionShow = true;
         angular.forEach($scope.optionGroupDataBackup, function(value, index) {
             if (id == value.id) {
@@ -59,15 +54,10 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
     }
     $scope.optionSelectAdd = function() {
         $scope.optionGroupConfirm.operations.push($scope.optionNowSelect);
-        /* $scope.optionGroupConfirm.operation_group.name = $scope.optionGroupName;
-        $scope.optionGroupConfirm.operation_group.description = $scope.optionGroupDescription;
-        $scope.optionGroupConfirm.operation_group.trigger_time =
-            $scope.optionGroupInittime !== undefined ? $scope.optionGroupInittime.getHours() + ':' + $scope.optionGroupInittime.getMinutes() : '';
-        $scope.optionGroupConfirm.operation_group.is_emergency = $scope.optionGroupEmerge; */
         if ($scope.optionGroupConfirm.operations.length > 0) {
-            $scope.optionGroupConfirmIsNull = true;
-        } else {
             $scope.optionGroupConfirmIsNull = false;
+        } else {
+            $scope.optionGroupConfirmIsNull = true;
         }
     };
     activate();
@@ -78,20 +68,26 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
             // promise被resolve时的处理
             // console.log(promises);
         });
-    }
+    };
+
     $scope.dbclickFunc = function(index) {
         $scope.optionGroupConfirm.operations.splice(index, 1);
         if ($scope.optionGroupConfirm.operations.length > 0) {
-            $scope.optionGroupConfirmIsNull = true;
-        } else {
             $scope.optionGroupConfirmIsNull = false;
+        } else {
+            $scope.optionGroupConfirmIsNull = true;
         }
-    }
-    $scope.formComfirm = false;
+    };
+    // $scope.formComfirm = false;
     $scope.loadingIcon = false;
     $scope.addNewGroup = function() {
         // $scope.formComfirm = !$scope.formComfirm;
         $scope.loadingIcon = !$scope.loadingIcon;
+        $scope.optionGroupConfirm.operation_group.name = $scope.optionGroupName;
+        $scope.optionGroupConfirm.operation_group.description = $scope.optionGroupDescription;
+        $scope.optionGroupConfirm.operation_group.trigger_time =
+            $scope.optionGroupInittime !== undefined ? $scope.optionGroupInittime.getHours() + ':' + $scope.optionGroupInittime.getMinutes() : '';
+        $scope.optionGroupConfirm.operation_group.is_emergency = $scope.optionGroupEmerge;
         $operationBooks.systemOptionGroupPost({
             data: $scope.optionGroupConfirm,
             onSuccess: function(response) {
@@ -107,16 +103,16 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
                         },
                         operations: []
                     };
-                    $scope.optionGroupName = null;
-                    $scope.optionGroupDescription = null;
-                    $scope.optionGroupInittime = null;
+                    $scope.optionGroupName = undefined;
+                    $scope.optionGroupDescription = undefined;
+                    $scope.optionGroupInittime = undefined;
                     $scope.optionGroupEmerge = false;
-                    $scope.optionGroupName = null;
-                    $scope.optionNowSelect = null;
+                    $scope.optionNowSelect = undefined;
                     $scope.optionShow = false;
                     $scope.detailInfo = "";
-                    $scope.optionGroupConfirmIsNull = false;
-                    $scope.formComfirm = false;
+                    $scope.optionGroupConfirmIsNull = true;
+                    $scope.optionGroupDataBackup = undefined;
+                    // $scope.formComfirm = false;
                 }, 0);
 
                 $rootScope.$broadcast('OperationGroupRenew');
@@ -126,7 +122,7 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
             onError: function(response) {
                 $scope.loadingIcon = !$scope.loadingIcon;
                 $message.ModelAlert("表单提交失败，错误代码" + response, 'modalInfoShowAdd');
-                $scope.formComfirm = true;
+                // $scope.formComfirm = true;
             }
         })
     }
