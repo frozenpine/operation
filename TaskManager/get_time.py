@@ -29,6 +29,38 @@ def calc_diff(curr, task):
     return (task - curr).seconds
 
 
+def next_second(time_temp):
+    h = int(time_temp[0: 2])
+    m = int(time_temp[2: 4])
+    s = int(time_temp[4: 6])
+    s = s + 1
+    if s == 60:
+        s = 0
+        m = m + 1
+    if m == 60:
+        m = 0
+        h = h + 1
+    if h == 24:
+        h = 0
+    return "{:0>2d}{:0>2d}{:0>2d}".format(h, m, s)
+
+
+def last_second(time_temp):
+    h = int(time_temp[0: 2])
+    m = int(time_temp[2: 4])
+    s = int(time_temp[4: 6])
+    s = s - 1
+    if s == -1:
+        s = 59
+        m = m - 1
+    if m == -1:
+        m = 59
+        h = h - 1
+    if h == -1:
+        h = 23
+    return "{:0>2d}{:0>2d}{:0>2d}".format(h, m, s)
+
+
 # 比较时间戳先后顺序
 def compare_timestamps(queue, earliest, latest):
     """
@@ -51,7 +83,7 @@ def compare_timestamps(queue, earliest, latest):
         # 均获取最后三位
         curr_temp = "".join(curr_info[-3:])
         queue_temp = "".join(queue_info[-3:])
-        earliest_temp = str(int(queue_temp) + 1)
+        earliest_temp = next_second(queue_temp)
         latest_temp = "".join(latest_info[-3:])
     elif not latest and earliest:
         # 当前时间
@@ -67,7 +99,7 @@ def compare_timestamps(queue, earliest, latest):
         curr_temp = "".join(curr_info[-3:])
         queue_temp = "".join(queue_info[-3:])
         earliest_temp = "".join(earliest_info[-3:])
-        latest_temp = str(int(queue_temp) - 1)
+        latest_temp = last_second(queue_temp)
     else:
         # 当前时间
         curr = current_ymd_hms()
