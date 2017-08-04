@@ -25,7 +25,6 @@ class ControllerQueue(object):
         # fixme: for debug:
         self.create_time = "2017/01/01-12:00:00"
         self.group_block = group_block
-        # 移除block_flag, 更新block_flag为controller_queue_status
         self.controller_queue_status = 0
         self.controller_queue_uuid = controller_queue_uuid
         self.controller_todo_task_queue = JoinableQueue()
@@ -34,11 +33,14 @@ class ControllerQueue(object):
         self.controller_task_result_list = list()
 
     def to_dict(self):
+        """
+        转换为字典
+        """
         return {
             "create_time": self.create_time,
             "group_block": self.group_block,
             "controller_queue_status": self.controller_queue_status,
-            "queue_id": self.controller_queue_uuid,
+            "controller_queue_uuid": self.controller_queue_uuid,
             "task_list": self.controller_task_list,
             "task_result_list": self.controller_task_result_list,
             "task_status_list": self.controller_task_status_list
@@ -65,6 +67,7 @@ class ControllerQueue(object):
     def peek_controller_todo_task_queue(self, task_uuid):
         """
         从controller的待做队列中查询第一个task
+        :param task_uuid: task的uuid
         """
         if self.controller_todo_task_queue.empty():
             return -1, msg_dict[-11]
@@ -91,10 +94,11 @@ class ControllerQueue(object):
         """
         将失败任务压入待做队列
         """
-        # 寻找到失败任务的uuid
         if self.controller_queue_status == -13:
+            # 队列失败不可恢复
             return -1, msg_dict[-13]
         else:
+            # 寻找到失败任务的uuid
             fail_task_uuid_list = list()
             for each in self.controller_task_status_list:
                 if each.values()[0] in (1, 2, 3):
@@ -118,17 +122,16 @@ class ControllerQueue(object):
                 temp_queue.put(self.controller_todo_task_queue.get())
             self.controller_todo_task_queue = temp_queue
             self.controller_queue_status = 0
-            return 0, None
+            return 0, u"队列失败任务恢复成功"
 
     def pop_controller_todo_task_queue(self):
         """
         移除待做队列中的第一项
-        :return:
         """
         if self.controller_todo_task_queue.empty():
             return -1, msg_dict[-11]
         self.controller_todo_task_queue.get()
-        return 0, None
+        return 0, u"队列第一项移除成功"
 
     def change_task_info(self, task_uuid, task_status, task_result):
         """
@@ -136,7 +139,6 @@ class ControllerQueue(object):
         :param task_uuid: task的uuid
         :param task_status: task的状态
         :param task_result: task的执行结果
-        :return:
         """
         if task_status[0] == -1:
             # 任务初始化失败

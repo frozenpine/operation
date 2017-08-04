@@ -29,17 +29,29 @@ class Result(object):
             self.task_result = task_result
 
     def to_dict(self):
+        """
+        转换为字典
+        :return: 字典
+        """
         return vars(self)
 
     def to_str(self):
+        """
+        转换为字符串
+        :return: 字符串
+        """
         return json.dumps(self.to_dict())
 
     def type(self):
+        """
+        判断类型
+        :return: 返回init start end
+        """
         if self.task_status[0] in (-1, 100, 111, 112, 121):
             return "init"
         if self.task_status[0] in (200,):
             return "start"
-        if self.task_status[0] in (0, 1):
+        if self.task_status[0] in (0, 1, 2, 3):
             return "end"
 
 
@@ -75,6 +87,13 @@ class RunTask(Process):
             self.send(100, u"可以直接执行", None)
 
     def send(self, status_code, status_msg, task_result):
+        """
+        管道回传信息
+        :param status_code: 任务状态码
+        :param status_msg: 任务状态信息
+        :param task_result: 任务状态结果
+        :return:
+        """
         self.pipe_child.send(
             Result(controller_queue_uuid=self.controller_queue_uuid, task_uuid=self.task_uuid,
                    status_code=status_code, status_msg=status_msg, session=self.session, run_all=self.run_all,
@@ -213,13 +232,15 @@ class Worker(object):
 
     def kill_process_callback(self, task_uuid):
         """
-        删除进程回调
+        终止进程回调
         :param task_uuid: task的uuid
         :return:
         """
-        for (k, v) in self.process_dict.iteritems():
-            if k == task_uuid:
-                self.process_dict.pop(k)
+        if task_uuid in self.process_dict.keys():
+            self.process_dict.pop(task_uuid)
+            return 0, u"终止进程成功"
+        else:
+            return -1, u"无此进程"
 
     def register_callback(self, event, callback):
         """
