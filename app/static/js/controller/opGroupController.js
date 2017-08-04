@@ -1,5 +1,5 @@
 var app = angular.module('myApp');
-app.controller('opGroupController', ['$scope', '$operationBooks', '$operations', '$routeParams', '$location', '$rootScope', '$timeout', '$message', '$sessionStorage', function($scope, $operationBooks, $operations, $routeParams, $location, $rootScope, $timeout, $message, $sessionStorage) {
+app.controller('opGroupController', ['$scope', '$operationBooks', '$operations', '$routeParams', '$location', '$rootScope', '$timeout', '$message', '$sessionStorage', '$systems', function($scope, $operationBooks, $operations, $routeParams, $location, $rootScope, $timeout, $message, $sessionStorage, $systems) {
     /* $scope.$on('$routeChangeStart', function(evt, next, current) {
         var last = $scope.opList.details[$scope.opList.details.length - 1];
         if (last.exec_code != -1 && last.checker.isTrue && !last.checker.checked) {
@@ -323,5 +323,18 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                 $message.Alert("表单提交失败，错误代码" + req);
             }
         });
+    }
+
+    $scope.CheckSystemConfig = function() {
+        $scope.checkingSystemConfig = true;
+        $systems.QuantdoConfigCheck({
+            sysID: $routeParams.sysid,
+            onSuccess: function(data) {
+                $timeout(function() {
+                    $scope.configFileList = data.records
+                    $scope.checkingSystemConfig = false;
+                }, 0);
+            }
+        })
     }
 }]);

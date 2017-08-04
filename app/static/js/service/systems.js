@@ -1,4 +1,3 @@
-var app = angular.module('myApp');
 app.service('$systems', function($http, $message, $localStorage, $sessionStorage, $timeout, $rootScope) {
     this.SystemStaticsCheck = function(params, force = false) {
         if (params.sysID === undefined) {
@@ -247,5 +246,34 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
                 $message.Alert(response.message);
             });
         return true;
+    }
+
+    this.QuantdoVersionCheck = function(params) {
+        if (params.sysID === undefined) {
+            return false;
+        }
+        $http.get()
+    }
+
+    this.QuantdoConfigCheck = function(params) {
+        if (params.sysID === undefined) {
+            return false;
+        }
+        $http.get('api/system/id/' + params.sysID + '/config_files/check')
+            .success(function(response) {
+                if (response.error_code == 0) {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(response.data);
+                    }
+                } else if (params.hasOwnProperty('onError')) {
+                    params.onError(response.data);
+                }
+            })
+            .error(function(response) {
+                console.log(response);
+                if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                }
+            });
     }
 })
