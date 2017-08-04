@@ -454,6 +454,7 @@
                                     <a href="{{children.Url}}" class="am-inline-block">{{::children.name}} - {{::children.trigger_time}}</a>
                                     <span style="cursor: pointer;" ng-show="grpOrderEdit[data.id]" sv-handle class="am-icon-bars am-inline-block"></span>
                                 </li>
+                                <a href="{{data.emerge_ops.Url}}" style="color: #96a5aa; font-size: 12px;padding-left: 18px; padding-bottom: 8px;">{{::data.emerge_ops.name}}</a>
                             </ul>
                         </div>
                     </li>
@@ -491,6 +492,7 @@
                                     <span style="cursor: pointer;" ng-show="grpOrderEdit[data.id]" sv-handle class="am-icon-bars am-inline-block"></span>
                                 </div>
                             </li>
+                            <a href="{{data.emerge_ops.Url}}" style="color: #485a6a; font-size: 14px;padding-left: 20px; padding-bottom: 8px;margin-right: 35px">{{::data.emerge_ops.name}}</a>
                         </ul>
                     </li>
                 </ul>
