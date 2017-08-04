@@ -1,4 +1,4 @@
-var app = angular.module('myApp');
+// var app = angular.module('myApp');
 app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$operationBooks', '$message', '$timeout', function($scope, $http, $routeParams, $operationBooks, $message, $timeout) {
     /* $scope.optionBookEditDataList = new Array();
     $scope.optionBookEditShow = new Array(); */

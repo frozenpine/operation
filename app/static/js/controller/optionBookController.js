@@ -1,5 +1,6 @@
 var app = angular.module('myApp');
 app.controller('optionBookController', ['$scope', '$rootScope', '$timeout', '$operationBooks', '$message', '$timeout', function($scope, $rootScope, $timeout, $operationBooks, $message, $timeout) {
+    $scope.opBookShellFine = false;
     $operationBooks.operationBookSystemsGet({
         onSuccess: function(res) {
             $scope.optionBookData = res.records;
@@ -34,36 +35,34 @@ app.controller('optionBookController', ['$scope', '$rootScope', '$timeout', '$op
         "shell": "",
         "chdir": ""
     }];
-    $scope.checkDataFull = function(data) {
-        if (data.name == "" || data.sys == "" || data.type == "" || data.remote_name == "" || data.catalog === null || data.catalog === undefined || !$scope.optionBookShellIs)
-            return true;
-        else
-            return false;
-    }
+
     $scope.optionBookComAdd = function() {
         $scope.optionBookShellIs = false;
         $scope.optionBookNew = {};
         $scope.optionBookCommand.push($scope.optionBookNew);
-    }
-    $scope.optionBookShellIs = false;
+    };
+
+    $scope.shellChanged = function() {
+        $scope.opBookShellFine = false;
+    };
+
     $scope.optionBookCheckShell = function(index, id) {
         if (id === undefined) {
             $message.ModelAlert("请选择系统", "modalInfoShowDefine");
             return;
         }
-        $scope.optionBookShellIs = false;
-        $scope.checkShow = true;
         $operationBooks.operationbookCheck({
             sys_id: id,
             data: $scope.optionBookCommand[index],
             onSuccess: function(response) {
                 $message.ModelSucess("检查成功", "modalInfoShowDefine");
-                // $scope.checkShow = false;
-                $scope.optionBookShellIs = true;
+                $scope.checkShow = false;
+                $scope.opBookShellFine = true;
             },
             onError: function(response) {
                 $message.ModelAlert("检查失败,脚本文件不存在", "modalInfoShowDefine");
-                // $scope.checkShow = false;
+                $scope.checkShow = true;
+                $scope.opBookShellFine = false;
                 if ($scope.optionBookCommand.length != 1) {
                     $scope.optionBookCommand.splice(index, 1);
                 } else {
@@ -105,6 +104,7 @@ app.controller('optionBookController', ['$scope', '$rootScope', '$timeout', '$op
                         "chdir": ""
                     }];
                     $scope.optionBookEditDataPost = {};
+                    $scope.opBookShellFine = false;
                 }, 0);
 
                 $rootScope.$broadcast('addNewOperateNode');
