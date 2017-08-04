@@ -199,32 +199,35 @@
                         <label class="am-u-sm-2 am-form-label">主系统</label>
                         <div class="am-u-sm-3">
                             <select ng-change="selectWhichSystem(optionBookEditData.main_sys.id)" ng-model="optionBookEditData.main_sys" ng-options="x.name for x in optionBookData" required>
-                                <span class="am-text-danger">*</span>
+                                <option value="">------</option>
                             </select>
                         </div>
                         <label for="doc-ipt-3-a" class="am-u-sm-2 am-form-label">系统列表</label>
                         <div class="am-u-sm-5">
                             <select id="doc-ipt-3-a" ng-model="optionBookEditData.sys" value="x.id" ng-options="x.name for x in systemListData" ng-disabled="optionBookEditData.main_sys==''" required>
-                        </select>
+                                <option value="">------</option>
+                            </select>
                         </div>
                     </div>
                     <div class="am-form-group am-form-icon font-green">
-                        <label for="doc-ipt-3-f" class="am-u-sm-2 am-form-label">类型</label>
+                        <label for="doc-ipt-3-f" class="am-u-sm-2 am-form-label">脚本类型</label>
                         <div class="am-u-sm-3">
                             <select ng-model="optionBookEditData.type" ng-disabled="optionBookEditData.sys==''" required>
-                            <option value="Checker">检查</option>
-                            <option value="Executor">执行</option>
-                            <option value="Interactivator">交互</option>
-                            <option value="Execute_Checker">执行与检查</option>
-                            <option value="Interactive_Checker">交互与检查</option>
-                        </select>
+                                <option value="">------</option>
+                                <option value="Checker">检查</option>
+                                <option value="Executor">执行</option>
+                                <option value="Interactivator">交互</option>
+                                <option value="Execute_Checker">执行与检查</option>
+                                <option value="Interactive_Checker">交互与检查</option>
+                            </select>
                         </div>
                         <label for="doc-ipt-3-r" class="am-u-sm-2 am-form-label">连接方式</label>
                         <div class="am-u-sm-5">
                             <select id="doc-ipt-3-r" ng-model="optionBookEditData.remote_name" ng-disabled="optionBookEditData.sys==''" required>
-                            <option value="SSHConfig">SSHConfig</option>
-                            <option value="WinRmConfig">WinRmConfig</option>
-                        </select>
+                                <option value="">------</option>
+                                <option value="SSHConfig">SSHConfig</option>
+                                <option value="WinRmConfig">WinRmConfig</option>
+                            </select>
                         </div>
                     </div>
                     <div class="am-form-group am-form-icon font-green">
@@ -235,7 +238,8 @@
                         <label for="doc-ipt-3-d" class="am-u-sm-2 am-form-label">分类</label>
                         <div class="am-u-sm-5">
                             <select ng-model="optionBookEditData.catalog" ng-disabled="optionBookEditData.sys==''" ng-options="x.name for x in operationCatalogs" required>
-                        </select>
+                                <option value="">------</option>
+                            </select>
                         </div>
                     </div>
                     <div class="am-form-group am-form-icon font-green">
