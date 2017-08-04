@@ -111,13 +111,11 @@ app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$oper
         $('#his_result' + id).modal({ relatedTarget: this });
     };
 
-    $scope.execute = function(grp_name, id) {
+    $scope.execute = function(grp_name, op_idx, id) {
         var group = null;
-        var op_idx = null;
         angular.forEach($scope.emergeopList, function(value, index) {
             if (grp_name == value.name) {
                 group = value;
-                op_idx
             }
         });
         if (group === null || group === undefined) {
