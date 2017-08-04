@@ -75,11 +75,11 @@ if __name__ == "__main__":
             ]
         },
         "task_group2": {
-            "group_block": False,
+            "group_block": True,
             "group_info": [
                 {
                     "task_uuid": "task6",
-                    "earliest": "16:00",
+                    "earliest": "13:00",
                     "latest": "18:00",
                     "detail": {
                         "remote": {
@@ -98,13 +98,13 @@ if __name__ == "__main__":
                 },
                 {
                     "task_uuid": "task7",
-                    "earliest": "18:00",
+                    "earliest": "13:00",
                     "latest": "20:00",
                     "detail": {
                         "remote": {
                             "params": {
                                 "ip": "192.168.100.90",
-                                "password": "qdam",
+                                "password": "qdam1",
                                 "user": "qdam"
                             },
                             "name": "SSHConfig"
@@ -141,6 +141,6 @@ if __name__ == "__main__":
     client.connect("tcp://127.0.0.1:2017")
     # print client.deserialize()
     print client.init(task_dict)
-    print client.run_all("task_group1")
+    print client.run_all("task_group2")
     print client.snapshot("task_group1")
     print client.snapshot("task_group2")

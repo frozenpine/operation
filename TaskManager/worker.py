@@ -8,6 +8,7 @@ import gevent
 
 import get_time
 from SysManager.configs import SSHConfig
+from SysManager.excepts import SSHException, SSHAuthenticationException, SSHNoValidConnectionsError, ConfigInvalid
 from SysManager.executor import Executor
 from msg_queue import msg_queue
 from worker_queue import WorkerQueue
@@ -105,59 +106,57 @@ class RunTask(Process):
         调用Executor执行task
         :return:
         """
-        # 继续初始化判断
+        # 实例化SSHConfig初始化判断
         try:
             conf = SSHConfig(**self.task["remote"]["params"])
-        except TypeError:
-            # SSH格式错误
+        except ConfigInvalid, status_msg:
+            # 配置文件格式错误
             status_code = -1
-            status_msg = u"SSH初始化失败"
+            status_msg = status_msg.message
             task_result = None
             self.send(status_code, status_msg, task_result)
             return -1
-        else:
-            exe = Executor.Create(conf)
-            # EXE初始化失败
-            if not exe:
-                status_code = -1
-                status_msg = u"EXE初始化失败"
-                task_result = None
-                self.send(status_code, status_msg, task_result)
-                return -1
+        # 实例化Executor初始化判断
+        try:
+            exe = Executor.CreateByWorker(conf)
+        except (SSHNoValidConnectionsError, SSHAuthenticationException, SSHException), status_msg:
+            status_code = -1
+            status_msg = status_msg.message
+            task_result = None
+            self.send(status_code, status_msg, task_result)
+            return -1
         # 开始正式执行
-        ret_code, ret_msg = get_time.compare_timestamps(self.controller_queue_create_time, self.task_earliest,
-                                                        self.task_latest)
-        if ret_code == 3:
-            pass
-        else:
-            if ret_code == 2:
-                gevent.sleep(ret_msg)
-            status_code, status_msg = 200, u"开始执行"
-            self.pipe_child.send(
-                Result(controller_queue_uuid=self.controller_queue_uuid, task_uuid=self.task_uuid,
-                       status_code=status_code, status_msg=status_msg, session=self.session, run_all=self.run_all))
-            mod = self.task["mod"]
-            if isinstance(mod, dict):
-                # 一个任务
-                task_result = exe.run(mod)
+        ret_code, ret_msg = get_time.compare_timestamps(
+            self.controller_queue_create_time, self.task_earliest, self.task_latest
+        )
+        if ret_code == 2:
+            gevent.sleep(ret_msg)
+        status_code, status_msg = 200, u"开始执行"
+        self.pipe_child.send(
+            Result(controller_queue_uuid=self.controller_queue_uuid, task_uuid=self.task_uuid,
+                   status_code=status_code, status_msg=status_msg, session=self.session, run_all=self.run_all))
+        mod = self.task["mod"]
+        if isinstance(mod, dict):
+            # 一个任务
+            task_result = exe.run(mod)
+            status_code = task_result.return_code
+            if status_code != 0:
+                status_code = 1
+                status_msg = u"单任务执行失败"
+            else:
+                status_msg = u"单任务执行成功"
+        if isinstance(mod, list):
+            # 多个任务
+            for each in mod:
+                task_result = exe.run(each)
                 status_code = task_result.return_code
                 if status_code != 0:
                     status_code = 1
-                    status_msg = u"单任务执行失败"
+                    status_msg = u"多任务执行失败"
+                    break
                 else:
-                    status_msg = u"单任务执行成功"
-            if isinstance(mod, list):
-                # 多个任务
-                for each in mod:
-                    task_result = exe.run(each)
-                    status_code = task_result.return_code
-                    if status_code != 0:
-                        status_code = 1
-                        status_msg = u"多任务执行失败"
-                        break
-                    else:
-                        status_msg = u"多任务执行成功"
-            self.send(status_code, status_msg, task_result)
+                    status_msg = u"多任务执行成功"
+        self.send(status_code, status_msg, task_result)
 
 
 class ParentPipe(Thread):
