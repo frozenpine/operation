@@ -140,15 +140,6 @@ app.service("$operationBooks", ["$http", '$message', function($http, $message) {
                 console.log(response);
             });
     }
-    this.operationPriviGet = function(params) {
-        $http.get('api/user/id/' + params.currentId)
-            .success(function(response) {
-                params.onSuccess(response.data);
-                console.log(response);
-            }).error(function(response) {
-                console.log(response);
-            });
-    }
     this.operationBookEditPut = function(params) {
         $http.put('api/operation-books', data = params.data)
             .success(function(response) {
