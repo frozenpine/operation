@@ -1,4 +1,3 @@
-var app = angular.module('myApp');
 app.controller('EditoptionBookController', ['$scope', '$operationBooks', function($scope, $operationBooks) {
     $operationBooks.operationBookSystemsGet({
         onSuccess: function(res) {

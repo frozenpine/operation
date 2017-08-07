@@ -1,4 +1,3 @@
-var app = angular.module('myApp');
 app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$operationBooks', '$message', function($scope, $http, $routeParams, $operationBooks, $message) {
     /* $scope.optionBookEditDataList = new Array();
     $scope.optionBookEditShow = new Array(); */

@@ -1,4 +1,3 @@
-var app = angular.module('myApp');
 app.filter('resultFilter', function() {
     return function(ListData, filterLimit, scope) {
         var newArr = new Array();

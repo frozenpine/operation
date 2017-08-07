@@ -1,4 +1,3 @@
-var app = angular.module('myApp');
 app.controller('loginStaticsControl', ['$scope', '$systems', '$interval', '$timeout', '$routeParams', '$rootScope', function($scope, $systems, $interval, $timeout, $routeParams, $rootScope) {
     $scope.loginShowDetail = true;
     $scope.loginStaticsShow = false;

@@ -221,31 +221,6 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
     });
 });
 
- app.config(['$routeProvider', function($routeProvider) {
-    $routeProvider
-        .when('/dashboard', {
-            templateUrl: 'UI/views/dashboard'
-        })
-        .when('/op_records', {
-            templateUrl: 'UI/views/op_records'
-        })
-        .when('/sys_ser', {
-            templateUrl: 'UI/views/sys_ser_pro'
-        })
-        .when('/statics/:sysid', {
-            templateUrl: 'UI/views/statics'
-        })
-        .when('/system/:sysid/op_group/:grpid', {
-            templateUrl: 'UI/views/op_group'
-        })
-        .when('/system/:sysid/operate-books', {
-            templateUrl: 'UI/views/operate-books'
-        })
-        .otherwise({
-            redirectTo: '/dashboard'
-        });
-}]);
-
 app.run(function($rootScope, $websocket, $sessionStorage, $localStorage, $operationBooks) {
     $rootScope.tab = 1; //default
     $rootScope.status = "normal";
@@ -258,18 +233,11 @@ app.run(function($rootScope, $websocket, $sessionStorage, $localStorage, $operat
         cpuIdleThreshold: { upper: 100, lower: 50 }
     }
 });
-app.controller('dashBoardControl', ['$scope', '$rootScope', '$operationBooks', function($scope, $rootScope, $operationBooks) {
-    $rootScope.isShowSideList = false;
-}]);
 
-app.filter('paging', function() {
-    return function(listsData, start) {
-        if (listsData)
-            return listsData.slice(start);
-    }
-});
-
-app.controller('FileUpdateControl', ['$scope', 'fileUpload', function($scope, fileUpload) {
+app.controller('indexController', ['$scope','$uidatas','$sessionStorage','$location','$http', '$rootScope', '$operationBooks', '$timeout','fileUpload', function($scope,$uidatas,$sessionStorage,$location, $http, $rootScope, $operationBooks,$timeout, fileUpload) {
+    /**
+     * 文件上传
+     */
     $scope.sendFile = function() {
         var url = "api/global-config",
             file = $scope.fileToUpload;
@@ -277,7 +245,192 @@ app.controller('FileUpdateControl', ['$scope', 'fileUpload', function($scope, fi
             alert("请选择需要上传的文件。")
         else
             fileUpload.uploadFileToUrl(file, url);
-    }
+    };
+
+    /**
+     * 消息列表控制
+     */
+    $scope.messages = $sessionStorage.messages;
+
+    /**
+     * 用户控制
+     */
+    $scope.ModifyPassword = function(usr_id) {
+        $('#modifyPassword').modal({
+            relatedTarget: this,
+            onConfirm: function() {
+                $http.put('api/user/id/' + usr_id, data = {
+                    old_password: $('#oldPwd').val(),
+                    password: $('#newPwd').val()
+                }).success(function(response) {
+                    console.log(response);
+                }).error(function(response) {
+                    console.log(response);
+                });
+                $('#oldPwd').val('');
+                $('#newPwd').val('');
+            }
+        });
+    };
+
+    /**
+     * 左边栏
+     */
+    $scope.tabList = [];
+    $scope.grpOrderEdit = {};
+    var idList = [];
+    $scope.$on('$routeChangeStart', function(evt, next, current) {
+        if (next.params.hasOwnProperty('sysid')) {
+            if ($scope.listName === undefined) {
+                var watch_onece = $scope.$watch('listName', function() {
+                    if ($scope.listName !== undefined) {
+                        $scope.showListChange(next.params.sysid);
+                        watch_onece(); //取消监听
+                    }
+                });
+            } else {
+                $scope.showListChange(next.params.sysid);
+            }
+        } else {
+            // $scope.clearTabList();
+            $rootScope.isShowSideList = false;
+        }
+    });
+    $scope.$on('OperationGroupRenew', function() {
+        $scope.SideBarList();
+    })
+    $scope.SideBarList = function() {
+        $uidatas.SideBarList({
+            onSuccess: function(data) {
+                $scope.listName = data.records;
+                $scope.grpOrderEdit = [];
+                angular.forEach($scope.listName, function(value, index) {
+                    $scope.grpOrderEdit[value.id] = false;
+                });
+            }
+        });
+    };
+    $scope.SideBarList();
+    $scope.showListChild = function(id) {
+        angular.forEach($scope.listName, function(value, index) {
+            if (value.id == id) {
+                $scope.listName[index].isShow = !$scope.listName[index].isShow;
+            } else {
+                $scope.listName[index].isShow = false;
+            }
+        });
+    };
+    $scope.showListChange = function(id) {
+        $rootScope.isShowSideList = true;
+        angular.forEach($scope.tabList, function(value, index) {
+            value.active = "";
+            if (idList.indexOf(value.id) == -1) {
+                idList.push(value.id);
+            }
+        });
+        angular.forEach($scope.listName, function(value, index) {
+            if (value.id == id) {
+                $scope.listName[index].isShow = true;
+                if (idList.indexOf($scope.listName[index].id) == -1) {
+                    $scope.tabList.push({
+                        "id": $scope.listName[index].id,
+                        "name": $scope.listName[index].name,
+                        "active": "am-active",
+                        "Url": $scope.listName[index].Url
+                    });
+                } else {
+                    angular.forEach($scope.tabList, function(tab) {
+                        if (tab.id == id) {
+                            tab.active = "am-active";
+                        }
+                    });
+                }
+            } else {
+                $scope.listName[index].isShow = false;
+            }
+        });
+    };
+    $scope.tabChangeActive = function(id) {
+        $rootScope.isShowSideList = true;
+        angular.forEach($scope.tabList, function(value) {
+            value.active = "";
+            if (value.id == id) {
+                value.active = "am-active";
+            }
+        });
+    };
+    $scope.tabDelete = function(id) {
+        $rootScope.isShowSideList = true;
+        angular.forEach($scope.tabList, function(data, index) {
+            if (data.id == id) {
+                $scope.tabList.splice(index, 1);
+                idList.splice(index, 1);
+            }
+        });
+        var length = $scope.tabList.length;
+        if (length > 0) {
+            var set = true;
+            angular.forEach($scope.tabList, function(value, index) {
+                if (value.active == "am-active") set = false;
+            });
+            if (set)
+                $scope.tabList[length - 1].active = "am-active";
+            var LocationUrl = $scope.tabList[length - 1].Url;
+            LocationUrl = LocationUrl.substring(1, LocationUrl.length);
+            LocationUrl = '/' + LocationUrl;
+            $location.url(LocationUrl);
+        } else {
+            $rootScope.isShowSideList = false;
+            $location.url('/dashboard');
+        }
+    };
+    $scope.clearTabList = function() {
+        if ($rootScope.isShowSideList === false) {
+            idList.splice(0, idList.length);
+            $scope.tabList.splice(0, $scope.tabList.length);
+            return false;
+        } else {
+            return true;
+        }
+    };
+
+    /**
+     * Privileges
+     */
+    $scope.currentId = null;
+    $scope.$watch('currentId', function(scope) {
+        if ($scope.currentId) {
+            $operationBooks.operationPriviGet({
+                currentId: $scope.currentId,
+                onSuccess: function(res) {
+                    $rootScope.privileges = res.privileges;
+                    console.log($rootScope.privileges);
+                },
+                onError: function(res) {
+                    console.log(res);
+                }
+            });
+        }
+    });
+
+    $scope.messagePosition = {};
+    $("body").scroll(function(){
+        $timeout(function(){
+            var topDistance = document.documentElement.scrollHeight || document.body.scrollHeight;
+            if(topDistance > 200){
+                $scope.messagePosition = {
+                    position: "fixed",
+                    top:0,
+                    left: 0,
+                    right: "15px",
+                    zIndex: "999"
+                };
+            }
+            else{
+                $scope.messagePosition = {};
+            }
+        });
+    });
 }]);
 
 /* app.controller('warningCtrl', ['$scope', '$http', function($scope, $http) {
@@ -321,10 +474,12 @@ app.controller('FileUpdateControl', ['$scope', 'fileUpload', function($scope, fi
 }]); */
 
 // app.controller('taskControl', ['$scope', '$rootScope', function($scope, $rootScope) {}]);
-
-app.controller('messageControl', ['$scope', '$sessionStorage', function($scope, $sessionStorage) {
-    $scope.messages = $sessionStorage.messages;
-}]);
+app.filter('paging', function() {
+    return function(listsData, start) {
+        if (listsData)
+            return listsData.slice(start);
+    }
+});
 
 app.filter('KB2', function() {
     return function(value, dst) {

@@ -1,4 +1,3 @@
-var app = angular.module('myApp');
 app.controller('optionResultControl', ['$scope', '$operationBooks', function($scope, $operationBooks) {
     $scope.executeResult = [];
     $scope.operationName = null;

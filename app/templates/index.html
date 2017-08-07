@@ -19,7 +19,7 @@
     {% endif %}
 </head>
 
-<body>
+<body ng-controller="indexController">
     <!-- Modal Dialog Begin -->
     <div class="am-modal am-modal-confirm" tabindex="-1" id="modifyPassword">
         <div class="am-modal-dialog">
@@ -48,7 +48,7 @@
             </div>
         </div>
     </div>
-    <div ng-init="currentId = [[user_id]]" ng-controller="Privileges">
+    <div ng-init="currentId = [[user_id]]">
         <div ng-if="!privileges.add_group" class="am-modal am-modal-confirm" tabindex="-1" id="addNewGroups">
             <div class="am-modal-dialog" style="max-width: 700px;">
                 <div class="am-modal-hd font-red bold">
@@ -271,7 +271,7 @@
         </div>
     </div>
 
-    <div class="am-modal am-modal-confirm" tabindex="-1" id="FileUpdate" ng-controller="FileUpdateControl">
+    <div class="am-modal am-modal-confirm" tabindex="-1" id="FileUpdate">
         <div class="am-modal-dialog">
             <form class="am-form am-form-horizontal">
                 <div class="am-modal-hd font-green bold">文件上传
@@ -335,7 +335,7 @@
                         <li>当前有 0 项任务</li>
                     </ul>
                 </li>-->
-                <li ng-controller='messageControl' class="am-dropdown" data-am-dropdown data-am-dropdown-toggle>
+                <li class="am-dropdown" data-am-dropdown data-am-dropdown-toggle>
                     <a class="am-dropdown-toggle tpl-header-list-link" href="javascript:;">
                         <span class="am-dropdown-toggle tpl-header-list-link" style="cursor: pointer">
                             <span class="am-badge am-round tpl-badge-secondary">
@@ -396,7 +396,7 @@
                         </li>
                     </ul>
                 </li>
-                <li ng-controller="userController" class="am-dropdown" data-am-dropdown data-am-dropdown-toggle>
+                <li  class="am-dropdown" data-am-dropdown data-am-dropdown-toggle>
                     <a class="am-dropdown-toggle tpl-header-list-link" href="">
                         <span class="tpl-header-list-user-nick">[[user_name]]</span>
                         <span id="user_uuid" style="display: none">[[user_uuid]]</span>
@@ -428,8 +428,8 @@
             </ul>
         </div>
     </header>
-    <div id="alertMessage" style="margin-bottom: 16px"></div>
-    <aside class="tpl-page-container tpl-page-header-fixed" ng-controller="sideBarCtrl">
+    <div id="alertMessage" ng-style="messagePosition" style="margin-bottom: 16px"></div>
+    <aside class="tpl-page-container tpl-page-header-fixed">
         <div class="tpl-left-nav tpl-left-nav-hover" style="display: none; width: 55px;">
             <div class="tpl-left-nav-title">
                 <div class="am-icon-list tpl-header-nav-hover-ico am-fl am-margin-right" style="cursor: pointer">
@@ -519,6 +519,7 @@
     <script src="[[ url_for('static', filename='js/echarts.min.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/app.js', _external=True) ]]" type="text/javascript" charset="utf-8"></script>
     <script src="[[ url_for('static', filename='js/myApp.js', _external=True) ]]" type="text/javascript" charset="utf-8"></script>
+    <script src="[[ url_for('static', filename='js/routeConfig.js', _external=True) ]]" type="text/javascript" charset="utf-8"></script>
     <script src="[[ url_for('static', filename='js/service/systemServer.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/service/operationBooks.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/service/operations.js', _external=True) ]]"></script>
@@ -532,18 +533,16 @@
     <script src="[[ url_for('static', filename='js/directive/relamap.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/controller/addServerControl.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/controller/clientStaticsControl.js', _external=True) ]]"></script>
-    <script src="[[ url_for('static', filename='js/controller/EditoptionBookController.js', _external=True) ]]"></script>
+    <!--<script src="[[ url_for('static', filename='js/controller/EditoptionBookController.js', _external=True) ]]"></script>-->
     <script src="[[ url_for('static', filename='js/controller/emergeOpsController.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/controller/loginStaticsControl.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/controller/opGroupController.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/controller/dashBoardController.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/controller/optionBookController.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/controller/optionGroupController.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/controller/optionResultControl.js', _external=True) ]]"></script>
-    <script src="[[ url_for('static', filename='js/controller/Privileges.js', _external=True) ]]"></script>
-    <script src="[[ url_for('static', filename='js/controller/sideBarCtrl.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/controller/svrStaticsControl.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/controller/sysStaticsControl.js', _external=True) ]]"></script>
-    <script src="[[ url_for('static', filename='js/controller/userController.js', _external=True) ]]"></script>
 </body>
 
 </html>

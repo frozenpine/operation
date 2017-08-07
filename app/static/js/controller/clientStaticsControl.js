@@ -1,4 +1,3 @@
-var app = angular.module('myApp');
 app.controller('clientStaticsControl', ['$scope', '$systems', '$routeParams', '$interval', '$message', '$rootScope', function($scope, $systems, $routeParams, $interval, $message, $rootScope) {
     $scope.clientShowDetail = true;
     $scope.userSessionShow = false;

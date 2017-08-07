@@ -1,4 +1,3 @@
-var app = angular.module('myApp');
 app.controller('svrStaticsControl', ['$scope', '$servers', '$interval', '$routeParams', '$localStorage', '$rootScope', function($scope, $servers, $interval, $routeParams, $localStorage, $rootScope) {
     $scope.svrShowDetail = true;
     var sys_id = $routeParams.sysid;

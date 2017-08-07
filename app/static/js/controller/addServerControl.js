@@ -1,5 +1,4 @@
-var app = angular.module('myApp');
-app.controller('addServerControl',['$scope', '$systemServer', '$message', '$operationBooks', '$rootScope', function($scope, $systemServer, $message, $operationBooks, $rootScope){
+app.controller('addServerControl',['$scope', '$systemServer', '$message', '$operationBooks', '$rootScope','$timeout', function($scope, $systemServer, $message, $operationBooks, $rootScope,$timeout){
 	$scope.addServerRadio = 0;
 	$scope.addServerData = null;
 	$scope.editOrPost = true;
@@ -32,6 +31,16 @@ app.controller('addServerControl',['$scope', '$systemServer', '$message', '$oper
 	$scope.editServerData = function(index){
 		$scope.clearSysData();
 		$scope.editOrPost = false;
+        angular.forEach($scope.systemServerData,function(data,dataIndex){
+            if(index != dataIndex){
+                data.style = {};
+            }
+            else{
+                data.style = {
+                    backgroundColor: "#d7effb"
+                };
+            }
+        });
 		$scope.addServerData.name = $scope.systemServerData[index].name;
 		$scope.addServerData.ip = $scope.systemServerData[index].manage_ip;
 		$scope.addServerData.password = "";
@@ -40,10 +49,33 @@ app.controller('addServerControl',['$scope', '$systemServer', '$message', '$oper
 		$scope.addServerData.description = $scope.systemServerData[index].description;
 		$scope.addServerData.id = $scope.systemServerData[index].id;
 		$scope.addServerRadio = 0;
-	}
+	};
 	$scope.editSystemData = function(id){
 		$scope.clearSysData();
 		$scope.editOrPost = false;
+        angular.forEach($scope.systemTreeData,function(data,dataIndex){
+            if(id != data.id){
+            	for(var i=0;i<data.child.length;i++){
+            		if(id == data.child[i].id){
+                        data.child[i].style = {
+                            backgroundColor: "#d7effb"
+                        };
+					}
+					else{
+                        data.child[i].style = {};
+					}
+				}
+                data.style = {};
+            }
+            else{
+                for(var j=0;j<data.child.length;j++){
+					data.child[j].style = {};
+                }
+                data.style = {
+                    backgroundColor: "#d7effb"
+                };
+            }
+        });
 		$systemServer.getSystem({
 			id: id,
 			onSuccess: function(res) {
@@ -69,7 +101,7 @@ app.controller('addServerControl',['$scope', '$systemServer', '$message', '$oper
 			
 		});
 		
-	}
+	};
 	$scope.editServerDataPut = function(){
 		$systemServer.editServer({
 			data: $scope.addServerData,
@@ -226,7 +258,7 @@ app.controller('addServerControl',['$scope', '$systemServer', '$message', '$oper
 		onError: function(res){
 			$message.Alert(res);
 		}
-	})
+	});
 	$scope.$watch('addServerData.name',function(newValue,oldValue,scope){
 		if(newValue){
 			$scope.newAddServerData = new Array();
@@ -236,7 +268,7 @@ app.controller('addServerControl',['$scope', '$systemServer', '$message', '$oper
 			});
 			console.log($scope.newAddServerData);
 		}
-	})
+	});
 	$scope.editProcessData = function(){
 		$scope.editProcessBtn = false;
 		$scope.systemProcessDataCopy = new Array();
@@ -271,13 +303,18 @@ app.controller('addServerControl',['$scope', '$systemServer', '$message', '$oper
 			onSuccess: function(res){
 				$message.Success("进程数据提交成功");
 				$systemServer.getProcess({
-					onSuccess: function(res) {
-						$scope.systemProcessData = res.records;
-					},
-					onError: function(res) {
-						$message.Alert(res);
-					}
-				})
+                        onSuccess: function(res) {
+                            $scope.systemProcessData = res.records;
+                            $scope.newAddServerData = [];
+                            angular.forEach($scope.systemProcessData,function(value, index){
+                                if(value.server.name == $scope.addServerData.name || value.system.name == $scope.addServerData.name)
+                                    $scope.newAddServerData.push(angular.copy(value));
+                            });
+                        },
+                        onError: function(res) {
+                            $message.Alert(res);
+                        }
+                    });
 				$scope.editProcessBtn = true;
 			},
 			onError: function(res){

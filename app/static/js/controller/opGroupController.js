@@ -1,4 +1,3 @@
-var app = angular.module('myApp');
 app.controller('opGroupController', ['$scope', '$operationBooks', '$operations', '$routeParams', '$location', '$rootScope', '$timeout', '$message', '$sessionStorage', function($scope, $operationBooks, $operations, $routeParams, $location, $rootScope, $timeout, $message, $sessionStorage) {
     /* $scope.$on('$routeChangeStart', function(evt, next, current) {
         var last = $scope.opList.details[$scope.opList.details.length - 1];

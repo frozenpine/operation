@@ -1,4 +1,3 @@
-var app = angular.module('myApp');
 app.controller('sysStaticsControl', ['$scope', '$systems', '$interval', '$routeParams', '$rootScope', function($scope, $systems, $interval, $routeParams, $rootScope) {
     $scope.sysShowDetail = true;
     var sys_id;

@@ -1,5 +1,4 @@
-var app = angular.module('myApp');
-app.controller('optionBookController', ['$scope', '$timeout', '$operationBooks', '$message', function($scope, $timeout, $operationBooks, $message) {
+app.controller('optionBookController', ['$scope','$rootScope', '$timeout', '$operationBooks', '$message', function($scope, $rootScope, $timeout, $operationBooks, $message) {
     $operationBooks.operationBookSystemsGet({
         onSuccess: function(res) {
             $scope.optionBookData = res.records;

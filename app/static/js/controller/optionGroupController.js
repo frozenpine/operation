@@ -1,4 +1,3 @@
-var app = angular.module('myApp');
 app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$rootScope', '$message', function($scope, $q, $operationBooks, $rootScope, $message) {
     $operationBooks.operationBookSystemsGet({
         onSuccess: function(res) {
