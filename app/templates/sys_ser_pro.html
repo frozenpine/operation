@@ -12,6 +12,111 @@
         </div>
         <div class="tpl-block">
             <div class="am-g am-form">
+                <div class="am-fl">
+                    <div class="am-form-group am-fl">
+                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
+                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
+	                            	名称：
+	                        </span>
+                            <input placeholder="必填" style="height: 34px;" required type="text" class="am-form-field" ng-model="addServerData.name">
+                        </div>
+                    </div>
+                    <div class="am-form-group am-margin-left-sm am-fl">
+                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
+                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
+		                            	描述：
+		                        </span>
+                            <input type="text" style="height: 34px;" class="am-form-field" ng-model="addServerData.description">
+                        </div>
+                    </div>
+                    <div class="am-form-group am-margin-left-sm am-fl">
+                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
+                            <span class="am-input-group-label" style="padding: 0 5px;padding-left: 1.6rem; line-height: normal; border-color: #32c5d2; background: #32c5d2">
+		                            	IP：
+		                        </span>
+                            <input placeholder="必填" style="height: 34px;" type="text" class="am-form-field" ng-model="addServerData.ip">
+                        </div>
+                    </div>
+                </div>
+                <div class="am-fl">
+                    <div class="am-form-group am-fl">
+                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
+                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
+					                            	用户：
+					                        </span>
+                            <input placeholder="必填" style="height: 34px;" type="text" class="am-form-field" ng-model="addServerData.user">
+                        </div>
+                    </div>
+                    <div class="am-form-group am-margin-left-sm am-fl">
+                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
+                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
+					                            	密码：
+					                        </span>
+                            <input placeholder="新增时必填" style="height: 34px;" type="text" class="am-form-field" ng-model="addServerData.password">
+                        </div>
+                    </div>
+                    <div class="am-form-group am-margin-left-sm am-fl" ng-if="addServerRadio == 0">
+                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
+                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
+					                            	平台：
+					                        </span>
+                            <select class="am-form-field" style="height: 34px;" ng-model="addServerData.platform">
+								<option value="Windows">Windows</option>
+								<option value="Linux">Linux</option>
+							</select>
+                        </div>
+                    </div>
+                    <div class="am-form-group am-margin-left-sm am-fl" ng-if="addServerRadio == 1">
+                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
+                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
+					                            	类型：
+					                       </span>
+                            <select class="am-form-field" style="height: 34px;" ng-model="addServerData.type_id">
+								<option value="{{data.id}}" ng-repeat="data in systemTypes">{{data.name}}</option>
+							</select>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-fl">
+                    <div class="am-form-group am-fl" ng-if="addServerRadio == 1">
+                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
+                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
+					                            	系统版本：
+					                        </span>
+                            <input type="text" style="height: 34px;" class="am-form-field" ng-model="addServerData.version" value="addServerData.version">
+                        </div>
+                    </div>
+                    <div class="am-form-group am-margin-left-sm am-fl" ng-if="addServerRadio == 1">
+                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
+                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
+					                            	所属系统：
+					                       </span>
+                            <select class="am-form-field" style="height: 34px;" ng-model="addServerData.parent_sys_id">
+								<option value="{{data.id}}" ng-repeat="data in belongSystem">{{data.name}}</option>
+							</select>
+                        </div>
+                    </div>
+                    <div class="am-form-group am-margin-left-sm am-fl" ng-if="addServerRadio == 1">
+                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
+                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
+					                            	存放路径：
+					                        </span>
+                            <input type="text" style="height: 34px;" class="am-form-field" ng-model="addServerData.base_dir">
+                        </div>
+                    </div>
+                </div>
+                <div class="am-u-sm-12" style="padding: 0;">
+                    <div class="am-form-group" ng-if="addServerRadio == 1">
+                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
+                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
+	                            	供应商：
+	                        </span>
+                            <select class="am-form-field" style="height: 34px;" ng-model="addServerData.vendor_id">
+	                        	<option value="{{data.id}}" ng-repeat="data in systemVendors">{{data.name}}</option>
+	                        </select>
+                        </div>
+                    </div>
+                </div>
                 <div class="am-btn-toolbar am-fr am-margin-right am-fl">
                     <div class="am-btn-group am-btn-group-sm">
                         <button class="am-btn am-btn-secondary am-round" ng-click="clearSysData()">
@@ -37,111 +142,6 @@
 						</button>
                     </div>
                 </div>
-                <div class="am-fl">
-                    <div class="am-form-group am-fl">
-                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
-	                            	名称：
-	                        </span>
-                            <input placeholder="必填" required type="text" class="am-form-field" ng-model="addServerData.name">
-                        </div>
-                    </div>
-                    <div class="am-form-group am-margin-left-sm am-fl">
-                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
-		                            	描述：
-		                        </span>
-                            <input type="text" class="am-form-field" ng-model="addServerData.description">
-                        </div>
-                    </div>
-                    <div class="am-form-group am-margin-left-sm am-fl">
-                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
-		                            	Ip：
-		                        </span>
-                            <input placeholder="必填" type="text" class="am-form-field" ng-model="addServerData.ip">
-                        </div>
-                    </div>
-                </div>
-                <div class="am-fl">
-                    <div class="am-form-group am-fl">
-                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
-					                            	用户：
-					                        </span>
-                            <input placeholder="必填" type="text" class="am-form-field" ng-model="addServerData.user">
-                        </div>
-                    </div>
-                    <div class="am-form-group am-margin-left-sm am-fl">
-                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
-					                            	密码：
-					                        </span>
-                            <input placeholder="新增时必填" type="text" class="am-form-field" ng-model="addServerData.password">
-                        </div>
-                    </div>
-                    <div class="am-form-group am-margin-left-sm am-fl" ng-if="addServerRadio == 0">
-                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
-					                            	平台：
-					                        </span>
-                            <select class="am-form-field" ng-model="addServerData.platform">
-								<option value="Windows">Windows</option>
-								<option value="Linux">Linux</option>
-							</select>
-                        </div>
-                    </div>
-                    <div class="am-form-group am-margin-left-sm am-fl" ng-if="addServerRadio == 1">
-                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
-					                            	类型：
-					                       </span>
-                            <select class="am-form-field" ng-model="addServerData.type_id">
-								<option value="{{data.id}}" ng-repeat="data in systemTypes">{{data.name}}</option>
-							</select>
-                        </div>
-                    </div>
-                </div>
-                <div class="am-fl">
-                    <div class="am-form-group am-fl" ng-if="addServerRadio == 1">
-                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
-					                            	系统版本：
-					                        </span>
-                            <input type="text" class="am-form-field" ng-model="addServerData.version" value="addServerData.version">
-                        </div>
-                    </div>
-                    <div class="am-form-group am-margin-left-sm am-fl" ng-if="addServerRadio == 1">
-                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
-					                            	所属系统：
-					                       </span>
-                            <select class="am-form-field" ng-model="addServerData.parent_sys_id">
-								<option value="{{data.id}}" ng-repeat="data in belongSystem">{{data.name}}</option>
-							</select>
-                        </div>
-                    </div>
-                    <div class="am-form-group am-margin-left-sm am-fl" ng-if="addServerRadio == 1">
-                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
-					                            	存放路径：
-					                        </span>
-                            <input type="text" class="am-form-field" ng-model="addServerData.base_dir">
-                        </div>
-                    </div>
-                </div>
-                <div class="am-u-sm-12" style="padding: 0;">
-                    <div class="am-form-group" ng-if="addServerRadio == 1">
-                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
-	                            	供应商：
-	                        </span>
-                            <select class="am-form-field" ng-model="addServerData.vendor_id">
-	                        	<option value="{{data.id}}" ng-repeat="data in systemVendors">{{data.name}}</option>
-	                        </select>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -158,8 +158,8 @@
         </div>
     </div>
 
-    <div class="am-u-sm-6" style="padding-left: 0;">
-        <div class="tpl-portlet-components" class="am-u-sm-12" style="max-height: 306px;overflow-y: scroll;">
+    <div class="am-u-sm-6" style="padding-left: 0;padding-right: 0;">
+        <div class="tpl-portlet-components" class="am-u-sm-12" style="height: 280px;overflow-y: auto;">
             <div class="portlet-title">
                 <div class="caption font-green bold">
                     服务器信息
@@ -168,16 +168,16 @@
             <div class="tpl-block">
                 <div class="am-g">
                     <div class="am-u-sm-12">
-                        <table class="am-table am-table-hover table-main">
+                        <table class="am-table am-table-hover table-main" style="margin-bottom: .7rem;">
                             <thead>
                                 <tr>
                                     <th>名称</th>
                                     <th>描述</th>
-                                    <th>Ip地址</th>
+                                    <th>IP地址</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr ng-repeat="data in systemServerData" ng-dblclick="editServerData($index)">
+                                <tr ng-repeat="data in systemServerData track by $index" onselectstart="return false" ng-style="data.style" ng-dblclick="editServerData($index)">
                                     <td>{{data.name}}</td>
                                     <td>{{data.description}}</td>
                                     <td>{{data.manage_ip}}</td>
@@ -189,8 +189,8 @@
             </div>
         </div>
     </div>
-    <div class="am-u-sm-6" style="padding-right: 0;">
-        <div class="tpl-portlet-components" class="am-u-sm-12" style="max-height: 306px;overflow-y: scroll;">
+    <div class="am-u-sm-6" style="padding-right: 0;padding-left: 10px;">
+        <div class="tpl-portlet-components" class="am-u-sm-12" style="height: 280px;overflow-y: auto;">
             <div class="portlet-title">
                 <div class="caption font-green bold">
                     系统信息
@@ -231,7 +231,7 @@
     </div>
     <script id="systemTree" type="text/ng-template">
         <li style="padding: 0;" ng-repeat="data in systemTreeData">
-            <a ng-dblclick="editSystemData(data.id)" style="padding-left: 0;">
+            <a ng-dblclick="editSystemData(data.id)" onselectstart="return false" ng-style="data.style" style="padding-left: 0;">
                 <i class="am-icon-table am-margin-left-sm"></i>
                 <span>{{data.name}}</span>
                 <span>{{data.ip}}</span>

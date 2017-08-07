@@ -36,6 +36,11 @@ def UIView(name):
         return render_template("errors/403.html")
     return render_template("{}.html".format(name))
 
+@main.route('/UI/dialogs/<string:name>')
+@login_required
+def DialogBody(name):
+    return render_template('dialogs/{}.html'.format(name))
+
 class Camera():
     def __init__(self):
         self.frames = [open('app/static/img/a{}.png'.format(f+1), 'rb').read() for f in xrange(10)]
