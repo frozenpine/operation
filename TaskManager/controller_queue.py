@@ -94,9 +94,9 @@ class ControllerQueue(object):
         """
         将失败任务压入待做队列
         """
-        if self.controller_queue_status == -13:
-            # 队列失败不可恢复
-            return -1, msg_dict[-13]
+        if self.controller_queue_status != 14:
+            # 队列不可恢复
+            return -1, msg_dict[self.controller_queue_status]
         else:
             # 寻找到失败任务的uuid
             fail_task_uuid_list = list()
