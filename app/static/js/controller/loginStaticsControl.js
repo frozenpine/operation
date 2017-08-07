@@ -1,7 +1,10 @@
 app.controller('loginStaticsControl', ['$scope', '$systems', '$interval', '$timeout', '$routeParams', '$rootScope', function($scope, $systems, $interval, $timeout, $routeParams, $rootScope) {
     $scope.loginShowDetail = true;
     $scope.loginStaticsShow = false;
-    $scope.CheckLoginLog = function(force = false) {
+    $scope.CheckLoginLog = function(force) {
+        if (force === undefined) {
+            force = false;
+        }
         var started = $systems.LoginStaticsCheck({
             sysID: $routeParams.sysid,
             onSuccess: function(data) {
@@ -10,9 +13,9 @@ app.controller('loginStaticsControl', ['$scope', '$systems', '$interval', '$time
                         if (rspValue.seat_id == value.seat_id) {
                             angular.merge(value, rspValue);
                         }
-                    })
+                    });
                 });
-                if (data.cached != true) {
+                if (data.cached !== true) {
                     $scope.checking = false;
                 }
             },
@@ -49,7 +52,7 @@ app.controller('loginStaticsControl', ['$scope', '$systems', '$interval', '$time
     };
     $scope.$on('$destory', function() {
         $interval.cancel($scope.loginStaticInterval);
-    })
+    });
 
     $systems.LoginList({
         sysID: $routeParams.sysid,
@@ -58,5 +61,5 @@ app.controller('loginStaticsControl', ['$scope', '$systems', '$interval', '$time
             $scope.loginStatics = data.records;
             $scope.CheckLoginLog();
         }
-    })
+    });
 }]);

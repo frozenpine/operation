@@ -1,5 +1,7 @@
 # -*- coding: UTF-8 -*-
 from . import resources
+from .handlers.ConfigFileHandler import (ConfigFileApi, ConfigFileCheckApi,
+                                         ConfigFileListApi)
 from .handlers.DeviceHandler import DeviceApi, DeviceListApi
 from .handlers.EmergeOpHandler import (EmergeOpApi, EmergeOpCaptchaApi,
                                        EmergeOpCSVApi, EmergeOpExecuteApi,
@@ -22,6 +24,7 @@ from .handlers.OperationHandler import (OperationApi, OperationCallbackApi,
                                         OperationListRunApi,
                                         OperationListSnapshotApi,
                                         OperationLoginApi, OperationUIApi)
+from .handlers.ProcessHandler import ProcessApi, ProcessListApi
 from .handlers.RoleHandler import RoleApi, RoleListApi
 from .handlers.SysStaticsHandler import (ConfigCheckApi, ConfigListApi,
                                          LoginCheckApi, LoginListApi,
@@ -33,17 +36,12 @@ from .handlers.SystemHandler import (SystemApi, SystemFindOperationBookApi,
                                      SystemListApi,
                                      SystemSystemListInformationApi,
                                      SystemTreeStructureApi)
+from .handlers.SystemTypeHandler import SystemTypeApi, SystemTypeListApi
 from .handlers.TradingDayHandler import NextTradingDayApi
 from .handlers.UIDataHandler import UIDataApi
 from .handlers.UserHandler import UserApi, UserListApi, UserPrivilegeHandler
+from .handlers.VendorHandler import VendorApi, VendorListApi
 from .handlers.WebshellHandler import WebshellUIApi
-from .handlers.VendorHandler import (VendorListApi,
-                                     VendorApi)
-from .handlers.SystemTypeHandler import (SystemTypeApi,
-                                         SystemTypeListApi)
-from .handlers.ProcessHandler import (ProcessApi,
-                                      ProcessListApi)
-
 
 resources.add_resource(
     UserApi,
@@ -294,9 +292,9 @@ resources.add_resource(
     ConfigListApi,
     '/system/id/<int:id>/config_files',
     '/system/id/<int:id>/config_files/',
-    methods=['GET'],
+    methods=['GET', 'POST'],
     endpoint='config_files_list'
-)
+) 
 
 resources.add_resource(
     ConfigCheckApi,

@@ -28,21 +28,21 @@ app.controller('optionResultControl', ['$scope', '$operationBooks', function($sc
     } */
     $scope.setPages = function(num) {
         $scope.currentPage = num;
-    }
+    };
     $scope.prePage = function() {
         if ($scope.currentPage > 0)
             $scope.currentPage--;
-    }
+    };
     $scope.nextPage = function() {
         if ($scope.currentPage < $scope.pages - 1)
             $scope.currentPage++;
-    }
+    };
     $scope.firstPage = function() {
         $scope.currentPage = 0;
-    }
+    };
     $scope.lastPage = function() {
         $scope.currentPage = $scope.pages - 1;
-    }
+    };
     $scope.show_result = function(index) {
         $('#op_result' + index).modal({ relatedTarget: this });
     };

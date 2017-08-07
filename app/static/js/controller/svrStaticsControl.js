@@ -13,11 +13,14 @@ app.controller('svrStaticsControl', ['$scope', '$servers', '$interval', '$routeP
                 $scope.checking = false;
             }
         });
-    }
+    };
 
     $scope.serverList();
 
-    $scope.checkSvrStatics = function(force = false) {
+    $scope.checkSvrStatics = function(force) {
+        if (force === undefined) {
+            force = false;
+        }
         var started = $servers.CheckServerStatics({
             sysID: sys_id,
             onSuccess: function(data) {
@@ -28,7 +31,7 @@ app.controller('svrStaticsControl', ['$scope', '$servers', '$interval', '$routeP
                         $scope.serverStatics.showMountDetail.push(false);
                     });
                 }
-                if (data.cached != true) {
+                if (data.cached !== true) {
                     $scope.checking = false;
                 }
             },

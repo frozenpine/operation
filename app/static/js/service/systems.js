@@ -1,6 +1,8 @@
-var app = angular.module('myApp');
 app.service('$systems', function($http, $message, $localStorage, $sessionStorage, $timeout, $rootScope) {
-    this.SystemStaticsCheck = function(params, force = false) {
+    this.SystemStaticsCheck = function(params, force) {
+        if (force === undefined) {
+            force = false;
+        }
         if (params.sysID === undefined) {
             return false;
         }
@@ -54,11 +56,11 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
         }); */
         $http.get('api/system/id/' + params.sysID + '/sys_statics/check')
             .success(function(response) {
-                if (response.error_code == 0) {
+                if (response.error_code === 0) {
                     if ($localStorage.hasOwnProperty('sysStatics_' + params.sysID)) {
                         $timeout(function() {
                             angular.merge($localStorage['sysStatics_' + params.sysID], response.data);
-                        })
+                        });
                     } else {
                         $timeout(function() {
                             $localStorage['sysStatics_' + params.sysID] = angular.merge(
@@ -80,7 +82,7 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
                 }
             });
         return true;
-    }
+    };
 
     this.SystemList = function(params) {
         if (params.sysID === undefined) {
@@ -101,7 +103,7 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
         }); */
         $http.get('api/system/id/' + params.sysID + '/sys_statics')
             .success(function(response) {
-                if (response.error_code == 0) {
+                if (response.error_code === 0) {
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess(response.data);
                     }
@@ -113,9 +115,12 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
                 console.log(response);
                 $message.Alert(response.message);
             });
-    }
+    };
 
-    this.LoginStaticsCheck = function(params, force = false) {
+    this.LoginStaticsCheck = function(params, force) {
+        if (force === undefined) {
+            force = false;
+        }
         if (params.sysID === undefined) {
             return false;
         }
@@ -145,11 +150,11 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
         }
         $http.get('api/system/id/' + params.sysID + '/login_statics/check')
             .success(function(response) {
-                if (response.error_code == 0) {
+                if (response.error_code === 0) {
                     if ($sessionStorage.hasOwnProperty('loginStatics_' + params.sysID)) {
                         $timeout(function() {
                             angular.merge($sessionStorage['loginStatics_' + params.sysID], response.data);
-                        })
+                        });
                     } else {
                         $timeout(function() {
                             $sessionStorage['loginStatics_' + params.sysID] = angular.merge(
@@ -169,7 +174,7 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
                 $message.Alert(response.message);
             });
         return true;
-    }
+    };
 
     this.LoginList = function(params) {
         if (params.sysID === undefined) {
@@ -177,7 +182,7 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
         }
         $http.get('api/system/id/' + params.sysID + '/login_statics')
             .success(function(response) {
-                if (response.error_code == 0) {
+                if (response.error_code === 0) {
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess(response.data);
                     }
@@ -188,10 +193,13 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
             .error(function(response) {
                 console.log(response);
                 $message.Alert(response.message);
-            })
-    }
+            });
+    };
 
-    this.ClientSessionCheck = function(params, force = false) {
+    this.ClientSessionCheck = function(params, force) {
+        if (force === undefined) {
+            force = false;
+        }
         if (params.sysID === undefined) {
             return false;
         }
@@ -223,11 +231,11 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
         }
         $http.get('api/system/id/' + params.sysID + '/user_sessions')
             .success(function(response) {
-                if (response.error_code == 0) {
+                if (response.error_code === 0) {
                     if ($sessionStorage.hasOwnProperty('clientSessions_' + params.sysID)) {
                         $timeout(function() {
                             angular.merge($sessionStorage['clientSessions_' + params.sysID], response.data);
-                        })
+                        });
                     } else {
                         $timeout(function() {
                             $sessionStorage['clientSessions_' + params.sysID] = angular.merge(
@@ -247,5 +255,34 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
                 $message.Alert(response.message);
             });
         return true;
-    }
-})
+    };
+
+    this.QuantdoVersionCheck = function(params) {
+        if (params.sysID === undefined) {
+            return false;
+        }
+        // $http.get()
+    };
+
+    this.QuantdoConfigCheck = function(params) {
+        if (params.sysID === undefined) {
+            return false;
+        }
+        $http.get('api/system/id/' + params.sysID + '/config_files/check')
+            .success(function(response) {
+                if (response.error_code === 0) {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(response.data);
+                    }
+                } else if (params.hasOwnProperty('onError')) {
+                    params.onError(response.data);
+                }
+            })
+            .error(function(response) {
+                console.log(response);
+                if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                }
+            });
+    };
+});

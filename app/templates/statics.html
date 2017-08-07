@@ -231,7 +231,7 @@
                                 <td class="table-data">{{::child.proc_role}}</td>
                                 <td class="table-data" style="max-width: 130px">
                                     <ul>
-                                        <li ng-repeat="socket in child.sockets track by $index">
+                                        <li ng-repeat="socket in child.sockets">
                                             <span>{{::socket.port}}</span>
                                             <span class="am-fr am-dropdown am-badge am-round" ng-class="{true: 'tpl-badge-success', false: ''}[socket.status.stat=='侦听中']" style="cursor: pointer" ng-mouseover="showSocketDetail[$index] = true" ng-mouseleave="showSocketDetail[$index] = false">
                                                 {{socket.status.stat}}
@@ -257,7 +257,7 @@
                                 </td>
                                 <td class="table-data" style="max-width: 130px">
                                     <ul>
-                                        <li ng-repeat="conn in child.connections track by $index">
+                                        <li ng-repeat="conn in child.connections">
                                             <span>{{::conn.port}}</span>
                                             <span class="am-fr am-dropdown am-badge am-round" ng-class="{true: 'tpl-badge-success', false: ''}[conn.status.stat=='已连接']" style="cursor: pointer" ng-mouseover="showConnDetail[$index] = true" ng-mouseleave="showConnDetail[$index] = false">
                                                 {{conn.status.stat}}

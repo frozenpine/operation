@@ -2,92 +2,128 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
     $provide.factory('$uuid', function() {
         return {
             uuid4: function() {
-                return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
-                    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
-                )
+                return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, function(c) {
+                    return (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);
+                });
             }
-        }
+        };
     });
 
     $provide.factory('$message', function($uuid) {
         return {
-            ModelSucess: function(msg, moduleID, timeout = 3, id = $uuid.uuid4()) {
-                $('#' + moduleID).append('\
-<div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">\
-    <p class="am-text-center">' + msg + '</p>\
-</div>\
-                ');
+            ModelSucess: function(msg, moduleID, timeout, id) {
+                if (timeout === undefined) {
+                    timeout = 3;
+                }
+                if (id === undefined) {
+                    id = $uuid.uuid4();
+                }
+                $('#' + moduleID).append(
+                    '<div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">' +
+                    '    <p class="am-text-center">' + msg + '</p>' +
+                    '</div>'
+                );
                 $('#' + id).alert();
                 $('#' + id).addClass('am-alert-success').show();
                 setTimeout(function() {
                     $('#' + id).alert('close');
                 }, timeout * 1000);
             },
-            ModelAlert: function(msg, moduleID, timeout = 3, id = $uuid.uuid4()) {
-                $('#' + moduleID).append('\
-<div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">\
-    <p class="am-text-center">' + msg + '</p>\
-</div>\
-                ');
+            ModelAlert: function(msg, moduleID, timeout, id) {
+                if (timeout === undefined) {
+                    timeout = 3;
+                }
+                if (id === undefined) {
+                    id = $uuid.uuid4();
+                }
+                $('#' + moduleID).append(
+                    '<div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">' +
+                    '    <p class="am-text-center">' + msg + '</p>' +
+                    '</div>'
+                );
                 $('#' + id).alert();
                 $('#' + id).addClass('am-alert-danger').show();
                 setTimeout(function() {
                     $('#' + id).alert('close');
                 }, timeout * 1000);
             },
-            Alert: function(msg, timeout = 3, id = $uuid.uuid4()) {
-                $('#alertMessage').append('\
-<div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">\
-    <span type="button" class="am-close am-fr">&times;</span>\
-    <p class="am-text-center">' + msg + '</p>\
-</div>\
-                ');
+            Alert: function(msg, timeout, id) {
+                if (timeout === undefined) {
+                    timeout = 3;
+                }
+                if (id === undefined) {
+                    id = $uuid.uuid4();
+                }
+                $('#alertMessage').append(
+                    '<div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">' +
+                    '    <span type="button" class="am-close am-fr">&times;</span>' +
+                    '    <p class="am-text-center">' + msg + '</p>' +
+                    '</div>'
+                );
                 $('#' + id).alert();
                 $('#' + id).addClass('am-alert-danger').show();
                 setTimeout(function() {
                     $('#' + id).alert('close');
                 }, timeout * 1000);
             },
-            Warning: function(msg, timeout = 3, id = $uuid.uuid4()) {
-                $('#alertMessage').append('\
-<div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">\
-    <span type="button" class="am-close am-fr">&times;</span>\
-    <p class="am-text-center">' + msg + '</p>\
-</div>\
-                ');
+            Warning: function(msg, timeout, id) {
+                if (timeout === undefined) {
+                    timeout = 3;
+                }
+                if (id === undefined) {
+                    id = $uuid.uuid4();
+                }
+                $('#alertMessage').append(
+                    '<div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">' +
+                    '    <span type="button" class="am-close am-fr">&times;</span>' +
+                    '    <p class="am-text-center">' + msg + '</p>' +
+                    '</div>'
+                );
                 $('#' + id).alert();
                 $('#' + id).addClass('am-alert-warning').show();
                 setTimeout(function() {
                     $('#' + id).alert('close');
                 }, timeout * 1000);
             },
-            Info: function(msg, timeout = 3, id = $uuid.uuid4()) {
-                $('#alertMessage').append('\
-<div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">\
-    <span type="button" class="am-close am-fr">&times;</span>\
-    <p class="am-text-center">' + msg + '</p>\
-</div>\
-                ');
+            Info: function(msg, timeout, id) {
+                if (timeout === undefined) {
+                    timeout = 3;
+                }
+                if (id === undefined) {
+                    id = $uuid.uuid4();
+                }
+                $('#alertMessage').append(
+                    '<div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">' +
+                    '    <span type="button" class="am-close am-fr">&times;</span>' +
+                    '    <p class="am-text-center">' + msg + '</p>' +
+                    '</div>'
+                );
                 $('#' + id).alert();
                 $('#' + id).show();
                 setTimeout(function() {
                     $('#' + id).alert('close');
                 }, timeout * 1000);
             },
-            Success: function(msg, timeout = 3, id = $uuid.uuid4()) {
-                $('#alertMessage').html('\
-<div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">\
-    <span type="button" class="am-close am-fr">&times;</span>\
-    <p class="am-text-center">' + msg + '</p>\
-</div>\
-                ');
+            Success: function(msg, timeout, id) {
+                if (timeout === undefined) {
+                    timeout = 3;
+                }
+                if (id === undefined) {
+                    id = $uuid.uuid4();
+                }
+                $('#alertMessage').html(
+                    '<div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">' +
+                    '    <span type="button" class="am-close am-fr">&times;</span>' +
+                    '    <p class="am-text-center">' + msg + '</p>' +
+                    '</div>'
+                );
                 $('#' + id).alert();
                 $('#' + id).addClass('am-alert-success').show();
                 setTimeout(function() {
                     $('#' + id).alert('close');
                 }, timeout * 1000);
             }
-        }
+        };
     });
 
     $provide.factory('$websocket', function($rootScope, $location, $interval, $timeout, $message, $sessionStorage, $uuid) {
@@ -103,7 +139,7 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
 
         var init = function() {
             if ("WebSocket" in window) {
-                if (ws) { delete ws; }
+                // if (ws) { delete ws; }
                 var websocket_protocol = $location.protocol() == "http" ? "ws://" : "wss://";
                 var websocket_uri = websocket_protocol + $location.host() + ":" + $location.port() + "/websocket";
                 console.log(websocket_uri);
@@ -141,10 +177,10 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
                     if (!unload) {
                         if (!reconnect) {
                             console.log('[Client] Websocket connection lost.');
-                            $message.Warning('Websocket connection lost, reconnect in 30s.', 30)
+                            $message.Warning('Websocket connection lost, reconnect in 30s.', 30);
                         } else {
                             console.log('[Client] Websocket re-connect failed, retry...');
-                            $message.Warning('Websocket re-connect failed, retry in 30s.', 30)
+                            $message.Warning('Websocket re-connect failed, retry in 30s.', 30);
                         }
                         $timeout(init, 30000);
                         reconnect = true;
@@ -189,7 +225,7 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
                         $message.Info(msg.data);
                         $timeout(function() {
                             $sessionStorage.messages.push(msg.data);
-                        }, 0)
+                        }, 0);
                         break;
                     case "tasks":
                         task_result = JSON.parse(msg.data);
@@ -214,12 +250,37 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
             },
             Close: function() {
                 unload = true;
-                console.log('[Client] Closing websocket.')
+                console.log('[Client] Closing websocket.');
                 ws.close();
             }
         };
     });
 });
+
+app.config(['$routeProvider', function($routeProvider) {
+    $routeProvider
+        .when('/dashboard', {
+            templateUrl: 'UI/views/dashboard'
+        })
+        .when('/op_records', {
+            templateUrl: 'UI/views/op_records'
+        })
+        .when('/sys_ser', {
+            templateUrl: 'UI/views/sys_ser_pro'
+        })
+        .when('/statics/:sysid', {
+            templateUrl: 'UI/views/statics'
+        })
+        .when('/system/:sysid/op_group/:grpid', {
+            templateUrl: 'UI/views/op_group'
+        })
+        .when('/system/:sysid/operate-books', {
+            templateUrl: 'UI/views/operate-books'
+        })
+        .otherwise({
+            redirectTo: '/dashboard'
+        });
+}]);
 
 app.run(function($rootScope, $websocket, $sessionStorage, $localStorage, $operationBooks) {
     $rootScope.tab = 1; //default
@@ -231,206 +292,25 @@ app.run(function($rootScope, $websocket, $sessionStorage, $localStorage, $operat
         loginStaticsInterval: { default: 60, current: 60 },
         sessionStaticsInterval: { default: 60, current: 60 },
         cpuIdleThreshold: { upper: 100, lower: 50 }
-    }
+    };
 });
 
-app.controller('indexController', ['$scope','$uidatas','$sessionStorage','$location','$http', '$rootScope', '$operationBooks', '$timeout','fileUpload', function($scope,$uidatas,$sessionStorage,$location, $http, $rootScope, $operationBooks,$timeout, fileUpload) {
-    /**
-     * 文件上传
-     */
+app.filter('paging', function() {
+    return function(listsData, start) {
+        if (listsData)
+            return listsData.slice(start);
+    };
+});
+
+app.controller('FileUpdateControl', ['$scope', 'fileUpload', function($scope, fileUpload) {
     $scope.sendFile = function() {
         var url = "api/global-config",
             file = $scope.fileToUpload;
         if (!file)
-            alert("请选择需要上传的文件。")
+            alert("请选择需要上传的文件。");
         else
             fileUpload.uploadFileToUrl(file, url);
     };
-
-    /**
-     * 消息列表控制
-     */
-    $scope.messages = $sessionStorage.messages;
-
-    /**
-     * 用户控制
-     */
-    $scope.ModifyPassword = function(usr_id) {
-        $('#modifyPassword').modal({
-            relatedTarget: this,
-            onConfirm: function() {
-                $http.put('api/user/id/' + usr_id, data = {
-                    old_password: $('#oldPwd').val(),
-                    password: $('#newPwd').val()
-                }).success(function(response) {
-                    console.log(response);
-                }).error(function(response) {
-                    console.log(response);
-                });
-                $('#oldPwd').val('');
-                $('#newPwd').val('');
-            }
-        });
-    };
-
-    /**
-     * 左边栏
-     */
-    $scope.tabList = [];
-    $scope.grpOrderEdit = {};
-    var idList = [];
-    $scope.$on('$routeChangeStart', function(evt, next, current) {
-        if (next.params.hasOwnProperty('sysid')) {
-            if ($scope.listName === undefined) {
-                var watch_onece = $scope.$watch('listName', function() {
-                    if ($scope.listName !== undefined) {
-                        $scope.showListChange(next.params.sysid);
-                        watch_onece(); //取消监听
-                    }
-                });
-            } else {
-                $scope.showListChange(next.params.sysid);
-            }
-        } else {
-            // $scope.clearTabList();
-            $rootScope.isShowSideList = false;
-        }
-    });
-    $scope.$on('OperationGroupRenew', function() {
-        $scope.SideBarList();
-    })
-    $scope.SideBarList = function() {
-        $uidatas.SideBarList({
-            onSuccess: function(data) {
-                $scope.listName = data.records;
-                $scope.grpOrderEdit = [];
-                angular.forEach($scope.listName, function(value, index) {
-                    $scope.grpOrderEdit[value.id] = false;
-                });
-            }
-        });
-    };
-    $scope.SideBarList();
-    $scope.showListChild = function(id) {
-        angular.forEach($scope.listName, function(value, index) {
-            if (value.id == id) {
-                $scope.listName[index].isShow = !$scope.listName[index].isShow;
-            } else {
-                $scope.listName[index].isShow = false;
-            }
-        });
-    };
-    $scope.showListChange = function(id) {
-        $rootScope.isShowSideList = true;
-        angular.forEach($scope.tabList, function(value, index) {
-            value.active = "";
-            if (idList.indexOf(value.id) == -1) {
-                idList.push(value.id);
-            }
-        });
-        angular.forEach($scope.listName, function(value, index) {
-            if (value.id == id) {
-                $scope.listName[index].isShow = true;
-                if (idList.indexOf($scope.listName[index].id) == -1) {
-                    $scope.tabList.push({
-                        "id": $scope.listName[index].id,
-                        "name": $scope.listName[index].name,
-                        "active": "am-active",
-                        "Url": $scope.listName[index].Url
-                    });
-                } else {
-                    angular.forEach($scope.tabList, function(tab) {
-                        if (tab.id == id) {
-                            tab.active = "am-active";
-                        }
-                    });
-                }
-            } else {
-                $scope.listName[index].isShow = false;
-            }
-        });
-    };
-    $scope.tabChangeActive = function(id) {
-        $rootScope.isShowSideList = true;
-        angular.forEach($scope.tabList, function(value) {
-            value.active = "";
-            if (value.id == id) {
-                value.active = "am-active";
-            }
-        });
-    };
-    $scope.tabDelete = function(id) {
-        $rootScope.isShowSideList = true;
-        angular.forEach($scope.tabList, function(data, index) {
-            if (data.id == id) {
-                $scope.tabList.splice(index, 1);
-                idList.splice(index, 1);
-            }
-        });
-        var length = $scope.tabList.length;
-        if (length > 0) {
-            var set = true;
-            angular.forEach($scope.tabList, function(value, index) {
-                if (value.active == "am-active") set = false;
-            });
-            if (set)
-                $scope.tabList[length - 1].active = "am-active";
-            var LocationUrl = $scope.tabList[length - 1].Url;
-            LocationUrl = LocationUrl.substring(1, LocationUrl.length);
-            LocationUrl = '/' + LocationUrl;
-            $location.url(LocationUrl);
-        } else {
-            $rootScope.isShowSideList = false;
-            $location.url('/dashboard');
-        }
-    };
-    $scope.clearTabList = function() {
-        if ($rootScope.isShowSideList === false) {
-            idList.splice(0, idList.length);
-            $scope.tabList.splice(0, $scope.tabList.length);
-            return false;
-        } else {
-            return true;
-        }
-    };
-
-    /**
-     * Privileges
-     */
-    $scope.currentId = null;
-    $scope.$watch('currentId', function(scope) {
-        if ($scope.currentId) {
-            $operationBooks.operationPriviGet({
-                currentId: $scope.currentId,
-                onSuccess: function(res) {
-                    $rootScope.privileges = res.privileges;
-                    console.log($rootScope.privileges);
-                },
-                onError: function(res) {
-                    console.log(res);
-                }
-            });
-        }
-    });
-
-    $scope.messagePosition = {};
-    $("body").scroll(function(){
-        $timeout(function(){
-            var topDistance = document.documentElement.scrollHeight || document.body.scrollHeight;
-            if(topDistance > 200){
-                $scope.messagePosition = {
-                    position: "fixed",
-                    top:0,
-                    left: 0,
-                    right: "15px",
-                    zIndex: "999"
-                };
-            }
-            else{
-                $scope.messagePosition = {};
-            }
-        });
-    });
 }]);
 
 /* app.controller('warningCtrl', ['$scope', '$http', function($scope, $http) {
@@ -555,7 +435,7 @@ app.filter('percentStatus', ['$rootScope', function($rootScope) {
         }
         $rootScope.status = 'warning';
         return true;
-    }
+    };
 }]);
 
 app.filter('mask', function() {
@@ -615,4 +495,3 @@ app.filter('exe_result', function() {
         }
     };
 });
-

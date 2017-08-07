@@ -871,6 +871,10 @@ class CommandHistory(SQLModelMixin, db.Model):
 class ConfigFile(SQLModelMixin, db.Model):
     __tablename__ = 'config_files'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    uuid = db.Column(
+        db.String, index=True,
+        default=lambda: unicode(uuid4()).lower()
+    )
     name = db.Column(db.String, index=True)
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     config_type = db.Column(ChoiceType(ConfigType, impl=db.Integer()), default=ConfigType.INIFile)

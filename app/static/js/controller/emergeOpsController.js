@@ -1,4 +1,4 @@
-app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$operationBooks', '$message', function($scope, $http, $routeParams, $operationBooks, $message) {
+app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$operationBooks', '$message', '$timeout', function($scope, $http, $routeParams, $operationBooks, $message, $timeout) {
     /* $scope.optionBookEditDataList = new Array();
     $scope.optionBookEditShow = new Array(); */
     $scope.$on('addNewOperateNode', function() {
@@ -8,7 +8,7 @@ app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$oper
     $scope.getOperateBookList = function() {
         $http.get('api/system/id/' + $routeParams.sysid + '/catalogs/operation-books')
             .success(function(response) {
-                $scope.emergeopList = [];
+                // $scope.emergeopList = [];
                 $scope.emergeopList = response.data.records;
                 $scope.optionBookEditDataList = [];
                 $scope.optionBookEditShow = [];
@@ -20,10 +20,10 @@ app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$oper
             .error(function(response) {
                 console.log(response);
             });
-    }
+    };
     $scope.getOperateBookList();
 
-    $scope.optionBookEdit = function(data, index) {
+    $scope.optionBookEdit = function(data, cata_index) {
         $scope.optionBookCatalog_id = data[0].catalog_id.toString();
         $scope.isEmergency = [{
             "name": "紧急操作",
@@ -32,7 +32,7 @@ app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$oper
             "name": "非紧急操作",
             "value": false
         }];
-        $scope.optionBookEditShow[index] = false;
+        $scope.optionBookEditShow[cata_index] = false;
         console.log($scope.optionGroupEditShow);
         $operationBooks.systemOptionBooksGet({
             sys_id: $routeParams.sysid,
@@ -52,10 +52,10 @@ app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$oper
             }
         });
 
-        $scope.optionBookEditDataList[index] = new Array();
+        $scope.optionBookEditDataList[cata_index] = [];
         $scope.optionOldData = angular.copy(data);
         angular.forEach($scope.optionOldData, function(value) {
-            var data = new Object;
+            var data = {};
             data.op_name = value.op_name.toString();
             data.op_desc = value.op_desc.toString();
             data.type = value.type.toString();
@@ -64,34 +64,33 @@ app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$oper
             data.id = value.id;
             data.sys_id = value.sys_id.toString();
             data.connection = value.connection;
-            $scope.optionBookEditDataList[index].push(data);
-        })
+            $scope.optionBookEditDataList[cata_index].push(data);
+        });
         $scope.optionBookEditCancel = function(index) {
-            $scope.optionBookEditShow[index] = true;
-        }
+            $scope.optionBookEditShow[id] = true;
+        };
         $scope.optionBookEditDelete = function(index_del) {
-            $scope.optionBookEditDataList[index][index_del].disabled = true;
-        }
+            $scope.optionBookEditDataList[cata_index][index_del].disabled = true;
+        };
         $scope.optionBookEditPut = function() {
             $scope.optionBookEditDataListNew = {
-                "data": $scope.optionBookEditDataList[index],
+                "data": $scope.optionBookEditDataList[cata_index],
                 "catalog_id": $scope.optionBookCatalog_id
-            }
+            };
             $operationBooks.operationBookEditPut({
                 data: $scope.optionBookEditDataListNew,
                 onSuccess: function(res) {
-                    $scope.optionBookEditShow[index] = true;
+                    $scope.optionBookEditShow[cata_index] = true;
                     $message.Success("提交成功");
-                    $scope.emergeopList = [];
+                    // $scope.emergeopList = [];
                     $scope.getOperateBookList();
                 },
                 onError: function(res) {
                     console.log(res);
                 }
-            })
-
-        }
-    }
+            });
+        };
+    };
 
     $scope.openshell = function(sys_id) {
         $http.get('api/webshell/system/id/' + sys_id)

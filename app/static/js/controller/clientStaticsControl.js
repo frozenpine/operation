@@ -1,13 +1,16 @@
 app.controller('clientStaticsControl', ['$scope', '$systems', '$routeParams', '$interval', '$message', '$rootScope', function($scope, $systems, $routeParams, $interval, $message, $rootScope) {
     $scope.clientShowDetail = true;
     $scope.userSessionShow = false;
-    $scope.CheckClientSessions = function(force = false) {
+    $scope.CheckClientSessions = function(force) {
+        if (force === undefined) {
+            force = false;
+        }
         var started = $systems.ClientSessionCheck({
             sysID: $routeParams.sysid,
             onSuccess: function(data) {
                 $scope.userSessionShow = true;
                 $scope.statusList = data.records;
-                if (data.cached != true) {
+                if (data.cached !== true) {
                     $scope.checking = false;
                 }
             },
@@ -33,9 +36,9 @@ app.controller('clientStaticsControl', ['$scope', '$systems', '$routeParams', '$
         } else {
             $interval.cancel($scope.clientSessionInterval);
         }
-    }
+    };
     $scope.$on('$destory', function() {
         $interval.cancel($scope.clientSessionInterval);
-    })
+    });
     $scope.CheckClientSessions();
 }]);

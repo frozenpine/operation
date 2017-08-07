@@ -167,10 +167,29 @@
             </div>
             <button ng-show="!optionGroupEditShow" ng-click="optionGroupEditAdd()" type="button" class="am-btn am-btn-primary am-round am-btn-sm am-fr">添加</button>
             <button ng-show="optionGroupEditShow" ng-click="optionGroupEdit(opList)" type="button" class="am-btn am-btn-sm am-btn-primary am-round am-fr">编辑</button>
-
+            <div class="am-fr am-margin-right">
+                <div class="am-btn-group am-btn-group-sm">
+                    <button ng-click="CheckSystemConfig()" class="am-btn am-btn-primary am-round">
+                        <i class="am-icon-spinner am-icon-spin" ng-show="checkingSystemConfig"></i>
+                        配置文件检查
+                    </button>
+                    <button ng-click="" class="am-btn am-btn-secondary am-round" disabled>
+                        <i class="am-icon-spinner am-icon-spin" ng-show="false"></i>
+                        进程版本检查
+                    </button>
+                </div>
+            </div>
         </div>
         <div class="tpl-block">
             <div class="am-g">
+                <div class="am-u-sm-12" ng-repeat="system in configFileList">
+                    <span class="caption font-green am-inline-block am-margin-bottom-xs">{{::system.name}} 配置文件：</span>
+                    <ul class="am-avg-sm-4 am-avg-md-7 am-avg-lg-9 am-margin-left-sm am-margin-right-sm">
+                        <li ng-repeat="conf in system.detail" class="am-padding-left-xs" style="text-align: center;">
+                            <span class="am-badge am-radius" ng-class="{true: 'am-badge-danger', false: 'am-badge-success'}[conf.hash_changed]" style="line-height: 30px; width: 100%">{{::conf.name}}</span>
+                        </li>
+                    </ul>
+                </div>
                 <div class="am-u-sm-12" style="overflow-x: auto">
                     <table class="am-table am-table-hover table-main" ng-show="optionGroupEditShow">
                         <thead>
@@ -220,7 +239,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <tr ng-repeat="data in opList.details track by $index">
+                            <tr ng-repeat="data in opList.details">
                                 <td>{{data.op_name}}</td>
                                 <td>{{data.op_desc}}</td>
                                 <td>{{data.time_range.lower}} ~ {{data.time_range.upper}}</td>
@@ -305,7 +324,7 @@
                                 </ul>
                             </div>
                             <ul sv-root sv-part="optionGroupCopy.operations">
-                                <li ng-repeat="data in optionGroupCopy.operations track by $index" sv-element>
+                                <li ng-repeat="data in optionGroupCopy.operations" sv-element>
                                     <div class="am-u-sm-2" style="padding: 0;">
                                         <input type="text" style="padding: 5px 5px 5px 0;border: none;" value="data.operation_name" ng-model="data.operation_name" />
                                     </div>

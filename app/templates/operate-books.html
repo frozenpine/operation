@@ -21,7 +21,7 @@
         </div>
         <div class="tpl-block">
             <div class="am-g">
-                <div class="am-u-sm-12" ng-repeat="data in emergeopList track by $index" style="overflow-x: auto;">
+                <div class="am-u-sm-12" ng-repeat="data in emergeopList" style="overflow-x: auto;">
                     <span class="am-icon-angle-double-right" style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169); cursor: pointer"> 操作分类 ： {{::data.name}}</span>
                     <button ng-show="optionBookEditShow[$index]" ng-click="optionBookEdit(data.details,$index)" type="button" class="am-btn am-btn-sm am-btn-primary am-round am-fr">编辑</button>
                     <table class="am-table am-table-hover table-main" ng-show="optionBookEditShow[$index]">
@@ -130,7 +130,7 @@
                                 </ul>
                             </div>
                             <ul sv-root sv-part="optionBookEditDataList[$index]">
-                                <li ng-repeat="dtl in optionBookEditDataList[$index] track by $index" ng-show="!dtl.disabled" sv-element>
+                                <li ng-repeat="dtl in optionBookEditDataList[$index]" ng-show="!dtl.disabled" sv-element>
                                     <div class="am-u-sm-2" style="padding: 3px;">
                                         <select ng-model="dtl.sys_id" style="width: 100%;">
                     	                	<option value="{{x.id}}" ng-repeat="x in systemListData">

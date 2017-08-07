@@ -6,12 +6,15 @@ app.controller('sysStaticsControl', ['$scope', '$systems', '$interval', '$routeP
     } else {
 
     }
-    $scope.checkProc = function(force = false) {
+    $scope.checkProc = function(force) {
+        if (force === undefined) {
+            force = false;
+        }
         var started = $systems.SystemStaticsCheck({
             sysID: sys_id,
             onSuccess: function(data) {
                 $scope.systemStatics = data.records;
-                if (data.cached != true) {
+                if (data.cached !== true) {
                     $scope.checking = false;
                 }
             },

@@ -1,4 +1,4 @@
-app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$rootScope', '$message', function($scope, $q, $operationBooks, $rootScope, $message) {
+app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$rootScope', '$message', '$timeout', function($scope, $q, $operationBooks, $rootScope, $message, $timeout) {
     $operationBooks.operationBookSystemsGet({
         onSuccess: function(res) {
             $scope.optionGroupSystem = res.records;
@@ -28,19 +28,14 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
                 console.log(res);
             }
         });
-    }
+    };
     $scope.optionGroupName = null;
     $scope.optionGroupDescription = null;
     $scope.optionNowSelect = null;
     $scope.optionShow = false;
     $scope.detailInfo = "";
-    $scope.optionGroupConfirmIsNull = false;
+    $scope.optionGroupConfirmIsNull = true;
     $scope.infOfDetail = function(id) {
-        $scope.optionGroupConfirm.operation_group.name = $scope.optionGroupName;
-        $scope.optionGroupConfirm.operation_group.description = $scope.optionGroupDescription;
-        $scope.optionGroupConfirm.operation_group.trigger_time =
-            $scope.optionGroupInittime !== undefined ? $scope.optionGroupInittime.getHours() + ':' + $scope.optionGroupInittime.getMinutes() : '';
-        $scope.optionGroupConfirm.operation_group.is_emergency = $scope.optionGroupEmerge;
         $scope.optionShow = true;
         angular.forEach($scope.optionGroupDataBackup, function(value, index) {
             if (id == value.id) {
@@ -54,19 +49,13 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
                 $scope.detailInfo = value.description;
             }
         });
-
-    }
+    };
     $scope.optionSelectAdd = function() {
         $scope.optionGroupConfirm.operations.push($scope.optionNowSelect);
-        $scope.optionGroupConfirm.operation_group.name = $scope.optionGroupName;
-        $scope.optionGroupConfirm.operation_group.description = $scope.optionGroupDescription;
-        $scope.optionGroupConfirm.operation_group.trigger_time =
-            $scope.optionGroupInittime !== undefined ? $scope.optionGroupInittime.getHours() + ':' + $scope.optionGroupInittime.getMinutes() : '';
-        $scope.optionGroupConfirm.operation_group.is_emergency = $scope.optionGroupEmerge;
         if ($scope.optionGroupConfirm.operations.length > 0) {
-            $scope.optionGroupConfirmIsNull = true;
-        } else {
             $scope.optionGroupConfirmIsNull = false;
+        } else {
+            $scope.optionGroupConfirmIsNull = true;
         }
     };
     activate();
@@ -78,37 +67,52 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
             // console.log(promises);
         });
     }
+
     $scope.dbclickFunc = function(index) {
         $scope.optionGroupConfirm.operations.splice(index, 1);
         if ($scope.optionGroupConfirm.operations.length > 0) {
-            $scope.optionGroupConfirmIsNull = true;
-        } else {
             $scope.optionGroupConfirmIsNull = false;
+        } else {
+            $scope.optionGroupConfirmIsNull = true;
         }
-    }
-    $scope.formComfirm = false;
+    };
+    // $scope.formComfirm = false;
     $scope.loadingIcon = false;
     $scope.addNewGroup = function() {
-        $scope.formComfirm = !$scope.formComfirm;
+        // $scope.formComfirm = !$scope.formComfirm;
         $scope.loadingIcon = !$scope.loadingIcon;
+        $scope.optionGroupConfirm.operation_group.name = $scope.optionGroupName;
+        $scope.optionGroupConfirm.operation_group.description = $scope.optionGroupDescription;
+        $scope.optionGroupConfirm.operation_group.trigger_time =
+            $scope.optionGroupInittime !== undefined ? $scope.optionGroupInittime.getHours() + ':' + $scope.optionGroupInittime.getMinutes() : '';
+        $scope.optionGroupConfirm.operation_group.is_emergency = $scope.optionGroupEmerge;
         $operationBooks.systemOptionGroupPost({
             data: $scope.optionGroupConfirm,
             onSuccess: function(response) {
-                $scope.loadingIcon = !$scope.loadingIcon;
-                $scope.optionGroupConfirm = {
-                    operation_group: {
-                        sys_id: null,
-                        name: null,
-                        description: null,
-                        trigger_time: null,
-                        is_emergency: false
-                    },
-                    operations: []
-                };
-                $scope.optionGroupName = null;
-                $scope.optionGroupDescription = null;
-                $scope.optionGroupInittime = null;
-                $scope.optionGroupEmerge = false;
+                $timeout(function() {
+                    $scope.loadingIcon = !$scope.loadingIcon;
+                    $scope.optionGroupConfirm = {
+                        operation_group: {
+                            sys_id: null,
+                            name: null,
+                            description: null,
+                            trigger_time: null,
+                            is_emergency: false
+                        },
+                        operations: []
+                    };
+                    $scope.optionGroupName = undefined;
+                    $scope.optionGroupDescription = undefined;
+                    $scope.optionGroupInittime = undefined;
+                    $scope.optionGroupEmerge = false;
+                    $scope.optionNowSelect = undefined;
+                    $scope.optionShow = false;
+                    $scope.detailInfo = "";
+                    $scope.optionGroupConfirmIsNull = true;
+                    $scope.optionGroupDataBackup = undefined;
+                    // $scope.formComfirm = false;
+                }, 0);
+
                 $rootScope.$broadcast('OperationGroupRenew');
                 $('#addNewGroups').modal('close');
                 $message.Success("表单提交成功");
@@ -116,8 +120,8 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
             onError: function(response) {
                 $scope.loadingIcon = !$scope.loadingIcon;
                 $message.ModelAlert("表单提交失败，错误代码" + response, 'modalInfoShowAdd');
-                $scope.formComfirm = !$scope.formComfirm;
+                // $scope.formComfirm = true;
             }
-        })
-    }
+        });
+    };
 }]);

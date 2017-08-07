@@ -1,4 +1,5 @@
-app.controller('optionBookController', ['$scope','$rootScope', '$timeout', '$operationBooks', '$message', function($scope, $rootScope, $timeout, $operationBooks, $message) {
+app.controller('optionBookController', ['$scope', '$rootScope', '$timeout', '$operationBooks', '$message', function($scope, $rootScope, $timeout, $operationBooks, $message) {
+    $scope.opBookShellFine = false;
     $operationBooks.operationBookSystemsGet({
         onSuccess: function(res) {
             $scope.optionBookData = res.records;
@@ -17,7 +18,7 @@ app.controller('optionBookController', ['$scope','$rootScope', '$timeout', '$ope
                 $scope.systemListData = res.records;
             }
         });
-    }
+    };
     $scope.optionBookEditData = {
         "main_sys": "",
         "name": "",
@@ -33,36 +34,34 @@ app.controller('optionBookController', ['$scope','$rootScope', '$timeout', '$ope
         "shell": "",
         "chdir": ""
     }];
-    $scope.checkDataFull = function(data) {
-        if (data.name == "" || data.sys == "" || data.type == "" || data.remote_name == "" || data.catalog === null || data.catalog === undefined || !$scope.optionBookShellIs)
-            return true;
-        else
-            return false;
-    }
+
     $scope.optionBookComAdd = function() {
         $scope.optionBookShellIs = false;
         $scope.optionBookNew = {};
         $scope.optionBookCommand.push($scope.optionBookNew);
-    }
-    $scope.optionBookShellIs = false;
+    };
+
+    $scope.shellChanged = function() {
+        $scope.opBookShellFine = false;
+    };
+
     $scope.optionBookCheckShell = function(index, id) {
         if (id === undefined) {
             $message.ModelAlert("请选择系统", "modalInfoShowDefine");
             return;
         }
-        $scope.optionBookShellIs = false;
-        $scope.checkShow = true;
         $operationBooks.operationbookCheck({
             sys_id: id,
             data: $scope.optionBookCommand[index],
             onSuccess: function(response) {
                 $message.ModelSucess("检查成功", "modalInfoShowDefine");
-                // $scope.checkShow = false;
-                $scope.optionBookShellIs = true;
+                $scope.checkShow = false;
+                $scope.opBookShellFine = true;
             },
             onError: function(response) {
                 $message.ModelAlert("检查失败,脚本文件不存在", "modalInfoShowDefine");
-                // $scope.checkShow = false;
+                $scope.checkShow = true;
+                $scope.opBookShellFine = false;
                 if ($scope.optionBookCommand.length != 1) {
                     $scope.optionBookCommand.splice(index, 1);
                 } else {
@@ -71,7 +70,7 @@ app.controller('optionBookController', ['$scope','$rootScope', '$timeout', '$ope
                 }
             }
         });
-    }
+    };
     $scope.optionBookEditPost = function() {
         $scope.optionBookEditDataPost = {
             "name": $scope.optionBookEditData.name,
@@ -86,23 +85,27 @@ app.controller('optionBookController', ['$scope','$rootScope', '$timeout', '$ope
         $operationBooks.operationbookDefinePost({
             data: $scope.optionBookEditDataPost,
             onSuccess: function(response) {
-                $scope.formComfirm = true;
-                $scope.optionBookEditData = {
-                    "main_sys": "",
-                    "name": "",
-                    "description": "",
-                    "remote_name": "",
-                    "type": "",
-                    "catalog": "",
-                    "sys": "",
-                    "is_emergency": "",
-                    "mod": ""
-                };
-                $scope.optionBookCommand = [{
-                    "shell": "",
-                    "chdir": ""
-                }];
-                $scope.optionBookEditDataPost = {};
+                $timeout(function() {
+                    $scope.formComfirm = true;
+                    $scope.optionBookEditData = {
+                        "main_sys": "",
+                        "name": "",
+                        "description": "",
+                        "remote_name": "",
+                        "type": "",
+                        "catalog": "",
+                        "sys": "",
+                        "is_emergency": "",
+                        "mod": ""
+                    };
+                    $scope.optionBookCommand = [{
+                        "shell": "",
+                        "chdir": ""
+                    }];
+                    $scope.optionBookEditDataPost = {};
+                    $scope.opBookShellFine = false;
+                }, 0);
+
                 $rootScope.$broadcast('addNewOperateNode');
                 $('#defineOptionBook').modal('close');
                 $message.Success("表单提交成功");
@@ -111,5 +114,5 @@ app.controller('optionBookController', ['$scope','$rootScope', '$timeout', '$ope
                 $message.ModelAlert("表单提交失败，错误信息：" + response, "modalInfoShowDefine");
             }
         });
-    }
+    };
 }]);

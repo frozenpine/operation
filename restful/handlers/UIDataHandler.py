@@ -46,10 +46,10 @@ class UIDataApi(Resource):
                     } for group in sys.operation_groups]
             }
             if privileged:
-                system['secondName'].append({
+                system['emerge_ops'] = {
                     'name': u'全部操作节点',
                     'Url': '#system/{}/operate-books'.format(sys.id)
-                })
+                }
             rtn.append(system)
         return rtn
 
