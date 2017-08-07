@@ -1,5 +1,4 @@
 app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout', '$uidatas', '$operationBooks', '$users', function($scope, $rootScope, $location, $timeout, $uidatas, $operationBooks, $users) {
-
     $scope.messagePosition = {};
     $("body").scroll(function() {
         $timeout(function() {
@@ -40,7 +39,7 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
     });
     $scope.$on('OperationGroupRenew', function() {
         $timeout($scope.SideBarList(), 0);
-    })
+    });
     $scope.SideBarList = function() {
         $uidatas.SideBarList({
             onSuccess: function(data) {
@@ -163,8 +162,7 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
                     onError: function(data) {
                         // console.log(data);
                     }
-                })
-
+                });
             }
         });
     };

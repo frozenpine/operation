@@ -29,7 +29,7 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
                 console.log(res);
             }
         });
-    }
+    };
     $scope.optionGroupName = null;
     $scope.optionGroupDescription = null;
     $scope.optionNowSelect = null;
@@ -50,8 +50,7 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
                 $scope.detailInfo = value.description;
             }
         });
-
-    }
+    };
     $scope.optionSelectAdd = function() {
         $scope.optionGroupConfirm.operations.push($scope.optionNowSelect);
         if ($scope.optionGroupConfirm.operations.length > 0) {
@@ -68,7 +67,7 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
             // promise被resolve时的处理
             // console.log(promises);
         });
-    };
+    }
 
     $scope.dbclickFunc = function(index) {
         $scope.optionGroupConfirm.operations.splice(index, 1);
@@ -124,6 +123,6 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
                 $message.ModelAlert("表单提交失败，错误代码" + response, 'modalInfoShowAdd');
                 // $scope.formComfirm = true;
             }
-        })
-    }
+        });
+    };
 }]);

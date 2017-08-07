@@ -1,6 +1,9 @@
 var app = angular.module('myApp');
 app.service('$servers', function($http, $message, $localStorage, $timeout, $rootScope) {
-    this.CheckServerStatics = function(params, force = false) {
+    this.CheckServerStatics = function(params, force) {
+        if (force === undefined) {
+            force = false;
+        }
         if (params.sysID === undefined) {
             return false;
         }
@@ -54,11 +57,11 @@ app.service('$servers', function($http, $message, $localStorage, $timeout, $root
         }); */
         $http.get('api/system/id/' + params.sysID + '/svr_statics/check')
             .success(function(response) {
-                if (response.error_code == 0) {
+                if (response.error_code === 0) {
                     if ($localStorage.hasOwnProperty('svrStatics_' + params.sysID)) {
                         $timeout(function() {
                             angular.merge($localStorage['svrStatics_' + params.sysID], response.data);
-                        })
+                        });
                     } else {
                         $timeout(function() {
                             $localStorage['svrStatics_' + params.sysID] = angular.merge(
@@ -101,7 +104,7 @@ app.service('$servers', function($http, $message, $localStorage, $timeout, $root
         }); */
         $http.get('api/system/id/' + params.sysID + '/svr_statics')
             .success(function(response) {
-                if (response.error_code == 0) {
+                if (response.error_code === 0) {
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess(response.data);
                     }
@@ -117,5 +120,5 @@ app.service('$servers', function($http, $message, $localStorage, $timeout, $root
                     $message.Alert(response.message);
                 }
             });
-    }
+    };
 });

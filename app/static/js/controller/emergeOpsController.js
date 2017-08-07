@@ -1,4 +1,3 @@
-// var app = angular.module('myApp');
 app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$operationBooks', '$message', '$timeout', function($scope, $http, $routeParams, $operationBooks, $message, $timeout) {
     /* $scope.optionBookEditDataList = new Array();
     $scope.optionBookEditShow = new Array(); */
@@ -21,7 +20,7 @@ app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$oper
             .error(function(response) {
                 console.log(response);
             });
-    }
+    };
     $scope.getOperateBookList();
 
     $scope.optionBookEdit = function(data, cata_index) {
@@ -56,7 +55,7 @@ app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$oper
         $scope.optionBookEditDataList[cata_index] = [];
         $scope.optionOldData = angular.copy(data);
         angular.forEach($scope.optionOldData, function(value) {
-            var data = new Object;
+            var data = {};
             data.op_name = value.op_name.toString();
             data.op_desc = value.op_desc.toString();
             data.type = value.type.toString();
@@ -66,18 +65,18 @@ app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$oper
             data.sys_id = value.sys_id.toString();
             data.connection = value.connection;
             $scope.optionBookEditDataList[cata_index].push(data);
-        })
+        });
         $scope.optionBookEditCancel = function(index) {
             $scope.optionBookEditShow[id] = true;
-        }
+        };
         $scope.optionBookEditDelete = function(index_del) {
             $scope.optionBookEditDataList[cata_index][index_del].disabled = true;
-        }
+        };
         $scope.optionBookEditPut = function() {
             $scope.optionBookEditDataListNew = {
                 "data": $scope.optionBookEditDataList[cata_index],
                 "catalog_id": $scope.optionBookCatalog_id
-            }
+            };
             $operationBooks.operationBookEditPut({
                 data: $scope.optionBookEditDataListNew,
                 onSuccess: function(res) {
@@ -89,10 +88,9 @@ app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$oper
                 onError: function(res) {
                     console.log(res);
                 }
-            })
-
-        }
-    }
+            });
+        };
+    };
 
     $scope.openshell = function(sys_id) {
         $http.get('api/webshell/system/id/' + sys_id)

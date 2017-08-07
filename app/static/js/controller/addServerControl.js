@@ -1,4 +1,3 @@
-// var app = angular.module('myApp');
 app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$operationBooks', '$rootScope', function($scope, $systemServer, $message, $operationBooks, $rootScope) {
     $scope.addServerRadio = 0;
     $scope.addServerData = null;
@@ -28,7 +27,7 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
             "disabled": false
         };
         $scope.newAddServerData = angular.copy($scope.systemProcessData);
-    }
+    };
     $scope.editServerData = function(index) {
         $scope.clearSysData();
         $scope.editOrPost = false;
@@ -40,7 +39,7 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
         $scope.addServerData.description = $scope.systemServerData[index].description;
         $scope.addServerData.id = $scope.systemServerData[index].id;
         $scope.addServerRadio = 0;
-    }
+    };
     $scope.editSystemData = function(id) {
         $scope.clearSysData();
         $scope.editOrPost = false;
@@ -66,10 +65,8 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
             onError: function(res) {
                 $message.Alert(res);
             }
-
         });
-
-    }
+    };
     $scope.editServerDataPut = function() {
         $systemServer.editServer({
             data: $scope.addServerData,
@@ -86,8 +83,8 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
             onError: function(res) {
                 $message.Alert(res);
             }
-        })
-    }
+        });
+    };
     $scope.editSystemDataPut = function() {
         $systemServer.editSystem({
             data: $scope.addServerData,
@@ -105,15 +102,15 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
                             onError: function(res) {
                                 $message.Alert(res);
                             }
-                        })
+                        });
                     }
                 });
             },
             onError: function(res) {
                 $message.Alert(res);
             }
-        })
-    }
+        });
+    };
     $systemServer.serversGet({
         onSuccess: function(res) {
             $scope.systemServerData = res.records;
@@ -122,60 +119,60 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
     $systemServer.getSystemTree({
         onSuccess: function(res) {
             $scope.systemTreeData = res;
-            $scope.systemTreeSecond = new Array();
+            $scope.systemTreeSecond = [];
             angular.forEach($scope.systemTreeData, function(value, index) {
                 $scope.systemTreeSecond.push(angular.copy(value));
                 if (value.child.length > 0)
                     for (var i = 0; i < value.child.length; i++) {
                         $scope.systemTreeSecond.push(value.child[i]);
                     }
-            })
+            });
         },
         onError: function(res) {
             $message.Alert(res);
         }
-    })
+    });
     $scope.systemBelongGet = function() {
         $operationBooks.operationBookSystemsGet({
             onSuccess: function(res) {
                 $scope.mainSystem = res.records;
-                $scope.belongSystem = new Array();
+                $scope.belongSystem = [];
                 angular.forEach($scope.mainSystem, function(value, index) {
                     $operationBooks.operationBookSystemListGet({
                         sys_id: value.id,
                         onSuccess: function(res) {
                             angular.forEach(res.records, function(value2, index2) {
-                                var obj = new Object();
+                                var obj = {};
                                 obj = angular.copy(value2);
                                 $scope.belongSystem.push(obj);
-                            })
+                            });
                         }
-                    })
+                    });
                 });
             }
         });
-    }
+    };
     $scope.systemBelongGet();
     $scope.$watch('addServerRadio', function(scope) {
-        if ($scope.editOrPost == false) {
+        if ($scope.editOrPost === false) {
             return;
         }
-        if ($scope.addServerRadio == 0) {
+        if ($scope.addServerRadio === 0) {
             $scope.clearSysData();
             $scope.checkDataFull = function(data) {
-                if (data.name == "" || data.ip == "" || data.password == "" || data.user == "" || data.platform == "")
+                if (data.name === "" || data.ip === "" || data.password === "" || data.user === "" || data.platform === "")
                     return true;
                 else
                     return false;
-            }
+            };
         } else {
             $scope.clearSysData();
             $scope.checkDataFull = function(data) {
-                if (data.name == "" || data.ip == "" || data.password == "" || data.user == "")
+                if (data.name === "" || data.ip === "" || data.password === "" || data.user === "")
                     return true;
                 else
                     return false;
-            }
+            };
         }
     });
     $scope.addSystemDataPost = function() {
@@ -192,13 +189,13 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
                     onError: function(res) {
                         $message.Alert(res);
                     }
-                })
+                });
             },
             onError: function(res) {
                 $message.Alert(res);
             }
-        })
-    }
+        });
+    };
     $scope.addServerDataPost = function() {
         $systemServer.addServer({
             data: $scope.addServerData,
@@ -214,8 +211,8 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
             onError: function(res) {
                 $message.Alert(res);
             }
-        })
-    }
+        });
+    };
     $scope.editProcessBtn = true;
     $systemServer.getProcess({
         onSuccess: function(res) {
@@ -225,22 +222,22 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
         onError: function(res) {
             $message.Alert(res);
         }
-    })
+    });
     $scope.$watch('addServerData.name', function(newValue, oldValue, scope) {
         if (newValue) {
-            $scope.newAddServerData = new Array();
+            $scope.newAddServerData = [];
             angular.forEach($scope.systemProcessData, function(value, index) {
                 if (value.server.name == newValue || value.system.name == newValue)
                     $scope.newAddServerData.push(angular.copy(value));
             });
             console.log($scope.newAddServerData);
         }
-    })
+    });
     $scope.editProcessData = function() {
         $scope.editProcessBtn = false;
-        $scope.systemProcessDataCopy = new Array();
+        $scope.systemProcessDataCopy = [];
         angular.forEach($scope.newAddServerData, function(value, index) {
-            var data = new Object();
+            var data = {};
             data.name = value.name;
             data.description = value.description;
             data.type = value.type;
@@ -254,16 +251,16 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
             $scope.systemProcessDataCopy.push(data);
         });
         $scope.addNewProcess = function() {
-            var data = new Object();
+            var data = {};
             $scope.systemProcessDataCopy.push(data);
-        }
-    }
+        };
+    };
     $scope.processEditDelete = function(index) {
         $scope.systemProcessDataCopy[index].disabled = true;
-    }
+    };
     $scope.editProcessCancel = function() {
         $scope.editProcessBtn = true;
-    }
+    };
     $scope.addProcessData = function() {
         $systemServer.addProcess({
             data: $scope.systemProcessDataCopy,
@@ -276,14 +273,14 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
                     onError: function(res) {
                         $message.Alert(res);
                     }
-                })
+                });
                 $scope.editProcessBtn = true;
             },
             onError: function(res) {
                 $message.Alert(res);
             }
         });
-    }
+    };
     $scope.systemDataDelete = function() {
         $('#systemServerDelete').modal({
             relatedTarget: this,
@@ -293,8 +290,8 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
                 $scope.systemBelongGet();
                 console.log($scope.addServerData);
             }
-        })
-    }
+        });
+    };
     $scope.serverDataDelete = function() {
         $('#systemServerDelete').modal({
             relatedTarget: this,
@@ -303,6 +300,6 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
                 $scope.editServerDataPut();
                 console.log($scope.addServerData);
             }
-        })
-    }
+        });
+    };
 }]);

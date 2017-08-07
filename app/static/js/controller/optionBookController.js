@@ -1,5 +1,5 @@
 var app = angular.module('myApp');
-app.controller('optionBookController', ['$scope', '$rootScope', '$timeout', '$operationBooks', '$message', '$timeout', function($scope, $rootScope, $timeout, $operationBooks, $message, $timeout) {
+app.controller('optionBookController', ['$scope', '$rootScope', '$timeout', '$operationBooks', '$message', function($scope, $rootScope, $timeout, $operationBooks, $message) {
     $scope.opBookShellFine = false;
     $operationBooks.operationBookSystemsGet({
         onSuccess: function(res) {
@@ -19,7 +19,7 @@ app.controller('optionBookController', ['$scope', '$rootScope', '$timeout', '$op
                 $scope.systemListData = res.records;
             }
         });
-    }
+    };
     $scope.optionBookEditData = {
         "main_sys": "",
         "name": "",
@@ -71,7 +71,7 @@ app.controller('optionBookController', ['$scope', '$rootScope', '$timeout', '$op
                 }
             }
         });
-    }
+    };
     $scope.optionBookEditPost = function() {
         $scope.optionBookEditDataPost = {
             "name": $scope.optionBookEditData.name,
@@ -115,5 +115,5 @@ app.controller('optionBookController', ['$scope', '$rootScope', '$timeout', '$op
                 $message.ModelAlert("表单提交失败，错误信息：" + response, "modalInfoShowDefine");
             }
         });
-    }
+    };
 }]);
