@@ -294,9 +294,6 @@ app.run(function($rootScope, $websocket, $sessionStorage, $localStorage, $operat
         cpuIdleThreshold: { upper: 100, lower: 50 }
     };
 });
-app.controller('dashBoardControl', ['$scope', '$rootScope', '$operationBooks', function($scope, $rootScope, $operationBooks) {
-    $rootScope.isShowSideList = false;
-}]);
 
 app.filter('paging', function() {
     return function(listsData, start) {

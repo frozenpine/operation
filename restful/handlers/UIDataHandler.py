@@ -24,6 +24,34 @@ class UIDataApi(Resource):
         else:
             return RestProtocol(message='resource not found.'), 404
 
+    def inventory(self):
+        svrs = Server.query.filter(Server.disabled == False).all()
+        rtn = [{
+            'svr_name': svr.name,
+            'svr_id': svr.id,
+            'svr_uuid': svr.uuid,
+            'svr_desc': svr.description,
+            'svr_ip': svr.ip,
+            'svr_platform': svr.platform and svr.platform.name,
+            'systems': [{
+                'sys_name': sys.name,
+                'sys_id': sys.id,
+                'sys_uuid': sys.uuid,
+                'sys_desc': sys.description,
+                'sys_type': sys.type and sys.type.name,
+                'sys_ip': sys.ip,
+                'sys_ver': sys.version,
+                'processes': [{
+                    'proc_name': proc.name,
+                    'proc_id': proc.id,
+                    'proc_uuid': proc.uuid,
+                    'proc_desc': proc.description,
+                    'proc_ver': proc.version
+                } for proc in svr.processes.all() if proc.sys_id == sys.id]
+            } for sys in svr.systems.all()]
+        } for svr in svrs]
+        return rtn
+
     def sideBarCtrl(self):
         systems = TradeSystem.query.filter(TradeSystem.parent_sys_id == None).all()
         rtn = []
