@@ -1,5 +1,7 @@
 # -*- coding: UTF-8 -*-
 from . import resources
+from .handlers.ConfigFileHandler import (ConfigFileApi, ConfigFileCheckApi,
+                                         ConfigFileListApi)
 from .handlers.DeviceHandler import DeviceApi, DeviceListApi
 from .handlers.EmergeOpHandler import (EmergeOpApi, EmergeOpCaptchaApi,
                                        EmergeOpCSVApi, EmergeOpExecuteApi,
@@ -22,6 +24,7 @@ from .handlers.OperationHandler import (OperationApi, OperationCallbackApi,
                                         OperationListRunApi,
                                         OperationListSnapshotApi,
                                         OperationLoginApi, OperationUIApi)
+from .handlers.ProcessHandler import ProcessApi, ProcessListApi
 from .handlers.RoleHandler import RoleApi, RoleListApi
 from .handlers.SysStaticsHandler import (ConfigCheckApi, ConfigListApi,
                                          LoginCheckApi, LoginListApi,
@@ -31,10 +34,13 @@ from .handlers.SysStaticsHandler import (ConfigCheckApi, ConfigListApi,
                                          UserSessionListApi)
 from .handlers.SystemHandler import (SystemApi, SystemFindOperationBookApi,
                                      SystemListApi,
-                                     SystemSystemListInformationApi)
+                                     SystemSystemListInformationApi,
+                                     SystemTreeStructureApi)
+from .handlers.SystemTypeHandler import SystemTypeApi, SystemTypeListApi
 from .handlers.TradingDayHandler import NextTradingDayApi
 from .handlers.UIDataHandler import UIDataApi
 from .handlers.UserHandler import UserApi, UserListApi, UserPrivilegeHandler
+from .handlers.VendorHandler import VendorApi, VendorListApi
 from .handlers.WebshellHandler import WebshellUIApi
 
 resources.add_resource(
@@ -54,7 +60,7 @@ resources.add_resource(
     DeviceApi,
     '/server/name/<string:name>',
     '/server/id/<int:id>',
-    methods=['GET'],
+    methods=['GET', 'PUT'],
     endpoint='server'
 )
 resources.add_resource(
@@ -286,9 +292,9 @@ resources.add_resource(
     ConfigListApi,
     '/system/id/<int:id>/config_files',
     '/system/id/<int:id>/config_files/',
-    methods=['GET'],
+    methods=['GET', 'POST'],
     endpoint='config_files_list'
-)
+) 
 
 resources.add_resource(
     ConfigCheckApi,
@@ -394,9 +400,55 @@ resources.add_resource(
 )
 
 resources.add_resource(
-    UserPrivilegeHandler,
-    '/user/privileges',
-    '/user/privileges/',
+    VendorListApi,
+    '/vendors',
+    '/vendors/',
+    methods=['GET', 'POST'],
+    endpoint='vendors'
+)
+
+resources.add_resource(
+    VendorApi,
+    '/vendor/id/<int:id>',
+    '/vendor/name/<string:name>',
+    methods=['GET', 'PUT'],
+    endpoint='vendor'
+)
+
+resources.add_resource(
+    SystemTypeListApi,
+    '/system-types',
+    '/system-types/',
+    methods=['GET', 'POST'],
+    endpoint='system-types'
+)
+
+resources.add_resource(
+    SystemTypeApi,
+    '/system-type/name/<string:name>',
+    '/system-type/id/<int:id>',
+    methods=['GET', 'PUT'],
+    endpoint='system-type'
+)
+
+resources.add_resource(
+    ProcessListApi,
+    '/processes',
+    '/processes/',
+    methods=['GET', 'POST'],
+    endpoint='processes'
+)
+
+resources.add_resource(
+    ProcessApi,
+    '/process/id/<int:id>',
+    methods=['GET', 'PUT'],
+    endpoint='process'
+)
+
+resources.add_resource(
+    SystemTreeStructureApi,
+    '/system/tree-structure',
     methods=['GET'],
-    endpoint='user_privileges'
+    endpoint='sys_tree_structure'
 )

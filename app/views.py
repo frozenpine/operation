@@ -1,15 +1,18 @@
 # -*- coding: UTF-8 -*-
 import json
+from app import flask_logger
 from time import time
 
 from flask import Response, abort, current_app, render_template, request
 from flask_login import current_user, login_required
+from geventwebsocket import WebSocketError
 
-from MessageQueue.msgserver import MessageServer
 from app.auth.privileged import CheckPrivilege
 from common import wssh
 from common.cmdbuffer import CommandBuffer
+from MessageQueue.msgserver import MessageServer
 from models import MethodType, Operator
+
 from . import main
 
 
@@ -25,23 +28,25 @@ def index():
         user_uuid=current_user.uuid
     )
 
-
 @main.route('/UI/views/<string:name>')
 @login_required
 def UIView(name):
     if name == 'emerge_ops' and \
-            not CheckPrivilege(current_user, '/api/emerge_ops', MethodType.Execute):
+        not CheckPrivilege(current_user, '/api/emerge_ops', MethodType.Execute):
         return render_template("errors/403.html")
     return render_template("{}.html".format(name))
 
+@main.route('/UI/dialogs/<string:name>')
+@login_required
+def DialogBody(name):
+    return render_template('dialogs/{}.html'.format(name))
 
 class Camera():
     def __init__(self):
-        self.frames = [open('app/static/img/a{}.png'.format(f + 1), 'rb').read() for f in xrange(10)]
+        self.frames = [open('app/static/img/a{}.png'.format(f+1), 'rb').read() for f in xrange(10)]
 
     def get_frame(self):
         return self.frames[int(time()) % 10]
-
 
 def _flowTest(camera):
     while True:
@@ -50,14 +55,12 @@ def _flowTest(camera):
                + camera.get_frame()
                + b'\r\n')
 
-
 @main.route('/flow')
 def flow():
     return Response(
         _flowTest(Camera()),
         mimetype='multipart/x-mixed-replace; boundary=frame'
     )
-
 
 @main.route('/websocket')
 @login_required
@@ -69,7 +72,6 @@ def websocket():
                 MessageServer.parse_request(ws)
         else:
             abort(500)
-
 
 @main.route('/webshell')
 def webshell():

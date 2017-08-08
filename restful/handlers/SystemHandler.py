@@ -15,112 +15,114 @@ from ..protocol import RestProtocol
 class SystemApi(Resource):
     def __init__(self):
         super(SystemApi, self).__init__()
+        self.pattern = re.compile('^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$')
 
     def get(self, **kwargs):
         system = TradeSystem.find(**kwargs)
-        if system is not None:
+        if system:
             return RestProtocol(system)
         else:
-            return {'message': 'Not found'}, 404
+            return RestProtocol(message='System not found', error_code=-1), 404
 
     def put(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
-        if sys is not None:
+        if sys:
             try:
                 data = request.get_json(force=True)
+                if data.get('name'):
+                    if sys.name != data.get('name') and TradeSystem.find(name=data.get('name')):
+                        raise DataUniqueError
+                if data.get('ip'):
+                    if not self.pattern.match(data.get('ip')):
+                        raise DataTypeError('Please enter a valid IP address.')
             except BadRequest:
                 return RestProtocol(DataNotJsonError())
+            except ApiError as e:
+                return RestProtocol(e)
             else:
-                try:
-                    if sys.name != data.get('name') and TradeSystem.query.filter_by(
-                            name=data.get('name')).first() is not None:
-                        raise DataUniqueError
-                except DataUniqueError as e:
-                    return RestProtocol(e)
-                else:
-                    sys.name = data.get('name', sys.name)
-                    sys.user = data.get('username', sys.user)
-                    sys.password = data.get('password', sys.password)
-                    sys.ip = data.get('ip', sys.ip)
-                    sys.description = data.get('description', sys.description)
-                    sys.version = data.get('version', sys.version)
-                    sys.type_id = data.get('type_id', sys.type_id)
-                    sys.base_dir = data.get('base_dir', sys.base_dir)
-                    sys.vendor_id = data.get('vendor_id', sys.vendor_id)
-                    # sys.uuid = data.get('status', sys.uuid)
-                    sys.parent_sys_id = data.get('parent_sys_id', sys.parent_sys_id)
-                    for op in sys.operation_book:
-                        details = json.loads(json.dumps(op.detail))
-                        params = details['remote']['params']
-                        params['ip'] = sys.ip
-                        params['user'] = sys.user
-                        params['password'] = sys.login_pwd
-                        op.detail = details
-                        db.session.add(op)
-                    for ds in DataSource.query.filter(
-                                    DataSource.src_type == DataSourceType.FILE
-                    ):
-                        source = json.loads(json.dumps(ds.source))
-                        source['uri'] = re.sub(
-                            '^(?P<header>[^:]+)://([^:]+):([^@]+)@([^:]+):(?P<tailer>.+)$',
-                            lambda matchs: matchs.group('header') + \
-                                           "://" + sys.user + ":" + sys.login_pwd + \
-                                           "@" + sys.ip + ":" + matchs.group('tailer'),
-                            source['uri']
-                        )
-                        ds.source = source
-                        db.session.add(ds)
-                    db.session.add(sys)
-                    db.session.commit()
-                    return RestProtocol(sys)
+                sys.name = data.get('name', sys.name)
+                sys.user = data.get('user', sys.user)
+                sys.password = data.get('password', sys.password)
+                sys.ip = data.get('ip', sys.ip)
+                sys.description = data.get('description', sys.description)
+                sys.version = data.get('version', sys.version)
+                sys.type_id = data.get('type_id', sys.type_id)
+                sys.base_dir = data.get('base_dir', sys.base_dir)
+                sys.vendor_id = data.get('vendor_id', sys.vendor_id)
+                sys.parent_sys_id = data.get('parent_sys_id', sys.parent_sys_id)
+                sys.disabled = data.get('disabled', sys.disabled)
+                for op in sys.operation_book:
+                    details = json.loads(json.dumps(op.detail))
+                    params = details['remote']['params']
+                    params['ip'] = sys.ip
+                    params['user'] = sys.user
+                    params['password'] = sys.login_pwd
+                    op.detail = details
+                    db.session.add(op)
+                for ds in DataSource.query.filter(
+                                DataSource.src_type == DataSourceType.FILE
+                ):
+                    source = json.loads(json.dumps(ds.source))
+                    source['uri'] = re.sub(
+                        '^(?P<header>[^:]+)://([^:]+):([^@]+)@([^:]+):(?P<tailer>.+)$',
+                        lambda matchs: matchs.group('header') + \
+                                       "://" + sys.user + ":" + sys.login_pwd + \
+                                       "@" + sys.ip + ":" + matchs.group('tailer'),
+                        source['uri']
+                    )
+                    ds.source = source
+                    db.session.add(ds)
+                db.session.add(sys)
+                db.session.commit()
+                return RestProtocol(sys)
         else:
-            return {'message': 'Not found'}, 404
+            return RestProtocol(message='System not found', error_code=-1), 404
 
 
 class SystemListApi(Resource):
     def __init__(self):
         super(SystemListApi, self).__init__()
+        self.not_null_list = ['name', 'user', 'password', 'ip']
+        self.pattern = re.compile('^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$')
 
     def get(self):
-        systems = TradeSystem.query.filter(TradeSystem.parent_sys_id == None).all()
+        systems = TradeSystem.query.filter(
+			TradeSystem.parent_sys_id == None,
+			TradeSystem.disabled == False
+		).all()
         return RestProtocol(systems)
 
     def post(self):
         system = []
         result_list = []
         try:
-            data_list = request.get_json(force=True).get('data')
+            data = request.get_json(force=True)
+            for param in self.not_null_list:
+                if not data.get(param):
+                    raise DataNotNullError('Please input {}'.format(param))
+            if TradeSystem.find(name=data.get('name')):
+                raise DataUniqueError
+            if not self.pattern.match(data.get('ip')):
+                raise DataTypeError('Please enter a valid IP address.')
         except BadRequest:
             return RestProtocol(DataNotJsonError())
+        except ApiError as e:
+            return RestProtocol(e)
         else:
-            try:
-                for i in xrange(len(data_list)):
-                    if not data_list[i].get('name') or not data_list[i].get('username') \
-                            or not data_list[i].get('password') or not data_list[i].get('ip'):
-                        raise DataNotNullError
-                    elif TradeSystem.query.filter_by(name=data_list[i].get('name')).first() is not None:
-                        raise DataUniqueError
-                    x = TradeSystem()
-                    system.append(x)
-                    system[i].name = data_list[i].get('name')
-                    system[i].user = data_list[i].get('username')
-                    system[i].password = data_list[i].get('password')
-                    system[i].ip = data_list[i].get('ip')
-                    system[i].description = data_list[i].get('description')
-                    system[i].type_id = data_list[i].get('type_id')
-                    system[i].version = data_list[i].get('version')
-                    system[i].base_dir = data_list[i].get('base_dir')
-                    system[i].vendor_id = data_list[i].get('vendor_id')
-                    # system[i].uuid = data_list[i].get('uuid')
-                    system[i].parent_sys_id = data_list[i].get('parent_sys_id')
-            except ApiError as e:
-                return RestProtocol(e)
-            else:
-                db.session.add_all(system)
-                db.session.commit()
-                for j in xrange(len(system)):
-                    result_list.append(RestProtocol(system[j]))
-                return result_list
+            system = TradeSystem()
+            system.name = data.get('name')
+            system.description = data.get('description')
+            system.type_id = data.get('type_id')
+            system.version = data.get('version')
+            system.ip = data.get('ip')
+            system.user = data.get('user')
+            system.password = data.get('password')
+            system.base_dir = data.get('base_dir')
+            system.vendor_id = data.get('vendor_id')
+            system.parent_sys_id = data.get('parent_sys_id')
+            db.session.add(system)
+            db.session.commit()
+            return RestProtocol(system)
 
 
 ''' class ParentSystemFindOperationBookListApi(Resource):
@@ -213,16 +215,55 @@ class SystemFindOperationBookApi(Resource):
 class SystemSystemListInformationApi(Resource):
     def __init__(self):
         super(SystemSystemListInformationApi, self).__init__()
+        self.systems = []
 
     def get(self, **kwargs):
         parent_sys = TradeSystem.find(**kwargs)
         if parent_sys:
             if parent_sys.parent_sys_id == None:
-                sys_list = [parent_sys]
-                for child_sys in parent_sys.child_systems:
-                    sys_list.append(child_sys)
-                return RestProtocol(sys_list)
+                self.systems.append(parent_sys)
+                self.find_systems(parent_sys)
+                return RestProtocol(self.systems)
             else:
                 return RestProtocol(DataNotMatchError('The system is not a parent system.'))
         else:
             return {'message': 'System not found.'}, 404
+
+    def find_systems(self, parent_sys):
+        for child_sys in parent_sys.child_systems:
+            if child_sys.disabled is False:
+                self.systems.append(child_sys)
+                if child_sys.child_systems:
+                    self.find_systems(child_sys)
+
+
+class SystemTreeStructureApi(Resource):
+    def __init__(self):
+        super(SystemTreeStructureApi, self).__init__()
+        self.trees = []
+
+    def get(self):
+        par_sys = TradeSystem.query.filter(TradeSystem.parent_sys_id == None).filter(
+            TradeSystem.disabled == False).all()
+        for sys in par_sys:
+            data = dict(id=sys.id,
+                        name=sys.name,
+                        ip=sys.ip,
+                        child=[],
+                        parent_id=sys.parent_system.id if sys.parent_system else None)
+            self.trees.append(data)
+        self.generate_tree(par_sys, self.trees)
+        return self.trees
+
+    def generate_tree(self, obj, obj_list):
+        for i, par in enumerate(obj):
+            for sys in par.child_systems:
+                if sys.disabled is False:
+                    data = dict(id=sys.id,
+                                name=sys.name,
+                                ip=sys.ip,
+                                child=[],
+                                parent_id=sys.parent_system.id if sys.parent_system else None)
+                    obj_list[i]['child'].append(data)
+                    if sys.child_systems:
+                        self.generate_tree(par.child_systems, obj_list[i]['child'])

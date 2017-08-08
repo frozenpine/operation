@@ -1,20 +1,26 @@
 # -*- coding: UTF-8 -*-
 import json
 import re
+import sys
 from datetime import datetime, time
 from uuid import uuid4
 
 from arrow import Arrow
 from enum import Enum
+from flask import current_app
 from flask_login import UserMixin
 from ipaddress import IPv4Address, ip_address
+from sqlalchemy import orm
 from sqlalchemy_utils import observes
-from sqlalchemy_utils.types import (ArrowType, ChoiceType, IPAddressType, JSONType)
+from sqlalchemy_utils.types import (ArrowType, ChoiceType, DateTimeRangeType,
+                                    IPAddressType, JSONType)
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from SysManager.Common import AESCrypto
 from app import globalEncryptKey
+from SysManager.Common import AESCrypto
+
 from . import db
+
 
 '''
 from neomodel import (
@@ -130,7 +136,6 @@ class Privilege(NodeMixin):
     level = IntegerProperty(default=1)
 '''
 
-
 class SQLModelMixin(object):
     filter_keyword = [
         'is_active',
@@ -168,7 +173,7 @@ class SQLModelMixin(object):
         results = {}
         for field in [x for x in dir(self) if not re.match(
                 r'^_|\w*p(?:ass)?w(?:or)?d|\w+_id$', x, re.I
-        ) and x not in self.filter_keyword]:
+            ) and x not in self.filter_keyword]:
             data = getattr(self, field)
             if not callable(data):
                 if isinstance(data, list):
@@ -203,7 +208,6 @@ class SQLModelMixin(object):
                 else:
                     results[field] = data
         return results
-
 
 operator_role = db.Table(
     'operator_role',
@@ -240,7 +244,6 @@ operator_server = db.Table(
     db.Column('disabled', db.Boolean, default=False)
 )
 
-
 class SystemDependece(db.Model):
     __tablename__ = 'system_system'
     up_sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), primary_key=True)
@@ -250,71 +253,61 @@ class SystemDependece(db.Model):
         self.up_sys_id = up_sys_id
         self.down_sys_id = down_sys_id
 
-
 class HaType(Enum):
     Master = 1
     Slave = 2
-
 
 class SocketType(Enum):
     TCP = 1
     UDP = 2
 
-
 class SocketDirection(Enum):
     Listen = 1
     Establish = 2
-
 
 class MethodType(Enum):
     Check = 1
     Execute = 2
     ReExecute = 4
     Authorize = 8
-    All = Check | Execute | ReExecute | Authorize
-
+    All = Check|Execute|ReExecute|Authorize
 
 class DataSourceType(Enum):
     SQL = 1
     FILE = 2
 
-
 class DataSourceModel(Enum):
     Seat = 1
     Session = 2
-
 
 class ConfigType(Enum):
     INIFile = 1
     XMLFile = 2
     YAMLFile = 3
 
-
 class ExeType(Enum):
     Quantdo = 1
-
 
 class ScriptType(Enum):
     Checker = 1
     Executor = 2
     Interactivator = 4
-    Execute_Checker = Executor | Checker
-    Interactive_Checker = Interactivator | Checker
+    Execute_Checker = Executor|Checker
+    Interactive_Checker = Interactivator|Checker
 
     def IsBatcher(self):
         return self.value & ScriptType.Execute_Checker.value \
-               == ScriptType.Execute_Checker.value or \
-               self.value & ScriptType.Interactive_Checker.value \
-               == ScriptType.Interactive_Checker.value
+            == ScriptType.Execute_Checker.value or \
+            self.value & ScriptType.Interactive_Checker.value \
+            == ScriptType.Interactive_Checker.value
 
     def IsChecker(self):
         return self.value & ScriptType.Checker.value \
-               == ScriptType.Checker.value
+            == ScriptType.Checker.value
 
     def IsInteractivator(self):
         return self.value & ScriptType.Interactivator.value \
-               == ScriptType.Interactivator.value
-
+            == ScriptType.Interactivator.value
 
 class PlatformType(Enum):
     Linux = 1
@@ -323,7 +316,6 @@ class PlatformType(Enum):
     BSD = 4
     Embedded = 5
 
-
 class StaticsType(Enum):
     CPU = 1
     MOUNT = 2
@@ -331,7 +323,6 @@ class StaticsType(Enum):
     MEMORY = 4
     SWAP = 5
     NETWORK = 6
-
 
 class OperateRecord(SQLModelMixin, db.Model):
     __tablename__ = 'operate_records'
@@ -343,7 +334,6 @@ class OperateRecord(SQLModelMixin, db.Model):
     authorized_at = db.Column(ArrowType, index=True)
     results = db.relationship('OperateResult', backref='record')
 
-
 class EmergeOpRecord(SQLModelMixin, db.Model):
     __tablename__ = 'emergeop_records'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -351,7 +341,6 @@ class EmergeOpRecord(SQLModelMixin, db.Model):
     operator_id = db.Column(db.Integer, db.ForeignKey('operators.id'), index=True)
     operated_at = db.Column(ArrowType, index=True)
     results = db.relationship('EmergeOpResult', backref='record')
-
 
 class Operator(UserMixin, SQLModelMixin, db.Model):
     def __init__(self, login, password, name=None, **kwargs):
@@ -424,7 +413,6 @@ class Operator(UserMixin, SQLModelMixin, db.Model):
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-
 class OpRole(SQLModelMixin, db.Model):
     __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -438,7 +426,6 @@ class OpRole(SQLModelMixin, db.Model):
         lazy='dynamic'
     )
 
-
 class OpPrivilege(SQLModelMixin, db.Model):
     __tablename__ = 'privileges'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -446,13 +433,11 @@ class OpPrivilege(SQLModelMixin, db.Model):
     @property
     def name(self):
         return '{}.{}'.format(self.uri, self.bit.name)
-
     uri = db.Column(db.String, nullable=False, index=True)
     bit = db.Column(ChoiceType(MethodType, impl=db.Integer()))
 
     def HasMethod(self, method):
         return self.bit.value & method.value == method.value
-
 
 class TradeProcess(SQLModelMixin, db.Model):
     def __init__(self, name, sys_id, svr_id, type=HaType.Master, **kwargs):
@@ -479,6 +464,7 @@ class TradeProcess(SQLModelMixin, db.Model):
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     svr_id = db.Column(db.Integer, db.ForeignKey('servers.id'), index=True)
     sockets = db.relationship('Socket', backref='process')
+    disabled = db.Column(db.Boolean, default=False)
     config_files = db.relationship(
         'ConfigFile',
         secondary=config_process,
@@ -487,7 +473,6 @@ class TradeProcess(SQLModelMixin, db.Model):
         backref=db.backref('processes', lazy='dynamic'),
         lazy='dynamic'
     )
-
 
 class Socket(SQLModelMixin, db.Model):
     __tablename__ = 'sockets'
@@ -514,7 +499,6 @@ class Socket(SQLModelMixin, db.Model):
     @property
     def ip(self):
         return self.address.exploded
-
     @ip.setter
     def ip(self, addr):
         self.address = ip_address(unicode(addr))
@@ -535,14 +519,13 @@ class Socket(SQLModelMixin, db.Model):
         else:
             self.type = SocketType.TCP
         if parse['ip'] in ['127.0.0.1', 'localhost', u'127.0.0.1', u'localhost'] \
-                and (self.direction == SocketDirection.Listen.value or
-                             self.direction == SocketDirection.Listen or
-                             self.direction == None):
+            and (self.direction == SocketDirection.Listen.value or
+                 self.direction == SocketDirection.Listen or
+                 self.direction == None):
             self.address = ip_address(u'0.0.0.0')
         else:
             self.address = ip_address(unicode(parse['ip']))
         self.port = int(parse['port'])
-
 
 class SystemType(SQLModelMixin, db.Model):
     __tablename__ = 'system_types'
@@ -550,7 +533,6 @@ class SystemType(SQLModelMixin, db.Model):
     name = db.Column(db.String, unique=True, index=True)
     description = db.Column(db.String)
     systems = db.relationship('TradeSystem', backref='type', lazy='dynamic')
-
 
 class TradeSystem(SQLModelMixin, db.Model):
     __tablename__ = 'trade_systems'
@@ -564,27 +546,23 @@ class TradeSystem(SQLModelMixin, db.Model):
     type_id = db.Column(db.Integer, db.ForeignKey('system_types.id'), index=True)
     version = db.Column(db.String)
     manage_ip = db.Column(IPAddressType, index=True)
-
+    disabled = db.Column(db.Boolean, default=False)
     @property
     def ip(self):
         return self.manage_ip.exploded
-
     @ip.setter
     def ip(self, addr):
         self.manage_ip = ip_address(unicode(addr))
 
     login_user = db.Column(db.String, index=True)
-
     @property
     def user(self):
         return self.login_user
-
     @user.setter
     def user(self, username):
         self.login_user = username
 
     login_pwd = db.Column(db.String)
-
     @property
     def password(self):
         if globalEncryptKey:
@@ -594,7 +572,6 @@ class TradeSystem(SQLModelMixin, db.Model):
             )
         else:
             return self.login_pwd
-
     @password.setter
     def password(self, password):
         if globalEncryptKey:
@@ -667,7 +644,6 @@ class TradeSystem(SQLModelMixin, db.Model):
         else:
             raise TypeError('{} is not <class:{}>'.format(up_sys, self.__name__))
 
-
 class DataSource(SQLModelMixin, db.Model):
     __tablename__ = "data_sources"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -683,7 +659,6 @@ class DataSource(SQLModelMixin, db.Model):
     source = db.Column(JSONType, nullable=False)
     disabled = db.Column(db.Boolean, default=False)
 
-
 class SystemVendor(SQLModelMixin, db.Model):
     __tablename__ = "vendors"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -691,7 +666,6 @@ class SystemVendor(SQLModelMixin, db.Model):
     description = db.Column(db.String)
     contactors = db.Column(JSONType, default={})
     systems = db.relationship('TradeSystem', backref='vendor', lazy='dynamic')
-
 
 class Server(SQLModelMixin, db.Model):
     __tablename__ = 'servers'
@@ -705,27 +679,23 @@ class Server(SQLModelMixin, db.Model):
     description = db.Column(db.String)
     platform = db.Column(ChoiceType(PlatformType, impl=db.Integer()), default=PlatformType.Linux)
     manage_ip = db.Column(IPAddressType, index=True)
-
+    disabled = db.Column(db.Boolean, default=False)
     @property
     def ip(self):
         return self.manage_ip.exploded
-
     @ip.setter
     def ip(self, addr):
         self.manage_ip = ip_address(unicode(addr))
 
     admin_user = db.Column(db.String, index=True)
-
     @property
     def user(self):
         return self.admin_user
-
     @user.setter
     def user(self, username):
         self.admin_user = username
 
     admin_pwd = db.Column(db.String)
-
     @property
     def password(self):
         if globalEncryptKey:
@@ -735,7 +705,6 @@ class Server(SQLModelMixin, db.Model):
             )
         else:
             return self.admin_pwd
-
     @password.setter
     def password(self, password):
         if globalEncryptKey:
@@ -747,7 +716,6 @@ class Server(SQLModelMixin, db.Model):
             self.admin_pwd = password
 
     processes = db.relationship('TradeProcess', backref='server', lazy='dynamic')
-
 
 class Operation(SQLModelMixin, db.Model):
     __tablename__ = 'operations'
@@ -809,7 +777,6 @@ class Operation(SQLModelMixin, db.Model):
         else:
             return True
 
-
 class OperationCatalog(SQLModelMixin, db.Model):
     __tablename__ = 'operation_catalogs'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -817,7 +784,6 @@ class OperationCatalog(SQLModelMixin, db.Model):
     description = db.Column(db.String)
     order = db.Column(db.Integer)
     operations = db.relationship('OperationBook', backref='catalog')
-
 
 class OperationBook(SQLModelMixin, db.Model):
     __tablename = 'operation_book'
@@ -844,8 +810,6 @@ class OperationBook(SQLModelMixin, db.Model):
     def remoteConfigObserver(self, sys_id):
         sys = TradeSystem.find(id=sys_id)
         if sys:
-            ''' params = self.detail['remote']['params']
-            params['ip'] = sys.ip '''
             if not self.type.IsInteractivator():
                 new_dtl = {
                     'remote': {
@@ -858,8 +822,6 @@ class OperationBook(SQLModelMixin, db.Model):
                     }
                 }
                 self.detail.update(new_dtl)
-                ''' params['user'] = sys.login_user
-                params['password'] = sys.login_pwd '''
 
 
 class OperationGroup(SQLModelMixin, db.Model):
@@ -882,7 +844,6 @@ class OperationGroup(SQLModelMixin, db.Model):
                     "Operation.disabled==False)"
     )
 
-
 class OperateResult(SQLModelMixin, db.Model):
     __tablename__ = 'operate_results'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -890,14 +851,12 @@ class OperateResult(SQLModelMixin, db.Model):
     error_code = db.Column(db.Integer, default=0)
     detail = db.Column(JSONType, nullable=False, default=[])
 
-
 class EmergeOpResult(SQLModelMixin, db.Model):
     __tablename__ = 'emergeop_results'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     emergeop_rec_id = db.Column(db.Integer, db.ForeignKey('emergeop_records.id'), index=True)
     error_code = db.Column(db.Integer, default=0)
     detail = db.Column(JSONType, nullable=False, default=[])
-
 
 class CommandHistory(SQLModelMixin, db.Model):
     __tablename__ = 'command_histories'
@@ -909,10 +868,13 @@ class CommandHistory(SQLModelMixin, db.Model):
     operated_at = db.Column(ArrowType, index=True)
     skip = db.Column(db.Boolean, nullable=False)
 
-
 class ConfigFile(SQLModelMixin, db.Model):
     __tablename__ = 'config_files'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    uuid = db.Column(
+        db.String, index=True,
+        default=lambda: unicode(uuid4()).lower()
+    )
     name = db.Column(db.String, index=True)
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     config_type = db.Column(ChoiceType(ConfigType, impl=db.Integer()), default=ConfigType.INIFile)

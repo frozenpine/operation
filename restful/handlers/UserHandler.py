@@ -1,26 +1,46 @@
 # -*- coding: UTF-8 -*-
-from flask import request
-from flask_login import current_user
 from flask_restful import Resource
+from app import db
+from app.models import Operator, MethodType
+from flask import request
 from werkzeug.exceptions import BadRequest
 from werkzeug.security import check_password_hash
-
-from app import db
-from app.auth.privileged import CheckPrivilege
-from app.models import Operator, MethodType
-from restful.errors import DataNotJsonError, DataUniqueError, DataNotNullError, DataTypeError, DataNotMatchError, \
-    ApiError
+from restful.errors import (DataNotJsonError,
+                            DataUniqueError,
+                            DataNotNullError,
+                            DataNotMatchError,
+                            ApiError)
 from restful.protocol import RestProtocol
+from flask_login import current_user
+from app.auth.privileged import CheckPrivilege
 
 
 class UserApi(Resource):
     def __init__(self):
         super(UserApi, self).__init__()
+        self.uri_to_action = {"/api/operation-groups": "add_group",
+                              "/api/operation-group/id/*": "edit_group",
+                              "/api/operation-books": "add_edit_ob",
+                              "/api/systems": "add_sys"}
+        self.uri_to_method = {"/api/operation-groups": "Authorize",
+                              "/api/operation-group/id/*": "Authorize",
+                              "/api/operation-books": "Authorize",
+                              "/api/systems": "Authorize"}
 
     def get(self, **kwargs):
         user = Operator.find(**kwargs)
-        if user is not None:
-            return RestProtocol(user)
+        if user:
+            if user.id == current_user.id or (
+                            user.id != current_user.id and 'authorizors' in [role.name for role in current_user.roles]):
+                privilege_dict = dict()
+                for uri, method in self.uri_to_method.iteritems():
+                    privilege_dict[self.uri_to_action[uri]] = CheckPrivilege(user, uri, MethodType[method])
+                user_data = RestProtocol(user)
+                user_data.get('data')['privileges'] = privilege_dict
+                return user_data
+            else:
+                return RestProtocol(error_code=1101,
+                                    message="You don't have the permission to check other's information.")
         else:
             return {'message': 'Not found'}, 404
 
@@ -61,6 +81,7 @@ class UserApi(Resource):
 class UserListApi(Resource):
     def __init__(self):
         super(UserListApi, self).__init__()
+        self.not_null_list = ['login', 'password']
 
     def get(self):
         users = Operator.query.all()
