@@ -565,11 +565,7 @@ class TradeSystem(SQLModelMixin, db.Model):
     type_id = db.Column(db.Integer, db.ForeignKey('system_types.id'), index=True)
     version = db.Column(db.String)
     manage_ip = db.Column(IPAddressType, index=True)
-<<<<<<< HEAD
-
-=======
     disabled = db.Column(db.Boolean, default=False)
->>>>>>> master
     @property
     def ip(self):
         return self.manage_ip.exploded
@@ -710,11 +706,7 @@ class Server(SQLModelMixin, db.Model):
     description = db.Column(db.String)
     platform = db.Column(ChoiceType(PlatformType, impl=db.Integer()), default=PlatformType.Linux)
     manage_ip = db.Column(IPAddressType, index=True)
-<<<<<<< HEAD
-
-=======
     disabled = db.Column(db.Boolean, default=False)
->>>>>>> master
     @property
     def ip(self):
         return self.manage_ip.exploded

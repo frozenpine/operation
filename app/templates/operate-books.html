@@ -21,52 +21,21 @@
         </div>
         <div class="tpl-block">
             <div class="am-g">
-<<<<<<< HEAD
-                <div class="am-u-sm-12" ng-repeat="data in emergeopList track by $index" style="overflow-x: auto;">
-                    <span class="am-icon-angle-double-right"
-                          style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169); cursor: pointer"> 操作分类 ：
-                        {{::data.name}}</span>
-                    <button ng-show="optionBookEditShow[$index]" ng-click="optionBookEdit(data.details,$index)"
-                            type="button" class="am-btn am-btn-sm am-btn-primary am-round am-fr">编辑
-                    </button>
-=======
                 <div class="am-u-sm-12" ng-repeat="data in emergeopList" style="overflow-x: auto;">
                     <span class="am-icon-angle-double-right" style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169); cursor: pointer"> 操作分类 ： {{::data.name}}</span>
                     <button ng-show="optionBookEditShow[$index]" ng-click="optionBookEdit(data.details,$index)" type="button" class="am-btn am-btn-sm am-btn-primary am-round am-fr">编辑</button>
->>>>>>> master
                     <table class="am-table am-table-hover table-main" ng-show="optionBookEditShow[$index]">
                         <thead>
-                        <tr>
-                            <th>操作名称</th>
-                            <th>操作描述</th>
-                            <th>操作</th>
-                            <th>本次操作结果</th>
-                            <th>查看结果</th>
-                            <!-- <th>应急通道</th> -->
-                        </tr>
+                            <tr>
+                                <th>操作名称</th>
+                                <th>操作描述</th>
+                                <th>操作</th>
+                                <th>本次操作结果</th>
+                                <th>查看结果</th>
+                                <!-- <th>应急通道</th> -->
+                            </tr>
                         </thead>
                         <tbody>
-<<<<<<< HEAD
-                        <tr ng-repeat="dtl in data.details track by $index">
-                            <td>{{::dtl.op_name}}</td>
-                            <td>{{::dtl.op_desc}}</td>
-                            <td>
-                                <div class="am-btn-group am-btn-group-xs">
-                                    <button class="am-btn am-btn-default am-btn-xs am-text-secondary"
-                                            ng-click="execute(data.name, $index, dtl.id)">
-                                        <span class="am-icon-pencil-square-o"></span> 执行
-                                    </button>
-                                </div>
-                                <div class="am-modal am-modal-loading" ng-if="dtl.interactivator.isTrue" tabindex="-1"
-                                     id="{{ 'interactive' + dtl.id }}">
-                                    <div class="am-modal-dialog">
-                                        <div class="am-modal-hd">
-                                            交互操作
-                                            <span class="am-close am-fr" data-am-modal-cancel data-am-modal-close>&times;</span>
-                                        </div>
-                                        <div class="am-modal-bd">
-                                            <div ng-bind-html="dtl.interactivator.template | html_trust"></div>
-=======
                             <tr ng-repeat="dtl in data.details">
                                 <td>{{::dtl.op_name}}</td>
                                 <td>{{::dtl.op_desc}}</td>
@@ -85,162 +54,136 @@
                                             <div class="am-modal-bd">
                                                 <div ng-bind-html="dtl.interactivator.template | html_trust"></div>
                                             </div>
->>>>>>> master
                                         </div>
                                     </div>
-                                </div>
-                            </td>
-                            <td>
-                                    <span ng-class="{'am-text-success': dtl.err_code==0, 'am-text-danger': dtl.err_code>0, 'am-text-warning': dtl.err_code==-3 }">
+                </div>
+                </td>
+                <td>
+                    <span ng-class="{'am-text-success': dtl.err_code==0, 'am-text-danger': dtl.err_code>0, 'am-text-warning': dtl.err_code==-3 }">
                                         <i class="am-icon-spinner am-icon-pulse" ng-show="dtl.err_code == -2"></i>
                                         {{ dtl.err_code | exe_result }}
                                     </span>
-                            </td>
-                            <td>
-                                <div class="am-btn-group am-btn-group-xs">
-                                    <button class="am-btn am-btn-default am-btn-xs am-text-secondary am-margin-right-xs"
-                                            ng-show="dtl.err_code >= 0" ng-click="check_result(dtl.id)">
+                </td>
+                <td>
+                    <div class="am-btn-group am-btn-group-xs">
+                        <button class="am-btn am-btn-default am-btn-xs am-text-secondary am-margin-right-xs" ng-show="dtl.err_code >= 0" ng-click="check_result(dtl.id)">
                                         <span class="am-icon-pencil-square-o"></span> 查看结果
                                     </button>
-                                    <button class="am-btn am-btn-default am-btn-xs am-text-secondary am-margin-right-xs"
-                                            ng-show="dtl.hasOwnProperty('his_results')"
-                                            ng-click="check_his_result(dtl.id)">
+                        <button class="am-btn am-btn-default am-btn-xs am-text-secondary am-margin-right-xs" ng-show="dtl.hasOwnProperty('his_results')" ng-click="check_his_result(dtl.id)">
                                         <span class="am-icon-pencil-square-o"></span> 查看历史结果
                                     </button>
-                                </div>
-                                <div class="am-modal am-modal-alert" tabindex="-1" id="{{ 'result' + dtl.id }}">
-                                    <div class="am-modal-dialog">
-                                        <div class="am-modal-hd">操作输出</div>
-                                        <div class="am-modal-bd">
-                                            <ul class="am-list am-list-static">
-                                                <li style="text-align: left; padding: 0px 5px; overflow-x: auto"
-                                                    ng-repeat="line in dtl.output_lines track by $index">
-                                                    <span class="am-icon-terminal am-icon-sm am-monospace"
-                                                          style="white-space: pre; margin-left: 5px; margin-right: 5px"> {{ line }}</span>
-                                                </li>
-                                            </ul>
-                                            <span ng-if="dtl.output_lines.length == 0 || dtl.output_lines == null">无操作回显。</span>
-                                        </div>
-                                        <div class="am-modal-footer">
-                                            <span class="am-modal-btn">确定</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="am-modal am-modal-alert" tabindex="-1" id="{{ 'his_result' + dtl.id }}">
-                                    <div class="am-modal-dialog">
-                                        <div class="am-modal-hd">操作输出</div>
-                                        <div class="am-modal-bd">
-                                                <span class="">
+                    </div>
+                    <div class="am-modal am-modal-alert" tabindex="-1" id="{{ 'result' + dtl.id }}">
+                        <div class="am-modal-dialog">
+                            <div class="am-modal-hd">操作输出</div>
+                            <div class="am-modal-bd">
+                                <ul class="am-list am-list-static">
+                                    <li style="text-align: left; padding: 0px 5px; overflow-x: auto" ng-repeat="line in dtl.output_lines track by $index">
+                                        <span class="am-icon-terminal am-icon-sm am-monospace" style="white-space: pre; margin-left: 5px; margin-right: 5px"> {{ line }}</span>
+                                    </li>
+                                </ul>
+                                <span ng-if="dtl.output_lines.length == 0 || dtl.output_lines == null">无操作回显。</span>
+                            </div>
+                            <div class="am-modal-footer">
+                                <span class="am-modal-btn">确定</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="am-modal am-modal-alert" tabindex="-1" id="{{ 'his_result' + dtl.id }}">
+                        <div class="am-modal-dialog">
+                            <div class="am-modal-hd">操作输出</div>
+                            <div class="am-modal-bd">
+                                <span class="">
                                                     由 {{ dtl.his_results.operator }} 于 {{ dtl.his_results.operated_at }} 操作
                                                     <span class="am-text-danger"
                                                           ng-show="dtl.his_results.err_code!=0">{{ dtl.his_results.err_code | exe_result }}</span>
-                                                </span>
-                                            <ul class="am-list am-list-static">
-                                                <li style="text-align: left; padding: 0px 5px; overflow-x: auto"
-                                                    ng-repeat="hisline in dtl.his_results.lines track by $index">
-                                                    <span class="am-icon-terminal am-icon-sm am-monospace"
-                                                          style="white-space: pre; margin-left: 5px; margin-right: 5px"> {{ hisline }}</span>
-                                                </li>
-                                            </ul>
-                                            <span ng-if="dtl.his_results.lines.length == 0 || dtl.his_results.lines == null">无操作回显。</span>
-                                        </div>
-                                        <div class="am-modal-footer">
-                                            <span class="am-modal-btn">确定</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <!-- <td>
+                                </span>
+                                <ul class="am-list am-list-static">
+                                    <li style="text-align: left; padding: 0px 5px; overflow-x: auto" ng-repeat="hisline in dtl.his_results.lines track by $index">
+                                        <span class="am-icon-terminal am-icon-sm am-monospace" style="white-space: pre; margin-left: 5px; margin-right: 5px"> {{ hisline }}</span>
+                                    </li>
+                                </ul>
+                                <span ng-if="dtl.his_results.lines.length == 0 || dtl.his_results.lines == null">无操作回显。</span>
+                            </div>
+                            <div class="am-modal-footer">
+                                <span class="am-modal-btn">确定</span>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <!-- <td>
                                 <a class="am-icon-rocket am-icon-sm am-vertical-align-middle"></a>
                             </td> -->
-                        </tr>
-                        </tbody>
-                    </table>
-                    <form name="optionGroupEditSub" style="min-width: 930px" ng-show="!optionBookEditShow[$index]">
-                        <div class="am-table am-table-hover table-main" id="optionEditTitle">
-                            <div style="height: 36px;border-bottom: 1px solid #DDDDDD;">
-                                <ul style="font-weight: bold;">
-                                    <li class="am-u-sm-2" style="border-top: 0;">所属系统</li>
-                                    <li class="am-u-sm-2" style="border-top: 0;">源操作名</li>
-                                    <li class="am-u-sm-3" style="border-top: 0;">描述</li>
-                                    <li class="am-u-sm-1" style="border-top: 0;">分类</li>
-                                    <li class="am-u-sm-1" style="border-top: 0;">类型</li>
-                                    <li class="am-u-sm-1" style="border-top: 0;">连接方式</li>
-                                    <li class="am-u-sm-1" style="border-top: 0;">删除</li>
-                                    <li class="am-u-sm-1" style="border-top: 0;">排序</li>
-                                </ul>
-                            </div>
-                            <ul sv-root sv-part="optionBookEditDataList[$index]">
-<<<<<<< HEAD
-                                <li ng-repeat="dtl in optionBookEditDataList[$index] track by $index"
-                                    ng-show="!dtl.disabled" sv-element>
-=======
-                                <li ng-repeat="dtl in optionBookEditDataList[$index]" ng-show="!dtl.disabled" sv-element>
->>>>>>> master
-                                    <div class="am-u-sm-2" style="padding: 3px;">
-                                        <select ng-model="dtl.sys_id" style="width: 100%;">
+                </tr>
+                </tbody>
+                </table>
+                <form name="optionGroupEditSub" style="min-width: 930px" ng-show="!optionBookEditShow[$index]">
+                    <div class="am-table am-table-hover table-main" id="optionEditTitle">
+                        <div style="height: 36px;border-bottom: 1px solid #DDDDDD;">
+                            <ul style="font-weight: bold;">
+                                <li class="am-u-sm-2" style="border-top: 0;">所属系统</li>
+                                <li class="am-u-sm-2" style="border-top: 0;">源操作名</li>
+                                <li class="am-u-sm-3" style="border-top: 0;">描述</li>
+                                <li class="am-u-sm-1" style="border-top: 0;">分类</li>
+                                <li class="am-u-sm-1" style="border-top: 0;">类型</li>
+                                <li class="am-u-sm-1" style="border-top: 0;">连接方式</li>
+                                <li class="am-u-sm-1" style="border-top: 0;">删除</li>
+                                <li class="am-u-sm-1" style="border-top: 0;">排序</li>
+                            </ul>
+                        </div>
+                        <ul sv-root sv-part="optionBookEditDataList[$index]">
+                            <li ng-repeat="dtl in optionBookEditDataList[$index]" ng-show="!dtl.disabled" sv-element>
+                                <div class="am-u-sm-2" style="padding: 3px;">
+                                    <select ng-model="dtl.sys_id" style="width: 100%;">
                                             <option value="{{ x.id }}" ng-repeat="x in systemListData">
                                                 {{ x.name }}
                                             </option>
                                         </select>
-                                        <!--<input type="text" style="padding: 5px 5px 5px 0;border: none;" value="dtl.op_name" ng-model="dtl.op_name" />-->
-                                    </div>
-                                    <div class="am-u-sm-2" style="padding: 3px;">
-                                        <input type="text" style="width: 100%;border: none;" value="dtl.op_name"
-                                               ng-model="dtl.op_name"/>
-                                    </div>
-                                    <div class="am-u-sm-3" style="padding: 3px;">
-                                        <input type="text" style="border: none;width: 100%;" value="dtl.op_desc"
-                                               ng-model="dtl.op_desc"/>
-                                    </div>
-                                    <div class="am-u-sm-1" style="padding: 3px;">
-                                        <select ng-model="dtl.catalog_id" style="width: 100%;">
+                                    <!--<input type="text" style="padding: 5px 5px 5px 0;border: none;" value="dtl.op_name" ng-model="dtl.op_name" />-->
+                                </div>
+                                <div class="am-u-sm-2" style="padding: 3px;">
+                                    <input type="text" style="width: 100%;border: none;" value="dtl.op_name" ng-model="dtl.op_name" />
+                                </div>
+                                <div class="am-u-sm-3" style="padding: 3px;">
+                                    <input type="text" style="border: none;width: 100%;" value="dtl.op_desc" ng-model="dtl.op_desc" />
+                                </div>
+                                <div class="am-u-sm-1" style="padding: 3px;">
+                                    <select ng-model="dtl.catalog_id" style="width: 100%;">
                                             <option value="{{ x.id }}" ng-repeat="x in operationCatalogs">
                                                 {{ x.name }}
                                             </option>
                                         </select>
-                                    </div>
-                                    <div class="am-u-sm-1" style="padding: 3px;">
-                                        <select ng-model="dtl.type" style="width: 100%;">
+                                </div>
+                                <div class="am-u-sm-1" style="padding: 3px;">
+                                    <select ng-model="dtl.type" style="width: 100%;">
                                             <option value="Checker">检查</option>
                                             <option value="Executor">执行</option>
                                             <option value="Interactivator">交互</option>
                                             <option value="Execute_Checker">执行与检查</option>
                                             <option value="Interactive_Checker">交互与检查</option>
                                         </select>
-                                    </div>
-                                    <div class="am-u-sm-1" style="padding: 3px;">
-                                        {{ dtl.connection }}
-                                    </div>
-                                    <div class="am-u-sm-1" style="background: none; padding: 3px;">
-                                        <!--<button style="background-color: none;" ng-click="optionGroupEditDelete($index)">删除</button>-->
-                                        <a ng-click="optionBookEditDelete($index)"
-                                           class="am-close am-close-alt am-icon-times"></a>
-                                    </div>
-                                    <div>
-                                        <span style="cursor: pointer;position: relative;left: 2%;" sv-handle
-                                              class="am-icon-bars"></span>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                    </form>
-                    <hr/>
-                    <div class="am-fr" style="margin-bottom: 20px;" ng-show="!optionBookEditShow[$index]">
-<<<<<<< HEAD
-                        <button ng-click="!optionBookEditCancel($index)"
-                                class="am-btn am-btn-primary am-btn-sm am-round">取消
-                        </button>
-                        <button ng-click="optionBookEditPut()" type="submit"
-                                class="am-btn am-btn-primary am-btn-sm am-round">确定
-                        </button>
-=======
-                        <button ng-click="optionBookEditCancel($index)" class="am-btn am-btn-primary am-btn-sm am-round">取消</button>
-                        <button ng-click="optionBookEditPut()" type="submit" class="am-btn am-btn-primary am-btn-sm am-round">确定</button>
->>>>>>> master
+                                </div>
+                                <div class="am-u-sm-1" style="padding: 3px;">
+                                    {{ dtl.connection }}
+                                </div>
+                                <div class="am-u-sm-1" style="background: none; padding: 3px;">
+                                    <!--<button style="background-color: none;" ng-click="optionGroupEditDelete($index)">删除</button>-->
+                                    <a ng-click="optionBookEditDelete($index)" class="am-close am-close-alt am-icon-times"></a>
+                                </div>
+                                <div>
+                                    <span style="cursor: pointer;position: relative;left: 2%;" sv-handle class="am-icon-bars"></span>
+                                </div>
+                            </li>
+                        </ul>
                     </div>
+                </form>
+                <hr/>
+                <div class="am-fr" style="margin-bottom: 20px;" ng-show="!optionBookEditShow[$index]">
+                    <button ng-click="optionBookEditCancel($index)" class="am-btn am-btn-primary am-btn-sm am-round">取消</button>
+                    <button ng-click="optionBookEditPut()" type="submit" class="am-btn am-btn-primary am-btn-sm am-round">确定</button>
                 </div>
             </div>
         </div>
     </div>
+</div>
 </div>

@@ -25,14 +25,8 @@ class DeviceApi(Resource):
         if dev:
             return RestProtocol(device)
         else:
-<<<<<<< HEAD
-            return {'message': 'server not found'}, 404
-
-    '''
-=======
             return RestProtocol(message='Server not found', error_code=-1), 404
 
->>>>>>> master
     def put(self, **kwargs):
         device = Server.find(**kwargs)
         if device:
@@ -74,30 +68,8 @@ class DeviceListApi(Resource):
         self.pattern = re.compile('^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$')
 
     def get(self):
-<<<<<<< HEAD
-        devices = Server.query.all()
-        '''
-        for dev in Device.nodes.filter():
-            devices['records'].append({"uuid": dev.uuid, "name": dev.name, "status": dev.status})
-        '''
-        if devices:
-            return {
-                'message': 'all servers listed.',
-                'data': {
-                    'count': len(devices),
-                    'records': [
-                        dev.to_json() for dev in devices
-                    ]
-                }
-            }
-        else:
-            return {
-                       'message': 'no servers.'
-                   }, 204
-=======
         devices = Server.query.filter(Server.disabled == False).all()
         return RestProtocol(devices)
->>>>>>> master
 
     def post(self):
         try:

@@ -34,13 +34,10 @@ def UIView(name):
         return render_template("errors/403.html")
     return render_template("{}.html".format(name))
 
-<<<<<<< HEAD
-=======
 @main.route('/UI/dialogs/<string:name>')
 @login_required
 def DialogBody(name):
     return render_template('dialogs/{}.html'.format(name))
->>>>>>> master
 
 class Camera():
     def __init__(self):
