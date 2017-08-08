@@ -1,26 +1,20 @@
 # -*- coding: UTF-8 -*-
 import json
 import re
-import sys
 from datetime import datetime, time
 from uuid import uuid4
 
 from arrow import Arrow
 from enum import Enum
-from flask import current_app
 from flask_login import UserMixin
 from ipaddress import IPv4Address, ip_address
-from sqlalchemy import orm
 from sqlalchemy_utils import observes
-from sqlalchemy_utils.types import (ArrowType, ChoiceType, DateTimeRangeType,
-                                    IPAddressType, JSONType)
+from sqlalchemy_utils.types import (ArrowType, ChoiceType, IPAddressType, JSONType)
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from app import globalEncryptKey
 from SysManager.Common import AESCrypto
-
+from app import globalEncryptKey
 from . import db
-
 
 '''
 from neomodel import (
@@ -173,7 +167,7 @@ class SQLModelMixin(object):
         results = {}
         for field in [x for x in dir(self) if not re.match(
                 r'^_|\w*p(?:ass)?w(?:or)?d|\w+_id$', x, re.I
-            ) and x not in self.filter_keyword]:
+        ) and x not in self.filter_keyword]:
             data = getattr(self, field)
             if not callable(data):
                 if isinstance(data, list):
@@ -270,7 +264,7 @@ class MethodType(Enum):
     Execute = 2
     ReExecute = 4
     Authorize = 8
-    All = Check|Execute|ReExecute|Authorize
+    All = Check | Execute | ReExecute | Authorize
 
 class DataSourceType(Enum):
     SQL = 1
@@ -292,22 +286,22 @@ class ScriptType(Enum):
     Checker = 1
     Executor = 2
     Interactivator = 4
-    Execute_Checker = Executor|Checker
-    Interactive_Checker = Interactivator|Checker
+    Execute_Checker = Executor | Checker
+    Interactive_Checker = Interactivator | Checker
 
     def IsBatcher(self):
         return self.value & ScriptType.Execute_Checker.value \
-            == ScriptType.Execute_Checker.value or \
-            self.value & ScriptType.Interactive_Checker.value \
-            == ScriptType.Interactive_Checker.value
+               == ScriptType.Execute_Checker.value or \
+               self.value & ScriptType.Interactive_Checker.value \
+               == ScriptType.Interactive_Checker.value
 
     def IsChecker(self):
         return self.value & ScriptType.Checker.value \
-            == ScriptType.Checker.value
+               == ScriptType.Checker.value
 
     def IsInteractivator(self):
         return self.value & ScriptType.Interactivator.value \
-            == ScriptType.Interactivator.value
+               == ScriptType.Interactivator.value
 
 class PlatformType(Enum):
     Linux = 1
@@ -519,9 +513,9 @@ class Socket(SQLModelMixin, db.Model):
         else:
             self.type = SocketType.TCP
         if parse['ip'] in ['127.0.0.1', 'localhost', u'127.0.0.1', u'localhost'] \
-            and (self.direction == SocketDirection.Listen.value or
-                 self.direction == SocketDirection.Listen or
-                 self.direction == None):
+                and (self.direction == SocketDirection.Listen.value or
+                             self.direction == SocketDirection.Listen or
+                             self.direction == None):
             self.address = ip_address(u'0.0.0.0')
         else:
             self.address = ip_address(unicode(parse['ip']))

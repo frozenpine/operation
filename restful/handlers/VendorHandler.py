@@ -1,9 +1,10 @@
 # -*- coding: UTF-8 -*-
+from flask import request
 from flask_restful import Resource
+from werkzeug.exceptions import BadRequest
+
 from app import db
 from app.models import SystemVendor
-from flask import request
-from werkzeug.exceptions import BadRequest
 from restful.errors import (DataNotJsonError,
                             DataUniqueError,
                             DataNotNullError,
@@ -74,7 +75,3 @@ class VendorListApi(Resource):
             db.session.add(vendor)
             db.session.commit()
             return RestProtocol(vendor)
-
-
-
-

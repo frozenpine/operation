@@ -8,7 +8,7 @@ from werkzeug.exceptions import BadRequest
 
 from app import db
 from app.models import TradeSystem, DataSource, DataSourceType, OperationBook, EmergeOpRecord
-from ..errors import DataNotJsonError, DataUniqueError, DataNotNullError, DataNotMatchError, ApiError
+from ..errors import DataNotJsonError, DataUniqueError, DataNotNullError, DataNotMatchError, ApiError, DataTypeError
 from ..protocol import RestProtocol
 
 
@@ -87,9 +87,9 @@ class SystemListApi(Resource):
 
     def get(self):
         systems = TradeSystem.query.filter(
-			TradeSystem.parent_sys_id == None,
-			TradeSystem.disabled == False
-		).all()
+            TradeSystem.parent_sys_id == None,
+            TradeSystem.disabled == False
+        ).all()
         return RestProtocol(systems)
 
     def post(self):

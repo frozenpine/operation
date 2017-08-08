@@ -9,26 +9,33 @@
             </div>
             <div class="am-vertical-align am-inline-block am-fr">
                 <div class="am-vertical-align-middle">
-                    <span class="font-green am-inline-block am-margin-left-xs am-icon-refresh am-fl" ng-class="{true: 'am-icon-spin', false: ''}[checking]" ng-click="checkSvrStatics(true)" style="cursor: pointer"></span>
+                    <span class="font-green am-inline-block am-margin-left-xs am-icon-refresh am-fl"
+                          ng-class="{true: 'am-icon-spin', false: ''}[checking]" ng-click="checkSvrStatics(true)"
+                          style="cursor: pointer"></span>
                     <div class="am-inline-block am-margin-left-xs am-fl">
                         <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 148px">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px; border-color: #32c5d2; background: #32c5d2">
+                            <span class="am-input-group-label"
+                                  style="padding: 0 5px; line-height: normal; height: 25px; border-color: #32c5d2; background: #32c5d2">
                                 <span>
                                     <input type="checkbox" ng-click="autoRefresh()" ng-model="auto">
                                     自动刷新：
                                 </span>
                             </span>
-                            <input type="text" class="am-form-field font-green am-text-center" minlength="2" ng-model="GlobalConfigs.svrStaticsInterval.current" style="height: 25px">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2">s</span>
+                            <input type="text" class="am-form-field font-green am-text-center" minlength="2"
+                                   ng-model="GlobalConfigs.svrStaticsInterval.current" style="height: 25px">
+                            <span class="am-input-group-label"
+                                  style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2">s</span>
                         </div>
                     </div>
                 </div>
                 <div class="am-margin-left-sm am-vertical-align-middle">
                     <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 150px">
-                        <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2">
+                        <span class="am-input-group-label"
+                              style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2">
                             <i class="am-icon-search am-icon-fw"></i>
                         </span>
-                        <input type="text" class="am-form-field" style="height: 25px" placeholder="关键字过滤" ng-model="keyword">
+                        <input type="text" class="am-form-field" style="height: 25px" placeholder="关键字过滤"
+                               ng-model="keyword">
                     </div>
                 </div>
             </div>
@@ -38,123 +45,136 @@
                 <div class="am-u-sm-12">
                     <table class="am-table am-table-hover table-main" id="drop-down-test">
                         <thead>
-                            <tr>
-                                <th>服务器</th>
-                                <th>启动时间</th>
-                                <th>CPU空闲</th>
-                                <th>内存使用率</th>
-                                <th>SWAP使用率</th>
-                                <th>挂载点</th>
-                                <th>使用率</th>
-                                <th>最后更新</th>
-                            </tr>
+                        <tr>
+                            <th>服务器</th>
+                            <th>启动时间</th>
+                            <th>CPU空闲</th>
+                            <th>内存使用率</th>
+                            <th>SWAP使用率</th>
+                            <th>挂载点</th>
+                            <th>使用率</th>
+                            <th>最后更新</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            <tr ng-repeat="data in serverStatics | filter: keyword">
-                                <td class="table-data" style="max-width: 120px">{{::data.server}}</td>
-                                <td class="table-data" style="max-width: 120px">{{data.uptime}}</td>
-                                <td class="table-data">
-                                    <div class="am-dropdown" style="cursor: pointer" ng-mouseover="showCPUDetail = true" ng-mouseleave="showCPUDetail = false" ng-class="{'am-text-danger': (data.cpu[0].idle|percentStatus:GlobalConfigs.cpuIdleThreshold)}">
-                                        {{data.cpu[0].idle | percent}}
-                                        <div class="am-dropdown-content" ng-show="showCPUDetail" style="display: block;margin-top: 0">
-                                            <div style="max-height: 300px; overflow-y: auto">
-                                                <table class="am-table am-text-nowrap am-table-compact" style="margin-bottom: 0px">
-                                                    <thead>
-                                                        <th>NAME</th>
-                                                        <th>IO Wait</th>
-                                                        <th>IRQ</th>
-                                                        <th>USER</th>
-                                                        <th>SYS</th>
-                                                        <th>IDLE</th>
-                                                    </thead>
-                                                    <tbody>
-                                                        <tr ng-repeat="core in data.cpu">
-                                                            <td>{{core.name}}</td>
-                                                            <td>{{core.iowait | percent}}</td>
-                                                            <td>{{core.irq | percent}}</td>
-                                                            <td>{{core.usr | percent}}</td>
-                                                            <td>{{core.sys | percent}}</td>
-                                                            <td>{{core.idle | percent}}</td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="table-data">
-                                    <div class="am-dropdown" style="cursor: pointer" ng-mouseover="showMemDetail = true" ng-mouseleave="showMemDetail = false">
-                                        {{(data.memory[0].total - data.memory[0].free) / data.memory[0].total * 100 | percent}}
-                                        <div class="am-dropdown-content" ng-show="showMemDetail" style="display: block;margin-top: 0;">
-                                            <table class="am-table am-text-nowrap am-table-compact" style="margin-bottom: 0px">
+                        <tr ng-repeat="data in serverStatics | filter: keyword">
+                            <td class="table-data" style="max-width: 120px">{{::data.server}}</td>
+                            <td class="table-data" style="max-width: 120px">{{ data.uptime }}</td>
+                            <td class="table-data">
+                                <div class="am-dropdown" style="cursor: pointer" ng-mouseover="showCPUDetail = true"
+                                     ng-mouseleave="showCPUDetail = false"
+                                     ng-class="{'am-text-danger': (data.cpu[0].idle|percentStatus:GlobalConfigs.cpuIdleThreshold)}">
+                                    {{ data.cpu[0].idle | percent }}
+                                    <div class="am-dropdown-content" ng-show="showCPUDetail"
+                                         style="display: block;margin-top: 0">
+                                        <div style="max-height: 300px; overflow-y: auto">
+                                            <table class="am-table am-text-nowrap am-table-compact"
+                                                   style="margin-bottom: 0px">
                                                 <thead>
-                                                    <th>TOTAL</th>
-                                                    <th>FREE</th>
+                                                <th>NAME</th>
+                                                <th>IO Wait</th>
+                                                <th>IRQ</th>
+                                                <th>USER</th>
+                                                <th>SYS</th>
+                                                <th>IDLE</th>
                                                 </thead>
                                                 <tbody>
-                                                    <tr>
-                                                        <td>{{data.memory[0].total | KB2}}</td>
-                                                        <td>{{data.memory[0].free | KB2}}</td>
-                                                    </tr>
+                                                <tr ng-repeat="core in data.cpu">
+                                                    <td>{{ core.name }}</td>
+                                                    <td>{{ core.iowait | percent }}</td>
+                                                    <td>{{ core.irq | percent }}</td>
+                                                    <td>{{ core.usr | percent }}</td>
+                                                    <td>{{ core.sys | percent }}</td>
+                                                    <td>{{ core.idle | percent }}</td>
+                                                </tr>
                                                 </tbody>
                                             </table>
                                         </div>
                                     </div>
-                                </td>
-                                <td class="table-data">
-                                    <div class="am-dropdown" style="cursor: pointer" ng-mouseover="showSwapDetail = true" ng-mouseleave="showSwapDetail = false">
-                                        {{(data.swap[0].total - data.swap[0].free) / data.swap[0].total * 100 | percent}}
-                                        <div class="am-dropdown-content" ng-show="showSwapDetail" style="display: block;margin-top: 0;">
-                                            <table class="am-table am-text-nowrap am-table-compact" style="margin-bottom: 0px">
-                                                <thead>
-                                                    <th>TOTAL</th>
-                                                    <th>FREE</th>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <td>{{data.swap[0].total | KB2}}</td>
-                                                        <td>{{data.swap[0].free | KB2}}</td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                </div>
+                            </td>
+                            <td class="table-data">
+                                <div class="am-dropdown" style="cursor: pointer" ng-mouseover="showMemDetail = true"
+                                     ng-mouseleave="showMemDetail = false">
+                                    {{ (data.memory[0].total - data.memory[0].free) / data.memory[0].total * 100 | percent }}
+                                    <div class="am-dropdown-content" ng-show="showMemDetail"
+                                         style="display: block;margin-top: 0;">
+                                        <table class="am-table am-text-nowrap am-table-compact"
+                                               style="margin-bottom: 0px">
+                                            <thead>
+                                            <th>TOTAL</th>
+                                            <th>FREE</th>
+                                            </thead>
+                                            <tbody>
+                                            <tr>
+                                                <td>{{ data.memory[0].total | KB2 }}</td>
+                                                <td>{{ data.memory[0].free | KB2 }}</td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
-                                </td>
-                                <td class="table-data">
-                                    <ul>
-                                        <li ng-repeat="disk in data.disks">
-                                            <span>{{disk.mount}}</span>
-                                        </li>
-                                    </ul>
-                                </td>
-                                <td class="table-status">
-                                    <ul>
-                                        <li ng-repeat="disk in data.disks">
+                                </div>
+                            </td>
+                            <td class="table-data">
+                                <div class="am-dropdown" style="cursor: pointer" ng-mouseover="showSwapDetail = true"
+                                     ng-mouseleave="showSwapDetail = false">
+                                    {{ (data.swap[0].total - data.swap[0].free) / data.swap[0].total * 100 | percent }}
+                                    <div class="am-dropdown-content" ng-show="showSwapDetail"
+                                         style="display: block;margin-top: 0;">
+                                        <table class="am-table am-text-nowrap am-table-compact"
+                                               style="margin-bottom: 0px">
+                                            <thead>
+                                            <th>TOTAL</th>
+                                            <th>FREE</th>
+                                            </thead>
+                                            <tbody>
+                                            <tr>
+                                                <td>{{ data.swap[0].total | KB2 }}</td>
+                                                <td>{{ data.swap[0].free | KB2 }}</td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="table-data">
+                                <ul>
+                                    <li ng-repeat="disk in data.disks">
+                                        <span>{{ disk.mount }}</span>
+                                    </li>
+                                </ul>
+                            </td>
+                            <td class="table-status">
+                                <ul>
+                                    <li ng-repeat="disk in data.disks">
                                             <span>
-                                                <div class="am-dropdown" style="cursor: pointer" ng-mouseover="showMountDetail[$index] = true"
-                                                ng-mouseleave="showMountDetail[$index] = false">
-                                                    {{disk.percent}}
-                                                    <div class="am-dropdown-content_l" ng-show="showMountDetail[$index]" style="display: block;margin-top: 0;">
-                                                        <table class="am-table am-text-nowrap am-table-compact" style="margin-bottom: 0px">
+                                                <div class="am-dropdown" style="cursor: pointer"
+                                                     ng-mouseover="showMountDetail[$index] = true"
+                                                     ng-mouseleave="showMountDetail[$index] = false">
+                                                    {{ disk.percent }}
+                                                    <div class="am-dropdown-content_l" ng-show="showMountDetail[$index]"
+                                                         style="display: block;margin-top: 0;">
+                                                        <table class="am-table am-text-nowrap am-table-compact"
+                                                               style="margin-bottom: 0px">
                                                             <thead>
                                                                 <th>TOTAL</th>
                                                                 <th>AVAILABLE</th>
                                                             </thead>
                                                             <tbody>
                                                                 <tr>
-                                                                    <td>{{disk.total | KB2}}</td>
-                                                                    <td>{{disk.available | KB2}}</td>
+                                                                    <td>{{ disk.total | KB2 }}</td>
+                                                                    <td>{{ disk.available | KB2 }}</td>
                                                                 </tr>
                                                             </tbody>
                                                         </table>
                                                     </div>
                                                 </div>
                                             </span>
-                                        </li>
-                                    </ul>
-                                </td>
-                                <td>{{data.updated_time}}</td>
-                            </tr>
+                                    </li>
+                                </ul>
+                            </td>
+                            <td>{{ data.updated_time }}</td>
+                        </tr>
                         </tbody>
                     </table>
                     <hr/>
@@ -173,26 +193,34 @@
             </div>
             <div class="am-inline-block am-vertical-align am-fr">
                 <div class="am-vertical-align-middle">
-                    <span class="font-green am-margin-left-xs am-inline-block am-icon-refresh am-fl" ng-class="{true: 'am-icon-spin', false: ''}[checking]" ng-click="checkProc(true)" style="cursor: pointer"></span>
+                    <span class="font-green am-margin-left-xs am-inline-block am-icon-refresh am-fl"
+                          ng-class="{true: 'am-icon-spin', false: ''}[checking]" ng-click="checkProc(true)"
+                          style="cursor: pointer"></span>
                     <div class="am-margin-left-xs am-inline-block am-fl">
                         <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 148px">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px; border-color: #32c5d2; background: #32c5d2">
+                            <span class="am-input-group-label"
+                                  style="padding: 0 5px; line-height: normal; height: 25px; border-color: #32c5d2; background: #32c5d2">
                                 <span>
                                     <input type="checkbox" ng-click="autoRefresh()" ng-model="auto">
                                     自动刷新：
                                 </span>
                             </span>
-                            <input type="text" class="am-form-field font-green am-text-center" ng-model="GlobalConfigs.sysStaticsInterval.current" minlength="2" style="height: 25px">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2"> s</span>
+                            <input type="text" class="am-form-field font-green am-text-center"
+                                   ng-model="GlobalConfigs.sysStaticsInterval.current" minlength="2"
+                                   style="height: 25px">
+                            <span class="am-input-group-label"
+                                  style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2"> s</span>
                         </div>
                     </div>
                 </div>
                 <div class="am-margin-left-sm am-vertical-align-middle">
                     <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 150px">
-                        <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2">
+                        <span class="am-input-group-label"
+                              style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2">
                             <i class="am-icon-search am-icon-fw"></i>
                         </span>
-                        <input type="text" class="am-form-field" style="height: 25px" placeholder="关键字过滤" ng-model="keyword">
+                        <input type="text" class="am-form-field" style="height: 25px" placeholder="关键字过滤"
+                               ng-model="keyword">
                     </div>
                 </div>
             </div>
@@ -200,43 +228,56 @@
         <div class="tpl-block" ng-show="sysShowDetail">
             <div class="am-g">
                 <div class="am-u-sm-12" ng-repeat="data in systemStatics | filter: keyword">
-                    <span class="am-icon-angle-double-right" style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169); cursor: pointer"> 子系统名称 ： {{::data.name}} - {{::data.version}}</span>
-                    <span class="am-fr" style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169);"> 最后更新：{{data.updated_time}}</span>
+                    <span class="am-icon-angle-double-right"
+                          style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169); cursor: pointer"> 子系统名称 ： {{::data.name}} -
+                        {{::data.version}}</span>
+                    <span class="am-fr"
+                          style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169);"> 最后更新：{{ data.updated_time }}</span>
                     <table class="am-table am-table-hover table-main">
                         <thead>
-                            <tr>
-                                <th>进程名</th>
-                                <th>进程号</th>
-                                <th>角色</th>
-                                <th>侦听端口</th>
-                                <th>连接端口</th>
-                                <th>启动日期</th>
-                                <th>进程状态</th>
-                                <th>服务器名</th>
-                            </tr>
+                        <tr>
+                            <th>进程名</th>
+                            <th>进程号</th>
+                            <th>角色</th>
+                            <th>侦听端口</th>
+                            <th>连接端口</th>
+                            <th>启动日期</th>
+                            <th>进程状态</th>
+                            <th>服务器名</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            <tr ng-repeat="child in data.detail" ng-class="{true: 'am-danger', false: ''}[child.status.stat=='stopped']">
-                                <td class="table-data">
-                                    <span class="am-dropdown" ng-mouseover="showProcVer[$index] = true" ng-mouseleave="showProcVer[$index] = false">
+                        <tr ng-repeat="child in data.detail"
+                            ng-class="{true: 'am-danger', false: ''}[child.status.stat=='stopped']">
+                            <td class="table-data">
+                                    <span class="am-dropdown" ng-mouseover="showProcVer[$index] = true"
+                                          ng-mouseleave="showProcVer[$index] = false">
                                         {{::child.process}}
-                                        <div class="am-dropdown-content" ng-if="child.version.length>0" ng-show="showProcVer[$index]" style="display: block;margin-top: 0;">
+                                        <div class="am-dropdown-content" ng-if="child.version.length>0"
+                                             ng-show="showProcVer[$index]" style="display: block;margin-top: 0;">
                                             <ul style="color: #93a2a9" ng-repeat="line in child.version">
                                                 <li>{{::line}}</li>
                                             </ul>
                                         </div>
                                     </span>
-                                </td>
-                                <td class="table-data">{{::child.status.pid}}</td>
-                                <td class="table-data">{{::child.proc_role}}</td>
-                                <td class="table-data" style="max-width: 130px">
-                                    <ul>
-                                        <li ng-repeat="socket in child.sockets">
-                                            <span>{{::socket.port}}</span>
-                                            <span class="am-fr am-dropdown am-badge am-round" ng-class="{true: 'tpl-badge-success', false: ''}[socket.status.stat=='侦听中']" style="cursor: pointer" ng-mouseover="showSocketDetail[$index] = true" ng-mouseleave="showSocketDetail[$index] = false">
-                                                {{socket.status.stat}}
-                                                <div class="am-dropdown-content_l" ng-if="socket.status.hasOwnProperty('ip')" ng-show="showSocketDetail[$index]" style="display: block;margin-top: 0">
-                                                    <table class="am-table am-text-nowrap am-table-compact" style="margin-bottom: 0px">
+                            </td>
+                            <td class="table-data">{{::child.status.pid}}</td>
+                            <td class="table-data">{{::child.proc_role}}</td>
+                            <td class="table-data" style="max-width: 130px">
+                                <ul>
+                                    <li ng-repeat="socket in child.sockets">
+                                        <span>{{::socket.port}}</span>
+                                        <span class="am-fr am-dropdown am-badge am-round"
+                                              ng-class="{true: 'tpl-badge-success', false: ''}[socket.status.stat=='侦听中']"
+                                              style="cursor: pointer" ng-mouseover="showSocketDetail[$index] = true"
+                                              ng-mouseleave="showSocketDetail[$index] = false">
+                                                {{ socket.status.stat }}
+                                                <div class="am-dropdown-content_l"
+                                                     ng-if="socket.status.hasOwnProperty('ip')"
+                                                     ng-show="showSocketDetail[$index]"
+                                                     style="display: block;margin-top: 0">
+                                                    <table class="am-table am-text-nowrap am-table-compact"
+                                                           style="margin-bottom: 0px">
                                                         <thead>
                                                             <th>Protocal</th>
                                                             <th>Listening</th>
@@ -244,25 +285,32 @@
                                                         </thead>
                                                         <tbody>
                                                             <tr>
-                                                                <td>{{socket.status.proto | uppercase}}</td>
-                                                                <td>{{socket.status.ip}}</td>
-                                                                <td>{{socket.status.port}}</td>
+                                                                <td>{{ socket.status.proto | uppercase }}</td>
+                                                                <td>{{ socket.status.ip }}</td>
+                                                                <td>{{ socket.status.port }}</td>
                                                             </tr>
                                                         </tbody>
                                                     </table>
                                                 </div>
                                             </span>
-                                        </li>
-                                    </ul>
-                                </td>
-                                <td class="table-data" style="max-width: 130px">
-                                    <ul>
-                                        <li ng-repeat="conn in child.connections">
-                                            <span>{{::conn.port}}</span>
-                                            <span class="am-fr am-dropdown am-badge am-round" ng-class="{true: 'tpl-badge-success', false: ''}[conn.status.stat=='已连接']" style="cursor: pointer" ng-mouseover="showConnDetail[$index] = true" ng-mouseleave="showConnDetail[$index] = false">
-                                                {{conn.status.stat}}
-                                                <div class="am-dropdown-content_l" ng-if="conn.status.hasOwnProperty('ip')" ng-show="showConnDetail[$index]" style="display: block;margin-top: 0;">
-                                                    <table class="am-table am-text-nowrap am-table-compact" style="margin-bottom: 0px">
+                                    </li>
+                                </ul>
+                            </td>
+                            <td class="table-data" style="max-width: 130px">
+                                <ul>
+                                    <li ng-repeat="conn in child.connections">
+                                        <span>{{::conn.port}}</span>
+                                        <span class="am-fr am-dropdown am-badge am-round"
+                                              ng-class="{true: 'tpl-badge-success', false: ''}[conn.status.stat=='已连接']"
+                                              style="cursor: pointer" ng-mouseover="showConnDetail[$index] = true"
+                                              ng-mouseleave="showConnDetail[$index] = false">
+                                                {{ conn.status.stat }}
+                                                <div class="am-dropdown-content_l"
+                                                     ng-if="conn.status.hasOwnProperty('ip')"
+                                                     ng-show="showConnDetail[$index]"
+                                                     style="display: block;margin-top: 0;">
+                                                    <table class="am-table am-text-nowrap am-table-compact"
+                                                           style="margin-bottom: 0px">
                                                         <thead>
                                                             <th>Protocal</th>
                                                             <th>Connected</th>
@@ -270,45 +318,49 @@
                                                         </thead>
                                                         <tbody>
                                                             <tr>
-                                                                <td>{{conn.status.proto | uppercase}}</td>
-                                                                <td>{{conn.status.ip}}</td>
-                                                                <td>{{conn.status.port}}</td>
+                                                                <td>{{ conn.status.proto | uppercase }}</td>
+                                                                <td>{{ conn.status.ip }}</td>
+                                                                <td>{{ conn.status.port }}</td>
                                                             </tr>
                                                         </tbody>
                                                     </table>
                                                 </div>
                                             </span>
-                                        </li>
-                                    </ul>
-                                </td>
-                                <td class="table-data">{{::child.status.start}}</td>
-                                <td class="table-status">
-                                    <div class="am-dropdown" style="cursor: pointer" ng-mouseover="showStatDetail = true" ng-mouseleave="showStatDetail = false">
-                                        {{child.status.stat | status}}
-                                        <div class="am-dropdown-content" ng-if="child.status.stat != 'stopped' && child.status.stat != 'checking'" ng-show="showStatDetail" style="display: block;margin-top: 0">
-                                            <div style="max-height: 300px; overflow-y: auto">
-                                                <table class="am-table am-text-nowrap am-table-compact" style="margin-bottom: 0px">
-                                                    <thead>
-                                                        <th>CPU%</th>
-                                                        <th>MEM%</th>
-                                                        <th>RSS</th>
-                                                        <th>CPU时间</th>
-                                                    </thead>
-                                                    <tbody>
-                                                        <tr>
-                                                            <td class="table-data">{{child.status.cpu}}</td>
-                                                            <td class="table-data">{{child.status.mem}}</td>
-                                                            <td class="table-data">{{child.status.rss | KB2}}</td>
-                                                            <td class="table-data">{{child.status.time}}</td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
+                                    </li>
+                                </ul>
+                            </td>
+                            <td class="table-data">{{::child.status.start}}</td>
+                            <td class="table-status">
+                                <div class="am-dropdown" style="cursor: pointer" ng-mouseover="showStatDetail = true"
+                                     ng-mouseleave="showStatDetail = false">
+                                    {{ child.status.stat | status }}
+                                    <div class="am-dropdown-content"
+                                         ng-if="child.status.stat != 'stopped' && child.status.stat != 'checking'"
+                                         ng-show="showStatDetail" style="display: block;margin-top: 0">
+                                        <div style="max-height: 300px; overflow-y: auto">
+                                            <table class="am-table am-text-nowrap am-table-compact"
+                                                   style="margin-bottom: 0px">
+                                                <thead>
+                                                <th>CPU%</th>
+                                                <th>MEM%</th>
+                                                <th>RSS</th>
+                                                <th>CPU时间</th>
+                                                </thead>
+                                                <tbody>
+                                                <tr>
+                                                    <td class="table-data">{{ child.status.cpu }}</td>
+                                                    <td class="table-data">{{ child.status.mem }}</td>
+                                                    <td class="table-data">{{ child.status.rss | KB2 }}</td>
+                                                    <td class="table-data">{{ child.status.time }}</td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
-                                </td>
-                                <td class="table-data">{{::child.server}}</td>
-                            </tr>
+                                </div>
+                            </td>
+                            <td class="table-data">{{::child.server}}</td>
+                        </tr>
                         </tbody>
                     </table>
                     <hr/>
@@ -327,26 +379,34 @@
             </div>
             <div class="am-vertical-align am-fr">
                 <div class="am-vertical-align-middle">
-                    <span class="font-green bold am-margin-left-xs am-inline-block am-icon-refresh am-fl" ng-class="{true: 'am-icon-spin', false: ''}[checking]" ng-click="CheckLoginLog(true)" style="cursor: pointer"></span>
+                    <span class="font-green bold am-margin-left-xs am-inline-block am-icon-refresh am-fl"
+                          ng-class="{true: 'am-icon-spin', false: ''}[checking]" ng-click="CheckLoginLog(true)"
+                          style="cursor: pointer"></span>
                     <div class="am-margin-left-xs am-inline-block am-fl">
                         <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 148px">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px; border-color: #32c5d2; background: #32c5d2">
+                            <span class="am-input-group-label"
+                                  style="padding: 0 5px; line-height: normal; height: 25px; border-color: #32c5d2; background: #32c5d2">
                                 <span>
                                     <input type="checkbox" ng-click="autoRefresh()" ng-model="auto">
                                     自动刷新：
                                 </span>
                             </span>
-                            <input type="text" class="am-form-field font-green am-text-center" ng-model="GlobalConfigs.loginStaticsInterval.current" minlength="2" style="height: 25px">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2"> s</span>
+                            <input type="text" class="am-form-field font-green am-text-center"
+                                   ng-model="GlobalConfigs.loginStaticsInterval.current" minlength="2"
+                                   style="height: 25px">
+                            <span class="am-input-group-label"
+                                  style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2"> s</span>
                         </div>
                     </div>
                 </div>
                 <div class="am-margin-left-sm am-vertical-align-middle">
                     <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 150px">
-                        <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2">
+                        <span class="am-input-group-label"
+                              style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2">
                             <i class="am-icon-search am-icon-fw"></i>
                         </span>
-                        <input type="text" class="am-form-field" style="height: 25px" placeholder="关键字过滤" ng-model="keyword">
+                        <input type="text" class="am-form-field" style="height: 25px" placeholder="关键字过滤"
+                               ng-model="keyword">
                     </div>
                 </div>
             </div>
@@ -356,32 +416,33 @@
                 <div class="am-u-sm-12">
                     <table class="am-table am-table-hover table-main">
                         <thead>
-                            <tr>
-                                <th>上联系统</th>
-                                <th>交易日</th>
-                                <th>登录时间</th>
-                                <th>连接地址</th>
-                                <th>登录账户</th>
-                                <th>连接状态</th>
-                                <th>重连次数</th>
-                                <th>成功</th>
-                                <th>失败</th>
-                                <th>最后更新</th>
-                            </tr>
+                        <tr>
+                            <th>上联系统</th>
+                            <th>交易日</th>
+                            <th>登录时间</th>
+                            <th>连接地址</th>
+                            <th>登录账户</th>
+                            <th>连接状态</th>
+                            <th>重连次数</th>
+                            <th>成功</th>
+                            <th>失败</th>
+                            <th>最后更新</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            <tr ng-class="{'未连接': 'am-warning', '登录成功': 'am-success', '连接成功': 'am-primary', '登录失败': 'am-danger', '连接断开': 'am-danger'}[loginStatics[$index].seat_status]" ng-repeat="data in loginStatics | filter: keyword">
-                                <td>{{::data.seat_name}}</td>
-                                <td>{{data.trading_day}}</td>
-                                <td>{{data.login_time}}</td>
-                                <td class="am-text-break" style="max-width: 260px">{{::data.front_addr}}</td>
-                                <td>{{::data.seat_id | mask}}</td>
-                                <td>{{data.seat_status}}</td>
-                                <td>{{data.conn_count - (data.conn_count - data.disconn_count)}}</td>
-                                <td>{{data.login_success}}</td>
-                                <td>{{data.login_fail}}</td>
-                                <td>{{data.updated_time}}</td>
-                            </tr>
+                        <tr ng-class="{'未连接': 'am-warning', '登录成功': 'am-success', '连接成功': 'am-primary', '登录失败': 'am-danger', '连接断开': 'am-danger'}[loginStatics[$index].seat_status]"
+                            ng-repeat="data in loginStatics | filter: keyword">
+                            <td>{{::data.seat_name}}</td>
+                            <td>{{ data.trading_day }}</td>
+                            <td>{{ data.login_time }}</td>
+                            <td class="am-text-break" style="max-width: 260px">{{::data.front_addr}}</td>
+                            <td>{{::data.seat_id | mask}}</td>
+                            <td>{{ data.seat_status }}</td>
+                            <td>{{ data.conn_count - (data.conn_count - data.disconn_count) }}</td>
+                            <td>{{ data.login_success }}</td>
+                            <td>{{ data.login_fail }}</td>
+                            <td>{{ data.updated_time }}</td>
+                        </tr>
                         </tbody>
                     </table>
                     <hr/>
@@ -401,26 +462,34 @@
 
             <div class="am-fr am-vertical-align">
                 <div class=" am-vertical-align-middle">
-                    <span class="font-green bold am-margin-left-xs am-inline-block am-icon-refresh am-fl" ng-class="{true: 'am-icon-spin', false: ''}[checking]" ng-click="CheckClientSessions(true)" style="cursor: pointer"></span>
+                    <span class="font-green bold am-margin-left-xs am-inline-block am-icon-refresh am-fl"
+                          ng-class="{true: 'am-icon-spin', false: ''}[checking]" ng-click="CheckClientSessions(true)"
+                          style="cursor: pointer"></span>
                     <div class="am-margin-left-xs am-inline-block am-fl">
                         <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 148px">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px; border-color: #32c5d2; background: #32c5d2">
+                            <span class="am-input-group-label"
+                                  style="padding: 0 5px; line-height: normal; height: 25px; border-color: #32c5d2; background: #32c5d2">
                                 <span>
                                     <input type="checkbox" ng-click="autoRefresh()" ng-model="auto">
                                     自动刷新：
                                 </span>
                             </span>
-                            <input type="text" class="am-form-field font-green am-text-center" ng-model="GlobalConfigs.sessionStaticsInterval.current" minlength="2" style="height: 25px">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2"> s</span>
+                            <input type="text" class="am-form-field font-green am-text-center"
+                                   ng-model="GlobalConfigs.sessionStaticsInterval.current" minlength="2"
+                                   style="height: 25px">
+                            <span class="am-input-group-label"
+                                  style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2"> s</span>
                         </div>
                     </div>
                 </div>
                 <div class="am-inline-block am-margin-left-sm  am-vertical-align-middle">
                     <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 150px">
-                        <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2">
+                        <span class="am-input-group-label"
+                              style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2">
                         <i class="am-icon-search am-icon-fw"></i>
                     </span>
-                        <input type="text" class="am-form-field" style="height: 25px" placeholder="关键字过滤" ng-model="keyword">
+                        <input type="text" class="am-form-field" style="height: 25px" placeholder="关键字过滤"
+                               ng-model="keyword">
                     </div>
                 </div>
             </div>
@@ -430,36 +499,36 @@
                 <div class="am-u-sm-12">
                     <table class="am-table am-table-hover table-main" style="width: 100%">
                         <thead>
-                            <tr>
-                                <th class="table-data">经纪公司代码</th>
-                                <th class="table-data">交易用户代码</th>
-                                <th class="table-data">交易用户类型</th>
-                                <th class="table-data">会话编号</th>
-                                <th class="table-data">前置编号</th>
-                                <th class="table-data">登录时间</th>
-                                <th class="table-data">IP地址</th>
-                                <th class="table-data">MAC地址</th>
-                                <th class="table-data">用户端产品信息</th>
-                                <th class="table-data">用户端接口信息</th>
-                                <th class="table-data">登录次数</th>
-                                <th class="table-data">最后更新</th>
-                            </tr>
+                        <tr>
+                            <th class="table-data">经纪公司代码</th>
+                            <th class="table-data">交易用户代码</th>
+                            <th class="table-data">交易用户类型</th>
+                            <th class="table-data">会话编号</th>
+                            <th class="table-data">前置编号</th>
+                            <th class="table-data">登录时间</th>
+                            <th class="table-data">IP地址</th>
+                            <th class="table-data">MAC地址</th>
+                            <th class="table-data">用户端产品信息</th>
+                            <th class="table-data">用户端接口信息</th>
+                            <th class="table-data">登录次数</th>
+                            <th class="table-data">最后更新</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            <tr ng-repeat="data in statusList | filter: keyword">
-                                <td>{{::data.broker_id}}</td>
-                                <td>{{::data.user_id}}</td>
-                                <td>{{::data.user_type}}</td>
-                                <td>{{data.session_id}}</td>
-                                <td>{{::data.front_id}}</td>
-                                <td>{{data.login_time}}</td>
-                                <td>{{data.ip_address}}</td>
-                                <td>{{data.mac_address}}</td>
-                                <td class="am-text-break" style="max-width:160px">{{data.prod_info}}</td>
-                                <td>{{data.inter_info}}</td>
-                                <td>{{data.total_login}}</td>
-                                <td>{{data.updated_time}}</td>
-                            </tr>
+                        <tr ng-repeat="data in statusList | filter: keyword">
+                            <td>{{::data.broker_id}}</td>
+                            <td>{{::data.user_id}}</td>
+                            <td>{{::data.user_type}}</td>
+                            <td>{{ data.session_id }}</td>
+                            <td>{{::data.front_id}}</td>
+                            <td>{{ data.login_time }}</td>
+                            <td>{{ data.ip_address }}</td>
+                            <td>{{ data.mac_address }}</td>
+                            <td class="am-text-break" style="max-width:160px">{{ data.prod_info }}</td>
+                            <td>{{ data.inter_info }}</td>
+                            <td>{{ data.total_login }}</td>
+                            <td>{{ data.updated_time }}</td>
+                        </tr>
                         </tbody>
                     </table>
                     <hr/>

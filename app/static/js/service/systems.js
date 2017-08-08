@@ -1,5 +1,5 @@
-app.service('$systems', function($http, $message, $localStorage, $sessionStorage, $timeout, $rootScope) {
-    this.SystemStaticsCheck = function(params, force) {
+app.service('$systems', function ($http, $message, $localStorage, $sessionStorage, $timeout, $rootScope) {
+    this.SystemStaticsCheck = function (params, force) {
         if (force === undefined) {
             force = false;
         }
@@ -14,20 +14,20 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
                     ($rootScope.GlobalConfigs.sysStaticsInterval.current * 1000)) {
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess(angular.extend(
-                            $localStorage['sysStatics_' + params.sysID], { cached: false }
+                            $localStorage['sysStatics_' + params.sysID], {cached: false}
                         ));
                     }
                     return false;
                 } else {
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess(angular.extend(
-                            $localStorage['sysStatics_' + params.sysID], { cached: true }
+                            $localStorage['sysStatics_' + params.sysID], {cached: true}
                         ));
                     }
                 }
             }
-            $timeout(function() {
-                angular.extend($localStorage['sysStatics_' + params.sysID], { last_request: request_timestamp });
+            $timeout(function () {
+                angular.extend($localStorage['sysStatics_' + params.sysID], {last_request: request_timestamp});
             }, 0);
         }
         /* $websocket.Request({
@@ -55,16 +55,16 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
             }
         }); */
         $http.get('api/system/id/' + params.sysID + '/sys_statics/check')
-            .success(function(response) {
+            .success(function (response) {
                 if (response.error_code === 0) {
                     if ($localStorage.hasOwnProperty('sysStatics_' + params.sysID)) {
-                        $timeout(function() {
+                        $timeout(function () {
                             angular.merge($localStorage['sysStatics_' + params.sysID], response.data);
                         });
                     } else {
-                        $timeout(function() {
+                        $timeout(function () {
                             $localStorage['sysStatics_' + params.sysID] = angular.merge(
-                                response.data, { last_request: request_timestamp }
+                                response.data, {last_request: request_timestamp}
                             );
                         });
                     }
@@ -75,7 +75,7 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
                     params.onError(response);
                 }
             })
-            .error(function(response) {
+            .error(function (response) {
                 console.log(response);
                 if (response.hasOwnProperty('message')) {
                     $message.Alert(response.message);
@@ -84,7 +84,7 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
         return true;
     };
 
-    this.SystemList = function(params) {
+    this.SystemList = function (params) {
         if (params.sysID === undefined) {
             return;
         }
@@ -102,7 +102,7 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
             }
         }); */
         $http.get('api/system/id/' + params.sysID + '/sys_statics')
-            .success(function(response) {
+            .success(function (response) {
                 if (response.error_code === 0) {
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess(response.data);
@@ -111,13 +111,13 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
                     params.onError(response);
                 }
             })
-            .error(function(response) {
+            .error(function (response) {
                 console.log(response);
                 $message.Alert(response.message);
             });
     };
 
-    this.LoginStaticsCheck = function(params, force) {
+    this.LoginStaticsCheck = function (params, force) {
         if (force === undefined) {
             force = false;
         }
@@ -132,33 +132,33 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
                     ($rootScope.GlobalConfigs.loginStaticsInterval.current * 1000)) {
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess(angular.extend(
-                            $sessionStorage['loginStatics_' + params.sysID], { cached: false }
+                            $sessionStorage['loginStatics_' + params.sysID], {cached: false}
                         ));
                     }
                     return false;
                 } else {
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess(angular.extend(
-                            $sessionStorage['loginStatics_' + params.sysID], { cached: true }
+                            $sessionStorage['loginStatics_' + params.sysID], {cached: true}
                         ));
                     }
                 }
             }
-            $timeout(function() {
-                angular.extend($sessionStorage['loginStatics_' + params.sysID], { last_request: request_timestamp });
+            $timeout(function () {
+                angular.extend($sessionStorage['loginStatics_' + params.sysID], {last_request: request_timestamp});
             }, 0);
         }
         $http.get('api/system/id/' + params.sysID + '/login_statics/check')
-            .success(function(response) {
+            .success(function (response) {
                 if (response.error_code === 0) {
                     if ($sessionStorage.hasOwnProperty('loginStatics_' + params.sysID)) {
-                        $timeout(function() {
+                        $timeout(function () {
                             angular.merge($sessionStorage['loginStatics_' + params.sysID], response.data);
                         });
                     } else {
-                        $timeout(function() {
+                        $timeout(function () {
                             $sessionStorage['loginStatics_' + params.sysID] = angular.merge(
-                                response.data, { last_request: request_timestamp }
+                                response.data, {last_request: request_timestamp}
                             );
                         });
                     }
@@ -169,19 +169,19 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
                     params.onError(response);
                 }
             })
-            .error(function(response) {
+            .error(function (response) {
                 console.log(response);
                 $message.Alert(response.message);
             });
         return true;
     };
 
-    this.LoginList = function(params) {
+    this.LoginList = function (params) {
         if (params.sysID === undefined) {
             return;
         }
         $http.get('api/system/id/' + params.sysID + '/login_statics')
-            .success(function(response) {
+            .success(function (response) {
                 if (response.error_code === 0) {
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess(response.data);
@@ -190,13 +190,13 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
                     params.onError(response);
                 }
             })
-            .error(function(response) {
+            .error(function (response) {
                 console.log(response);
                 $message.Alert(response.message);
             });
     };
 
-    this.ClientSessionCheck = function(params, force) {
+    this.ClientSessionCheck = function (params, force) {
         if (force === undefined) {
             force = false;
         }
@@ -211,35 +211,35 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
                     ($rootScope.GlobalConfigs.sessionStaticsInterval.current * 1000)) {
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess(angular.extend(
-                            $sessionStorage['clientSessions_' + params.sysID], { cached: false }
+                            $sessionStorage['clientSessions_' + params.sysID], {cached: false}
                         ));
                     }
                     return false;
                 } else {
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess(angular.extend(
-                            $sessionStorage['clientSessions_' + params.sysID], { cached: true }
+                            $sessionStorage['clientSessions_' + params.sysID], {cached: true}
                         ));
                     }
                 }
             }
-            $timeout(function() {
+            $timeout(function () {
                 angular.extend(
-                    $sessionStorage['clientSessions_' + params.sysID], { last_request: request_timestamp }
+                    $sessionStorage['clientSessions_' + params.sysID], {last_request: request_timestamp}
                 );
             }, 0);
         }
         $http.get('api/system/id/' + params.sysID + '/user_sessions')
-            .success(function(response) {
+            .success(function (response) {
                 if (response.error_code === 0) {
                     if ($sessionStorage.hasOwnProperty('clientSessions_' + params.sysID)) {
-                        $timeout(function() {
+                        $timeout(function () {
                             angular.merge($sessionStorage['clientSessions_' + params.sysID], response.data);
                         });
                     } else {
-                        $timeout(function() {
+                        $timeout(function () {
                             $sessionStorage['clientSessions_' + params.sysID] = angular.merge(
-                                response.data, { last_request: request_timestamp }
+                                response.data, {last_request: request_timestamp}
                             );
                         });
                     }
@@ -250,26 +250,26 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
                     params.onError(response);
                 }
             })
-            .error(function(response) {
+            .error(function (response) {
                 console.log(response);
                 $message.Alert(response.message);
             });
         return true;
     };
 
-    this.QuantdoVersionCheck = function(params) {
+    this.QuantdoVersionCheck = function (params) {
         if (params.sysID === undefined) {
             return false;
         }
         // $http.get()
     };
 
-    this.QuantdoConfigCheck = function(params) {
+    this.QuantdoConfigCheck = function (params) {
         if (params.sysID === undefined) {
             return false;
         }
         $http.get('api/system/id/' + params.sysID + '/config_files/check')
-            .success(function(response) {
+            .success(function (response) {
                 if (response.error_code === 0) {
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess(response.data);
@@ -278,7 +278,7 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
                     params.onError(response.data);
                 }
             })
-            .error(function(response) {
+            .error(function (response) {
                 console.log(response);
                 if (response.hasOwnProperty('message')) {
                     $message.Alert(response.message);

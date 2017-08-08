@@ -1,5 +1,4 @@
 # -*- coding: UTF-8 -*-
-import json
 import logging
 import re
 import threading
@@ -10,23 +9,23 @@ from flask_restful import Resource
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
 
-from app import flask_logger as logging
-from app import globalEncryptKey
-from app.models import (ConfigType, DataSource, DataSourceModel,
-                        DataSourceType, SocketDirection, TradeSystem)
-from restful.protocol import RestProtocol
 from SysManager.Common import AESCrypto
 from SysManager.configs import SSHConfig, WinRmConfig
 from SysManager.executor import Executor
+from app import flask_logger as logging
+from app import globalEncryptKey
+from app.models import (DataSource, DataSourceModel,
+                        DataSourceType, SocketDirection, TradeSystem)
+from restful.protocol import RestProtocol
 
 
 def _decrypt(match):
     return match.group(1) + \
-        AESCrypto.decrypt(
-            match.group(2),
-            globalEncryptKey
-        ) + \
-        match.group(3)
+           AESCrypto.decrypt(
+               match.group(2),
+               globalEncryptKey
+           ) + \
+           match.group(3)
 
 class ServerList(object):
     def __init__(self):
@@ -153,27 +152,27 @@ class SystemList(object):
                         'version': proc.version,
                         'status': {
                             'user': self.proc_status.has_key(proc) and \
-                                self.proc_status[proc].get('user') or None,
+                                    self.proc_status[proc].get('user') or None,
                             'pid': self.proc_status.has_key(proc) and \
-                                self.proc_status[proc].get('pid') or None,
+                                   self.proc_status[proc].get('pid') or None,
                             'cpu': self.proc_status.has_key(proc) and \
-                                self.proc_status[proc].get('cpu%') or None,
+                                   self.proc_status[proc].get('cpu%') or None,
                             'mem': self.proc_status.has_key(proc) and \
-                                self.proc_status[proc].get('mem%') or None,
+                                   self.proc_status[proc].get('mem%') or None,
                             'vsz': self.proc_status.has_key(proc) and \
-                                self.proc_status[proc].get('vsz') or None,
+                                   self.proc_status[proc].get('vsz') or None,
                             'rss': self.proc_status.has_key(proc) and \
-                                self.proc_status[proc].get('rss') or None,
+                                   self.proc_status[proc].get('rss') or None,
                             'tty': self.proc_status.has_key(proc) and \
-                                self.proc_status[proc].get('tty') or None,
+                                   self.proc_status[proc].get('tty') or None,
                             'stat': self.proc_status.has_key(proc) and \
-                                self.proc_status[proc].get('stat') or 'stopped',
+                                    self.proc_status[proc].get('stat') or 'stopped',
                             'start': self.proc_status.has_key(proc) and \
-                                self.proc_status[proc].get('start') or None,
+                                     self.proc_status[proc].get('start') or None,
                             'time': self.proc_status.has_key(proc) and \
-                                self.proc_status[proc].get('time') or None,
+                                    self.proc_status[proc].get('time') or None,
                             'command': self.proc_status.has_key(proc) and \
-                                self.proc_status[proc].get('command') or None
+                                       self.proc_status[proc].get('command') or None
                         },
                         'server':
                             proc.server.name + "({})".format(proc.server.ip),
@@ -256,8 +255,8 @@ class ProcStaticApi(Resource, SystemList):
         executor = Executor.Create(conf)
         if not executor:
             logging.warning(
-                'Executor init failed with ip: {ip}, user: {user}'\
-                .format(ip=conf.remote_host, user=conf.remote_user)
+                'Executor init failed with ip: {ip}, user: {user}' \
+                    .format(ip=conf.remote_host, user=conf.remote_user)
             )
             return
         if not executor:
@@ -292,11 +291,11 @@ class ProcStaticApi(Resource, SystemList):
                     in result['command']: '''
                 exec_list = result['command'].split(' ')
                 if proc.exec_file in exec_list[0] and \
-                    reduce(
-                        lambda x, y: x or y,
-                        [find(proc.param, param) for param in exec_list[1:]],
-                        len(exec_list) <= 1
-                    ):
+                        reduce(
+                            lambda x, y: x or y,
+                            [find(proc.param, param) for param in exec_list[1:]],
+                                    len(exec_list) <= 1
+                        ):
                     self.proc_status[proc] = result
                     match = True
                     break
@@ -435,7 +434,7 @@ class LoginCheckApi(Resource):
         self.syslog_list = {}
         self.rtn = []
         self.checker = []
-        #self.mutex = threading.Lock()
+        # self.mutex = threading.Lock()
 
     def find_syslog(self, sys):
         log_srcs = DataSource.query.filter(
@@ -619,9 +618,9 @@ class ConfigList(object):
                         conf.pre_timestamp.to('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss'),
                     'hash': conf.hash_code,
                     'hash_changed': conf.pre_hash_code and \
-                        conf.pre_hash_code != conf.hash_code or False,
+                                    conf.pre_hash_code != conf.hash_code or False,
                     'timestamp': conf.timestamp and \
-                        conf.timestamp.to('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss')
+                                 conf.timestamp.to('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss')
                 } for conf in each_sys.config_files.all()]
             })
 
@@ -639,7 +638,7 @@ class ConfigListApi(Resource, ConfigList):
             return RestProtocol(message='system not found', error_code=-1), 404
 
 class ConfigCheckApi(Resource, ConfigList):
-    def  __init__(self):
+    def __init__(self):
         super(ConfigCheckApi, self).__init__()
         self.config_file_list = {}
         self.checker = []
@@ -681,7 +680,7 @@ class ConfigCheckApi(Resource, ConfigList):
                 )'''
                 self.checker.append(threading.Thread(
                     target=self.checkConfig,
-                    args=(remote, configs, )
+                    args=(remote, configs,)
                 ))
             for tr in self.checker:
                 tr.setDaemon(True)

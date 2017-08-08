@@ -1,18 +1,15 @@
 # -*- coding: UTF-8 -*-
 import json
-from app import flask_logger
 from time import time
 
 from flask import Response, abort, current_app, render_template, request
 from flask_login import current_user, login_required
-from geventwebsocket import WebSocketError
 
+from MessageQueue.msgserver import MessageServer
 from app.auth.privileged import CheckPrivilege
 from common import wssh
 from common.cmdbuffer import CommandBuffer
-from MessageQueue.msgserver import MessageServer
 from models import MethodType, Operator
-
 from . import main
 
 
@@ -32,9 +29,10 @@ def index():
 @login_required
 def UIView(name):
     if name == 'emerge_ops' and \
-        not CheckPrivilege(current_user, '/api/emerge_ops', MethodType.Execute):
+            not CheckPrivilege(current_user, '/api/emerge_ops', MethodType.Execute):
         return render_template("errors/403.html")
     return render_template("{}.html".format(name))
+
 
 @main.route('/UI/dialogs/<string:name>')
 @login_required
@@ -43,7 +41,7 @@ def DialogBody(name):
 
 class Camera():
     def __init__(self):
-        self.frames = [open('app/static/img/a{}.png'.format(f+1), 'rb').read() for f in xrange(10)]
+        self.frames = [open('app/static/img/a{}.png'.format(f + 1), 'rb').read() for f in xrange(10)]
 
     def get_frame(self):
         return self.frames[int(time()) % 10]

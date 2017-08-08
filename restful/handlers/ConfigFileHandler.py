@@ -1,18 +1,20 @@
 # -*- coding: UTF-8 -*-
+import os
+
+import arrow
+from flask import request, current_app
 from flask_restful import Resource
+from werkzeug.exceptions import BadRequest
+
+from SysManager.configs import SSHConfig
+from SysManager.executor import Executor
 from app import db
 from app.models import ConfigFile, ConfigType, TradeSystem
-from flask import request, current_app
-from werkzeug.exceptions import BadRequest
 from restful.errors import (DataNotJsonError,
                             DataNotNullError,
                             DataEnumValueError,
                             ApiError)
 from restful.protocol import RestProtocol
-from SysManager.configs import SSHConfig
-from SysManager.executor import Executor
-import arrow
-import os
 
 
 class ConfigFileListApi(Resource):

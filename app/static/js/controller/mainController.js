@@ -1,4 +1,4 @@
-app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout', '$uidatas', '$operationBooks', '$users', function($scope, $rootScope, $location, $timeout, $uidatas, $operationBooks, $users) {
+app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout', '$uidatas', '$operationBooks', '$users', function ($scope, $rootScope, $location, $timeout, $uidatas, $operationBooks, $users) {
     $scope.messagePosition = {};
 
     /* function getScrollTop() {
@@ -31,9 +31,9 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
             });
         }
     }); */
-    $('body').on('scroll', function(event) {
+    $('body').on('scroll', function (event) {
         if (event.offsetY >= 86) {
-            $timeout(function() {
+            $timeout(function () {
                 $scope.messagePosition = {
                     position: "fixed",
                     top: "3px",
@@ -43,7 +43,7 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
                 };
             });
         } else {
-            $timeout(function() {
+            $timeout(function () {
                 $scope.messagePosition = {};
             });
         }
@@ -53,10 +53,10 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
     $scope.tabList = [];
     $scope.grpOrderEdit = {};
     var idList = [];
-    $scope.$on('$routeChangeStart', function(evt, next, current) {
+    $scope.$on('$routeChangeStart', function (evt, next, current) {
         if (next.params.hasOwnProperty('sysid')) {
             if ($scope.listName === undefined) {
-                var watch_onece = $scope.$watch('listName', function() {
+                var watch_onece = $scope.$watch('listName', function () {
                     if ($scope.listName !== undefined) {
                         $scope.showListChange(next.params.sysid);
                         watch_onece(); //取消监听
@@ -69,23 +69,23 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
             $rootScope.isShowSideList = false;
         }
     });
-    $scope.$on('OperationGroupRenew', function() {
+    $scope.$on('OperationGroupRenew', function () {
         $timeout($scope.SideBarList(), 0);
     });
-    $scope.SideBarList = function() {
+    $scope.SideBarList = function () {
         $uidatas.SideBarList({
-            onSuccess: function(data) {
+            onSuccess: function (data) {
                 $scope.listName = data.records;
                 $scope.grpOrderEdit = [];
-                angular.forEach($scope.listName, function(value, index) {
+                angular.forEach($scope.listName, function (value, index) {
                     $scope.grpOrderEdit[value.id] = false;
                 });
             }
         });
     };
     $scope.SideBarList();
-    $scope.showListChild = function(id) {
-        angular.forEach($scope.listName, function(value, index) {
+    $scope.showListChild = function (id) {
+        angular.forEach($scope.listName, function (value, index) {
             if (value.id == id) {
                 $scope.listName[index].isShow = !$scope.listName[index].isShow;
             } else {
@@ -93,15 +93,15 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
             }
         });
     };
-    $scope.showListChange = function(id) {
+    $scope.showListChange = function (id) {
         $rootScope.isShowSideList = true;
-        angular.forEach($scope.tabList, function(value, index) {
+        angular.forEach($scope.tabList, function (value, index) {
             value.active = "";
             if (idList.indexOf(value.id) == -1) {
                 idList.push(value.id);
             }
         });
-        angular.forEach($scope.listName, function(value, index) {
+        angular.forEach($scope.listName, function (value, index) {
             if (value.id == id) {
                 $scope.listName[index].isShow = true;
                 if (idList.indexOf($scope.listName[index].id) == -1) {
@@ -112,7 +112,7 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
                         "Url": $scope.listName[index].Url
                     });
                 } else {
-                    angular.forEach($scope.tabList, function(tab) {
+                    angular.forEach($scope.tabList, function (tab) {
                         if (tab.id == id) {
                             tab.active = "am-active";
                         }
@@ -123,18 +123,18 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
             }
         });
     };
-    $scope.tabChangeActive = function(id) {
+    $scope.tabChangeActive = function (id) {
         $rootScope.isShowSideList = true;
-        angular.forEach($scope.tabList, function(value) {
+        angular.forEach($scope.tabList, function (value) {
             value.active = "";
             if (value.id == id) {
                 value.active = "am-active";
             }
         });
     };
-    $scope.tabDelete = function(id) {
+    $scope.tabDelete = function (id) {
         $rootScope.isShowSideList = true;
-        angular.forEach($scope.tabList, function(data, index) {
+        angular.forEach($scope.tabList, function (data, index) {
             if (data.id == id) {
                 $scope.tabList.splice(index, 1);
                 idList.splice(index, 1);
@@ -143,7 +143,7 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
         var length = $scope.tabList.length;
         if (length > 0) {
             var set = true;
-            angular.forEach($scope.tabList, function(value, index) {
+            angular.forEach($scope.tabList, function (value, index) {
                 if (value.active == "am-active") set = false;
             });
             if (set)
@@ -157,7 +157,7 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
             $location.url('/dashboard');
         }
     };
-    $scope.clearTabList = function() {
+    $scope.clearTabList = function () {
         if ($rootScope.isShowSideList === false) {
             idList.splice(0, idList.length);
             $scope.tabList.splice(0, $scope.tabList.length);
@@ -169,10 +169,10 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
     /* Code 4 SideBar End */
 
     /* Code 4 User Start */
-    $scope.ModifyPassword = function(usr_id) {
+    $scope.ModifyPassword = function (usr_id) {
         $('#modifyPassword').modal({
             relatedTarget: this,
-            onConfirm: function() {
+            onConfirm: function () {
                 /* $http.put('api/user/id/' + usr_id, data = {
                     old_password: $('#oldPwd').val(),
                     password: $('#newPwd').val()
@@ -187,11 +187,11 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
                         old_password: $('#oldPwd').val(),
                         password: $('#newPwd').val()
                     },
-                    onSuccess: function(data) {
+                    onSuccess: function (data) {
                         $('#oldPwd').val('');
                         $('#newPwd').val('');
                     },
-                    onError: function(data) {
+                    onError: function (data) {
                         // console.log(data);
                     }
                 });
@@ -199,14 +199,14 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
         });
     };
 
-    $scope.$watch('currentId', function() {
+    $scope.$watch('currentId', function () {
         if ($scope.currentId) {
             $users.GetPrivileges({
                 userID: $scope.currentId,
-                onSuccess: function(data) {
+                onSuccess: function (data) {
                     $rootScope.privileges = data.privileges;
                 },
-                onError: function(data) {
+                onError: function (data) {
                     console.log(data);
                 }
             });

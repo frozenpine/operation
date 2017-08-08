@@ -1,6 +1,6 @@
 var app = angular.module('myApp');
-app.service('$servers', function($http, $message, $localStorage, $timeout, $rootScope) {
-    this.CheckServerStatics = function(params, force) {
+app.service('$servers', function ($http, $message, $localStorage, $timeout, $rootScope) {
+    this.CheckServerStatics = function (params, force) {
         if (force === undefined) {
             force = false;
         }
@@ -15,20 +15,20 @@ app.service('$servers', function($http, $message, $localStorage, $timeout, $root
                     ($rootScope.GlobalConfigs.svrStaticsInterval.current * 1000)) {
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess(angular.extend(
-                            $localStorage['svrStatics_' + params.sysID], { cached: false }
+                            $localStorage['svrStatics_' + params.sysID], {cached: false}
                         ));
                     }
                     return false;
                 } else {
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess(angular.extend(
-                            $localStorage['svrStatics_' + params.sysID], { cached: true }
+                            $localStorage['svrStatics_' + params.sysID], {cached: true}
                         ));
                     }
                 }
             }
-            $timeout(function() {
-                angular.extend($localStorage['svrStatics_' + params.sysID], { last_request: request_timestamp });
+            $timeout(function () {
+                angular.extend($localStorage['svrStatics_' + params.sysID], {last_request: request_timestamp});
             }, 0);
         }
         /* $websocket.Request({
@@ -56,16 +56,16 @@ app.service('$servers', function($http, $message, $localStorage, $timeout, $root
             }
         }); */
         $http.get('api/system/id/' + params.sysID + '/svr_statics/check')
-            .success(function(response) {
+            .success(function (response) {
                 if (response.error_code === 0) {
                     if ($localStorage.hasOwnProperty('svrStatics_' + params.sysID)) {
-                        $timeout(function() {
+                        $timeout(function () {
                             angular.merge($localStorage['svrStatics_' + params.sysID], response.data);
                         });
                     } else {
-                        $timeout(function() {
+                        $timeout(function () {
                             $localStorage['svrStatics_' + params.sysID] = angular.merge(
-                                response.data, { last_request: request_timestamp }
+                                response.data, {last_request: request_timestamp}
                             );
                         });
                     }
@@ -76,7 +76,7 @@ app.service('$servers', function($http, $message, $localStorage, $timeout, $root
                     params.onError(response);
                 }
             })
-            .error(function(response) {
+            .error(function (response) {
                 console.log(response);
                 if (response.hasOwnProperty('message')) {
                     $message.Alert(response.message);
@@ -85,7 +85,7 @@ app.service('$servers', function($http, $message, $localStorage, $timeout, $root
         return true;
     };
 
-    this.ServerList = function(params) {
+    this.ServerList = function (params) {
         if (params.sysID === undefined) {
             return;
         }
@@ -103,7 +103,7 @@ app.service('$servers', function($http, $message, $localStorage, $timeout, $root
             }
         }); */
         $http.get('api/system/id/' + params.sysID + '/svr_statics')
-            .success(function(response) {
+            .success(function (response) {
                 if (response.error_code === 0) {
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess(response.data);
@@ -112,7 +112,7 @@ app.service('$servers', function($http, $message, $localStorage, $timeout, $root
                     params.onError(response);
                 }
             })
-            .error(function(response) {
+            .error(function (response) {
                 console.log(response);
                 if (params.hasOwnProperty('onError')) {
                     params.onError(response);

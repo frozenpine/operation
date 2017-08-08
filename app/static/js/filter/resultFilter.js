@@ -1,8 +1,8 @@
 var app = angular.module('myApp');
-app.filter('resultFilter', function() {
-    return function(ListData, filterLimit, scope) {
+app.filter('resultFilter', function () {
+    return function (ListData, filterLimit, scope) {
         var newArr = [];
-        angular.forEach(ListData, function(value, index) {
+        angular.forEach(ListData, function (value, index) {
             var filted = false;
             if (value.operation.name.toLowerCase().match(filterLimit.operation) === null) {
                 filted = true;

@@ -1,16 +1,16 @@
 var app = angular.module('myApp');
-app.controller('svrStaticsControl', ['$scope', '$servers', '$interval', '$routeParams', '$localStorage', '$rootScope', function($scope, $servers, $interval, $routeParams, $localStorage, $rootScope) {
+app.controller('svrStaticsControl', ['$scope', '$servers', '$interval', '$routeParams', '$localStorage', '$rootScope', function ($scope, $servers, $interval, $routeParams, $localStorage, $rootScope) {
     $scope.svrShowDetail = true;
     var sys_id = $routeParams.sysid;
 
-    $scope.serverList = function() {
+    $scope.serverList = function () {
         $servers.ServerList({
             sysID: sys_id,
-            onSuccess: function(data) {
+            onSuccess: function (data) {
                 $scope.serverStatics = data.details;
                 $scope.checkSvrStatics();
             },
-            onError: function() {
+            onError: function () {
                 $scope.checking = false;
             }
         });
@@ -18,17 +18,17 @@ app.controller('svrStaticsControl', ['$scope', '$servers', '$interval', '$routeP
 
     $scope.serverList();
 
-    $scope.checkSvrStatics = function(force) {
+    $scope.checkSvrStatics = function (force) {
         if (force === undefined) {
             force = false;
         }
         var started = $servers.CheckServerStatics({
             sysID: sys_id,
-            onSuccess: function(data) {
+            onSuccess: function (data) {
                 if (data.sys_id == sys_id) {
                     $scope.serverStatics = data.details;
                     $scope.serverStatics.showMountDetail = [];
-                    angular.forEach(data.details.disks, function(value, index) {
+                    angular.forEach(data.details.disks, function (value, index) {
                         $scope.serverStatics.showMountDetail.push(false);
                     });
                 }
@@ -36,22 +36,24 @@ app.controller('svrStaticsControl', ['$scope', '$servers', '$interval', '$routeP
                     $scope.checking = false;
                 }
             },
-            onError: function() {
+            onError: function () {
                 $scope.checking = false;
             }
         }, force);
         if (started) {
-            angular.forEach($scope.serverStatics, function(value, index) {
+            angular.forEach($scope.serverStatics, function (value, index) {
                 value.uptime = '检查中...';
             });
             $scope.checking = true;
         }
     };
 
-    $scope.autoRefresh = function() {
+    $scope.autoRefresh = function () {
         if ($scope.auto) {
             $scope.svrStaticInterval = $interval(
-                function() { $scope.checkSvrStatics(); },
+                function () {
+                    $scope.checkSvrStatics();
+                },
                 $rootScope.GlobalConfigs.svrStaticsInterval.current * 1000
             );
             $scope.checkSvrStatics();
@@ -60,7 +62,7 @@ app.controller('svrStaticsControl', ['$scope', '$servers', '$interval', '$routeP
         }
     };
 
-    $scope.$on('$destroy', function() {
+    $scope.$on('$destroy', function () {
         $interval.cancel($scope.svrStaticInterval);
     });
 }]);

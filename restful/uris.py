@@ -1,7 +1,5 @@
 # -*- coding: UTF-8 -*-
 from . import resources
-from .handlers.ConfigFileHandler import (ConfigFileApi, ConfigFileCheckApi,
-                                         ConfigFileListApi)
 from .handlers.DeviceHandler import DeviceApi, DeviceListApi
 from .handlers.EmergeOpHandler import (EmergeOpApi, EmergeOpCaptchaApi,
                                        EmergeOpCSVApi, EmergeOpExecuteApi,
@@ -39,7 +37,7 @@ from .handlers.SystemHandler import (SystemApi, SystemFindOperationBookApi,
 from .handlers.SystemTypeHandler import SystemTypeApi, SystemTypeListApi
 from .handlers.TradingDayHandler import NextTradingDayApi
 from .handlers.UIDataHandler import UIDataApi
-from .handlers.UserHandler import UserApi, UserListApi, UserPrivilegeHandler
+from .handlers.UserHandler import UserApi, UserListApi
 from .handlers.VendorHandler import VendorApi, VendorListApi
 from .handlers.WebshellHandler import WebshellUIApi
 

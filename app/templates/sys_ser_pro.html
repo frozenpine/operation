@@ -3,143 +3,180 @@
         <div class="portlet-title">
             <div class="caption font-green bold">
                 <label style="cursor: pointer;margin-right: 10px;">
-        		    <input ng-click="clearSysData()" style="margin-right: 5px;" type="radio" ng-model="addServerRadio" name="doc-radio-1" value="0">添加服务器
-        		</label>
+                    <input ng-click="clearSysData()" style="margin-right: 5px;" type="radio" ng-model="addServerRadio"
+                           name="doc-radio-1" value="0">添加服务器
+                </label>
                 <label style="cursor: pointer;">
-        		    <input ng-click="clearSysData()" style="margin-right: 5px;" type="radio" ng-model="addServerRadio" name="doc-radio-1" value="1">添加系统
-        		</label>
+                    <input ng-click="clearSysData()" style="margin-right: 5px;" type="radio" ng-model="addServerRadio"
+                           name="doc-radio-1" value="1">添加系统
+                </label>
             </div>
         </div>
         <div class="tpl-block">
             <div class="am-g am-form">
                 <div class="am-fl">
                     <div class="am-form-group am-fl">
-                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
+                        <div class="am-input-group am-input-group-sm am-input-group-secondary"
+                             style="width: 250px;height: 34px;">
+                            <span class="am-input-group-label"
+                                  style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">
 	                            	名称：
 	                        </span>
-                            <input placeholder="必填" style="height: 34px;" required type="text" class="am-form-field" ng-model="addServerData.name">
+                            <input placeholder="必填" style="height: 34px;" required type="text" class="am-form-field"
+                                   ng-model="addServerData.name">
                         </div>
                     </div>
                     <div class="am-form-group am-margin-left-sm am-fl">
-                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
+                        <div class="am-input-group am-input-group-sm am-input-group-secondary"
+                             style="width: 250px;height: 34px;">
+                            <span class="am-input-group-label"
+                                  style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">
 		                            	描述：
 		                        </span>
-                            <input type="text" style="height: 34px;" class="am-form-field" ng-model="addServerData.description">
+                            <input type="text" style="height: 34px;" class="am-form-field"
+                                   ng-model="addServerData.description">
                         </div>
                     </div>
                     <div class="am-form-group am-margin-left-sm am-fl">
-                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
-                            <span class="am-input-group-label" style="padding: 0 5px;padding-left: 1.6rem; line-height: normal; border-color: #32c5d2; background: #32c5d2">
+                        <div class="am-input-group am-input-group-sm am-input-group-secondary"
+                             style="width: 250px;height: 34px;">
+                            <span class="am-input-group-label"
+                                  style="padding: 0 5px;padding-left: 1.6rem; line-height: normal; border-color: #32c5d2; background: #32c5d2">
 		                            	IP：
 		                        </span>
-                            <input placeholder="必填" style="height: 34px;" type="text" class="am-form-field" ng-model="addServerData.ip">
+                            <input placeholder="必填" style="height: 34px;" type="text" class="am-form-field"
+                                   ng-model="addServerData.ip">
                         </div>
                     </div>
                 </div>
                 <div class="am-fl">
                     <div class="am-form-group am-fl">
-                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
+                        <div class="am-input-group am-input-group-sm am-input-group-secondary"
+                             style="width: 250px;height: 34px;">
+                            <span class="am-input-group-label"
+                                  style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">
 					                            	用户：
 					                        </span>
-                            <input placeholder="必填" style="height: 34px;" type="text" class="am-form-field" ng-model="addServerData.user">
+                            <input placeholder="必填" style="height: 34px;" type="text" class="am-form-field"
+                                   ng-model="addServerData.user">
                         </div>
                     </div>
                     <div class="am-form-group am-margin-left-sm am-fl">
-                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
+                        <div class="am-input-group am-input-group-sm am-input-group-secondary"
+                             style="width: 250px;height: 34px;">
+                            <span class="am-input-group-label"
+                                  style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">
 					                            	密码：
 					                        </span>
-                            <input placeholder="新增时必填" style="height: 34px;" type="text" class="am-form-field" ng-model="addServerData.password">
+                            <input placeholder="新增时必填" style="height: 34px;" type="text" class="am-form-field"
+                                   ng-model="addServerData.password">
                         </div>
                     </div>
                     <div class="am-form-group am-margin-left-sm am-fl" ng-if="addServerRadio == 0">
-                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
+                        <div class="am-input-group am-input-group-sm am-input-group-secondary"
+                             style="width: 250px;height: 34px;">
+                            <span class="am-input-group-label"
+                                  style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">
 					                            	平台：
 					                        </span>
                             <select class="am-form-field" style="height: 34px;" ng-model="addServerData.platform">
-								<option value="Windows">Windows</option>
-								<option value="Linux">Linux</option>
-							</select>
+                                <option value="Windows">Windows</option>
+                                <option value="Linux">Linux</option>
+                            </select>
                         </div>
                     </div>
                     <div class="am-form-group am-margin-left-sm am-fl" ng-if="addServerRadio == 1">
-                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
+                        <div class="am-input-group am-input-group-sm am-input-group-secondary"
+                             style="width: 250px;height: 34px;">
+                            <span class="am-input-group-label"
+                                  style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">
 					                            	类型：
 					                       </span>
                             <select class="am-form-field" style="height: 34px;" ng-model="addServerData.type_id">
-								<option value="{{data.id}}" ng-repeat="data in systemTypes">{{data.name}}</option>
-							</select>
+                                <option value="{{ data.id }}" ng-repeat="data in systemTypes">{{ data.name }}</option>
+                            </select>
                         </div>
                     </div>
                 </div>
                 <div class="am-fl">
                     <div class="am-form-group am-fl" ng-if="addServerRadio == 1">
-                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
+                        <div class="am-input-group am-input-group-sm am-input-group-secondary"
+                             style="width: 250px;height: 34px;">
+                            <span class="am-input-group-label"
+                                  style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">
 					                            	系统版本：
 					                        </span>
-                            <input type="text" style="height: 34px;" class="am-form-field" ng-model="addServerData.version" value="addServerData.version">
+                            <input type="text" style="height: 34px;" class="am-form-field"
+                                   ng-model="addServerData.version" value="addServerData.version">
                         </div>
                     </div>
                     <div class="am-form-group am-margin-left-sm am-fl" ng-if="addServerRadio == 1">
-                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
+                        <div class="am-input-group am-input-group-sm am-input-group-secondary"
+                             style="width: 250px;height: 34px;">
+                            <span class="am-input-group-label"
+                                  style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">
 					                            	所属系统：
 					                       </span>
                             <select class="am-form-field" style="height: 34px;" ng-model="addServerData.parent_sys_id">
-								<option value="{{data.id}}" ng-repeat="data in belongSystem">{{data.name}}</option>
-							</select>
+                                <option value="{{ data.id }}" ng-repeat="data in belongSystem">{{ data.name }}</option>
+                            </select>
                         </div>
                     </div>
                     <div class="am-form-group am-margin-left-sm am-fl" ng-if="addServerRadio == 1">
-                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
+                        <div class="am-input-group am-input-group-sm am-input-group-secondary"
+                             style="width: 250px;height: 34px;">
+                            <span class="am-input-group-label"
+                                  style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">
 					                            	存放路径：
 					                        </span>
-                            <input type="text" style="height: 34px;" class="am-form-field" ng-model="addServerData.base_dir">
+                            <input type="text" style="height: 34px;" class="am-form-field"
+                                   ng-model="addServerData.base_dir">
                         </div>
                     </div>
                 </div>
                 <div class="am-u-sm-12" style="padding: 0;">
                     <div class="am-form-group" ng-if="addServerRadio == 1">
-                        <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px;height: 34px;">
-                            <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">    
+                        <div class="am-input-group am-input-group-sm am-input-group-secondary"
+                             style="width: 250px;height: 34px;">
+                            <span class="am-input-group-label"
+                                  style="padding: 0 5px; line-height: normal; border-color: #32c5d2; background: #32c5d2">
 	                            	供应商：
 	                        </span>
                             <select class="am-form-field" style="height: 34px;" ng-model="addServerData.vendor_id">
-	                        	<option value="{{data.id}}" ng-repeat="data in systemVendors">{{data.name}}</option>
-	                        </select>
+                                <option value="{{ data.id }}" ng-repeat="data in systemVendors">{{ data.name }}</option>
+                            </select>
                         </div>
                     </div>
                 </div>
                 <div class="am-btn-toolbar am-fr am-margin-right am-fl">
                     <div class="am-btn-group am-btn-group-sm">
                         <button class="am-btn am-btn-secondary am-round" ng-click="clearSysData()">
-							<i class="am-icon-recycle am-icon-fw"></i>重置
-						</button>
-                        <button class="am-btn am-btn-secondary" ng-if="addServerRadio == 0" ng-disabled="!editOrPost" ng-click="addServerDataPost()">
-							<i class="am-icon-search "></i>新增
-						</button>
-                        <button class="am-btn am-btn-secondary" ng-if="addServerRadio == 1" ng-disabled="!editOrPost" ng-click="addSystemDataPost()">
-							<i class="am-icon-search "></i>新增
-						</button>
-                        <button class="am-btn am-btn-danger" ng-if="addServerRadio == 0" ng-disabled="editOrPost" ng-click="serverDataDelete()">
-							<i class="am-icon-trash "></i>删除
-						</button>
-                        <button class="am-btn am-btn-danger" ng-if="addServerRadio == 1" ng-disabled="editOrPost" ng-click="systemDataDelete()">
-							<i class="am-icon-trash "></i>删除
-						</button>
-                        <button class="am-btn am-btn-secondary am-round" ng-if="addServerRadio == 0" ng-disabled="editOrPost" ng-click="editServerDataPut()">
-							<i class="am-icon-search am-icon-fw"></i>修改
-						</button>
-                        <button class="am-btn am-btn-secondary am-round" ng-if="addServerRadio == 1" ng-disabled="editOrPost" ng-click="editSystemDataPut()">
-							<i class="am-icon-search am-icon-fw"></i>修改
-						</button>
+                            <i class="am-icon-recycle am-icon-fw"></i>重置
+                        </button>
+                        <button class="am-btn am-btn-secondary" ng-if="addServerRadio == 0" ng-disabled="!editOrPost"
+                                ng-click="addServerDataPost()">
+                            <i class="am-icon-search "></i>新增
+                        </button>
+                        <button class="am-btn am-btn-secondary" ng-if="addServerRadio == 1" ng-disabled="!editOrPost"
+                                ng-click="addSystemDataPost()">
+                            <i class="am-icon-search "></i>新增
+                        </button>
+                        <button class="am-btn am-btn-danger" ng-if="addServerRadio == 0" ng-disabled="editOrPost"
+                                ng-click="serverDataDelete()">
+                            <i class="am-icon-trash "></i>删除
+                        </button>
+                        <button class="am-btn am-btn-danger" ng-if="addServerRadio == 1" ng-disabled="editOrPost"
+                                ng-click="systemDataDelete()">
+                            <i class="am-icon-trash "></i>删除
+                        </button>
+                        <button class="am-btn am-btn-secondary am-round" ng-if="addServerRadio == 0"
+                                ng-disabled="editOrPost" ng-click="editServerDataPut()">
+                            <i class="am-icon-search am-icon-fw"></i>修改
+                        </button>
+                        <button class="am-btn am-btn-secondary am-round" ng-if="addServerRadio == 1"
+                                ng-disabled="editOrPost" ng-click="editSystemDataPut()">
+                            <i class="am-icon-search am-icon-fw"></i>修改
+                        </button>
                     </div>
                 </div>
             </div>
@@ -170,18 +207,19 @@
                     <div class="am-u-sm-12">
                         <table class="am-table am-table-hover table-main" style="margin-bottom: .7rem;">
                             <thead>
-                                <tr>
-                                    <th>名称</th>
-                                    <th>描述</th>
-                                    <th>IP地址</th>
-                                </tr>
+                            <tr>
+                                <th>名称</th>
+                                <th>描述</th>
+                                <th>IP地址</th>
+                            </tr>
                             </thead>
                             <tbody>
-                                <tr ng-repeat="data in systemServerData track by $index" onselectstart="return false" ng-style="data.style" ng-dblclick="editServerData($index)">
-                                    <td>{{data.name}}</td>
-                                    <td>{{data.description}}</td>
-                                    <td>{{data.manage_ip}}</td>
-                                </tr>
+                            <tr ng-repeat="data in systemServerData track by $index" onselectstart="return false"
+                                ng-style="data.style" ng-dblclick="editServerData($index)">
+                                <td>{{ data.name }}</td>
+                                <td>{{ data.description }}</td>
+                                <td>{{ data.manage_ip }}</td>
+                            </tr>
                             </tbody>
                         </table>
                     </div>
@@ -231,12 +269,14 @@
     </div>
     <script id="systemTree" type="text/ng-template">
         <li style="padding: 0;" ng-repeat="data in systemTreeData">
-            <a ng-dblclick="editSystemData(data.id)" onselectstart="return false" ng-style="data.style" style="padding-left: 0;">
+            <a ng-dblclick="editSystemData(data.id)" onselectstart="return false" ng-style="data.style"
+               style="padding-left: 0;">
                 <i class="am-icon-table am-margin-left-sm"></i>
-                <span>{{data.name}}</span>
-                <span>{{data.ip}}</span>
+                <span>{{ data.name }}</span>
+                <span>{{ data.ip }}</span>
             </a>
-            <ul ng-if="data.child.length > 0" ng-include="'systemTree'" ng-init="systemTreeData=data.child" class="am-list am-list-border" style="margin: 0 20px;"></ul>
+            <ul ng-if="data.child.length > 0" ng-include="'systemTree'" ng-init="systemTreeData=data.child"
+                class="am-list am-list-border" style="margin: 0 20px;"></ul>
         </li>
     </script>
     <div class="am-u-sm-12" style="padding-right: 0;padding-left: 0;">
@@ -245,8 +285,12 @@
                 <div class="caption font-green bold">
                     进程信息
                 </div>
-                <button ng-show="!editProcessBtn" ng-click="addNewProcess()" type="button" class="am-btn am-btn-primary am-round am-btn-sm am-fr">添加</button>
-                <button ng-show="editProcessBtn" ng-click="editProcessData()" type="button" class="am-btn am-btn-sm am-btn-primary am-round am-fr">编辑</button>
+                <button ng-show="!editProcessBtn" ng-click="addNewProcess()" type="button"
+                        class="am-btn am-btn-primary am-round am-btn-sm am-fr">添加
+                </button>
+                <button ng-show="editProcessBtn" ng-click="editProcessData()" type="button"
+                        class="am-btn am-btn-sm am-btn-primary am-round am-fr">编辑
+                </button>
 
             </div>
             <div class="tpl-block" ng-if="editProcessBtn">
@@ -254,28 +298,28 @@
                     <div class="am-u-sm-12">
                         <table class="am-table am-table-hover table-main">
                             <thead>
-                                <tr>
-                                    <th>名称</th>
-                                    <th>描述</th>
-                                    <th>类型</th>
-                                    <th>执行文件</th>
-                                    <th>所属系统</th>
-                                    <th>存放路径</th>
-                                    <th>服务器</th>
-                                    <th>参数</th>
-                                </tr>
+                            <tr>
+                                <th>名称</th>
+                                <th>描述</th>
+                                <th>类型</th>
+                                <th>执行文件</th>
+                                <th>所属系统</th>
+                                <th>存放路径</th>
+                                <th>服务器</th>
+                                <th>参数</th>
+                            </tr>
                             </thead>
                             <tbody>
-                                <tr ng-repeat="data in newAddServerData">
-                                    <td>{{data.name}}</td>
-                                    <td>{{data.description}}</td>
-                                    <td>{{data.type}}</td>
-                                    <td>{{data.exec_file}}</td>
-                                    <td>{{data.system.name}}</td>
-                                    <td>{{data.base_dir}}</td>
-                                    <td>{{data.server.name}}</td>
-                                    <td>{{data.param}}</td>
-                                </tr>
+                            <tr ng-repeat="data in newAddServerData">
+                                <td>{{ data.name }}</td>
+                                <td>{{ data.description }}</td>
+                                <td>{{ data.type }}</td>
+                                <td>{{ data.exec_file }}</td>
+                                <td>{{ data.system.name }}</td>
+                                <td>{{ data.base_dir }}</td>
+                                <td>{{ data.server.name }}</td>
+                                <td>{{ data.param }}</td>
+                            </tr>
                             </tbody>
                         </table>
                     </div>
@@ -286,62 +330,74 @@
                     <div class="am-u-sm-12">
                         <table class="am-table table-main">
                             <thead>
-                                <tr>
-                                    <th>名称</th>
-                                    <th>描述</th>
-                                    <th>类型</th>
-                                    <th>执行文件</th>
-                                    <th>所属系统</th>
-                                    <th>存放路径</th>
-                                    <th>服务器</th>
-                                    <th>参数</th>
-                                    <th>删除</th>
-                                </tr>
+                            <tr>
+                                <th>名称</th>
+                                <th>描述</th>
+                                <th>类型</th>
+                                <th>执行文件</th>
+                                <th>所属系统</th>
+                                <th>存放路径</th>
+                                <th>服务器</th>
+                                <th>参数</th>
+                                <th>删除</th>
+                            </tr>
                             </thead>
                             <tbody>
-                                <tr ng-repeat="data in systemProcessDataCopy" ng-show="!data.disabled">
-                                    <td>
-                                        <input style="width: 100px;padding: 3px;" type="text" value="{{data.name}}" ng-model="data.name">
-                                    </td>
-                                    <td>
-                                        <input style="width: 50px;padding: 3px;" type="text" value="{{data.description}}" ng-model="data.description">
-                                        <!--<textarea type="text"  value="{{data.description}}" ng-model="data.description"></textarea>-->
-                                    </td>
-                                    <td>
-                                        <select ng-model="data.type">
-											<option value="Master">Master</option>
-											<option value="Slave">Slave</option>
-										</select>
-                                    </td>
-                                    <td>
-                                        <input style="width: 100px;padding: 3px;" type="text" value="{{data.exec_file}}" ng-model="data.exec_file">
-                                    </td>
-                                    <td>
-                                        <select ng-model="data.sys_id">
-											<option value="{{sys.id}}" ng-repeat="sys in belongSystem">{{sys.name}}</option>
-										</select>
-                                    </td>
-                                    <td>
-                                        <input style="width: 200px;padding: 3px;" type="text" value="{{data.base_dir}}" ng-model="data.base_dir">
-                                    </td>
-                                    <td>
-                                        <select ng-model="data.svr_id">
-											<option value="{{ser.id}}" ng-repeat="ser in systemServerData">{{ser.name}}</option>
-										</select>
-                                    </td>
-                                    <td>
-                                        <input style="width: 50px;padding: 3px;" type="text" value="{{data.param}}" ng-model="data.param">
-                                    </td>
-                                    <td>
-                                        <a ng-click="processEditDelete($index)" class="am-close am-close-alt am-icon-times"></a>
-                                    </td>
-                                </tr>
+                            <tr ng-repeat="data in systemProcessDataCopy" ng-show="!data.disabled">
+                                <td>
+                                    <input style="width: 100px;padding: 3px;" type="text" value="{{ data.name }}"
+                                           ng-model="data.name">
+                                </td>
+                                <td>
+                                    <input style="width: 50px;padding: 3px;" type="text" value="{{ data.description }}"
+                                           ng-model="data.description">
+                                    <!--<textarea type="text"  value="{{data.description}}" ng-model="data.description"></textarea>-->
+                                </td>
+                                <td>
+                                    <select ng-model="data.type">
+                                        <option value="Master">Master</option>
+                                        <option value="Slave">Slave</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input style="width: 100px;padding: 3px;" type="text" value="{{ data.exec_file }}"
+                                           ng-model="data.exec_file">
+                                </td>
+                                <td>
+                                    <select ng-model="data.sys_id">
+                                        <option value="{{ sys.id }}"
+                                                ng-repeat="sys in belongSystem">{{ sys.name }}</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input style="width: 200px;padding: 3px;" type="text" value="{{ data.base_dir }}"
+                                           ng-model="data.base_dir">
+                                </td>
+                                <td>
+                                    <select ng-model="data.svr_id">
+                                        <option value="{{ ser.id }}"
+                                                ng-repeat="ser in systemServerData">{{ ser.name }}</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input style="width: 50px;padding: 3px;" type="text" value="{{ data.param }}"
+                                           ng-model="data.param">
+                                </td>
+                                <td>
+                                    <a ng-click="processEditDelete($index)"
+                                       class="am-close am-close-alt am-icon-times"></a>
+                                </td>
+                            </tr>
                             </tbody>
                         </table>
                     </div>
                     <div class="am-fr" ng-show="!editProcessBtn">
-                        <button ng-click="editProcessCancel()" class="am-btn am-btn-primary am-btn-sm am-round">取消</button>
-                        <button ng-click="addProcessData()" type="submit" class="am-btn am-btn-primary am-btn-sm am-round" ng-disabled="!optionGroupEditSub.$valid && optionGroupEditPostShow">确定</button>
+                        <button ng-click="editProcessCancel()" class="am-btn am-btn-primary am-btn-sm am-round">取消
+                        </button>
+                        <button ng-click="addProcessData()" type="submit"
+                                class="am-btn am-btn-primary am-btn-sm am-round"
+                                ng-disabled="!optionGroupEditSub.$valid && optionGroupEditPostShow">确定
+                        </button>
                     </div>
                 </div>
             </div>

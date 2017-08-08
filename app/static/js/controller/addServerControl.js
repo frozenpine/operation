@@ -1,21 +1,21 @@
-app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$operationBooks', '$rootScope', function($scope, $systemServer, $message, $operationBooks, $rootScope) {
+app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$operationBooks', '$rootScope', function ($scope, $systemServer, $message, $operationBooks, $rootScope) {
     $scope.addServerRadio = 0;
     $scope.addServerData = null;
     $scope.editOrPost = true;
     $systemServer.systemTypesGet({
-        onSuccess: function(res) {
+        onSuccess: function (res) {
             $scope.systemTypes = res.records;
         },
-        onError: function(res) {
+        onError: function (res) {
             $message.Alert("数据获取失败");
         }
     });
     $systemServer.systemVendorGet({
-        onSuccess: function(res) {
+        onSuccess: function (res) {
             $scope.systemVendors = res.records;
         }
     });
-    $scope.clearSysData = function() {
+    $scope.clearSysData = function () {
         $scope.editOrPost = true;
         $scope.addServerData = {
             "name": "",
@@ -28,7 +28,7 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
         };
         $scope.newAddServerData = angular.copy($scope.systemProcessData);
     };
-    $scope.editServerData = function(index) {
+    $scope.editServerData = function (index) {
         $scope.clearSysData();
         $scope.editOrPost = false;
         $scope.addServerData.name = $scope.systemServerData[index].name;
@@ -40,12 +40,12 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
         $scope.addServerData.id = $scope.systemServerData[index].id;
         $scope.addServerRadio = 0;
     };
-    $scope.editSystemData = function(id) {
+    $scope.editSystemData = function (id) {
         $scope.clearSysData();
         $scope.editOrPost = false;
         $systemServer.getSystem({
             id: id,
-            onSuccess: function(res) {
+            onSuccess: function (res) {
                 $scope.childSystemData = res;
                 $scope.addServerData.id = $scope.childSystemData.id;
                 $scope.addServerData.name = $scope.childSystemData.name;
@@ -62,65 +62,65 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
                     $scope.addServerData.type_id = $scope.childSystemData.type.id.toString();
                 $scope.addServerRadio = 1;
             },
-            onError: function(res) {
+            onError: function (res) {
                 $message.Alert(res);
             }
         });
     };
-    $scope.editServerDataPut = function() {
+    $scope.editServerDataPut = function () {
         $systemServer.editServer({
             data: $scope.addServerData,
             id: $scope.addServerData.id,
-            onSuccess: function(res) {
+            onSuccess: function (res) {
                 $message.Success("服务器数据修改成功");
                 $scope.clearSysData();
                 $systemServer.serversGet({
-                    onSuccess: function(res) {
+                    onSuccess: function (res) {
                         $scope.systemServerData = res.records;
                     }
                 });
             },
-            onError: function(res) {
+            onError: function (res) {
                 $message.Alert(res);
             }
         });
     };
-    $scope.editSystemDataPut = function() {
+    $scope.editSystemDataPut = function () {
         $systemServer.editSystem({
             data: $scope.addServerData,
             id: $scope.addServerData.id,
-            onSuccess: function(res) {
+            onSuccess: function (res) {
                 $message.Success("系统数据修改成功");
                 $scope.clearSysData();
                 $systemServer.serversGet({
-                    onSuccess: function(res) {
+                    onSuccess: function (res) {
                         $scope.systemServerData = res.records;
                         $systemServer.getSystemTree({
-                            onSuccess: function(res) {
+                            onSuccess: function (res) {
                                 $scope.systemTreeData = res;
                             },
-                            onError: function(res) {
+                            onError: function (res) {
                                 $message.Alert(res);
                             }
                         });
                     }
                 });
             },
-            onError: function(res) {
+            onError: function (res) {
                 $message.Alert(res);
             }
         });
     };
     $systemServer.serversGet({
-        onSuccess: function(res) {
+        onSuccess: function (res) {
             $scope.systemServerData = res.records;
         }
     });
     $systemServer.getSystemTree({
-        onSuccess: function(res) {
+        onSuccess: function (res) {
             $scope.systemTreeData = res;
             $scope.systemTreeSecond = [];
-            angular.forEach($scope.systemTreeData, function(value, index) {
+            angular.forEach($scope.systemTreeData, function (value, index) {
                 $scope.systemTreeSecond.push(angular.copy(value));
                 if (value.child.length > 0)
                     for (var i = 0; i < value.child.length; i++) {
@@ -128,20 +128,20 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
                     }
             });
         },
-        onError: function(res) {
+        onError: function (res) {
             $message.Alert(res);
         }
     });
-    $scope.systemBelongGet = function() {
+    $scope.systemBelongGet = function () {
         $operationBooks.operationBookSystemsGet({
-            onSuccess: function(res) {
+            onSuccess: function (res) {
                 $scope.mainSystem = res.records;
                 $scope.belongSystem = [];
-                angular.forEach($scope.mainSystem, function(value, index) {
+                angular.forEach($scope.mainSystem, function (value, index) {
                     $operationBooks.operationBookSystemListGet({
                         sys_id: value.id,
-                        onSuccess: function(res) {
-                            angular.forEach(res.records, function(value2, index2) {
+                        onSuccess: function (res) {
+                            angular.forEach(res.records, function (value2, index2) {
                                 var obj = {};
                                 obj = angular.copy(value2);
                                 $scope.belongSystem.push(obj);
@@ -153,13 +153,13 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
         });
     };
     $scope.systemBelongGet();
-    $scope.$watch('addServerRadio', function(scope) {
+    $scope.$watch('addServerRadio', function (scope) {
         if ($scope.editOrPost === false) {
             return;
         }
         if ($scope.addServerRadio === 0) {
             $scope.clearSysData();
-            $scope.checkDataFull = function(data) {
+            $scope.checkDataFull = function (data) {
                 if (data.name === "" || data.ip === "" || data.password === "" || data.user === "" || data.platform === "")
                     return true;
                 else
@@ -167,7 +167,7 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
             };
         } else {
             $scope.clearSysData();
-            $scope.checkDataFull = function(data) {
+            $scope.checkDataFull = function (data) {
                 if (data.name === "" || data.ip === "" || data.password === "" || data.user === "")
                     return true;
                 else
@@ -175,68 +175,68 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
             };
         }
     });
-    $scope.addSystemDataPost = function() {
+    $scope.addSystemDataPost = function () {
         $systemServer.addSystem({
             data: $scope.addServerData,
-            onSuccess: function(res) {
+            onSuccess: function (res) {
                 $message.Success("系统数据提交成功");
                 $scope.clearSysData();
                 $systemServer.getSystemTree({
-                    onSuccess: function(res) {
+                    onSuccess: function (res) {
                         $scope.systemTreeData = res;
                         $scope.systemBelongGet();
                     },
-                    onError: function(res) {
+                    onError: function (res) {
                         $message.Alert(res);
                     }
                 });
             },
-            onError: function(res) {
+            onError: function (res) {
                 $message.Alert(res);
             }
         });
     };
-    $scope.addServerDataPost = function() {
+    $scope.addServerDataPost = function () {
         $systemServer.addServer({
             data: $scope.addServerData,
-            onSuccess: function(res) {
+            onSuccess: function (res) {
                 $message.Success("服务器数据提交成功");
                 $scope.clearSysData();
                 $systemServer.serversGet({
-                    onSuccess: function(res) {
+                    onSuccess: function (res) {
                         $scope.systemServerData = res.records;
                     }
                 });
             },
-            onError: function(res) {
+            onError: function (res) {
                 $message.Alert(res);
             }
         });
     };
     $scope.editProcessBtn = true;
     $systemServer.getProcess({
-        onSuccess: function(res) {
+        onSuccess: function (res) {
             $scope.systemProcessData = res.records;
             $scope.newAddServerData = angular.copy($scope.systemProcessData);
         },
-        onError: function(res) {
+        onError: function (res) {
             $message.Alert(res);
         }
     });
-    $scope.$watch('addServerData.name', function(newValue, oldValue, scope) {
+    $scope.$watch('addServerData.name', function (newValue, oldValue, scope) {
         if (newValue) {
             $scope.newAddServerData = [];
-            angular.forEach($scope.systemProcessData, function(value, index) {
+            angular.forEach($scope.systemProcessData, function (value, index) {
                 if (value.server.name == newValue || value.system.name == newValue)
                     $scope.newAddServerData.push(angular.copy(value));
             });
             console.log($scope.newAddServerData);
         }
     });
-    $scope.editProcessData = function() {
+    $scope.editProcessData = function () {
         $scope.editProcessBtn = false;
         $scope.systemProcessDataCopy = [];
-        angular.forEach($scope.newAddServerData, function(value, index) {
+        angular.forEach($scope.newAddServerData, function (value, index) {
             var data = {};
             data.name = value.name;
             data.description = value.description;
@@ -250,41 +250,41 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
             data.disabled = value.disabled;
             $scope.systemProcessDataCopy.push(data);
         });
-        $scope.addNewProcess = function() {
+        $scope.addNewProcess = function () {
             var data = {};
             $scope.systemProcessDataCopy.push(data);
         };
     };
-    $scope.processEditDelete = function(index) {
+    $scope.processEditDelete = function (index) {
         $scope.systemProcessDataCopy[index].disabled = true;
     };
-    $scope.editProcessCancel = function() {
+    $scope.editProcessCancel = function () {
         $scope.editProcessBtn = true;
     };
-    $scope.addProcessData = function() {
+    $scope.addProcessData = function () {
         $systemServer.addProcess({
             data: $scope.systemProcessDataCopy,
-            onSuccess: function(res) {
+            onSuccess: function (res) {
                 $message.Success("进程数据提交成功");
                 $systemServer.getProcess({
-                    onSuccess: function(res) {
+                    onSuccess: function (res) {
                         $scope.systemProcessData = res.records;
                     },
-                    onError: function(res) {
+                    onError: function (res) {
                         $message.Alert(res);
                     }
                 });
                 $scope.editProcessBtn = true;
             },
-            onError: function(res) {
+            onError: function (res) {
                 $message.Alert(res);
             }
         });
     };
-    $scope.systemDataDelete = function() {
+    $scope.systemDataDelete = function () {
         $('#systemServerDelete').modal({
             relatedTarget: this,
-            onConfirm: function() {
+            onConfirm: function () {
                 $scope.addServerData.disabled = true;
                 $scope.editSystemDataPut();
                 $scope.systemBelongGet();
@@ -292,10 +292,10 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
             }
         });
     };
-    $scope.serverDataDelete = function() {
+    $scope.serverDataDelete = function () {
         $('#systemServerDelete').modal({
             relatedTarget: this,
-            onConfirm: function() {
+            onConfirm: function () {
                 $scope.addServerData.disabled = true;
                 $scope.editServerDataPut();
                 console.log($scope.addServerData);
