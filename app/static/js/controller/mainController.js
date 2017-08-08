@@ -2,6 +2,8 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
     $scope.messagePosition = {};
     $("body").scroll(function() {
         $timeout(function() {
+            console.log("top1" + $("body").scrollTop);
+            console.log("top2" + document.documentElement.scrollTop);
             var topDistance = document.documentElement.scrollHeight || document.body.scrollHeight;
             if (topDistance > 200) {
                 $scope.messagePosition = {
@@ -61,6 +63,46 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
             }
         });
     };
+
+    /**
+     * 改变左边侧边栏的排序和内容
+     */
+    $scope.changeSidebar = function(id,flag){
+        $scope.grpOrderEdit[id]=false;
+        $scope.tempListData = [];
+        console.log($scope.listName);
+        for(var i=0;i<$scope.listName.length;i++){
+            for(var j=0;j<$scope.listName[i].secondName.length;j++){
+                var listObj = {};
+                listObj.id = $scope.listName[i].secondName[j].id.toString();
+                listObj.name = $scope.listName[i].secondName[j].name;
+                if(flag == $scope.listName[i].secondName[j].id){
+                    listObj.disabled = true;
+                }
+                else{
+                    listObj.disabled = false;
+                }
+                if($scope.listName[i].secondName[j].trigger_time instanceof Date){
+                    listObj.trigger_time =
+                        $scope.listName[i].secondName[j].trigger_time.getHours() + ":" +
+                        $scope.listName[i].secondName[j].trigger_time.getMinutes();
+                }
+                else{
+                    listObj.trigger_time =
+                        $scope.listName[i].secondName[j].trigger_time.substr(0,5);
+                }
+                $scope.tempListData.push(listObj);
+            }
+        }
+        console.log($scope.tempListData);
+        $uidatas.updateSideBar({
+            data: $scope.tempListData,
+            onSuccess: function (data) {
+                $scope.SideBarList();
+            }
+        });
+    };
+
     $scope.showListChange = function(id) {
         $rootScope.isShowSideList = true;
         angular.forEach($scope.tabList, function(value, index) {
