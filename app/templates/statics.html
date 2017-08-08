@@ -260,6 +260,7 @@
                                             </ul>
                                         </div>
                                     </span>
+<<<<<<< HEAD
                             </td>
                             <td class="table-data">{{::child.status.pid}}</td>
                             <td class="table-data">{{::child.proc_role}}</td>
@@ -278,6 +279,19 @@
                                                      style="display: block;margin-top: 0">
                                                     <table class="am-table am-text-nowrap am-table-compact"
                                                            style="margin-bottom: 0px">
+=======
+                                </td>
+                                <td class="table-data">{{::child.status.pid}}</td>
+                                <td class="table-data">{{::child.proc_role}}</td>
+                                <td class="table-data" style="max-width: 130px">
+                                    <ul>
+                                        <li ng-repeat="socket in child.sockets">
+                                            <span>{{::socket.port}}</span>
+                                            <span class="am-fr am-dropdown am-badge am-round" ng-class="{true: 'tpl-badge-success', false: ''}[socket.status.stat=='侦听中']" style="cursor: pointer" ng-mouseover="showSocketDetail[$index] = true" ng-mouseleave="showSocketDetail[$index] = false">
+                                                {{socket.status.stat}}
+                                                <div class="am-dropdown-content_l" ng-if="socket.status.hasOwnProperty('ip')" ng-show="showSocketDetail[$index]" style="display: block;margin-top: 0">
+                                                    <table class="am-table am-text-nowrap am-table-compact" style="margin-bottom: 0px">
+>>>>>>> master
                                                         <thead>
                                                             <th>Protocal</th>
                                                             <th>Listening</th>
@@ -293,6 +307,7 @@
                                                     </table>
                                                 </div>
                                             </span>
+<<<<<<< HEAD
                                     </li>
                                 </ul>
                             </td>
@@ -311,6 +326,19 @@
                                                      style="display: block;margin-top: 0;">
                                                     <table class="am-table am-text-nowrap am-table-compact"
                                                            style="margin-bottom: 0px">
+=======
+                                        </li>
+                                    </ul>
+                                </td>
+                                <td class="table-data" style="max-width: 130px">
+                                    <ul>
+                                        <li ng-repeat="conn in child.connections">
+                                            <span>{{::conn.port}}</span>
+                                            <span class="am-fr am-dropdown am-badge am-round" ng-class="{true: 'tpl-badge-success', false: ''}[conn.status.stat=='已连接']" style="cursor: pointer" ng-mouseover="showConnDetail[$index] = true" ng-mouseleave="showConnDetail[$index] = false">
+                                                {{conn.status.stat}}
+                                                <div class="am-dropdown-content_l" ng-if="conn.status.hasOwnProperty('ip')" ng-show="showConnDetail[$index]" style="display: block;margin-top: 0;">
+                                                    <table class="am-table am-text-nowrap am-table-compact" style="margin-bottom: 0px">
+>>>>>>> master
                                                         <thead>
                                                             <th>Protocal</th>
                                                             <th>Connected</th>
@@ -462,9 +490,13 @@
 
             <div class="am-fr am-vertical-align">
                 <div class=" am-vertical-align-middle">
+<<<<<<< HEAD
                     <span class="font-green am-margin-left-xs am-inline-block am-icon-refresh am-fl"
                           ng-show="{true: 'am-icon-spin', false: ''}[checking]" ng-click="CheckClientSessions(true)"
                           style="cursor: pointer"></span>
+=======
+                    <span class="font-green bold am-margin-left-xs am-inline-block am-icon-refresh am-fl" ng-class="{true: 'am-icon-spin', false: ''}[checking]" ng-click="CheckClientSessions(true)" style="cursor: pointer"></span>
+>>>>>>> master
                     <div class="am-margin-left-xs am-inline-block am-fl">
                         <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 148px">
                             <span class="am-input-group-label"

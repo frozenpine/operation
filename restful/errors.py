@@ -16,7 +16,6 @@ class ExecuteTimeOutOfRange(ApiError):
         )
         self.error_code = 1001
 
-
 class InvalidParams(ApiError):
     def __init__(self, msg='invalid execution params'):
         super(InvalidParams, self).__init__(msg)

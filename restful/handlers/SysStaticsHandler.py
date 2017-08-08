@@ -243,17 +243,14 @@ class ProcStaticApi(Resource, SystemList):
         self.connection_status = {}
 
     def find_processes(self):
-        logging.info('ProcStatic find_processess started: {}'.format(arrow.now()))
         for child_sys in self.system_list:
             for proc in child_sys.processes:
                 key = (proc.server.ip, proc.system.user, proc.system.password)
                 if not self.proc_list.has_key(key):
                     self.proc_list[key] = []
                 self.proc_list[key].append(proc)
-        logging.info('ProcStatic find_processess finished: {}'.format(arrow.now()))
 
     def check_proc(self, entry, processes):
-        logging.info('ProcStatic check_proc started: {} {}'.format(arrow.now(), threading.currentThread().getName()))
         port_list = set()
         process_list = set()
         conf = SSHConfig(
@@ -271,12 +268,10 @@ class ProcStaticApi(Resource, SystemList):
         if not executor:
             logging.warning('ip: {ip}, user: {user}'.format(ip=conf.remote_host, user=conf.remote_user))
             return
-        logging.info(
-            'ProcStatic check_proc_version started: {} {}'.format(arrow.now(), threading.currentThread().getName()))
         for proc in processes:
             process_list.add((proc.exec_file, proc.param or ''))
             port_list |= set([socket.port for socket in proc.sockets])
-            if proc.version_method:
+            ''' if proc.version_method:
                 mod = {
                     'name': proc.version_method,
                     'args': {
@@ -284,12 +279,8 @@ class ProcStaticApi(Resource, SystemList):
                         'file': proc.exec_file
                     }
                 }
-                proc.version = executor.run(mod).lines
+                proc.version = executor.run(mod).lines '''
                 # gevent.sleep(0)
-        logging.info(
-            'ProcStatic check_proc_version finishied: {} {}'.format(arrow.now(), threading.currentThread().getName()))
-        logging.info(
-            'ProcStatic check_proc_state started: {} {}'.format(arrow.now(), threading.currentThread().getName()))
         mod = {
             'name': 'psaux',
             'args': {
@@ -329,10 +320,6 @@ class ProcStaticApi(Resource, SystemList):
                     'command': None
                 }
             match = False
-        logging.info(
-            'ProcStatic check_proc_state finished: {} {}'.format(arrow.now(), threading.currentThread().getName()))
-        logging.info(
-            'ProcStatic check_proc_socket started: {} {}'.format(arrow.now(), threading.currentThread().getName()))
         mod = {'name': 'netstat'}
         if len(port_list) > 0:
             if not mod.has_key('args'):
@@ -374,10 +361,6 @@ class ProcStaticApi(Resource, SystemList):
                         'port': socket['remote_port'],
                         'stat': u'已连接'
                     }
-        logging.info(
-            'ProcStatic check_proc_socket finished: {} {}'.format(arrow.now(), threading.currentThread().getName()))
-        executor.client.close()
-        logging.info('ProcStatic check_proc finished: {} {}'.format(arrow.now(), threading.currentThread().getName()))
 
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
@@ -427,9 +410,10 @@ class LoginListApi(Resource, SystemList):
                         uri = src.source['uri']
                     sys_db = create_engine(uri).connect()
                 except Exception:
-                    return {
-                               'message': 'faild to connect to database.'
-                           }, 404
+                    return RestProtocol(
+                        message='faild to connect to database.',
+                        error_code=-1
+                    ), 404
                 else:
                     results = sys_db.execute(text(src.source['sql'])).fetchall()
                     for result in results:
@@ -605,7 +589,7 @@ class UserSessionListApi(Resource, SystemList):
                                 tmp['updated_time'] = arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss')
                         rtn.append(tmp)
                     sys_db.close()
-                    return rtn
+                    return RestProtocol(rtn)
             else:
                 return RestProtocol(
                     message=u'No data source for system {}'.format(sys.name),
@@ -660,9 +644,9 @@ class ConfigListApi(Resource, ConfigList):
         if sys:
             self.find_systems(sys)
             self.make_response()
-            return self.rtn
+            return RestProtocol(self.rtn)
         else:
-            return {'message': 'system not found'}, 404
+            return RestProtocol(message='system not found', error_code=-1), 404
 
 
 class ConfigCheckApi(Resource, ConfigList):
@@ -692,8 +676,8 @@ class ConfigCheckApi(Resource, ConfigList):
             }
             result = exe.run(mod)
             if result.return_code == 0:
-                conf_file.pre_hash_code = conf_file.hash_code
-                conf_file.pre_timestamp = conf_file.timestamp
+                ''' conf_file.pre_hash_code = conf_file.hash_code
+                conf_file.pre_timestamp = conf_file.timestamp '''
                 conf_file.hash_code = result.lines[0]
                 conf_file.timestamp = arrow.utcnow()
 
@@ -717,6 +701,6 @@ class ConfigCheckApi(Resource, ConfigList):
                 tr.join()
             # gevent.joinall(self.checker)
             self.make_response()
-            return self.rtn
+            return RestProtocol(self.rtn)
         else:
-            return {'message': 'system not found'}, 404
+            return RestProtocol(message='system not found', error_code=-1), 404

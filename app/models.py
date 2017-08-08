@@ -479,6 +479,7 @@ class TradeProcess(SQLModelMixin, db.Model):
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     svr_id = db.Column(db.Integer, db.ForeignKey('servers.id'), index=True)
     sockets = db.relationship('Socket', backref='process')
+    disabled = db.Column(db.Boolean, default=False)
     config_files = db.relationship(
         'ConfigFile',
         secondary=config_process,
@@ -564,7 +565,11 @@ class TradeSystem(SQLModelMixin, db.Model):
     type_id = db.Column(db.Integer, db.ForeignKey('system_types.id'), index=True)
     version = db.Column(db.String)
     manage_ip = db.Column(IPAddressType, index=True)
+<<<<<<< HEAD
 
+=======
+    disabled = db.Column(db.Boolean, default=False)
+>>>>>>> master
     @property
     def ip(self):
         return self.manage_ip.exploded
@@ -705,7 +710,11 @@ class Server(SQLModelMixin, db.Model):
     description = db.Column(db.String)
     platform = db.Column(ChoiceType(PlatformType, impl=db.Integer()), default=PlatformType.Linux)
     manage_ip = db.Column(IPAddressType, index=True)
+<<<<<<< HEAD
 
+=======
+    disabled = db.Column(db.Boolean, default=False)
+>>>>>>> master
     @property
     def ip(self):
         return self.manage_ip.exploded
@@ -844,8 +853,6 @@ class OperationBook(SQLModelMixin, db.Model):
     def remoteConfigObserver(self, sys_id):
         sys = TradeSystem.find(id=sys_id)
         if sys:
-            ''' params = self.detail['remote']['params']
-            params['ip'] = sys.ip '''
             if not self.type.IsInteractivator():
                 new_dtl = {
                     'remote': {
@@ -858,8 +865,6 @@ class OperationBook(SQLModelMixin, db.Model):
                     }
                 }
                 self.detail.update(new_dtl)
-                ''' params['user'] = sys.login_user
-                params['password'] = sys.login_pwd '''
 
 
 class OperationGroup(SQLModelMixin, db.Model):
@@ -913,6 +918,10 @@ class CommandHistory(SQLModelMixin, db.Model):
 class ConfigFile(SQLModelMixin, db.Model):
     __tablename__ = 'config_files'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    uuid = db.Column(
+        db.String, index=True,
+        default=lambda: unicode(uuid4()).lower()
+    )
     name = db.Column(db.String, index=True)
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     config_type = db.Column(ChoiceType(ConfigType, impl=db.Integer()), default=ConfigType.INIFile)

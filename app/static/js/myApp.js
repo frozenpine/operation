@@ -1,40 +1,78 @@
 var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorage'], function ($provide) {
     $provide.factory('$uuid', function () {
         return {
+<<<<<<< HEAD
             uuid4: function () {
                 return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c = >
                     (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
             )
+=======
+            uuid4: function() {
+                return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, function(c) {
+                    return (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);
+                });
+>>>>>>> master
             }
-        }
+        };
     });
 
     $provide.factory('$message', function ($uuid) {
         return {
+<<<<<<< HEAD
             ModelSucess: function (msg, moduleID, timeout = 3, id = $uuid.uuid4()) {
                 $('#' + moduleID).append('\
 <div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">\
     <p class="am-text-center">' + msg + '</p>\
 </div>\
                 ');
+=======
+            ModelSucess: function(msg, moduleID, timeout, id) {
+                if (timeout === undefined) {
+                    timeout = 3;
+                }
+                if (id === undefined) {
+                    id = $uuid.uuid4();
+                }
+                $('#' + moduleID).append(
+                    '<div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">' +
+                    '    <p class="am-text-center">' + msg + '</p>' +
+                    '</div>'
+                );
+>>>>>>> master
                 $('#' + id).alert();
                 $('#' + id).addClass('am-alert-success').show();
                 setTimeout(function () {
                     $('#' + id).alert('close');
                 }, timeout * 1000);
             },
+<<<<<<< HEAD
             ModelAlert: function (msg, moduleID, timeout = 3, id = $uuid.uuid4()) {
                 $('#' + moduleID).append('\
 <div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">\
     <p class="am-text-center">' + msg + '</p>\
 </div>\
                 ');
+=======
+            ModelAlert: function(msg, moduleID, timeout, id) {
+                if (timeout === undefined) {
+                    timeout = 3;
+                }
+                if (id === undefined) {
+                    id = $uuid.uuid4();
+                }
+                $('#' + moduleID).append(
+                    '<div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">' +
+                    '    <p class="am-text-center">' + msg + '</p>' +
+                    '</div>'
+                );
+>>>>>>> master
                 $('#' + id).alert();
                 $('#' + id).addClass('am-alert-danger').show();
                 setTimeout(function () {
                     $('#' + id).alert('close');
                 }, timeout * 1000);
             },
+<<<<<<< HEAD
             Alert: function (msg, timeout = 3, id = $uuid.uuid4()) {
                 $('#alertMessage').append('\
 <div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">\
@@ -42,12 +80,28 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
     <p class="am-text-center">' + msg + '</p>\
 </div>\
                 ');
+=======
+            Alert: function(msg, timeout, id) {
+                if (timeout === undefined) {
+                    timeout = 3;
+                }
+                if (id === undefined) {
+                    id = $uuid.uuid4();
+                }
+                $('#alertMessage').append(
+                    '<div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">' +
+                    '    <span type="button" class="am-close am-fr">&times;</span>' +
+                    '    <p class="am-text-center">' + msg + '</p>' +
+                    '</div>'
+                );
+>>>>>>> master
                 $('#' + id).alert();
                 $('#' + id).addClass('am-alert-danger').show();
                 setTimeout(function () {
                     $('#' + id).alert('close');
                 }, timeout * 1000);
             },
+<<<<<<< HEAD
             Warning: function (msg, timeout = 3, id = $uuid.uuid4()) {
                 $('#alertMessage').append('\
 <div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">\
@@ -55,12 +109,28 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
     <p class="am-text-center">' + msg + '</p>\
 </div>\
                 ');
+=======
+            Warning: function(msg, timeout, id) {
+                if (timeout === undefined) {
+                    timeout = 3;
+                }
+                if (id === undefined) {
+                    id = $uuid.uuid4();
+                }
+                $('#alertMessage').append(
+                    '<div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">' +
+                    '    <span type="button" class="am-close am-fr">&times;</span>' +
+                    '    <p class="am-text-center">' + msg + '</p>' +
+                    '</div>'
+                );
+>>>>>>> master
                 $('#' + id).alert();
                 $('#' + id).addClass('am-alert-warning').show();
                 setTimeout(function () {
                     $('#' + id).alert('close');
                 }, timeout * 1000);
             },
+<<<<<<< HEAD
             Info: function (msg, timeout = 3, id = $uuid.uuid4()) {
                 $('#alertMessage').append('\
 <div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">\
@@ -68,12 +138,28 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
     <p class="am-text-center">' + msg + '</p>\
 </div>\
                 ');
+=======
+            Info: function(msg, timeout, id) {
+                if (timeout === undefined) {
+                    timeout = 3;
+                }
+                if (id === undefined) {
+                    id = $uuid.uuid4();
+                }
+                $('#alertMessage').append(
+                    '<div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">' +
+                    '    <span type="button" class="am-close am-fr">&times;</span>' +
+                    '    <p class="am-text-center">' + msg + '</p>' +
+                    '</div>'
+                );
+>>>>>>> master
                 $('#' + id).alert();
                 $('#' + id).show();
                 setTimeout(function () {
                     $('#' + id).alert('close');
                 }, timeout * 1000);
             },
+<<<<<<< HEAD
             Success: function (msg, timeout = 3, id = $uuid.uuid4()) {
                 $('#alertMessage').html('\
 <div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">\
@@ -81,13 +167,28 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
     <p class="am-text-center">' + msg + '</p>\
 </div>\
                 ');
+=======
+            Success: function(msg, timeout, id) {
+                if (timeout === undefined) {
+                    timeout = 3;
+                }
+                if (id === undefined) {
+                    id = $uuid.uuid4();
+                }
+                $('#alertMessage').html(
+                    '<div class="am-alert" style="margin: 1px 5px; display: none" id="' + id + '">' +
+                    '    <span type="button" class="am-close am-fr">&times;</span>' +
+                    '    <p class="am-text-center">' + msg + '</p>' +
+                    '</div>'
+                );
+>>>>>>> master
                 $('#' + id).alert();
                 $('#' + id).addClass('am-alert-success').show();
                 setTimeout(function () {
                     $('#' + id).alert('close');
                 }, timeout * 1000);
             }
-        }
+        };
     });
 
     $provide.factory('$websocket', function ($rootScope, $location, $interval, $timeout, $message, $sessionStorage, $uuid) {
@@ -103,9 +204,13 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
 
         var init = function () {
             if ("WebSocket" in window) {
+<<<<<<< HEAD
                 if (ws) {
                     delete ws;
                 }
+=======
+                // if (ws) { delete ws; }
+>>>>>>> master
                 var websocket_protocol = $location.protocol() == "http" ? "ws://" : "wss://";
                 var websocket_uri = websocket_protocol + $location.host() + ":" + $location.port() + "/websocket";
                 console.log(websocket_uri);
@@ -143,10 +248,10 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
                     if (!unload) {
                         if (!reconnect) {
                             console.log('[Client] Websocket connection lost.');
-                            $message.Warning('Websocket connection lost, reconnect in 30s.', 30)
+                            $message.Warning('Websocket connection lost, reconnect in 30s.', 30);
                         } else {
                             console.log('[Client] Websocket re-connect failed, retry...');
-                            $message.Warning('Websocket re-connect failed, retry in 30s.', 30)
+                            $message.Warning('Websocket re-connect failed, retry in 30s.', 30);
                         }
                         $timeout(init, 30000);
                         reconnect = true;
@@ -191,7 +296,7 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
                         $message.Info(msg.data);
                         $timeout(function () {
                             $sessionStorage.messages.push(msg.data);
-                        }, 0)
+                        }, 0);
                         break;
                     case "tasks":
                         task_result = JSON.parse(msg.data);
@@ -216,13 +321,14 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
             },
             Close: function () {
                 unload = true;
-                console.log('[Client] Closing websocket.')
+                console.log('[Client] Closing websocket.');
                 ws.close();
             }
         };
     });
 });
 
+<<<<<<< HEAD
 app.directive("fileModel", ["$parse", function ($parse) {
     return {
         restrict: "A",
@@ -938,12 +1044,18 @@ app.service("$operationBooks", ["$http", '$message', function ($http, $message) 
 }]);
 
 app.config(['$routeProvider', function ($routeProvider) {
+=======
+app.config(['$routeProvider', function($routeProvider) {
+>>>>>>> master
     $routeProvider
         .when('/dashboard', {
             templateUrl: 'UI/views/dashboard'
         })
         .when('/op_records', {
             templateUrl: 'UI/views/op_records'
+        })
+        .when('/sys_ser', {
+            templateUrl: 'UI/views/sys_ser_pro'
         })
         .when('/statics/:sysid', {
             templateUrl: 'UI/views/statics'
@@ -962,7 +1074,9 @@ app.config(['$routeProvider', function ($routeProvider) {
 app.run(function ($rootScope, $websocket, $sessionStorage, $localStorage, $operationBooks) {
     $rootScope.tab = 1; //default
     $rootScope.status = "normal";
+    $rootScope.currentId = null;
     $rootScope.GlobalConfigs = {
+<<<<<<< HEAD
         svrStaticsInterval: {default: 60, current: 60},
         sysStaticsInterval: {default: 60, current: 60},
         loginStaticsInterval: {default: 60, current: 60},
@@ -1061,12 +1175,21 @@ app.filter('resultFilter', function () {
         scope.pages = Math.ceil(newArr.length / scope.listsPerPage);
         return newArr;
     }
+=======
+        svrStaticsInterval: { default: 60, current: 60 },
+        sysStaticsInterval: { default: 60, current: 60 },
+        loginStaticsInterval: { default: 60, current: 60 },
+        sessionStaticsInterval: { default: 60, current: 60 },
+        cpuIdleThreshold: { upper: 100, lower: 50 }
+    };
+>>>>>>> master
 });
 
 app.filter('paging', function () {
     return function (listsData, start) {
         if (listsData)
             return listsData.slice(start);
+<<<<<<< HEAD
     }
 });
 
@@ -1117,20 +1240,23 @@ app.controller('optionResultControl', ['$scope', '$operationBooks', function ($s
     }
     $scope.show_result = function (index) {
         $('#op_result' + index).modal({relatedTarget: this});
+=======
+>>>>>>> master
     };
-}]);
+});
 
 app.controller('FileUpdateControl', ['$scope', 'fileUpload', function ($scope, fileUpload) {
     $scope.sendFile = function () {
         var url = "api/global-config",
             file = $scope.fileToUpload;
         if (!file)
-            alert("请选择需要上传的文件。")
+            alert("请选择需要上传的文件。");
         else
             fileUpload.uploadFileToUrl(file, url);
-    }
+    };
 }]);
 
+<<<<<<< HEAD
 app.controller('EditoptionBookController', ['$scope', '$operationBooks', function ($scope, $operationBooks) {
     $operationBooks.operationBookSystemsGet({
         onSuccess: function (res) {
@@ -2355,6 +2481,45 @@ app.controller('clientStaticsControl', ['$scope', '$systems', '$routeParams', '$
                 o.isDetailShow = !o.isDetailShow;
             }
         });
+=======
+/* app.controller('warningCtrl', ['$scope', '$http', function($scope, $http) {
+    $scope.isRadioClick = false;
+    $scope.tagSele = {
+        statusNum: '',
+        handleNum: ''
+    };
+    $http.get('json/warningStatus.json').success(function(data) {
+        $scope.warningData = data;
+    });
+    $scope.outData = [];
+    $scope.ischeck = function() {
+        $scope.isRadioClick = true;
+        $scope.outData = [];
+        angular.forEach($scope.warningData, function(o, index, array) {
+            if (($scope.tagSele.statusNum == o.statusNum && $scope.tagSele.handleNum == o.handleNum)) {
+                $scope.outData.push(o);
+                $scope.outData.push(array[index + 1]);
+            } else if ($scope.tagSele.statusNum == o.statusNum && $scope.tagSele.handleNum === '') {
+                $scope.outData.push(o);
+                $scope.outData.push(array[index + 1]);
+            } else if ($scope.tagSele.statusNum === '' && $scope.tagSele.handleNum == o.handleNum) {
+                $scope.outData.push(o);
+                $scope.outData.push(array[index + 1]);
+            }
+        });
+    };
+    $scope.clearRadio = function() {
+        $scope.isRadioClick = false;
+        $scope.tagSele.statusNum = '';
+        $scope.tagSele.handleNum = '';
+    };
+    $scope.showDetail = function(data) {
+        angular.forEach($scope.warningData, function(o) {
+            if (data.id == o.secId && data.name) {
+                o.isDetailShow = !o.isDetailShow;
+            }
+        });
+>>>>>>> master
     };
 }]); */
 
@@ -2438,7 +2603,7 @@ app.filter('percentStatus', ['$rootScope', function ($rootScope) {
         }
         $rootScope.status = 'warning';
         return true;
-    }
+    };
 }]);
 
 app.filter('mask', function () {
@@ -2499,6 +2664,7 @@ app.filter('exe_result', function () {
                 return "执行失败";
         }
     };
+<<<<<<< HEAD
 });
 
 app.directive('relamap', [function () {
@@ -2612,3 +2778,6 @@ app.directive('idcmap', [function () {
         }
     }
 }]);
+=======
+});
+>>>>>>> master
