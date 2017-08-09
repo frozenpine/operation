@@ -17,8 +17,8 @@ if __name__ == "__main__":
             "group_info": [
                 {
                     "task_uuid": "task1",
-                    "earliest": "16:00",
-                    "latest": "18:00",
+                    "earliest": "16:40",
+                    "latest": "",
                     "detail": {
                         "remote": {
                             "params": {
@@ -36,8 +36,8 @@ if __name__ == "__main__":
                 },
                 {
                     "task_uuid": "task2",
-                    "earliest": "16:00",
-                    "latest": "18:00",
+                    "earliest": "",
+                    "latest": "",
                     "detail": {
                         "remote": {
                             "params": {
@@ -55,8 +55,8 @@ if __name__ == "__main__":
                 },
                 {
                     "task_uuid": "task3",
-                    "earliest": "16:00",
-                    "latest": "18:00",
+                    "earliest": "",
+                    "latest": "",
                     "detail": {
                         "remote": {
                             "params": {
@@ -139,8 +139,5 @@ if __name__ == "__main__":
     }
     client = zerorpc.Client()
     client.connect("tcp://127.0.0.1:2017")
-    # print client.deserialize()
-    print client.init(task_dict)
-    print client.run_all("task_group2")
-    print client.snapshot("task_group1")
-    print client.snapshot("task_group2")
+    print client.init(task_dict, True)
+    print client.run_all("task_group1")
