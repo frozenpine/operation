@@ -69,8 +69,9 @@ class OperationMixin(object):
         }
         idx, status = self.find_op_status(op)
         if status != None:
-            if status not in [TaskStatus.InitFail, TaskStatus.Runnable]:
-                op_session = json.loads(self.snapshot['task_result_list'][idx]['session'])
+            if status != TaskStatus.InitFail:
+                if not op_session:
+                    op_session = json.loads(self.snapshot['task_result_list'][idx]['session'])
                 operator = Operator.find(id=op_session['operator_id'])
                 dtl['operator'] = {
                     'operator_id': operator.id,
@@ -232,7 +233,6 @@ class OperationListRunApi(OperationMixin, Resource):
                     'operated_at': unicode(arrow.utcnow())
                 })
             )
-            # ret_code = DispatchResult(ret_code)
             if ret_code == 0:
                 ret, self.snapshot = taskManager.snapshot(op_group.uuid)
                 op = Operation.find(uuid=data)
@@ -314,19 +314,19 @@ class OperationApi(OperationMixin, Resource):
                 author = self.check_privileges(op)
                 ret, data = taskManager.peek(op.group.uuid, op.uuid)
                 if ret == 0:
+                    session = {
+                        'operation_id': op.id,
+                        'operator_id': current_user.id,
+                        'operated_at': unicode(arrow.utcnow()),
+                        'authorizor_id': author and author.uuid or None,
+                        'authorized_at': author and unicode(arrow.utcnow()) or None
+                    }
                     taskManager.run_next(
                         op.group.uuid,
-                        json.dumps({
-                            'operation_id': op.id,
-                            'operator_id': current_user.id,
-                            'operator_uuid': current_user.uuid,
-                            'operated_at': unicode(arrow.utcnow()),
-                            'authorizor_id': author and author.uuid or None,
-                            'authorized_at': author and unicode(arrow.utcnow()) or None
-                        })
+                        json.dumps(session)
                     )
                     ret, self.snapshot = taskManager.snapshot(op.group.uuid)
-                    return RestProtocol(self.make_operation_detail(op))
+                    return RestProtocol(self.make_operation_detail(op, session))
                 else:
                     raise ApiError(data)
             except AuthError as err:

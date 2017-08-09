@@ -124,12 +124,14 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             $scope.queue_blocked = data.exec_code > 0;
         }, 0);
         if (!$scope.batch_run) {
-            if (!$scope.triggered_ouside && data.hasOwnProperty('output_lines') && data.output_lines.length > 0) {
-                $scope.check_result(index);
-            }
-            if (index < $scope.opList.details.length - 1 && (!data.checker.isTrue || data.checker.checked)) {
-                $scope.opList.details[index + 1].enabled = data.exec_code === 0;
-            }
+            $timeout(function() {
+                if (!$scope.triggered_ouside && data.hasOwnProperty('output_lines') && data.output_lines.length > 0) {
+                    $scope.check_result(index);
+                }
+                if (index < $scope.opList.details.length - 1 && (!data.checker.isTrue || data.checker.checked)) {
+                    $scope.opList.details[index + 1].enabled = data.exec_code === 0;
+                }
+            });
         } else {
             $timeout(function() {
                 $scope.opList.details[index].enabled = false;
