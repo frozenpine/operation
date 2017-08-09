@@ -9,12 +9,12 @@
     </table>
 </div>
 <script type="text/javascript">
-    app.controller('configCheckControl', ['$scope', '$http', function ($scope, $http) {
+    app.controller('configCheckControl', ['$scope', '$http', function($scope, $http) {
         $http.get('api/system/id/3/config_files')
-            .success(function (response) {
+            .success(function(response) {
                 console.log(response);
             })
-            .error(function (response) {
+            .error(function(response) {
                 console.log(reponse);
             });
     }])

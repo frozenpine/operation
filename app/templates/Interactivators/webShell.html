@@ -6,39 +6,38 @@
 <script type="text/javascript" charset="utf-8">
     function openTerminal(options) {
         var client = new WSSHClient();
-        var term = new Terminal(120, 24, function (key) {
+        var term = new Terminal(120, 24, function(key) {
             client.send(key);
         });
         term.open();
         $('.terminal').detach().appendTo('#term');
-        $('.terminal').bind('changeCodec', function (event, data) {
+        $('.terminal').bind('changeCodec', function(event, data) {
             client.changeCodec(data);
         });
         term.resize(120, 24);
         term.write('Connecting...');
         client.connect($.extend(options, {
-            onError: function (error) {
+            onError: function(error) {
                 term.write('Error: ' + error + '\r\n');
             },
-            onConnect: function () {
+            onConnect: function() {
                 // Erase our connecting message
                 term.write('\r');
                 client.resize(120, 24);
             },
-            onClose: function () {
+            onClose: function() {
                 term.write('Connection Reset By Peer');
 
             },
-            onData: function (data) {
+            onData: function(data) {
                 term.write(data);
             },
-            onDecoder: function (data) {
+            onDecoder: function(data) {
                 $('#decoder').text(data)
             }
         }));
     }
-
-    $(document).ready(function () {
+    $(document).ready(function() {
         openTerminal({
             host: 'localhost',
             port: 5000
@@ -55,9 +54,9 @@
         <label style="display: inline-block">切换编码：</label>
         <!--<button id="term_encoder" style="width: 3.5em; height: 3.5em" onclick="changeCodec()">GBK</button>-->
         <select onchange="changeCodec(this.value)" id="term_codec" style="display: inline-block">
-            <option value="utf-8">UTF-8</option>
-            <option value="gbk">GBK</option>
-        </select>
+                    <option value="utf-8">UTF-8</option>
+                    <option value="gbk">GBK</option>
+                </select>
         <label style="display: inline-block"> 当前可能的编码：</label>
         <span class="text-primary" id="decoder"></span>
     </div>

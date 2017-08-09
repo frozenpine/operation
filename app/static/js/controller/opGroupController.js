@@ -1,5 +1,5 @@
 var app = angular.module('myApp');
-app.controller('opGroupController', ['$scope', '$operationBooks', '$operations', '$routeParams', '$location', '$rootScope', '$timeout', '$message', '$sessionStorage', '$systems', function ($scope, $operationBooks, $operations, $routeParams, $location, $rootScope, $timeout, $message, $sessionStorage, $systems) {
+app.controller('opGroupController', ['$scope', '$operationBooks', '$operations', '$routeParams', '$location', '$rootScope', '$timeout', '$message', '$sessionStorage', '$systems', function($scope, $operationBooks, $operations, $routeParams, $location, $rootScope, $timeout, $message, $sessionStorage, $systems) {
     /* $scope.$on('$routeChangeStart', function(evt, next, current) {
         var last = $scope.opList.details[$scope.opList.details.length - 1];
         if (last.exec_code != -1 && last.checker.isTrue && !last.checker.checked) {
@@ -14,11 +14,11 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     $scope.taskQueueRunning = false;
     $scope.queue_blocked = false;
 
-    $scope.$on('TaskStatusChanged', function (event, data) {
+    $scope.$on('TaskStatusChanged', function(event, data) {
         if (data.hasOwnProperty('details')) {
-            $timeout(function () {
+            $timeout(function() {
                 $scope.opList = data;
-                angular.forEach($scope.opList.details, function (value, index) {
+                angular.forEach($scope.opList.details, function(value, index) {
                     delete $sessionStorage[value.uuid];
                 });
                 $scope.taskQueueRunning = false;
@@ -26,7 +26,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             }, 0);
             $message.Warning('任务队列被重新初始化');
         } else {
-            angular.forEach($scope.opList.details, function (value, index) {
+            angular.forEach($scope.opList.details, function(value, index) {
                 if (data.uuid == value.uuid) {
                     if (data.operator.operator_uuid != $scope.user_uuid) {
                         $scope.triggered_ouside = true;
@@ -42,17 +42,17 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         }
     });
 
-    $scope.GetOperationList = function () {
+    $scope.GetOperationList = function() {
         $operations.Detail({
             groupID: $routeParams.grpid,
-            onSuccess: function (data) {
+            onSuccess: function(data) {
                 $scope.opList = data;
                 TaskQueueStatus();
             }
         });
     };
 
-    $scope.InitQueue = function () {
+    $scope.InitQueue = function() {
         $scope.queue_blocked = false;
         $operations.InitQueue({
             groupID: $routeParams.grpid
@@ -61,11 +61,11 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
 
     $scope.GetOperationList();
 
-    $scope.check_result = function (index) {
+    $scope.check_result = function(index) {
         $('#result' + index).modal({
             relatedTarget: this,
-            onConfirm: function () {
-                $scope.$apply(function () {
+            onConfirm: function() {
+                $scope.$apply(function() {
                     if (index < $scope.opList.details.length - 1) {
                         $scope.opList.details[index + 1].enabled = true;
                     }
@@ -76,22 +76,22 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         });
     };
 
-    $scope.resumeQueue = function () {
+    $scope.resumeQueue = function() {
         $operations.ResumeQueue({
             groupID: $routeParams.grpid,
-            onSuccess: function () {
-                $timeout(function () {
+            onSuccess: function() {
+                $timeout(function() {
                     $scope.queue_blocked = false;
                 }, 0);
                 $message.Success('队列已恢复');
             },
-            onError: function (data) {
+            onError: function(data) {
                 $message.Warning(data.message);
             }
         });
     };
 
-    $scope.runAll = function () {
+    $scope.runAll = function() {
         if ($scope.queue_blocked) {
             $message.Warning('队列执行失败已阻塞，请先恢复队列。');
             return;
@@ -100,7 +100,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         $scope.batch_run = true;
         var terminate = false;
         var need_authorization = false;
-        $scope.opList.details.forEach(function (value, index) {
+        $scope.opList.details.forEach(function(value, index) {
             if (value.interactivator.isTrue) {
                 $message.Alert('操作列表内包含交互式执行操作，无法批量运行');
                 terminate = true;
@@ -110,7 +110,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         if (!terminate) {
             $operations.RunAll({
                 groupID: $routeParams.grpid,
-                onSuccess: function (data) {
+                onSuccess: function(data) {
                     $message.Info('批量任务执行开始');
                 }
             });
@@ -118,7 +118,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     };
 
     function TaskStatus(data, index) {
-        $timeout(function () {
+        $timeout(function() {
             $scope.opList.details[index] = data;
             $scope.queue_blocked = data.exec_code > 0;
         }, 0);
@@ -130,7 +130,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                 $scope.opList.details[index + 1].enabled = data.exec_code === 0;
             }
         } else {
-            $timeout(function () {
+            $timeout(function() {
                 $scope.opList.details[index].enabled = false;
                 if (data.checker.isTrue && data.exec_code === 0) {
                     $sessionStorage[data.uuid] = true;
@@ -147,7 +147,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     }
 
     function TaskQueueStatus() {
-        angular.forEach($scope.opList.details, function (value, index) {
+        angular.forEach($scope.opList.details, function(value, index) {
             if (value.exec_code > 0) {
                 $scope.queue_blocked = true;
             }
@@ -169,7 +169,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         });
     }
 
-    $scope.execute = function (index, id) {
+    $scope.execute = function(index, id) {
         if ($scope.queue_blocked) {
             $message.Warning('队列执行失败已阻塞，请先恢复队列。');
             return;
@@ -177,17 +177,17 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         $scope.batch_run = false;
         if ($scope.opList.details[index].interactivator.isTrue) {
             $http.get('api/operation/id/' + id + '/ui')
-                .success(function (response) {
+                .success(function(response) {
                     $scope.opList.details[index].interactivator.template = response;
-                    $('#interactive' + id).bind('results.quantdo', function (event, data) {
-                        $scope.$apply(function () {
+                    $('#interactive' + id).bind('results.quantdo', function(event, data) {
+                        $scope.$apply(function() {
                             if ($routeParams.hasOwnProperty('grpid')) {
                                 $scope.opList.details[index] = data;
                                 TaskStatus(data);
                             }
                         });
                     });
-                    $('#interactive' + id).on('opened.modal.amui', function () {
+                    $('#interactive' + id).on('opened.modal.amui', function() {
                         var imgElement = $('#interactive' + id).find('img')[0];
                         if (imgElement !== null && imgElement !== undefined) {
                             imgElement.click();
@@ -195,8 +195,8 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                     });
                     $('#interactive' + id).modal({
                         relatedTarget: this,
-                        onCancel: function () {
-                            $scope.$apply(function () {
+                        onCancel: function() {
+                            $scope.$apply(function() {
                                 $scope.opList.details[index].err_code = -1;
                             });
                         }
@@ -204,19 +204,19 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                 });
         } else {
             if ($scope.opList.details[index].need_authorized) {
-                $('#authorizor').bind('authorize.quantdo', function (event, data) {
+                $('#authorizor').bind('authorize.quantdo', function(event, data) {
                     $operations.RunNext({
                         operationID: id,
                         groupID: $routeParams.grpid,
                         authorizor: data,
-                        onSuccess: function (data) {
+                        onSuccess: function(data) {
                             $scope.opList.details[index] = data;
                         }
                     });
                 });
                 $('#authorizor').modal({
                     relatedTarget: this,
-                    onCancel: function () {
+                    onCancel: function() {
                         $('#authorizeUser').val('');
                         $('#authorizePassword').val('');
                     }
@@ -225,7 +225,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                 $operations.RunNext({
                     groupID: $routeParams.grpid,
                     operationID: id,
-                    onSuccess: function (data) {
+                    onSuccess: function(data) {
                         $scope.opList.details[index] = data;
                     }
                 });
@@ -234,7 +234,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     };
     $scope.optionGroupEditShow = true;
     $scope.optionGroupSelect = 0;
-    $scope.optionGroupEdit = function (data) {
+    $scope.optionGroupEdit = function(data) {
         if ($rootScope.privileges.edit_group === false) {
             $message.Warning('该用户无编辑权限，无法编辑队列内容');
             return;
@@ -245,10 +245,10 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         }
         $operationBooks.systemOptionBooksGet({
             sys_id: data.sys_id,
-            onSuccess: function (res) {
+            onSuccess: function(res) {
                 $scope.optionBooks = res.records;
             },
-            onError: function (res) {
+            onError: function(res) {
                 console.log(response);
             }
         });
@@ -270,7 +270,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             "value": false
         }];
         $scope.optionOldData = angular.copy($scope.opList.details);
-        angular.forEach($scope.optionOldData, function (value, index) {
+        angular.forEach($scope.optionOldData, function(value, index) {
             var data = {};
             data.operation_name = value.op_name;
             data.description = value.op_desc;
@@ -281,8 +281,8 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             $scope.optionGroupCopy.operations.push(data);
         });
 
-        $scope.optionGroupSelectWhich = function (Id, data, index_id) {
-            angular.forEach($scope.optionBooks, function (value, index) {
+        $scope.optionGroupSelectWhich = function(Id, data, index_id) {
+            angular.forEach($scope.optionBooks, function(value, index) {
                 if (value.id == Id) {
                     data.book_id = value.id;
                     data.description = value.description;
@@ -296,41 +296,41 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
 
         $scope.optionGroupEditShow = !$scope.optionGroupEditShow;
     };
-    $scope.optionGroupEditAdd = function () {
+    $scope.optionGroupEditAdd = function() {
         $scope.optionGroupNew = {};
         $scope.optionGroupCopy.operations.push($scope.optionGroupNew);
     };
-    $scope.optionGroupEditCancel = function () {
+    $scope.optionGroupEditCancel = function() {
         $scope.optionGroupEditShow = !$scope.optionGroupEditShow;
     };
-    $scope.optionGroupEditDelete = function (index_del) {
+    $scope.optionGroupEditDelete = function(index_del) {
         //  	console.log($scope.optionGroupCopy.operations,index_del);
         $scope.optionGroupCopy.operations.splice(index_del, 1);
     };
     $scope.optionGroupEditPostShow = true;
-    $scope.optionGroupEditFinish = function () {
+    $scope.optionGroupEditFinish = function() {
         $operationBooks.optionGroupEditPut({
             optionGroup_id: $scope.optionGroupCopy.operation_group.id,
             data: $scope.optionGroupCopy,
-            onSuccess: function (req) {
+            onSuccess: function(req) {
                 $scope.optionGroupEditPostShow = !$scope.optionGroupEditPostShow;
                 $scope.optionGroupEditShow = true;
                 $message.Success("表单提交成功");
                 $scope.GetOperationList();
             },
-            onError: function (req) {
+            onError: function(req) {
                 $scope.optionGroupEditPostShow = !$scope.optionGroupEditPostShow;
                 $message.Alert("表单提交失败，错误代码" + req);
             }
         });
     };
 
-    $scope.CheckSystemConfig = function () {
+    $scope.CheckSystemConfig = function() {
         $scope.checkingSystemConfig = true;
         $systems.QuantdoConfigCheck({
             sysID: $routeParams.sysid,
-            onSuccess: function (data) {
-                $timeout(function () {
+            onSuccess: function(data) {
+                $timeout(function() {
                     $scope.configFileList = data.records;
                     $scope.checkingSystemConfig = false;
                 }, 0);
