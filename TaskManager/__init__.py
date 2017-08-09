@@ -1,3 +1,5 @@
+# coding=utf-8
+
 from enum import Enum
 
 
@@ -30,6 +32,7 @@ class QueueStatus(Enum):
             QueueStatus.DispatchedBlock, QueueStatus.RunningBlock,
             QueueStatus.WaitingBlock, QueueStatus.FailBlock
         ]
+
 
 class TaskStatus(Enum):
     InitFail = -1

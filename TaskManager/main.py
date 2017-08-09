@@ -1,19 +1,19 @@
 # coding=utf-8
 
-
 import sys
 from os import environ, path
-
-sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
 
 import gevent
 import zerorpc
 from gevent import monkey
 
-from TaskManager.controller import Controller
-from TaskManager.worker import Worker
-
-sys.path.append(path.join(path.dirname(sys.argv[0]), "../"))
+try:
+    from TaskManager.controller import Controller
+    from TaskManager.worker import Worker
+except ImportError:
+    sys.path.append(path.join(path.dirname(sys.argv[0]), "../"))
+    from TaskManager.controller import Controller
+    from TaskManager.worker import Worker
 
 tm_host = environ.get("TM_HOST") or "0.0.0.0"
 tm_port = environ.get("TM_PORT") or 6000
