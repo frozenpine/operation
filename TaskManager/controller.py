@@ -327,7 +327,7 @@ class Controller(object):
             else:
                 create_time = queue_status["create_time"]
                 group_block = queue_status["group_block"]
-                queue_id = queue_status["controller_queue_id"]
+                queue_id = queue_status["controller_queue_uuid"]
                 task_list = queue_status["task_list"]
                 task_result_list = queue_status["task_result_list"]
                 task_status_list = queue_status["task_status_list"]
