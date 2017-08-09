@@ -443,9 +443,7 @@ app.filter('mask', function() {
             return str.substring(0, len - 3) + '***';
         } else {
             var mask = '';
-            for (var i = 0; i < len - 1; i++) {
-                mask += '*';
-            }
+            for (var i = 0; i < len - 1; i++) { mask += '*'; }
             return str[0] + mask;
         }
     };

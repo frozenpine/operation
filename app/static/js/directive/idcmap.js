@@ -1,12 +1,12 @@
 var app = angular.module('myApp');
-app.directive('idcmap', [function () {
+app.directive('idcmap', [function() {
     return {
         restrict: 'A',
         link: link
     };
 
     function link(scope, element, attr) {
-        $.get('api/UI/map?name=china', function (chinaJson) {
+        $.get('api/UI/map?name=china', function(chinaJson) {
             echarts.registerMap('china', chinaJson);
             myChart = echarts.init(element[0]);
             myChart.showLoading();
@@ -23,8 +23,8 @@ app.directive('idcmap', [function () {
                 toolbox: {
                     show: true,
                     feature: {
-                        dataView: {show: true, readOnly: true},
-                        restore: {show: true}
+                        dataView: { show: true, readOnly: true },
+                        restore: { show: true }
                     }
                 },
                 legend: {
@@ -47,7 +47,7 @@ app.directive('idcmap', [function () {
             });
             myChart.hideLoading();
 
-            $(element[0]).resize(function () {
+            $(element[0]).resize(function() {
                 //chartResize();
                 myChart.resize();
             });
@@ -56,7 +56,7 @@ app.directive('idcmap', [function () {
         });
 
         function getIDC() {
-            $.get('api/UI/idc', function (idcs) {
+            $.get('api/UI/idc', function(idcs) {
                 myChart.setOption({
                     series: [{
                         name: '数据中心',
@@ -75,7 +75,7 @@ app.directive('idcmap', [function () {
                                 formatter: '{b}'
                             }
                         },
-                        symbolSize: function (val) {
+                        symbolSize: function(val) {
                             return val[2];
                         },
                         itemStyle: {

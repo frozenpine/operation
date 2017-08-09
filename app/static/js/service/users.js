@@ -1,8 +1,8 @@
-app.service('$users', function ($http, $message) {
-    this.ModifyPassword = function (params) {
+app.service('$users', function($http, $message) {
+    this.ModifyPassword = function(params) {
         if (params.hasOwnProperty('userID')) {
             $http.put('api/user/id/' + params.userID, data = params.data)
-                .success(function (response) {
+                .success(function(response) {
                     if (response.error_code === 0) {
                         if (params.hasOwnProperty('onSuccess')) {
                             params.onSuccess(response);
@@ -11,7 +11,7 @@ app.service('$users', function ($http, $message) {
                         params.onError(response);
                     }
                 })
-                .error(function (response) {
+                .error(function(response) {
                     console.log(response);
                     if (response.hasOwnProperty('message')) {
                         $message.Alert(response.message);
@@ -22,10 +22,10 @@ app.service('$users', function ($http, $message) {
         }
     };
 
-    this.GetPrivileges = function (params) {
+    this.GetPrivileges = function(params) {
         if (params.hasOwnProperty('userID')) {
             $http.get('api/user/id/' + params.userID)
-                .success(function (response) {
+                .success(function(response) {
                     if (response.error_code === 0) {
                         if (params.hasOwnProperty('onSuccess')) {
                             params.onSuccess(response.data);
@@ -34,7 +34,7 @@ app.service('$users', function ($http, $message) {
                         params.onError(response.data);
                     }
                 })
-                .error(function (response) {
+                .error(function(response) {
                     console.log(response);
                     if (response.hasOwnProperty('message')) {
                         $message.Alert(response.message);

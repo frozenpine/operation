@@ -1,39 +1,33 @@
 <div id="genTradeData_Alert"></div>
 {% if not session %}
-    <fieldset class="am-center login-form" id="genTradeData_LoginForm" style="width: 350px">
-        <div class="am-form-group am-form-icon" style="margin-bottom: 3px">
-            <i class="am-icon-user am-icon-fw"></i>
-            <input type="text" class="am-form-field" id="genTradeData_User" style="height: 40px" placeholder="请输入用户名"
-                   value="[[login_user]]"/>
-        </div>
-        <div class="am-form-group am-form-icon" style="margin-bottom: 3px">
-            <i class="am-icon-lock am-icon-fw"></i>
-            <input type="password" class="am-form-field" id="genTradeData_Password" style="height: 40px"
-                   placeholder="请输入密码" value="[[login_password]]"/>
-        </div>
-        {% if captcha %}
-            <div>
-                <input type="text" class="am-form-field" id="genTradeData_Captcha" style="width: 248px; height: 40px"
-                       placeholder="请输入验证码"/>
-                <img src="javascript: void(0)" style="width: 100px; position: relative; right: -117px; top: -40px"
-                     onclick="if(!$('.login_form').is(':hidden')) this.src='[[captcha_uri]]?d='+Date.parse(new Date())"></img>
-            </div>
-            <div style="margin-top: -35px">
-                <button type="submit" class="am-btn am-btn-default" style="width: 100%" onclick="login()">登录</button>
-            </div>
-        {% else %}
-            <div>
-                <button type="submit" class="am-btn am-btn-default" style="width: 100%" onclick="login()">登录</button>
-            </div>
-        {% endif %}
-    </fieldset>
+<fieldset class="am-center login-form" id="genTradeData_LoginForm" style="width: 350px">
+    <div class="am-form-group am-form-icon" style="margin-bottom: 3px">
+        <i class="am-icon-user am-icon-fw"></i>
+        <input type="text" class="am-form-field" id="genTradeData_User" style="height: 40px" placeholder="请输入用户名" value="[[login_user]]" />
+    </div>
+    <div class="am-form-group am-form-icon" style="margin-bottom: 3px">
+        <i class="am-icon-lock am-icon-fw"></i>
+        <input type="password" class="am-form-field" id="genTradeData_Password" style="height: 40px" placeholder="请输入密码" value="[[login_password]]" />
+    </div>
+    {% if captcha %}
+    <div>
+        <input type="text" class="am-form-field" id="genTradeData_Captcha" style="width: 248px; height: 40px" placeholder="请输入验证码" />
+        <img src="javascript: void(0)" style="width: 100px; position: relative; right: -117px; top: -40px" onclick="if(!$('.login_form').is(':hidden')) this.src='[[captcha_uri]]?d='+Date.parse(new Date())"></img>
+    </div>
+    <div style="margin-top: -35px">
+        <button type="submit" class="am-btn am-btn-default" style="width: 100%" onclick="login()">登录</button>
+    </div>
+    {% else %}
+    <div>
+        <button type="submit" class="am-btn am-btn-default" style="width: 100%" onclick="login()">登录</button>
+    </div>
+    {% endif %}
+</fieldset>
 {% endif %}
-<fieldset class="am-center module-form" id="genTradeData_TradingDayPicker"
-          style="{% if not session %}display: none;{% endif %} width: 350px">
+<fieldset class="am-center module-form" id="genTradeData_TradingDayPicker" style="{% if not session %}display: none;{% endif %} width: 350px">
     <div class="am-form-group am-form-icon am-center" style="margin-bottom: 3px">
         <i class="am-icon-calendar-check-o am-icon-fw"></i>
-        <input type="text" class="am-form-field am-modal-prompt-input" id="genTradeData_NextTradingDay"
-               style="height: 40px" placeholder="请输入交易日" value=""/>
+        <input type="text" class="am-form-field am-modal-prompt-input" id="genTradeData_NextTradingDay" style="height: 40px" placeholder="请输入交易日" value="" />
     </div>
     <div>
         <button type="submit" class="am-btn am-btn-default" style="width: 100%" onclick="genTradeData()">
@@ -43,7 +37,7 @@
     </div>
 </fieldset>
 <script type="text/javascript">
-    $('.am-alert').on('closed.alert.amui', function () {
+    $('.am-alert').on('closed.alert.amui', function() {
         $('.am-alert').removeClass('am-alert-success am-alert-danger');
     });
 
@@ -55,14 +49,14 @@
                 \<span type="button" class="am-close am-fr">&times;\</span\>\
                 \<p class="am-text-center">' + message + '\</p>\
             \</div>\
-        ');
+        ')
         $('.am-alert').alert();
         if (success) {
             $('.am-alert').addClass('am-alert-success').show();
         } else {
             $('.am-alert').addClass('am-alert-danger').show();
         }
-        setTimeout(function () {
+        setTimeout(function() {
             $('.am-alert').alert('close');
         }, 3000);
     }
@@ -76,7 +70,7 @@
             data = {
                 params: '{userName: "' + user + '", password: "' + pass + '", verification_code: "' + captcha + '"}'
             },
-            function (response) {
+            function(response) {
                 console.log(response);
                 if (response.errorCode == 0) {
                     showMessage("登录成功", true);
@@ -88,15 +82,17 @@
                 }
             }
         );
-    }
+    };
+
     function getNextTradingDay() {
         $.get(
             'api/nextTradingDay',
-            function (response) {
+            function(response) {
                 $('#genTradeData_NextTradingDay').attr('value', response);
             }
         )
-    }
+    };
+
     function genTradeData() {
         var prompt = $('#genTradeData_TradingDayPicker').closest('.am-modal-loading');
         if (confirm("请确认上场交易日期为：" + $('#genTradeData_NextTradingDay').val())) {
@@ -106,7 +102,7 @@
                 data = {
                     params: JSON.stringify([$('#genTradeData_NextTradingDay').val()])
                 },
-                function (response) {
+                function(response) {
                     prompt.trigger('results.quantdo', [response]);
                     prompt.modal('close');
                 }
