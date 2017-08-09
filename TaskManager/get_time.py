@@ -1,5 +1,6 @@
 # coding=utf-8
 
+import re
 import time
 
 from dateutil.parser import parse
@@ -24,12 +25,12 @@ def current_ymd_hms():
 def format_datetime(create_time, earliest, latest):
     create_datetime = parse(create_time)
     current_datetime = parse(current_ymd_hms())
+    pattern = re.compile(ur'([01]?\d|2[0-3]):[0-5]?\d(:[0-5]?\d)?')
     # 如果存在earliest时间
-    if earliest:
+    if earliest and pattern.search(earliest):
         if create_datetime.hour >= 12 > int(earliest.split(":")[0]):
-            temp = parse(
-                "{0}-{1}-{2}".format(create_datetime.year, create_datetime.month, create_datetime.day)) + relativedelta(
-                days=1)
+            temp = parse("{0}-{1}-{2}".format(
+                create_datetime.year, create_datetime.month, create_datetime.day)) + relativedelta(days=1)
         else:
             temp = parse("{0}-{1}-{2}".format(create_datetime.year, create_datetime.month, create_datetime.day))
         earliest_datetime = parse("{0}-{1}-{2} {3}:{4}:{5}".format(
@@ -37,11 +38,10 @@ def format_datetime(create_time, earliest, latest):
             int(earliest.split(":")[1]), 0))
     else:
         earliest_datetime = None
-    if latest:
+    if latest and pattern.search(latest):
         if create_datetime.hour >= 12 > int(latest.split(":")[0]):
-            temp = parse(
-                "{0}-{1}-{2}".format(create_datetime.year, create_datetime.month, create_datetime.day)) + relativedelta(
-                days=1)
+            temp = parse("{0}-{1}-{2}".format(
+                create_datetime.year, create_datetime.month, create_datetime.day)) + relativedelta(days=1)
         else:
             temp = parse("{0}-{1}-{2}".format(create_datetime.year, create_datetime.month, create_datetime.day))
         latest_datetime = parse("{0}-{1}-{2} {3}:{4}:{5}".format(
@@ -54,7 +54,7 @@ def format_datetime(create_time, earliest, latest):
 
 def compare_timestamps(create_time, earliest, latest):
     create_datetime, current_datetime, earliest_datetime, latest_datetime \
-        = format_datetime(create_time,  earliest, latest)
+        = format_datetime(create_time, earliest, latest)
     if not earliest_datetime and not latest_datetime:
         return 1, None
     if not earliest_datetime and latest_datetime:
@@ -74,7 +74,6 @@ def compare_timestamps(create_time, earliest, latest):
             return 2, (earliest_datetime - current_datetime).seconds
         else:
             return 3, None
-
 
 # if __name__ == "__main__":
 #     # test case 1
