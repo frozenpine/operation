@@ -130,7 +130,13 @@ class ControllerQueue(object):
         """
         if self.controller_todo_task_queue.empty():
             return -1, msg_dict[-11]
-        self.controller_todo_task_queue.get()
+        task = self.controller_todo_task_queue.get()
+        task_uuid = task["task_uuid"]
+        # 更改任务状态列表
+        for each in self.controller_task_status_list:
+            for (k, v) in each.iteritems():
+                if k == task_uuid:
+                    each[k] = 4
         return 0, u"队列第一项移除成功"
 
     def change_task_info(self, task_uuid, task_status, task_result):

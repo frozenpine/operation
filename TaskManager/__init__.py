@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class QueueStatus(Enum):
     InitFail = -1
     Empty = -11
