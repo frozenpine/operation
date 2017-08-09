@@ -24,6 +24,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                 $scope.taskQueueRunning = false;
                 $scope.batch_run = false;
             }, 0);
+            TaskQueueStatus();
             $message.Warning('任务队列被重新初始化');
         } else {
             angular.forEach($scope.opList.details, function(value, index) {
@@ -147,25 +148,27 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     }
 
     function TaskQueueStatus() {
-        angular.forEach($scope.opList.details, function(value, index) {
-            if (value.exec_code > 0) {
-                $scope.queue_blocked = true;
-            }
-            if (index > 0 && $scope.opList.details[index - 1].checker.isTrue) {
-                checked = $sessionStorage[$scope.opList.details[index - 1].uuid];
-                $scope.opList.details[index].enabled = value.enabled && checked === true;
-            }
-            if (index < $scope.opList.details.length - 1) {
-                $scope.taskQueueRunning = value.exec_code >= 0;
-                if (value.checker.isTrue && $scope.opList.details[index + 1].exec_code === 0) {
-                    $sessionStorage[value.uuid] = true;
+        $timeout(function() {
+            angular.forEach($scope.opList.details, function(value, index) {
+                if (value.exec_code > 0) {
+                    $scope.queue_blocked = true;
                 }
-            } else if (value.exec_code === 0) {
-                $scope.taskQueueRunning = false;
-            }
-            if (value.checker.isTrue) {
-                $scope.opList.details[index].checker.checked = $sessionStorage[value.uuid] === true;
-            }
+                if (index > 0 && $scope.opList.details[index - 1].checker.isTrue) {
+                    checked = $sessionStorage[$scope.opList.details[index - 1].uuid];
+                    $scope.opList.details[index].enabled = value.enabled && checked === true;
+                }
+                if (index < $scope.opList.details.length - 1) {
+                    $scope.taskQueueRunning = value.exec_code >= 0;
+                    if (value.checker.isTrue && $scope.opList.details[index + 1].exec_code === 0) {
+                        $sessionStorage[value.uuid] = true;
+                    }
+                } else if (value.exec_code === 0) {
+                    $scope.taskQueueRunning = false;
+                }
+                if (value.checker.isTrue) {
+                    $scope.opList.details[index].checker.checked = $sessionStorage[value.uuid] === true;
+                }
+            });
         });
     }
 

@@ -41,7 +41,9 @@ class OperationMixin(object):
         if isinstance(self.snapshot, dict):
             for idx in xrange(len(self.snapshot['task_list'])):
                 if op.uuid == self.snapshot['task_list'][idx]['task_uuid']:
-                    return idx, self.snapshot['task_status_list'][idx]
+                    if self.snapshot['task_status_list'][idx] != None:
+                        return idx, TaskStatus(self.snapshot['task_status_list'][idx])
+                    return idx, None
         return -1, None
 
     def make_operation_detail(self, op, op_session=None):
@@ -66,32 +68,32 @@ class OperationMixin(object):
             'need_authorized': op.need_authorization
         }
         idx, status = self.find_op_status(op)
-        if status == TaskStatus.InQueue:
-            dtl['exec_code'] = -1
-        elif status == TaskStatus.Running:
-            dtl['exec_code'] = -2
-            operator = Operator.find(id=op_session['operator_id'])
-            dtl['operator'] = {
-                'operator_id': operator.id,
-                'operator_uuid': operator.uuid,
-                'operator_name': operator.name
-            }
-            dtl['operated_at'] = arrow.get(op_session['operated_at']) \
-                .to('Asia/Shanghai').strftime('%Y-%m-%d %H:%M:%S')
-        elif status == TaskStatus.Success or status == TaskStatus.Failed:
-            dtl['exec_code'] = self.snapshot['task_result_list'][idx]['task_result']['return_code']
-            dtl['output_lines'] = self.snapshot['task_result_list'][idx]['task_result']['lines']
-            op_session = json.loads(self.snapshot['task_result_list'][idx]['session'])
-            operator = Operator.find(id=op_session['operator_id'])
-            dtl['operator'] = {
-                'operator_id': operator.id,
-                'operator_uuid': operator.uuid,
-                'operator_name': operator.name
-            }
-            dtl['operated_at'] = arrow.get(op_session['operated_at']) \
-                .to('Asia/Shanghai').strftime('%Y-%m-%d %H:%M:%S')
-        elif status == TaskStatus.Skipped:
-            dtl['exec_code'] = -3
+        if status != None:
+            if status not in [TaskStatus.InitFail, TaskStatus.Runnable]:
+                op_session = json.loads(self.snapshot['task_result_list'][idx]['session'])
+                operator = Operator.find(id=op_session['operator_id'])
+                dtl['operator'] = {
+                    'operator_id': operator.id,
+                    'operator_uuid': operator.uuid,
+                    'operator_name': operator.name
+                }
+            if status == TaskStatus.Runnable:
+                dtl['exec_code'] = -4
+            elif status.IsWaiting:
+                dtl['exec_code'] = -5
+            elif status == TaskStatus.Running:
+                dtl['exec_code'] = -2
+                dtl['operated_at'] = arrow.get(op_session['operated_at']) \
+                    .to('Asia/Shanghai').strftime('%Y-%m-%d %H:%M:%S')
+            elif status == TaskStatus.Success or status == TaskStatus.Failed:
+                dtl['exec_code'] = self.snapshot['task_result_list'][idx]['task_result']['return_code']
+                dtl['output_lines'] = self.snapshot['task_result_list'][idx]['task_result']['lines']
+                dtl['operated_at'] = arrow.get(op_session['operated_at']) \
+                    .to('Asia/Shanghai').strftime('%Y-%m-%d %H:%M:%S')
+            elif status and status.IsTimeout:
+                dtl['exec_code'] = -6
+            elif status == TaskStatus.Skipped:
+                dtl['exec_code'] = -3
         else:
             dtl['exec_code'] = -1
         if idx > 0:
@@ -317,6 +319,7 @@ class OperationApi(OperationMixin, Resource):
                         json.dumps({
                             'operation_id': op.id,
                             'operator_id': current_user.id,
+                            'operator_uuid': current_user.uuid,
                             'operated_at': unicode(arrow.utcnow()),
                             'authorizor_id': author and author.uuid or None,
                             'authorized_at': author and unicode(arrow.utcnow()) or None
@@ -351,7 +354,7 @@ class OperationCallbackApi(OperationMixin, Resource):
                 ), 406
             else:
                 ret, self.snapshot = taskManager.snapshot(op.group.uuid)
-                status = TaskStatus(int(result['task_status']))
+                status = TaskStatus(int(result['task_status'][0]))
                 record_params = json.loads(result['session'])
                 if status == TaskStatus.Running:
                     if not record_params.has_key('operation_id'):
