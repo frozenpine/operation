@@ -57,7 +57,7 @@ class ControllerQueue(object):
         task_latest = task["latest"]
         if not deserialize:
             self.controller_task_list.append(task)
-            self.controller_task_status_list.append({task_uuid: 0})
+            self.controller_task_status_list.append({task_uuid: None})
             self.controller_task_result_list.append({task_uuid: None})
         task = task["detail"]
         self.controller_todo_task_queue.put(
