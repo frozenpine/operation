@@ -54,6 +54,7 @@ class OperationMixin(object):
             'grp_uuid': op.group.uuid,
             'op_name': op.name,
             'op_desc': op.description,
+            'book_id': op.book_id,
             'checker': {
                 'isTrue': op.operate_define.type.IsChecker(),
                 'checked': False

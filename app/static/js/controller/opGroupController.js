@@ -48,6 +48,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             groupID: $routeParams.grpid,
             onSuccess: function(data) {
                 $scope.opList = data;
+                $scope.optionGroupSelect = new Array(data.details.length);
                 TaskQueueStatus();
             }
         });
@@ -238,7 +239,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         }
     };
     $scope.optionGroupEditShow = true;
-    $scope.optionGroupSelect = 0;
+    $scope.optionGroupSelect = [];
     $scope.optionGroupEdit = function(data) {
         if ($rootScope.privileges.edit_group === false) {
             $message.Warning('该用户无编辑权限，无法编辑队列内容');
@@ -276,28 +277,37 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         }];
         $scope.optionOldData = angular.copy($scope.opList.details);
         angular.forEach($scope.optionOldData, function(value, index) {
-            var data = {};
-            data.operation_name = value.op_name;
-            data.description = value.op_desc;
-            data.earliest = value.time_range.lower;
-            data.latest = value.time_range.upper;
-            data.need_authorized = value.need_authorized;
-            data.operation_id = value.id;
+            var data = {
+                operation_name: value.op_name,
+                description: value.op_desc,
+                earliest: value.time_range.lower,
+                latest: value.time_range.upper,
+                need_authorized: value.need_authorized,
+                operation_id: value.id,
+                book_id: value.book_id
+            };
             $scope.optionGroupCopy.operations.push(data);
         });
 
-        $scope.optionGroupSelectWhich = function(Id, data, index_id) {
+        $scope.optionGroupSelectWhich = function(option, data) {
             angular.forEach($scope.optionBooks, function(value, index) {
-                if (value.id == Id) {
+                if (value.id == option.id) {
                     data.book_id = value.id;
                     data.description = value.description;
                     data.operation_name = value.name;
-                    data.operation_id = "";
                 }
             });
-            var stringId = "#resetSelect" + index_id;
-            $(stringId).val("0");
         };
+
+        $scope.$watch('optionBooks', function() {
+            angular.forEach($scope.opList.details, function(value, index) {
+                angular.forEach($scope.optionBooks, function(v, i) {
+                    if (value.book_id === v.id) {
+                        $scope.optionGroupSelect[index] = v;
+                    }
+                });
+            });
+        });
 
         $scope.optionGroupEditShow = !$scope.optionGroupEditShow;
     };
