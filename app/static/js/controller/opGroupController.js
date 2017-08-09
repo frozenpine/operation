@@ -276,12 +276,23 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             "value": false
         }];
         $scope.optionOldData = angular.copy($scope.opList.details);
+
+        function formatTime(time_string) {
+            var match = time_string.match(/\d{2}:\d{2}:\d{2}/);
+            if (match !== null) {
+                var datetime = new Date('The Jan 01 1970 ' + match[0] + ' GMT+0800');
+                return datetime;
+            } else {
+                return '';
+            }
+        }
+
         angular.forEach($scope.optionOldData, function(value, index) {
             var data = {
                 operation_name: value.op_name,
                 description: value.op_desc,
-                earliest: value.time_range.lower,
-                latest: value.time_range.upper,
+                earliest: formatTime(value.time_range.lower),
+                latest: formatTime(value.time_range.upper),
                 need_authorized: value.need_authorized,
                 operation_id: value.id,
                 book_id: value.book_id
@@ -324,6 +335,12 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     };
     $scope.optionGroupEditPostShow = true;
     $scope.optionGroupEditFinish = function() {
+        angular.forEach($scope.optionGroupCopy.operations, function(value, index) {
+            value.earliest = (value.earliest !== undefined && value.earliest !== null && value.earliest !== '') ?
+                value.earliest.getHours() + ':' + value.earliest.getMinutes() : '';
+            value.latest = (value.latest !== undefined && value.latest !== null && value.latest !== '') ?
+                value.latest.getHours() + ':' + value.latest.getMinutes() : '';
+        });
         $operationBooks.optionGroupEditPut({
             optionGroup_id: $scope.optionGroupCopy.operation_group.id,
             data: $scope.optionGroupCopy,

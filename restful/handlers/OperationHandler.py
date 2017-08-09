@@ -155,7 +155,7 @@ class OperationListApi(OperationMixin, Resource):
                 )
             if isinstance(self.snapshot, dict):
                 create_time = datetime.datetime.strptime(
-                    self.snapshot['create_time'], '%Y/%m/%d-%H:%M:%S'
+                    self.snapshot['create_time'], '%Y-%m-%d %H:%M:%S'
                 )
                 if op_group.is_emergency or \
                         (now_time.day - create_time.day >= 1 and \
