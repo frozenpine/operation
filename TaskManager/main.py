@@ -2,26 +2,27 @@
 
 
 import sys
-from os import path, environ
+from os import environ, path
+
+sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
 
 import gevent
 import zerorpc
 from gevent import monkey
 
-from controller import Controller
-from worker import Worker
+from TaskManager.controller import Controller
+from TaskManager.worker import Worker
 
 sys.path.append(path.join(path.dirname(sys.argv[0]), "../"))
 
 tm_host = environ.get("TM_HOST") or "0.0.0.0"
-# tm_port = environ.get("TM_PORT") or 6000
-tm_port = 2017
+tm_port = environ.get("TM_PORT") or 6000
 
 monkey.patch_all(socket=False, thread=False)
 
 if __name__ == "__main__":
     controller = Controller()
-    # controller.deserialize()
+    controller.deserialize()
     worker = Worker()
     server = zerorpc.Server(controller)
     server.bind("tcp://{ip}:{port}".format(ip=tm_host, port=tm_port))
