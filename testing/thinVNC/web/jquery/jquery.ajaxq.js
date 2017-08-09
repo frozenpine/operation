@@ -93,4 +93,4 @@ jQuery.ajaxq = function (queue, options) {
 
         document.ajaxq.q[queue] = [];
     }
-}
+};

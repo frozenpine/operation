@@ -25,6 +25,7 @@ def index():
         user_uuid=current_user.uuid
     )
 
+
 @main.route('/UI/views/<string:name>')
 @login_required
 def UIView(name):
@@ -32,7 +33,6 @@ def UIView(name):
             not CheckPrivilege(current_user, '/api/emerge_ops', MethodType.Execute):
         return render_template("errors/403.html")
     return render_template("{}.html".format(name))
-
 
 @main.route('/UI/dialogs/<string:name>')
 @login_required
@@ -46,6 +46,7 @@ class Camera():
     def get_frame(self):
         return self.frames[int(time()) % 10]
 
+
 def _flowTest(camera):
     while True:
         yield (b'--frame\r\n'
@@ -53,12 +54,14 @@ def _flowTest(camera):
                + camera.get_frame()
                + b'\r\n')
 
+
 @main.route('/flow')
 def flow():
     return Response(
         _flowTest(Camera()),
         mimetype='multipart/x-mixed-replace; boundary=frame'
     )
+
 
 @main.route('/websocket')
 @login_required
@@ -70,6 +73,7 @@ def websocket():
                 MessageServer.parse_request(ws)
         else:
             abort(500)
+
 
 @main.route('/webshell')
 def webshell():

@@ -68,6 +68,8 @@ def compare_timestamps(queue, earliest, latest):
             2 等待时间
             3 不能执行
     """
+    if not earliest and not latest:
+        return 1, None
     if not earliest and latest:
         # 当前时间
         curr = current_ymd_hms()

@@ -15,7 +15,8 @@ from worker_queue import WorkerQueue
 
 
 class Result(object):
-    def __init__(self, controller_queue_uuid, task_uuid, status_code, status_msg, session, run_all, task_result=None):
+    def __init__(self, controller_queue_uuid, task_uuid, status_code,
+                 status_msg, session, run_all, task_result=None):
         self.controller_queue_uuid = controller_queue_uuid
         self.task_uuid = task_uuid
         self.task_status = (status_code, status_msg)
@@ -57,8 +58,8 @@ class Result(object):
 
 
 class RunTask(Process):
-    def __init__(self, controller_queue_uuid, controller_queue_create_time, task_uuid, task_earliest, task_latest, task,
-                 pipe_child, session, run_all, idle_process_count):
+    def __init__(self, controller_queue_uuid, controller_queue_create_time, task_uuid,
+                 task_earliest, task_latest, task, pipe_child, session, run_all, idle_process_count):
         Process.__init__(self)
         self.controller_queue_uuid = controller_queue_uuid
         self.controller_queue_create_time = controller_queue_create_time

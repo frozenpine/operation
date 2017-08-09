@@ -37,8 +37,7 @@ client.connect({
 */
 
 function WSSHClient() {
-};
-
+}
 WSSHClient.prototype._generateEndpoint = function (options) {
     /*
     if (window.location.protocol == 'https:') {

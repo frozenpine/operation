@@ -55,7 +55,7 @@
                 \<span type="button" class="am-close am-fr">&times;\</span\>\
                 \<p class="am-text-center">' + message + '\</p>\
             \</div>\
-        ')
+        ');
         $('.am-alert').alert();
         if (success) {
             $('.am-alert').addClass('am-alert-success').show();
@@ -88,8 +88,7 @@
                 }
             }
         );
-    };
-
+    }
     function getNextTradingDay() {
         $.get(
             'api/nextTradingDay',
@@ -97,8 +96,7 @@
                 $('#genTradeData_NextTradingDay').attr('value', response);
             }
         )
-    };
-
+    }
     function genTradeData() {
         var prompt = $('#genTradeData_TradingDayPicker').closest('.am-modal-loading');
         if (confirm("请确认上场交易日期为：" + $('#genTradeData_NextTradingDay').val())) {

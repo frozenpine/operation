@@ -1,10 +1,41 @@
-<div class="row" ng-controller="dashBoardControl">
+<div class="row" ng-controller="dashBoardController">
     <div class="am-g">
-        <div class="am-u-lg-7 am-u-md-12 am-u-sm-12 am-padding-top-sm">
+        <!-- <div class="am-u-lg-7 am-u-md-12 am-u-sm-12 am-padding-top-sm">
             <div style="min-height: 400px; border-radius: 10px" relamap></div>
         </div>
         <div class="am-u-lg-5 am-u-md-12 am-u-sm-12 am-padding-top-sm">
             <div style="min-height: 400px; border-radius: 10px" idcmap></div>
+        </div> -->
+        <div class="tpl-portlet-components">
+            <div class="portlet-title">
+                <span class="caption font-green bold">系统架构</span>
+            </div>
+            <div class="tpl-block am-g">
+                <div class="am-u-sm-5">
+                    <div class="am-text-center caption font-green bold am-text-md am-margin-bottom-sm">
+                        服务器
+                    </div>
+                    <ul class="am-avg-sm-1">
+                        <li ng-repeat="svr in inventory">
+                            <div class="am-panel am-panel-secondary">
+                                <div class="am-panel-hd bold">{{::svr.svr_name}} - {{::svr.svr_ip}}</div>
+                                <div class="am-panel-bd" style="background-color: floralwhite;">
+                                    <ul>
+                                        <li ng-repeat="sys in svr.systems">
+                                            <span class="caption font-green bold am-text-sm">{{::sys.sys_name}}</span>
+                                            <ul class="am-avg-sm-1 am-avg-md-2 am-avg-lg-3">
+                                                <li class="am-padding-xs" style="text-align: center;" ng-repeat="proc in sys.processes" on-bind="bindPopup(proc)" repeat-finish>
+                                                    <span class="am-badge am-round am-text-truncate am-badge-success" style="line-height: 30px; width: 100%; cursor: help;" id="{{proc.proc_uuid}}">{{::proc.proc_name}}</span>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 </div>

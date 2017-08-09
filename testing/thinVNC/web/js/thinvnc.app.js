@@ -29,7 +29,7 @@ ThinVNCApp = function (obj) {
                 draggable: true,
                 width: 600,
                 height: 300
-            })
+            });
             startClipboard();
         }
         if (!THIN.iphone) {
@@ -74,7 +74,7 @@ ThinVNCApp = function (obj) {
     });
     this.get = function (id) {
         return document.getElementById(id);
-    }
+    };
     this.helpListener = function (e) {
         $('#dropdown').css('left', $('#help').position().left);
 
@@ -87,7 +87,7 @@ ThinVNCApp = function (obj) {
             $(this).addClass('pressed');
             dropVisible = true;
         }
-    }
+    };
     this.helpBtnListener = function (e) {
         $('#dropdown').hide();
         dropVisible = false;
@@ -98,7 +98,7 @@ ThinVNCApp = function (obj) {
         } else {
             $('#help-content').dialog('open');
         }
-    }
+    };
 
     this.ctrlAltDelListener = function (e) {
         $('#dropdown').hide();
@@ -106,7 +106,7 @@ ThinVNCApp = function (obj) {
         $('#help').removeClass('pressed');
 
         THIN.sendFunctionKey("CtrlAltDel");
-    }
+    };
     this.ctrlEscListener = function (e) {
 
         $('#dropdown').hide();
@@ -114,22 +114,22 @@ ThinVNCApp = function (obj) {
         $('#help').removeClass('pressed');
 
         THIN.sendFunctionKey("CtrlEsc");
-    }
+    };
     this.showKeyboardListener = function (e) {
         $('#help').removeClass('pressed');
         $('#dropdown').hide();
         var sk = document.getElementById('show-keyboard');
         dropVisible = false;
         e.stopPropagation();
-    }
+    };
     this.refreshListener = function (e) {
         if (THIN.rcParams.active) {
             THIN.refresh();
         }
-    }
+    };
     this.monitorListener = function (e) {
         THIN.setMonitor(THIN.rcParams.monitor + 1);
-    }
+    };
     this.scaleListener = function (e) {
         if (!$.browser.msie) {
             THIN.rcParams.scaled = !THIN.rcParams.scaled;
@@ -143,20 +143,20 @@ ThinVNCApp = function (obj) {
             if (THIN.rcParams.scaled) $('#scale').addClass('pressed');
             else $('#scale').removeClass('pressed');
         }
-    }
+    };
     this.stateListener = function (e) {
         if (THIN.rcParams.active) {
             THIN.stop();
         } else {
             THIN.start();
         }
-    }
+    };
     this.colorsListener = function (e) {
         THIN.swicthPixelFormat();
-    }
+    };
     this.disconnectListener = function (e) {
         THIN.disconnect();
-    }
+    };
     this.toolbarHandleListener = function (e) {
         THIN.pinned = THIN.pinned ^ 1;
         if (THIN.toolbar.offsetTop < 0) {
@@ -164,10 +164,10 @@ ThinVNCApp = function (obj) {
         } else {
             THIN.hideToolbar();
         }
-    }
+    };
     this.mouseListener = function (e) {
         THIN.toogleMouseControl();
-    }
+    };
     this.clipbrdListener = function (e) {
         if (THIN.rcParams.mouseControl) {
             e.stopPropagation();
@@ -185,27 +185,27 @@ ThinVNCApp = function (obj) {
                 $('#clipboard').removeClass('hidden');
             }
         }
-    }
+    };
 
     THIN.sendParams = function (mouseControl, remotePointer, pixelFormat) {
         THIN.sendCmd("cmd=params&mouseControl=" + mouseControl + "&kbdControl=" + mouseControl + "&remotePointer=" + remotePointer + "&pixelFormat=" + pixelFormat);
-    }
+    };
 
     THIN.toogleMouseControl = function () {
         THIN.sendParams(!THIN.rcParams.mouseControl, THIN.rcParams.remotePointer, THIN.rcParams.pixelFormat);
-    }
+    };
 
 
     THIN.toogleRemotePointer = function () {
         THIN.sendParams(THIN.rcParams.mouseControl, !THIN.rcParams.remotePointer, THIN.rcParams.pixelFormat);
-    }
+    };
 
 
     THIN.swicthPixelFormat = function () {
         var pf = 0;
         if (THIN.rcParams.pixelFormat == 0) pf = 1;
         THIN.sendParams(THIN.rcParams.mouseControl, THIN.rcParams.remotePointer, pf);
-    }
+    };
     $(window).bind('serverDisconnect', function () {
         document.body.style.backgroundColor = "#FFF";
         if (clipbrdVisible) {
@@ -265,7 +265,7 @@ ThinVNCApp = function (obj) {
         delete THIN.tv;
         delete this;
 
-    }
+    };
     $(window).resize(function () {
         THIN.resetToolbarPosition();
 
@@ -326,12 +326,12 @@ ThinVNCApp = function (obj) {
     THIN.hideToolbar = function () {
         THIN.toolbar.style.top = -THIN.toolbar.offsetHeight + 'px';
         THIN.resetToolbarPosition();
-    }
+    };
 
     THIN.showToolbar = function () {
         THIN.toolbar.style.top = 0 + 'px';
         THIN.resetToolbarPosition();
-    }
+    };
 
     function CommandLineInterface() {
         var type = "unknown";
@@ -468,5 +468,5 @@ ThinVNCApp = function (obj) {
     }
 
 
-}
+};
 

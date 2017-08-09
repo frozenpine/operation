@@ -1096,7 +1096,6 @@
                         // ESC D Index ( IND is 0x84).
                         case 'E':
                             this.x = 0;
-                            ;
                         case 'D':
                             this.index();
                             break;
@@ -2533,7 +2532,7 @@
                 while (j--) this.eraseLine(j);
                 break;
             case 3:
-                ; // no saved lines
+                 // no saved lines
                 break;
         }
     };
@@ -3209,7 +3208,7 @@
                     break;
                 case 1049: // alt screen buffer cursor
                     //this.saveCursor();
-                    ; // FALL-THROUGH
+                     // FALL-THROUGH
                 case 47: // alt screen buffer
                 case 1047: // alt screen buffer
                     if (!this.normal) {
@@ -3383,7 +3382,7 @@
                     this.cursorHidden = true;
                     break;
                 case 1049: // alt screen buffer cursor
-                    ; // FALL-THROUGH
+                     // FALL-THROUGH
                 case 47: // normal screen buffer
                 case 1047: // normal screen buffer - clearing it first
                     if (this.normal) {
@@ -3491,7 +3490,6 @@
     //     Ps = 3  -> Do not query window/icon labels using UTF-8.
     //   (See discussion of "Title Modes").
     Terminal.prototype.resetTitleModes = function (params) {
-        ;
     };
 
     // CSI Ps Z  Cursor Backward Tabulation Ps tab stops (default = 1) (CBT).
@@ -3538,7 +3536,6 @@
     //     Ps = 1  0  -> Print composed display, ignores DECPEX.
     //     Ps = 1  1  -> Print all pages.
     Terminal.prototype.mediaCopy = function (params) {
-        ;
     };
 
     // CSI > Ps; Ps m
@@ -3554,7 +3551,6 @@
     //   If no parameters are given, all resources are reset to their
     //   initial values.
     Terminal.prototype.setResources = function (params) {
-        ;
     };
 
     // CSI > Ps n
@@ -3571,7 +3567,6 @@
     //   adding a parameter to each function key to denote the modi-
     //   fiers.
     Terminal.prototype.disableModifiers = function (params) {
-        ;
     };
 
     // CSI > Ps p
@@ -3583,7 +3578,6 @@
     //     Ps = 2  -> always hide the pointer.  If no parameter is
     //     given, xterm uses the default, which is 1 .
     Terminal.prototype.setPointerMode = function (params) {
-        ;
     };
 
     // CSI ! p   Soft terminal reset (DECSTR).
@@ -3614,7 +3608,6 @@
     //     3 - permanently set
     //     4 - permanently reset
     Terminal.prototype.requestAnsiMode = function (params) {
-        ;
     };
 
     // CSI ? Ps$ p
@@ -3623,7 +3616,6 @@
     //   where Ps is the mode number as in DECSET, Pm is the mode value
     //   as in the ANSI DECRQM.
     Terminal.prototype.requestPrivateMode = function (params) {
-        ;
     };
 
     // CSI Ps ; Ps " p
@@ -3637,7 +3629,6 @@
     //     Ps = 1  -> 7-bit controls (always set for VT100).
     //     Ps = 2  -> 8-bit controls.
     Terminal.prototype.setConformanceLevel = function (params) {
-        ;
     };
 
     // CSI Ps q  Load LEDs (DECLL).
@@ -3649,7 +3640,6 @@
     //     Ps = 2  2  -> Extinguish Caps Lock.
     //     Ps = 2  3  -> Extinguish Scroll Lock.
     Terminal.prototype.loadLEDs = function (params) {
-        ;
     };
 
     // CSI Ps SP q
@@ -3660,7 +3650,6 @@
     //     Ps = 3  -> blinking underline.
     //     Ps = 4  -> steady underline.
     Terminal.prototype.setCursorStyle = function (params) {
-        ;
     };
 
     // CSI Ps " q
@@ -3670,14 +3659,12 @@
     //     Ps = 1  -> DECSED and DECSEL cannot erase.
     //     Ps = 2  -> DECSED and DECSEL can erase.
     Terminal.prototype.setCharProtectionAttr = function (params) {
-        ;
     };
 
     // CSI ? Pm r
     //   Restore DEC Private Mode Values.  The value of Ps previously
     //   saved is restored.  Ps values are the same as for DECSET.
     Terminal.prototype.restorePrivateValues = function (params) {
-        ;
     };
 
     // CSI Pt; Pl; Pb; Pr; Ps$ r
@@ -3710,7 +3697,6 @@
     //   Save DEC Private Mode Values.  Ps values are the same as for
     //   DECSET.
     Terminal.prototype.savePrivateValues = function (params) {
-        ;
     };
 
     // CSI Ps ; Ps ; Ps t
@@ -3760,7 +3746,6 @@
     //     Ps = 2 3  ;  2  -> Restore xterm window title from stack.
     //     Ps >= 2 4  -> Resize to Ps lines (DECSLPP).
     Terminal.prototype.manipulateWindow = function (params) {
-        ;
     };
 
     // CSI Pt; Pl; Pb; Pr; Ps$ t
@@ -3770,7 +3755,6 @@
     //     Ps denotes the attributes to reverse, i.e.,  1, 4, 5, 7.
     // NOTE: xterm doesn't enable this code by default.
     Terminal.prototype.reverseAttrInRectangle = function (params) {
-        ;
     };
 
     // CSI > Ps; Ps t
@@ -3782,7 +3766,6 @@
     //     Ps = 3  -> Query window/icon labels using UTF-8.  (See dis-
     //     cussion of "Title Modes")
     Terminal.prototype.setTitleModeFeature = function (params) {
-        ;
     };
 
     // CSI Ps SP t
@@ -3791,7 +3774,6 @@
     //     Ps = 2 , 3  or 4  -> low.
     //     Ps = 5 , 6 , 7 , or 8  -> high.
     Terminal.prototype.setWarningBellVolume = function (params) {
-        ;
     };
 
     // CSI Ps SP u
@@ -3800,7 +3782,6 @@
     //     Ps = 2 , 3  or 4  -> low.
     //     Ps = 0 , 5 , 6 , 7 , or 8  -> high.
     Terminal.prototype.setMarginBellVolume = function (params) {
-        ;
     };
 
     // CSI Pt; Pl; Pb; Pr; Pp; Pt; Pl; Pp$ v
@@ -3811,7 +3792,6 @@
     //     Pp denotes the target page.
     // NOTE: xterm doesn't enable this code by default.
     Terminal.prototype.copyRectangle = function (params) {
-        ;
     };
 
     // CSI Pt ; Pl ; Pb ; Pr ' w
@@ -3826,7 +3806,6 @@
     //   ted, any locator motion will be reported.  DECELR always can-
     //   cels any prevous rectangle definition.
     Terminal.prototype.enableFilterRectangle = function (params) {
-        ;
     };
 
     // CSI Ps x  Request Terminal Parameters (DECREQTPARM).
@@ -3841,7 +3820,6 @@
     //     Pn = 1  <- clock multiplier.
     //     Pn = 0  <- STP flags.
     Terminal.prototype.requestParameters = function (params) {
-        ;
     };
 
     // CSI Ps x  Select Attribute Change Extent (DECSACE).
@@ -3849,7 +3827,6 @@
     //     Ps = 1  -> from start to end position, wrapped.
     //     Ps = 2  -> rectangle (exact).
     Terminal.prototype.selectChangeExtent = function (params) {
-        ;
     };
 
     // CSI Pc; Pt; Pl; Pb; Pr$ x
@@ -3934,14 +3911,12 @@
     //     Ps = 3  -> report button up transitions.
     //     Ps = 4  -> do not report button up transitions.
     Terminal.prototype.setLocatorEvents = function (params) {
-        ;
     };
 
     // CSI Pt; Pl; Pb; Pr$ {
     //   Selective Erase Rectangular Area (DECSERA), VT400 and up.
     //     Pt; Pl; Pb; Pr denotes the rectangle.
     Terminal.prototype.selectiveEraseRectangle = function (params) {
-        ;
     };
 
     // CSI Ps ' |
@@ -3985,7 +3960,6 @@
     //   The ``page'' parameter is not used by xterm, and will be omit-
     //   ted.
     Terminal.prototype.requestLocatorPosition = function (params) {
-        ;
     };
 
     // CSI P m SP }

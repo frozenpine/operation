@@ -64,15 +64,15 @@ ThinVNC = function () {
         reconnectDelay: 3000,
         address: "",
         ticket: ""
-    }
+    };
 
     this.getBodyHeight = function () {
         return this.vncDivElement.parent().height();
-    }
+    };
 
     this.getBodyWidth = function () {
         return TVNC.vncDivElement.parent().width();
-    }
+    };
     this.findPos = function (obj) {
         var curleft = 0;
         var curtop = 0;
@@ -89,20 +89,20 @@ ThinVNC = function () {
 
         } while (obj = obj.offsetParent);
         return [curleft, curtop];
-    }
+    };
     this.serverMouseX = function (e) {
         var position = this.findPos(TVNC.vncdiv);
         var left = position[0];
         if (TVNC.iphone) return Math.floor((e.touches[0].pageX - left) / TVNC.scale);
         else return Math.floor((e.pageX - left) / TVNC.scale);
-    }
+    };
 
     this.serverMouseY = function (e) {
         var position = this.findPos(TVNC.vncdiv);
         var top = position[1];
         if (TVNC.iphone) return Math.floor((e.touches[0].pageY - top) / TVNC.scale);
         else return Math.floor((e.pageY - top) / TVNC.scale);
-    }
+    };
     this.center = function () {
         var s = (jQuery.browser.mozilla || jQuery.browser.opera || jQuery.browser.webkit) ? TVNC.getScale() : 1;
 
@@ -138,11 +138,11 @@ ThinVNC = function () {
                 TVNC.vncdiv.style.marginLeft = '0px';
             }
         }
-    }
+    };
 
     this.setScaled = function (value) {
         this.rcParams.scaled = value;
-    }
+    };
 
     this.getScale = function () {
         if (!TVNC.rcParams.scaled) return 1;
@@ -158,7 +158,7 @@ ThinVNC = function () {
             else
                 return c1;
         }
-    }
+    };
 
     this.moveCursorCanvas = function (x, y) {
         if (TVNC.cursorCanvas) {
@@ -168,7 +168,7 @@ ThinVNC = function () {
             TVNC.cursorCanvas.style.left = cX + 'px';
             TVNC.cursorCanvas.style.top = cY + 'px';
         }
-    }
+    };
 
     this.zoomDesktop = function () {
         this.scale = TVNC.getScale();
@@ -189,7 +189,7 @@ ThinVNC = function () {
         if ($.browser.msie) {
             //this.vncdiv.style.zoom = this.scale;			
         }
-    }
+    };
 
     this.createCanvas = function (win) {
         var canvas = document.createElement("canvas");
@@ -202,12 +202,12 @@ ThinVNC = function () {
         canvas.width = win.width;
         canvas.height = win.height;
         canvas.id = "canvas" + win.hwnd;
-        canvas.mask = new Object();
+        canvas.mask = {};
         canvas.mask.color = '#000';
         canvas.mask.visible = false;
         this.vncdiv.appendChild(canvas);
         return canvas;
-    }
+    };
 
     this.processWindow = function (win) {
 
@@ -248,7 +248,7 @@ ThinVNC = function () {
                         var savedHeight = canvas.Height;
                         img.onload = function () {
                             context.drawImage(img, 0, 0);
-                        }
+                        };
                         img.src = dataURL;
                         canvas.width = win.width;
                         canvas.height = win.height;
@@ -280,20 +280,16 @@ ThinVNC = function () {
                 alert("there is no canvas");
                 return;
             }
-            ;
-
             if (this.cursorCanvas == canvas) {
                 context.clearRect(0, 0, win.width, win.height);
             }
-            ;
-
             $.each(win.imgs, function (i, imgpart) {
                 var img = new Image();
                 img.id = "imgcanvas";
                 img.style.display = "none";
                 img.onload = function () {
                     context.drawImage(img, imgpart.x, imgpart.y, img.width, img.height);
-                }
+                };
                 img.src = imgpart.img;
             })
 
@@ -313,7 +309,7 @@ ThinVNC = function () {
                 this.ws.send(query + "&id=" + this.rcParams.id);
             }
         }
-    }
+    };
 
     this.receiveScreen = function (obj) {
         TVNC.scale = TVNC.getScale();
@@ -331,7 +327,7 @@ ThinVNC = function () {
 
             $.each(obj.windows, function (i, win) {
                 TVNC.processWindow(win);
-            })
+            });
 
             for (var i = TVNC.vncdiv.children.length - 1; i >= 0; i--) {
                 var found = false;
@@ -342,7 +338,7 @@ ThinVNC = function () {
                     if (canvas.id == canvasid) {
                         found = true;
                     }
-                })
+                });
                 if (!found) {
                     canvas.style.display = "none";
                     canvas.innerHTML = '';
@@ -370,7 +366,7 @@ ThinVNC = function () {
                 setTimeout(TVNC.reload, 1);
             }
         }
-    }
+    };
 
     this.serverCmdResult = function (data) {
 
@@ -425,71 +421,69 @@ ThinVNC = function () {
         if (TVNC.rcParams.active && TVNC.rcParams.mouseControl) {
             setTimeout(TVNC.sendMouseMove, 100);
         }
-        ;
-
         if (TVNC.startPending)
             setTimeout(TVNC.start, 1);
 
         $(window).trigger("onServerCommandResult", obj);
 
-    }
+    };
 
     this.sendCmd = function (query) {
         return this.sendServerCmd("cmd", query);
-    }
+    };
 
 
     this.setMouseControl = function (value) {
         this.sendCmd("cmd=params&mouseControl=" + value + "&kbdControl=" + !TVNC.rcParams.kbdControl);
-    }
+    };
 
     this.setQuality = function (value) {
         this.sendCmd("cmd=params&quality=" + value);
-    }
+    };
 
     this.setimageMethod = function (value) {
         this.sendCmd("cmd=params&imageMethod=" + value);
-    }
+    };
 
     this.setGrayscale = function (value) {
         this.sendCmd("cmd=params&grayscale=" + value);
-    }
+    };
 
     this.setKbdControl = function (value) {
         this.sendCmd("cmd=params&kbdControl=" + value);
-    }
+    };
 
     this.setRemotePointer = function (value) {
         this.sendCmd("cmd=params&remotePointer=" + value);
-    }
+    };
 
     this.setPixelFormat = function (value) {
         this.sendCmd("cmd=params&pixelFormat=" + value);
-    }
+    };
 
     this.setMonitor = function (m) {
         if (m >= this.rcParams.monitorCount)
             m = -1;
         this.sendCmd("cmd=params&monitor=" + m);
-    }
+    };
 
     this.clearSID = function () {
         var d = new Date();
         document.cookie = "SID=; expires=-1;";
-    }
+    };
     this.disconnect = function () {
         if (document.getElementById(TVNC.reconnectDivId)) {
             $('#' + TVNC.reconnectDivId).remove();
         }
         TVNC.disposeTimeout = setTimeout(TVNC.dispose, TVNC.disposeTimeoutValue);
         TVNC.sendCmd("cmd=disconnect");
-    }
+    };
     this.removeListeners = function () {
         $(document).unbind();
         $('#' + TVNC.vncdivId).unbind();
         window.removeEventListener('DOMMouseScroll', TVNC.wheel, false);
         window.onmousewheel = null;
-    }
+    };
     this.dispose = function () {
         TVNC.alive = false;
         clearTimeout(TVNC.disposeTimeout);
@@ -510,21 +504,21 @@ ThinVNC = function () {
             TVNC.xmlHttpJson = null;
         }
 
-    }
+    };
     this.stop = function () {
         this.sendCmd("cmd=stop");
-    }
+    };
 
     this.start = function () {
         this.startPending = false;
         this.rcParams.active = false;
-        var cmd = "cmd=start"
+        var cmd = "cmd=start";
         cmd = cmd + "&mouseControl=" + this.rcParams.mouseControl + "&kbdControl=" + this.rcParams.kbdControl;
         cmd = cmd + "&quality=" + this.rcParams.quality + "&pixelFormat=" + this.rcParams.pixelFormat;
         cmd = cmd + "&monitor=" + this.rcParams.monitor;
         TVNC.sendCmd(cmd);
         $('#' + TVNC.vncdivId).show();
-    }
+    };
     this.connect = function () {
         if (!this.connecting && !this.connected && TVNC.xmlHttpJson == null) {
             this.clearSID();
@@ -548,7 +542,7 @@ ThinVNC = function () {
             });
             $(window).trigger("serverConnecting");
         }
-    }
+    };
     this.onConnectResult = function (data) {
         TVNC.xmlHttpJson = null;
         TVNC.connecting = false;
@@ -583,7 +577,7 @@ ThinVNC = function () {
         } else {
             TVNC.reconnect();
         }
-    }
+    };
     this.gup = function (name) {
         name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
         var regexS = "[\\?&]" + name + "=([^&#]*)";
@@ -593,11 +587,11 @@ ThinVNC = function () {
             return "";
         else
             return results[1];
-    }
+    };
     this.refresh = function () {
         this.vncdiv.innerHTML = '';
         this.sendCmd("cmd=refresh");
-    }
+    };
 
     this.onJsonTimeout = function () {
         if (TVNC.xmlHttpJson)
@@ -606,7 +600,7 @@ ThinVNC = function () {
 
         TVNC.xmlHttpJson = null;
         TVNC.reconnect();
-    }
+    };
 
     this.reload = function () {
         if (!TVNC.connected) return;
@@ -646,14 +640,14 @@ ThinVNC = function () {
         else {
             TVNC.ws.send('cmd=ready');
         }
-    }
+    };
 
     this.clearMouse = function () {
         this.mouseMoved = false;
-    }
+    };
     this.sendEvent = function (url) {
         $.ajaxq(this.queueRequestName, {url: url, async: true});
-    }
+    };
 
     this.sendKey = function (key, char, action) {
         if (TVNC.rcParams.active && TVNC.rcParams.kbdControl) {
@@ -663,7 +657,7 @@ ThinVNC = function () {
                 this.sendEvent(url);
             } else TVNC.ws.send(query);
         }
-    }
+    };
 
     this.sendFunctionKey = function (key) {
         if (TVNC.rcParams.active && TVNC.rcParams.kbdControl) {
@@ -673,7 +667,7 @@ ThinVNC = function () {
                 this.sendEvent(url);
             } else TVNC.ws.send(query);
         }
-    }
+    };
 
     this.sendMouse = function (x, y, button, action) {
         if (TVNC.rcParams.active && TVNC.rcParams.mouseControl) {
@@ -688,7 +682,7 @@ ThinVNC = function () {
             } else TVNC.ws.send(query);
 
         }
-    }
+    };
 
     this.sendMouseMove = function () {
         if (TVNC.rcParams.active && TVNC.rcParams.mouseControl) {
@@ -697,7 +691,7 @@ ThinVNC = function () {
             }
             setTimeout(TVNC.sendMouseMove, 100);
         }
-    }
+    };
     this.sendWheel = function (delta) {
         if (TVNC.rcParams.active && TVNC.rcParams.mouseControl) {
             var query = "cmd=mouse&action=wheel&delta=" + delta + "&id=" + TVNC.rcParams.id;
@@ -708,7 +702,7 @@ ThinVNC = function () {
             } else TVNC.ws.send(query);
 
         }
-    }
+    };
     this.wheel = function (event) {
         var delta = 0;
         if (!event) event = window.event;
@@ -721,7 +715,7 @@ ThinVNC = function () {
         if (delta) TVNC.sendWheel(delta);
         event.stopPropagation();
         event.preventDefault();
-    }
+    };
 
     this.IsFunctionKey = function (keyCode) {
         return ((keyCode >= 112) && (keyCode <= 123) ||
@@ -733,7 +727,7 @@ ThinVNC = function () {
             (keyCode == 8) || (keyCode == 27) ||
             (keyCode == 144) || (keyCode == 12) ||
             (keyCode == 224));
-    }
+    };
 
     this.hookKM = function () {
 
@@ -817,7 +811,7 @@ ThinVNC = function () {
         this.vncDivElement.bind("contextmenu", function (e) {
             return false;
         });
-    }
+    };
     this.onTouchStart = function (e) {
         if (TVNC.iphone) {
             if (e.touches.length == 1) {
@@ -840,7 +834,7 @@ ThinVNC = function () {
 
         e.stopPropagation();
         e.preventDefault();
-    }
+    };
     this.onTouchMove = function (e) {
         var currentX = TVNC.serverMouseX(e, false);
         var currentY = TVNC.serverMouseY(e, false);
@@ -856,14 +850,14 @@ ThinVNC = function () {
                 TVNC.moveCursorCanvas(e.touches[0].pageX, e.touches[0].pageY);
             }
         }
-    }
+    };
     this.onTouchEnd = function (e) {
         var button = (TVNC.iphone) ? 0 : e.button;
         TVNC.sendMouse(TVNC.mouseX, TVNC.mouseY, button, "up");
         e.stopPropagation();
         e.preventDefault();
 
-    }
+    };
 
     this.connectWebSocket = function () {
         if (TVNC.connected) {
@@ -904,7 +898,7 @@ ThinVNC = function () {
                         TVNC.reconnect();
                     } else TVNC.start();
 
-                }
+                };
 
                 // Called when connection is closed
                 TVNC.ws.onclose = function () {
@@ -916,7 +910,7 @@ ThinVNC = function () {
                 TVNC.start(); 	//ajax transfer			
             }
         }
-    }
+    };
     this.getNextHighestZindex = function (obj) {
         var highestIndex = 0;
         var currentIndex = 0;
@@ -937,7 +931,7 @@ ThinVNC = function () {
             }
         }
         return (highestIndex + 1);
-    }
+    };
 
     this.reconnect = function () {
         clearTimeout(TVNC.jsonTimeout);
@@ -963,7 +957,7 @@ ThinVNC = function () {
         }
         TVNC.connect();
 
-    }
+    };
 
     this.init = function (dd) {
         for (var o in dd) TVNC.rcParams[o] = dd[o];
@@ -999,4 +993,4 @@ ThinVNC = function () {
 
         TVNC.connect();
     };
-}
+};

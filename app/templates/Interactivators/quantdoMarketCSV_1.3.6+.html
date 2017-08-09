@@ -56,7 +56,7 @@
                 \<span type="button" class="am-close am-fr">&times;\</span\>\
                 \<p class="am-text-center">' + message + '\</p>\
             \</div>\
-        ')
+        ');
         $('.am-alert').alert();
         if (success) {
             $('.am-alert').addClass('am-alert-success').show();
@@ -93,8 +93,7 @@
                 }
             }
         );
-    };
-
+    }
     //function importCSV() {
     var prompt = $('#marketCSV_ImportFile').closest('.am-modal-loading');
     $('#market_csv').ajaxfileupload({
@@ -105,7 +104,7 @@
             prompt.modal('close')
         },
         onStart: function () {
-            console.log('import start.')
+            console.log('import start.');
             $('#marketCSV_Spinner').toggle();
         }
     });

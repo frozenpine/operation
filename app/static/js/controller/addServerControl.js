@@ -31,6 +31,15 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
     $scope.editServerData = function (index) {
         $scope.clearSysData();
         $scope.editOrPost = false;
+        angular.forEach($scope.systemServerData, function(data, dataIndex) {
+            if (index != dataIndex) {
+                data.style = {};
+            } else {
+                data.style = {
+                    backgroundColor: "#d7effb"
+                };
+            }
+        });
         $scope.addServerData.name = $scope.systemServerData[index].name;
         $scope.addServerData.ip = $scope.systemServerData[index].manage_ip;
         $scope.addServerData.password = "";
@@ -43,6 +52,27 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
     $scope.editSystemData = function (id) {
         $scope.clearSysData();
         $scope.editOrPost = false;
+        angular.forEach($scope.systemTreeData, function(data, dataIndex) {
+            if (id != data.id) {
+                for (var i = 0; i < data.child.length; i++) {
+                    if (id == data.child[i].id) {
+                        data.child[i].style = {
+                            backgroundColor: "#d7effb"
+                        };
+                    } else {
+                        data.child[i].style = {};
+                    }
+                }
+                data.style = {};
+            } else {
+                for (var j = 0; j < data.child.length; j++) {
+                    data.child[j].style = {};
+                }
+                data.style = {
+                    backgroundColor: "#d7effb"
+                };
+            }
+        });
         $systemServer.getSystem({
             id: id,
             onSuccess: function (res) {

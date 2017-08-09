@@ -21,6 +21,8 @@ class OperationGroupListApi(Resource):
             'sys_id': '系统',
             'trigger_time': '触发时间'
         }
+        self.op_group_list = []
+        self.disabled_list = []
 
     def get(self):
         op_groups = OperationGroup.query.all()
@@ -46,8 +48,6 @@ class OperationGroupListApi(Resource):
                 return RestProtocol(err)
             except DataTypeError as err:
                 return RestProtocol(err)
-            hour, minute = data['operation_group'].pop('trigger_time').split(':')
-            data['operation_group']['trigger_time'] = unicode(time(int(hour), int(minute)))
             og = OperationGroup(**data['operation_group'])
             ''' og.name = data['operation_group'].get('name')
             og.description = data['operation_group'].get('description')
@@ -82,6 +82,37 @@ class OperationGroupListApi(Resource):
             db.session.add_all(operations)
             db.session.commit()
             return RestProtocol(og)
+
+    def put(self):
+        try:
+            data_list = request.get_json(force=True)
+        except BadRequest:
+            return RestProtocol(DataNotJsonError())
+        else:
+            for data in data_list:
+                if len(data):
+                    for og in data:
+                        op_group = OperationGroup.find(id=og.get('id'))
+                        if op_group:
+                            if og.get('disabled'):
+                                self.disabled_list.append(op_group)
+                                op_group.disabled = True
+                            else:
+                                try:
+                                    if og.get('trigger_time') and not self.pattern.match(og.get('trigger_time')):
+                                        raise DataTypeError("Please enter the trigger time formatted as 'HH:MM'.")
+                                except DataTypeError as e:
+                                    return RestProtocol(e)
+                                else:
+                                    op_group.name = og.get('name', op_group.name)
+                                    if og.get('trigger_time'):
+                                        op_group.trigger_time = og.get('trigger_time') + ':00'
+                                    self.op_group_list.append(op_group)
+                                    op_group.order = (self.op_group_list.index(op_group) + 1) * 10
+            db.session.add_all(self.op_group_list)
+            db.session.add_all(self.disabled_list)
+            db.session.commit()
+            return RestProtocol(message='Success')
 
 
 class OperationGroupApi(Resource):
@@ -158,3 +189,42 @@ class OperationGroupApi(Resource):
                 return RestProtocol(op_group)
         else:
             return {'message': 'Not found'}, 404
+
+
+'''class OperationGroupAdjustApi(Resource):
+    def __init__(self):
+        super(OperationGroupAdjustApi, self).__init__()
+        self.pattern = re.compile('^[0-1]?\d|2[0-3]:[0-5]?\d$')
+        self.op_group_list = []
+        self.disabled_list = []
+
+    def put(self):
+        try:
+            data_list = request.get_json(force=True)
+        except BadRequest:
+            return RestProtocol(DataNotJsonError())
+        else:
+            for data in data_list:
+                if len(data):
+                    for og in data:
+                        op_group = OperationGroup.find(id=og.get('id'))
+                        if op_group:
+                            if og.get('disabled') is True:
+                                self.disabled_list.append(op_group)
+                                op_group.disabled = True
+                            else:
+                                try:
+                                    if og.get('trigger_time') and not self.pattern.match(og.get('trigger_time')):
+                                        raise DataTypeError("Please enter the trigger time formatted as 'HH:MM'.")
+                                except DataTypeError as e:
+                                    return RestProtocol(e)
+                                else:
+                                    op_group.name = og.get('name', op_group.name)
+                                    if og.get('trigger_time'):
+                                        op_group.trigger_time = og.get('trigger_time') + ':00'
+                                    self.op_group_list.append(op_group)
+                                    op_group.order = (self.op_group_list.index(op_group) + 1) * 10
+            db.session.add_all(self.op_group_list)
+            db.session.add_all(self.disabled_list)
+            db.session.commit()
+            return RestProtocol(message='Success')'''
