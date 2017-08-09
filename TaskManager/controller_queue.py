@@ -6,6 +6,7 @@ import logging
 from enum import Enum
 from gevent.queue import JoinableQueue
 
+import get_time
 from controller_msg import msg_dict
 
 logging.basicConfig(level="INFO")
@@ -21,9 +22,8 @@ class TaskStatus(Enum):
 
 class ControllerQueue(object):
     def __init__(self, controller_queue_uuid, group_block):
-        # self.create_time = get_time.current_ymd_hms()
-        # fixme: for debug:
-        self.create_time = "2017/01/01-12:00:00"
+        self.create_time = get_time.current_ymd_hms()
+        # self.create_time = "2017/01/01-12:00:00"
         self.group_block = group_block
         self.controller_queue_status = 0
         self.controller_queue_uuid = controller_queue_uuid
