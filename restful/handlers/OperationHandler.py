@@ -243,8 +243,8 @@ class OperationListRunApi(OperationMixin, Resource):
                 )
             else:
                 return RestProtocol(
-                    error_code=ret_code.value,
-                    message=dispatchMessage[ret_code]
+                    error_code=ret_code,
+                    message=data
                 )
         else:
             return RestProtocol(message='Operation group not found', error_code=-1), 404
@@ -261,18 +261,18 @@ class OperationListRunAllApi(OperationMixin, Resource):
                 operator = current_user
             else:
                 operator = Operator.find(login='admin')
+            session = {
+                'operator_id': operator.id,
+                'operated_at': unicode(arrow.utcnow())
+            }
             ret_code, data = taskManager.run_all(
                 op_group.uuid,
-                json.dumps({
-                    'operator_id': operator.id,
-                    'operated_at': unicode(arrow.utcnow())
-                })
+                json.dumps(session)
             )
-            # ret_code = DispatchResult(ret_code)
             if ret_code == 0:
                 op = Operation.find(uuid=data)
                 ret, self.snapshot = taskManager.snapshot(op_group.uuid)
-                return RestProtocol(self.make_operation_detail(op))
+                return RestProtocol(self.make_operation_detail(op, session))
             else:
                 return RestProtocol(
                     message=data,
