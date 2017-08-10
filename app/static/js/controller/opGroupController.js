@@ -105,6 +105,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                     $scope.queue_blocked = false;
                 }, 0);
                 $message.Success('队列已恢复');
+                $scope.GetOperationList();
             },
             onError: function(data) {
                 $message.Warning(data.message);
