@@ -21,33 +21,6 @@
 
 <body ng-controller="mainController">
     <!-- Modal Dialog Begin -->
-    <!-- <div class="am-modal am-modal-confirm" tabindex="-1" id="modifyPassword">
-        <div class="am-modal-dialog">
-            <div class="am-modal-hd" style="font-weight: bold; color: #000">修改密码</div>
-            <div class="am-modal-bd am-vertical-align">
-                <form class="am-center am-vertical-align-middle am-form" style="width: 400px">
-                    <fieldset>
-                        <div class="am-input-group" style="padding: 3px">
-                            <span class="am-input-group-label"><i class="am-icon-lock am-icon-fw"></i></span>
-                            <input id="oldPwd" type="password" class="am-form-field" placeholder=" 原始密码" required/>
-                        </div>
-                        <div class="am-input-group" style="padding: 3px">
-                            <span class="am-input-group-label"><i class="am-icon-lock am-icon-fw"></i></span>
-                            <input id="newPwd" type="password" class="am-form-field" placeholder=" 修改密码" required/>
-                        </div>
-                        <div class="am-input-group" style="padding: 3px">
-                            <span class="am-input-group-label"><i class="am-icon-lock am-icon-fw"></i></span>
-                            <input id="newPwdConfirm" type="password" class="am-form-field" placeholder=" 确认密码" required/>
-                        </div>
-                    </fieldset>
-                </form>
-            </div>
-            <div class="am-modal-footer">
-                <span class="am-modal-btn" data-am-modal-cancel>取消</span>
-                <span class="am-modal-btn">确定</span>
-            </div>
-        </div>
-    </div> -->
     <modal-dialog head-title="修改密码" dialog-id="modifyPassword" modal-class="am-modal-confirm" url="UI/dialogs/modifyPassword"></modal-dialog>
     <!-- <div ng-init="currentId = [[user_id]]" ng-controller="Privileges"> -->
     <div ng-init="currentId = [[user_id]]">
@@ -453,18 +426,15 @@
                                     <i class="am-icon-close am-margin-left-xs" style="cursor: pointer" ng-click="grpOrderEdit[data.id]=false"></i>
                                 </span>
                                 <li ng-repeat="children in opGroupEditList[data.id]" ng-show="!children.disabled" sv-element>
-                                    <!-- <a href="javascript:void(0);" class="am-inline-block" style="padding-left: 10px;"> -->
                                     <div style="padding: 12px 8px 12px 10px;font-size: 12px">
                                         <span class="am-inline-block">
                                             <input type="text" ng-model="children.name" style="width: 50px;background-color: transparent;margin-top: -5px;font-size: 12px" ng-class="{true: 'invalid', false: ''}[children.name === undefined]" required> -
                                             <input type="time" ng-model="children.trigger_time" style="background-color: transparent;margin-top: -5px;font-size:12px" ng-class="{true: 'invalid', false: ''}[children.trigger_time === undefined]" required>
                                         </span>
-                                        <!-- </a> -->
-                                        <span style="cursor: pointer;margin-left: -10px;" ng-show="grpOrderEdit[data.id]" sv-handle class="am-icon-bars am-inline-block"></span>
+                                        <span style="cursor: pointer;" ng-show="grpOrderEdit[data.id]" sv-handle class="am-icon-bars am-inline-block"></span>
                                         <i class="am-icon-trash am-margin-left-xs" style="cursor: pointer" ng-click="groupItemDelete(children)"></i>
                                     </div>
                                 </li>
-                                <a href="{{data.emerge_ops.Url}}" style="color: #96a5aa; font-size: 12px;padding-left: 10px; padding-bottom: 8px;">{{::data.emerge_ops.name}}</a>
                             </ul>
                             <ul class="am-dropdown-content" id="second{{data.id}}" ng-if="data.isSecond" style="display: block;" ng-show="showListIcon && !grpOrderEdit[data.id]">
                                 <span style="margin-left: 15px; font-size: 10pt; font-weight: bold; color: #7FB0DA;">
@@ -512,17 +482,14 @@
                             <ul class="tpl-left-nav-sub-menu" id="{{data.id}}" ng-if="data.isSecond" style="display: block" ng-show="data.isShow && grpOrderEdit[data.id]" sv-root sv-part="opGroupEditList[data.id]">
                                 <li ng-repeat="children in opGroupEditList[data.id]" ng-show="!children.disabled" style="vertical-align: center;" sv-element>
                                     <div style="padding: 10px 0 10px 20px; font-size: 14px">
-                                        <!-- <a href="javascript:void(0);" class="am-inline-block" style="padding-left: 20px;padding-right: 0;"> -->
                                         <span class="am-icon-circle am-inline-block">
                                             <input type="text" ng-model="children.name" style="width: 60px;background-color: transparent;font-size: 14px;" ng-class="{true: 'invalid', false: ''}[children.name === undefined]" required> -
                                             <input type="time" style="background-color: transparent;font-size: 14px" ng-model="children.trigger_time" ng-class="{true: 'invalid', false:''}[children.trigger_time === undefined]" required>
                                         </span>
-                                        <!-- </a> -->
                                         <span style="cursor: pointer;" sv-handle class="am-icon-bars am-inline-block"></span>
                                         <i class="am-icon-trash am-margin-left-xs" style="cursor: pointer;" ng-click="groupItemDelete(children)"></i>
                                     </div>
                                 </li>
-                                <a href="{{data.emerge_ops.Url}}" style="color: #485a6a; font-size: 14px;padding-left: 20px; padding-bottom: 8px;">{{::data.emerge_ops.name}}</a>
                             </ul>
                             <ul class="tpl-left-nav-sub-menu" id="{{data.id}}" ng-if="data.isSecond" style="display: block" ng-show="data.isShow && !grpOrderEdit[data.id]">
                                 <li ng-repeat="children in data.secondName" ng-click="operateChange(children.id)" style="vertical-align: center;">
