@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 import datetime
 import json
+import re
 from os import path
 
 import arrow
@@ -145,13 +146,17 @@ class OperationListApi(OperationMixin, Resource):
             }
             now_time = datetime.datetime.today()
             try:
-                trigger_hour, trigger_minute, trigger_second = \
-                    op_group.trigger_time.split(':')
+                ''' trigger_hour, trigger_minute = \
+                    op_group.trigger_time.split(':') '''
+                trigger_time = re.match(
+                    r'^(?P<hour>\d{1,2}):(?P<minute>\d{1,2})(?:\d{1,2})?',
+                    op_group.trigger_time
+                ).groupdict()
             except (AttributeError, ValueError):
-                trigger_time = None
+                trigger_time = datetime.time(0, 0, 0)
             else:
                 trigger_time = datetime.time(
-                    int(trigger_hour), int(trigger_minute), int(trigger_second)
+                    int(trigger_time['hour']), int(trigger_time['minute'])
                 )
             if isinstance(self.snapshot, dict):
                 create_time = datetime.datetime.strptime(
