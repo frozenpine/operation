@@ -577,17 +577,27 @@ class TradeSystem(SQLModelMixin, db.Model):
             self.login_pwd = password
 
     base_dir = db.Column(db.String)
-    processes = db.relationship('TradeProcess', backref='system')
+    processes = db.relationship(
+        'TradeProcess', backref='system',
+        primaryjoin="and_(TradeProcess.sys_id == TradeSystem.id,"
+                    "TradeProcess.disabled == False)"
+    )
     servers = db.relationship(
         'Server',
         secondary='trade_processes',
         backref=db.backref('systems', lazy='dynamic'),
-        lazy='dynamic'
+        lazy='dynamic',
+        primaryjoin="and_(TradeProcess.sys_id == TradeSystem.id,"
+                    "TradeProcess.disabled == False)",
+        secondaryjoin="and_(TradeProcess.svr_id == Server.id,"
+                      "Server.disabled == False)"
     )
     vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.id'), index=True)
     parent_sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     parent_system = db.relationship(
-        'TradeSystem', backref='child_systems', remote_side=[id]
+        'TradeSystem', backref='child_systems', remote_side=[id],
+        primaryjoin="and_(TradeSystem.parent_sys_id == TradeSystem.id,"
+                    "TradeSystem.disabled == False)"
     )
     operation_groups = db.relationship(
         'OperationGroup', backref='system',
@@ -596,7 +606,9 @@ class TradeSystem(SQLModelMixin, db.Model):
                     "OperationGroup.disabled == False)"
     )
     operation_book = db.relationship(
-        'OperationBook', backref='system', lazy="dynamic"
+        'OperationBook', backref='system', lazy="dynamic",
+        primaryjoin="and_(OperationBook.sys_id == TradeSystem.id,"
+                    "OperationBook.disabled == False)"
     )
     data_sources = db.relationship(
         'DataSource', backref='system', lazy='dynamic',
@@ -604,7 +616,9 @@ class TradeSystem(SQLModelMixin, db.Model):
                     "DataSource.disabled == False)"
     )
     config_files = db.relationship(
-        'ConfigFile', backref='system', lazy='dynamic'
+        'ConfigFile', backref='system', lazy='dynamic',
+        primaryjoin="and_(ConfigFile.sys_id == TradeSystem.id,"
+                    "ConfigFile.disabled == False)"
     )
 
     @property
@@ -709,7 +723,11 @@ class Server(SQLModelMixin, db.Model):
         else:
             self.admin_pwd = password
 
-    processes = db.relationship('TradeProcess', backref='server', lazy='dynamic')
+    processes = db.relationship(
+        'TradeProcess', backref='server', lazy='dynamic',
+        primaryjoin="and_(TradeProcess.svr_id == Server.id,"
+                    "TradeProcess.disabled == False)"
+    )
 
 class Operation(SQLModelMixin, db.Model):
     __tablename__ = 'operations'
@@ -879,4 +897,4 @@ class ConfigFile(SQLModelMixin, db.Model):
     hash_code = db.Column(db.String)
     timestamp = db.Column(ArrowType, index=True)
     storage = db.Column(db.String)
-    active = db.Column(db.Boolean, default=True)
+    disabled = db.Column(db.Boolean, default=False)

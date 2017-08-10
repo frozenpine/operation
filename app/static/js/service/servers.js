@@ -31,36 +31,12 @@ app.service('$servers', function($http, $message, $localStorage, $timeout, $root
                 angular.extend($localStorage['svrStatics_' + params.sysID], { last_request: request_timestamp });
             }, 0);
         }
-        /* $websocket.Request({
-            uri: 'api/system/id/' + params.sysID + '/svr_statics/check',
-            method: 'get',
-            callback: function(response) {
-                if (response.error_code == 0) {
-                    if ($localStorage.hasOwnProperty('svrStatics_' + params.sysID)) {
-                        $timeout(function() {
-                            angular.merge($localStorage['svrStatics_' + params.sysID], response.data);
-                        })
-                    } else {
-                        $timeout(function() {
-                            $localStorage['svrStatics_' + params.sysID] = angular.merge(
-                                response.data, { last_request: request_timestamp }
-                            );
-                        });
-                    }
-                    if (params.hasOwnProperty('onSuccess')) {
-                        params.onSuccess(response.data);
-                    }
-                } else if (params.hasOwnProperty('onError')) {
-                    params.onError(response);
-                }
-            }
-        }); */
         $http.get('api/system/id/' + params.sysID + '/svr_statics/check')
             .success(function(response) {
                 if (response.error_code === 0) {
-                    if ($localStorage.hasOwnProperty('svrStatics_' + params.sysID)) {
+                    /* if ($localStorage.hasOwnProperty('svrStatics_' + params.sysID)) {
                         $timeout(function() {
-                            angular.merge($localStorage['svrStatics_' + params.sysID], response.data);
+                            $localStorage['svrStatics_' + params.sysID] = response.data;
                         });
                     } else {
                         $timeout(function() {
@@ -68,7 +44,12 @@ app.service('$servers', function($http, $message, $localStorage, $timeout, $root
                                 response.data, { last_request: request_timestamp }
                             );
                         });
-                    }
+                    } */
+                    $timeout(function() {
+                        $localStorage['svrStatics_' + params.sysID] = angular.merge(
+                            response.data, { last_request: request_timestamp }
+                        );
+                    });
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess(response.data);
                     }
@@ -89,19 +70,6 @@ app.service('$servers', function($http, $message, $localStorage, $timeout, $root
         if (params.sysID === undefined) {
             return;
         }
-        /* $websocket.Request({
-            uri: 'api/system/id/' + params.sysID + '/svr_statics',
-            method: 'get',
-            callback: function(response) {
-                if (response.error_code == 0) {
-                    if (params.hasOwnProperty('onSuccess')) {
-                        params.onSuccess(response.data);
-                    }
-                } else if (params.hasOwnProperty('onError')) {
-                    params.onError(response);
-                }
-            }
-        }); */
         $http.get('api/system/id/' + params.sysID + '/svr_statics')
             .success(function(response) {
                 if (response.error_code === 0) {

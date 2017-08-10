@@ -70,7 +70,8 @@ class UIDataApi(Resource):
                         'id': group.id,
                         'name': group.name,
                         'trigger_time': group.trigger_time,
-                        'Url': '#system/{}/op_group/{}'.format(sys.id, group.id)
+                        'Url': '#system/{}/op_group/{}'.format(sys.id, group.id),
+                        'is_emerge': group.is_emergency
                     } for group in sys.operation_groups]
             }
             if privileged:

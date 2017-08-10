@@ -56,7 +56,9 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
         }
     }
 
+    $scope.checkingSideBarList = false;
     $scope.SideBarList = function() {
+        $scope.checkingSideBarList = true;
         $uidatas.SideBarList({
             onSuccess: function(data) {
                 angular.forEach(data.records, function(value, index) {
@@ -64,6 +66,7 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
                     // $scope.opGroupEditList[value.id] = new Array(value.secondName.length);
                 });
                 $scope.listName = data.records;
+                $scope.checkingSideBarList = false;
             }
         });
     };
@@ -153,6 +156,7 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
             onSuccess: function(data) {
                 $scope.SideBarList();
                 $scope.grpOrderEdit[id] = false;
+                $message.Success('修改操作组成功');
             }
         });
     };

@@ -30,34 +30,10 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
                 angular.extend($localStorage['sysStatics_' + params.sysID], { last_request: request_timestamp });
             }, 0);
         }
-        /* $websocket.Request({
-            uri: 'api/system/id/' + params.sysID + '/sys_statics/check',
-            method: 'get',
-            callback: function(response) {
-                if (response.error_code == 0) {
-                    if ($localStorage.hasOwnProperty('sysStatics_' + params.sysID)) {
-                        $timeout(function() {
-                            angular.merge($localStorage['sysStatics_' + params.sysID], response.data);
-                        })
-                    } else {
-                        $timeout(function() {
-                            $localStorage['sysStatics_' + params.sysID] = angular.merge(
-                                response.data, { last_request: request_timestamp }
-                            );
-                        });
-                    }
-                    if (params.hasOwnProperty('onSuccess')) {
-                        params.onSuccess(response.data);
-                    }
-                } else if (params.hasOwnProperty('onError')) {
-                    params.onError(response);
-                }
-            }
-        }); */
         $http.get('api/system/id/' + params.sysID + '/sys_statics/check')
             .success(function(response) {
                 if (response.error_code === 0) {
-                    if ($localStorage.hasOwnProperty('sysStatics_' + params.sysID)) {
+                    /* if ($localStorage.hasOwnProperty('sysStatics_' + params.sysID)) {
                         $timeout(function() {
                             angular.merge($localStorage['sysStatics_' + params.sysID], response.data);
                         });
@@ -67,7 +43,12 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
                                 response.data, { last_request: request_timestamp }
                             );
                         });
-                    }
+                    } */
+                    $timeout(function() {
+                        $localStorage['sysStatics_' + params.sysID] = angular.merge(
+                            response.data, { last_request: request_timestamp }
+                        );
+                    });
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess(response.data);
                     }
@@ -88,19 +69,6 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
         if (params.sysID === undefined) {
             return;
         }
-        /* $websocket.Request({
-            uri: 'api/system/id/' + params.sysID + '/sys_statics',
-            method: 'get',
-            callback: function(response) {
-                if (response.error_code == 0) {
-                    if (params.hasOwnProperty('onSuccess')) {
-                        params.onSuccess(response.data);
-                    }
-                } else if (params.hasOwnProperty('onError')) {
-                    params.onError(response);
-                }
-            }
-        }); */
         $http.get('api/system/id/' + params.sysID + '/sys_statics')
             .success(function(response) {
                 if (response.error_code === 0) {
@@ -151,7 +119,7 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
         $http.get('api/system/id/' + params.sysID + '/login_statics/check')
             .success(function(response) {
                 if (response.error_code === 0) {
-                    if ($sessionStorage.hasOwnProperty('loginStatics_' + params.sysID)) {
+                    /* if ($sessionStorage.hasOwnProperty('loginStatics_' + params.sysID)) {
                         $timeout(function() {
                             angular.merge($sessionStorage['loginStatics_' + params.sysID], response.data);
                         });
@@ -161,7 +129,12 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
                                 response.data, { last_request: request_timestamp }
                             );
                         });
-                    }
+                    } */
+                    $timeout(function() {
+                        $sessionStorage['loginStatics_' + params.sysID] = angular.merge(
+                            response.data, { last_request: request_timestamp }
+                        );
+                    });
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess(response.data);
                     }
@@ -232,7 +205,7 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
         $http.get('api/system/id/' + params.sysID + '/user_sessions')
             .success(function(response) {
                 if (response.error_code === 0) {
-                    if ($sessionStorage.hasOwnProperty('clientSessions_' + params.sysID)) {
+                    /* if ($sessionStorage.hasOwnProperty('clientSessions_' + params.sysID)) {
                         $timeout(function() {
                             angular.merge($sessionStorage['clientSessions_' + params.sysID], response.data);
                         });
@@ -242,7 +215,12 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
                                 response.data, { last_request: request_timestamp }
                             );
                         });
-                    }
+                    } */
+                    $timeout(function() {
+                        $sessionStorage['clientSessions_' + params.sysID] = angular.merge(
+                            response.data, { last_request: request_timestamp }
+                        );
+                    });
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess(response.data);
                     }

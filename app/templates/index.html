@@ -178,7 +178,7 @@
                         </div>
                         <label for="doc-ipt-3-a" class="am-u-sm-2 am-form-label">系统列表</label>
                         <div class="am-u-sm-5">
-                            <select id="doc-ipt-3-a" ng-model="optionBookEditData.sys" value="x.id" ng-options="x.name for x in systemListData" ng-disabled="optionBookEditData.main_sys==''" required>
+                            <select id="doc-ipt-3-a" ng-model="optionBookEditData.sys" value="x.id" ng-options="x.name for x in systemListData" ng-disabled="optionBookEditData.main_sys=='' || optionBookEditData.main_sys==undefined" required>
                                 <option value="">------</option>
                             </select>
                         </div>
@@ -186,18 +186,18 @@
                     <div class="am-form-group am-form-icon font-green">
                         <label for="doc-ipt-3-f" class="am-u-sm-2 am-form-label">脚本类型</label>
                         <div class="am-u-sm-3">
-                            <select ng-model="optionBookEditData.type" ng-disabled="optionBookEditData.sys==''" required>
+                            <select ng-model="optionBookEditData.type" ng-disabled="optionBookEditData.sys=='' || optionBookEditData.sys==undefined" ng-class="{true: 'invalid', false: ''}[optionBookEditData.type==undefined]" required>
                                 <option value="">------</option>
                                 <option value="Checker">检查</option>
                                 <option value="Executor">执行</option>
-                                <option value="Interactivator">交互</option>
+                                <!-- <option value="Interactivator">交互</option>
                                 <option value="Execute_Checker">执行与检查</option>
-                                <option value="Interactive_Checker">交互与检查</option>
+                                <option value="Interactive_Checker">交互与检查</option> -->
                             </select>
                         </div>
                         <label for="doc-ipt-3-r" class="am-u-sm-2 am-form-label">连接方式</label>
                         <div class="am-u-sm-5">
-                            <select id="doc-ipt-3-r" ng-model="optionBookEditData.remote_name" ng-disabled="optionBookEditData.sys==''" required>
+                            <select id="doc-ipt-3-r" ng-model="optionBookEditData.remote_name" ng-disabled="optionBookEditData.sys=='' || optionBookEditData.sys==undefined" required>
                                 <option value="">------</option>
                                 <option value="SSHConfig">SSHConfig</option>
                                 <option value="WinRmConfig">WinRmConfig</option>
@@ -207,11 +207,11 @@
                     <div class="am-form-group am-form-icon font-green">
                         <label for="doc-ipt-3-b" class="am-u-sm-2 am-form-label">名称</label>
                         <div class="am-u-sm-3">
-                            <input type="text" name="optionGroup_name" ng-disabled="optionBookEditData.sys==''" id="doc-ipt-3-b" value="optionBookEditData.name" ng-model="optionBookEditData.name" placeholder="必填项" required>
+                            <input type="text" name="optionGroup_name" ng-disabled="optionBookEditData.sys=='' || optionBookEditData.sys==undefined" id="doc-ipt-3-b" value="optionBookEditData.name" ng-model="optionBookEditData.name" placeholder="必填项" required>
                         </div>
                         <label for="doc-ipt-3-d" class="am-u-sm-2 am-form-label">分类</label>
                         <div class="am-u-sm-5">
-                            <select ng-model="optionBookEditData.catalog" ng-disabled="optionBookEditData.sys==''" ng-options="x.name for x in operationCatalogs" required>
+                            <select ng-model="optionBookEditData.catalog" ng-disabled="optionBookEditData.sys=='' || optionBookEditData.sys==undefined" ng-options="x.name for x in operationCatalogs" required>
                                 <option value="">------</option>
                             </select>
                         </div>
@@ -219,18 +219,18 @@
                     <div class="am-form-group am-form-icon font-green">
                         <label for="doc-ipt-3-c" class="am-u-sm-2 am-form-label">描述</label>
                         <div class="am-u-sm-10">
-                            <input type="text" name="optionGroup_des" id="doc-ipt-3-c" ng-disabled="optionBookEditData.sys==''" ng-model="optionBookEditData.description" placeholder="选填项">
+                            <input type="text" name="optionGroup_des" id="doc-ipt-3-c" ng-disabled="optionBookEditData.sys=='' || optionBookEditData.sys==undefined" ng-model="optionBookEditData.description" placeholder="选填项">
                         </div>
                     </div>
                     <div class="am-form-group am-form-icon font-green" ng-repeat="data in optionBookCommand track by $index">
                         <label for="doc-ta-1" class="am-u-sm-2 am-form-label font-green">命令输入</label>
                         <div class="am-u-sm-3">
-                            <input type="text" ng-model="data.shell" ng-change="shellChanged()" ng-disabled="optionBookEditData.sys==''" placeholder="必填项" required/>
+                            <input type="text" ng-model="data.shell" ng-change="shellChanged()" ng-disabled="optionBookEditData.sys=='' || optionBookEditData.sys==undefined" placeholder="必填项" required/>
                         </div>
                         <div class="am-u-sm-5">
                             <div class="am-input-group">
                                 <span class="am-input-group-label font-green">命令目录 :</span>
-                                <input type="text" class="am-form-field" ng-change="shellChanged()" ng-disabled="optionBookEditData.sys==''" ng-model="data.chdir" placeholder="选填项" />
+                                <input type="text" class="am-form-field" ng-change="shellChanged()" ng-disabled="optionBookEditData.sys=='' || optionBookEditData.sys==undefined" ng-model="data.chdir" placeholder="选填项" />
                             </div>
                         </div>
                         <div class="am-u-sm-2">
@@ -443,10 +443,9 @@
                                 </span>
                                 <li ng-repeat="children in data.secondName">
                                     <a href="{{children.Url}}" class="am-inline-block" style="padding-left: 10px;">
-                                        <span style="background-color: transparent;margin-top: -5px;">
-                                            {{children.name}}
-                                        </span> -
-                                        <span>{{children.trigger_time|time:'HH:mm'}}</span>
+                                        <span style="background-color: transparent;margin-top: -5px;" ng-class="{true: 'am-text-danger', false: ''}[children.is_emerge]">
+                                            {{children.name}} - {{children.trigger_time|time:'HH:mm'}}
+                                        </span>
                                     </a>
                                 </li>
                                 <a href="{{data.emerge_ops.Url}}" style="color: #96a5aa; font-size: 12px;padding-left: 10px; padding-bottom: 8px;">{{::data.emerge_ops.name}}</a>
@@ -461,6 +460,7 @@
             <div class="tpl-left-nav-title">
                 <div class="am-icon-list tpl-header-nav-hover-ico am-fr am-margin-right" style="cursor: pointer">
                 </div>
+                <span class="am-margin-right-xs am-icon-refresh am-fr am-inline-block am-icon-fw" ng-class="{true: 'am-icon-spin', false: ''}[checkingSideBarList]" ng-click="SideBarList()" style="cursor: pointer;font-size: 16px;margin-top:3px;color:#C0CDDC"></span>
             </div>
             <div class="tpl-left-nav-list">
                 <ul class="tpl-left-nav-menu">
@@ -495,9 +495,9 @@
                                 <li ng-repeat="children in data.secondName" ng-click="operateChange(children.id)" style="vertical-align: center;">
                                     <div>
                                         <a href="{{children.Url}}" style="padding-left: 20px;padding-right: 0;">
-                                            <span class="am-icon-circle" style="width: 165px;">
-                                            {{children.name}} - {{children.trigger_time|time:'HH:mm'}}
-                                        </span>
+                                            <span class="am-icon-circle" style="width: 165px;" ng-class="{true: 'am-text-danger', false: ''}[children.is_emerge]">
+                                                {{children.name}} - {{children.trigger_time|time:'HH:mm'}}
+                                            </span>
                                         </a>
                                     </div>
                                 </li>

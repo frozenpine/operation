@@ -543,7 +543,7 @@ ul.tpl-dropdown-content li>a.tpl-dropdown-content-message:last-child {
 .tpl-left-nav-sub-menu a span {
     font-size: 14px;
     font-weight: 400;
-    color: #485a6a;
+    /* color: #485a6a; */
 }
 
 .tpl-left-nav-item .nav-link i,
@@ -2118,6 +2118,11 @@ input.invalid {
     border-style: solid;
     border-width: 2px;
     border-color: coral;
+}
+
+select.invalid {
+    border-color: coral;
+    border-width: 2px;
 }
 
 

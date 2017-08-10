@@ -12,6 +12,10 @@ app.controller('optionBookController', ['$scope', '$rootScope', '$timeout', '$op
     });
 
     $scope.selectWhichSystem = function(id) {
+        if (id === undefined) {
+            $scope.optionBookEditData.sys = undefined;
+            return;
+        }
         $operationBooks.operationBookSystemListGet({
             sys_id: id,
             onSuccess: function(res) {
