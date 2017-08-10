@@ -2114,6 +2114,12 @@ div#optionEditTitle ul li {
     margin-right: 10px;
 }
 
+input.invalid {
+    border-style: solid;
+    border-width: 2px;
+    border-color: coral;
+}
+
 
 /* #resultTable tr th div input {
     width: 150px;

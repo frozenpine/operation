@@ -1,4 +1,3 @@
-var app = angular.module('myApp');
 app.service('$uidatas', function($http, $message) {
     this.SideBarList = function(params) {
         $http.get('api/UI/sideBarCtrl')

@@ -1,36 +1,9 @@
-app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout', '$uidatas', '$operationBooks', '$users', function($scope, $rootScope, $location, $timeout, $uidatas, $operationBooks, $users) {
+app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout', '$uidatas', '$operationBooks', '$users', '$message', function($scope, $rootScope, $location, $timeout, $uidatas, $operationBooks, $users, $message) {
     $scope.messagePosition = {};
+    $scope.opGroupTriggerTime = {};
+    $scope.opGroupEditList = {};
+    $scope.grpOrderEdit = {};
 
-    /* function getScrollTop() {
-        var scrollPos;
-        if (window.pageYOffset) {
-            scrollPos = window.pageYOffset;
-        } else if (document.compatMode && document.compatMode != 'BackCompat') {
-            scrollPos = document.documentElement.scrollTop;
-        } else if (document.body) {
-            scrollPos = document.body.scrollTop;
-        }
-        return scrollPos;
-    }
-
-    $('body').scroll(function(event) {
-        var topDistance = document.body.scrollTop;
-        if (topDistance > 86) {
-            $timeout(function() {
-                $scope.messagePosition = {
-                    position: "fixed",
-                    top: "3px",
-                    left: 0,
-                    right: "15px",
-                    zIndex: "999"
-                };
-            });
-        } else {
-            $timeout(function() {
-                $scope.messagePosition = {};
-            });
-        }
-    }); */
     $('body').on('scroll', function(event) {
         if (event.offsetY >= 86) {
             $timeout(function() {
@@ -51,7 +24,6 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
 
     /* Code 4 SideBar Start */
     $scope.tabList = [];
-    $scope.grpOrderEdit = {};
     var idList = [];
     $scope.$on('$routeChangeStart', function(evt, next, current) {
         if (next.params.hasOwnProperty('sysid')) {
@@ -69,20 +41,33 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
             $rootScope.isShowSideList = false;
         }
     });
+
     $scope.$on('OperationGroupRenew', function() {
         $timeout($scope.SideBarList(), 0);
     });
+
+    function formatTime(time_string) {
+        var match = time_string.match(/\d{1,2}:\d{1,2}(:\d{1,2})?/);
+        if (match !== null) {
+            var datetime = new Date('The Jan 01 1970 ' + match[0] + ' GMT+0800');
+            return datetime;
+        } else {
+            return '';
+        }
+    }
+
     $scope.SideBarList = function() {
         $uidatas.SideBarList({
             onSuccess: function(data) {
-                $scope.listName = data.records;
-                $scope.grpOrderEdit = [];
-                angular.forEach($scope.listName, function(value, index) {
+                angular.forEach(data.records, function(value, index) {
                     $scope.grpOrderEdit[value.id] = false;
+                    // $scope.opGroupEditList[value.id] = new Array(value.secondName.length);
                 });
+                $scope.listName = data.records;
             }
         });
     };
+
     $scope.SideBarList();
     $scope.showListChild = function(id) {
         angular.forEach($scope.listName, function(value, index) {
@@ -97,11 +82,51 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
     /**
      * 改变左边侧边栏的排序和内容
      */
-    $scope.changeSidebar = function(id, flag) {
-        $scope.grpOrderEdit[id] = false;
-        $scope.tempListData = [];
-        console.log($scope.listName);
-        for (var i = 0; i < $scope.listName.length; i++) {
+
+    $scope.groupEdit = function(data) {
+        $scope.grpOrderEdit[data.id] = true;
+        $scope.opGroupEditList[data.id] = [];
+        angular.forEach(data.secondName, function(value, index) {
+            $scope.opGroupEditList[data.id].push({
+                id: value.id,
+                name: value.name,
+                trigger_time: formatTime(value.trigger_time),
+                disabled: false
+            });
+        });
+    };
+
+    $scope.groupItemDelete = function(item) {
+        item.disabled = true;
+    }
+
+    $scope.groupCheckData = function(id) {
+        var flag = false;
+        angular.forEach($scope.opGroupEditList[id], function(value, index) {
+            if (value !== undefined && (value.name === undefined || value.trigger_time === undefined)) {
+                flag = true;
+            }
+            return;
+        });
+        return flag;
+    };
+
+    $scope.changeSidebar = function(id) {
+        var flag = false;
+        angular.forEach($scope.opGroupEditList[id], function(value, index) {
+            if (value !== undefined && (value.name === undefined || value.trigger_time === undefined)) {
+                flag = true;
+            }
+            return;
+        });
+        if (flag) { $message.Warning('操作组数据不完整'); return; }
+        var tempListData = angular.copy($scope.opGroupEditList[id]);
+        for (var i = 0; i < tempListData.length; i++) {
+            tempListData[i].trigger_time = $scope.opGroupEditList[id][i].trigger_time.getHours() + ':' +
+                $scope.opGroupEditList[id][i].trigger_time.getMinutes();
+        }
+        // console.log($scope.listName);
+        /* for (var i = 0; i < $scope.listName.length; i++) {
             for (var j = 0; j < $scope.listName[i].secondName.length; j++) {
                 var listObj = {};
                 listObj.id = $scope.listName[i].secondName[j].id.toString();
@@ -121,12 +146,13 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
                 }
                 $scope.tempListData.push(listObj);
             }
-        }
+        } */
         console.log($scope.tempListData);
         $uidatas.updateSideBar({
-            data: $scope.tempListData,
+            data: tempListData,
             onSuccess: function(data) {
                 $scope.SideBarList();
+                $scope.grpOrderEdit[id] = false;
             }
         });
     };
