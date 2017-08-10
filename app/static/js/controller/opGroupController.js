@@ -62,12 +62,12 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             onSuccess: function(data) {
                 $scope.opList = data;
                 $scope.optionGroupSelect = new Array(data.details.length);
+                $scope.optionEarliest = new Array(data.details.length);
+                $scope.optionLatiest = new Array(data.details.length);
                 angular.forEach($scope.opList.details, function(value, index) {
-                    $scope.optionEarliest.push(formatTime(value.time_range.lower));
-                    $scope.optionLatiest.push(formatTime(value.time_range.upper));
+                    $scope.optionEarliest[index] = formatTime(value.time_range.lower);
+                    $scope.optionLatiest[index] = formatTime(value.time_range.upper);
                 });
-                // $scope.optionEarliest = new Array(data.details.length);
-                // $scope.optionLatiest = new Array(data.details.length);
                 TaskQueueStatus();
             }
         });
