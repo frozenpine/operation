@@ -12,6 +12,10 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     $scope.user_uuid = $('#user_uuid').text();
     $scope.taskQueueRunning = false;
     $scope.queue_blocked = false;
+    $scope.optionGroupEditShow = true;
+    $scope.optionGroupSelect = [];
+    $scope.optionEarliest = [];
+    $scope.optionLatiest = [];
 
     $scope.$on('TaskStatusChanged', function(event, data) {
         if (data.hasOwnProperty('details')) {
@@ -23,6 +27,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                 $scope.taskQueueRunning = false;
                 $scope.batch_run = false;
             }, 0);
+            TaskQueueStatus();
             $message.Warning('任务队列被重新初始化');
         } else {
             angular.forEach($scope.opList.details, function(value, index) {
@@ -41,11 +46,28 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         }
     });
 
+    function formatTime(time_string) {
+        var match = time_string.match(/\d{2}:\d{2}:\d{2}/);
+        if (match !== null) {
+            var datetime = new Date('The Jan 01 1970 ' + match[0] + ' GMT+0800');
+            return datetime;
+        } else {
+            return '';
+        }
+    }
+
     $scope.GetOperationList = function() {
         $operations.Detail({
             groupID: $routeParams.grpid,
             onSuccess: function(data) {
                 $scope.opList = data;
+                $scope.optionGroupSelect = new Array(data.details.length);
+                angular.forEach($scope.opList.details, function(value, index) {
+                    $scope.optionEarliest.push(formatTime(value.time_range.lower));
+                    $scope.optionLatiest.push(formatTime(value.time_range.upper));
+                });
+                // $scope.optionEarliest = new Array(data.details.length);
+                // $scope.optionLatiest = new Array(data.details.length);
                 TaskQueueStatus();
             }
         });
@@ -122,12 +144,14 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             $scope.queue_blocked = data.exec_code > 0;
         }, 0);
         if (!$scope.batch_run) {
-            if (!$scope.triggered_ouside && data.hasOwnProperty('output_lines') && data.output_lines.length > 0) {
-                $scope.check_result(index);
-            }
-            if (index < $scope.opList.details.length - 1 && (!data.checker.isTrue || data.checker.checked)) {
-                $scope.opList.details[index + 1].enabled = data.exec_code === 0;
-            }
+            $timeout(function() {
+                if (!$scope.triggered_ouside && data.hasOwnProperty('output_lines') && data.output_lines.length > 0) {
+                    $scope.check_result(index);
+                }
+                if (index < $scope.opList.details.length - 1 && (!data.checker.isTrue || data.checker.checked)) {
+                    $scope.opList.details[index + 1].enabled = data.exec_code === 0;
+                }
+            });
         } else {
             $timeout(function() {
                 $scope.opList.details[index].enabled = false;
@@ -146,25 +170,27 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     }
 
     function TaskQueueStatus() {
-        angular.forEach($scope.opList.details, function(value, index) {
-            if (value.exec_code > 0) {
-                $scope.queue_blocked = true;
-            }
-            if (index > 0 && $scope.opList.details[index - 1].checker.isTrue) {
-                checked = $sessionStorage[$scope.opList.details[index - 1].uuid];
-                $scope.opList.details[index].enabled = value.enabled && checked === true;
-            }
-            if (index < $scope.opList.details.length - 1) {
-                $scope.taskQueueRunning = value.exec_code >= 0;
-                if (value.checker.isTrue && $scope.opList.details[index + 1].exec_code === 0) {
-                    $sessionStorage[value.uuid] = true;
+        $timeout(function() {
+            angular.forEach($scope.opList.details, function(value, index) {
+                if (value.exec_code > 0) {
+                    $scope.queue_blocked = true;
                 }
-            } else if (value.exec_code === 0) {
-                $scope.taskQueueRunning = false;
-            }
-            if (value.checker.isTrue) {
-                $scope.opList.details[index].checker.checked = $sessionStorage[value.uuid] === true;
-            }
+                if (index > 0 && $scope.opList.details[index - 1].checker.isTrue) {
+                    checked = $sessionStorage[$scope.opList.details[index - 1].uuid];
+                    $scope.opList.details[index].enabled = value.enabled && checked === true;
+                }
+                if (index < $scope.opList.details.length - 1) {
+                    $scope.taskQueueRunning = value.exec_code >= 0;
+                    if (value.checker.isTrue && $scope.opList.details[index + 1].exec_code === 0) {
+                        $sessionStorage[value.uuid] = true;
+                    }
+                } else if (value.exec_code === 0) {
+                    $scope.taskQueueRunning = false;
+                }
+                if (value.checker.isTrue) {
+                    $scope.opList.details[index].checker.checked = $sessionStorage[value.uuid] === true;
+                }
+            });
         });
     }
 
@@ -231,8 +257,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             }
         }
     };
-    $scope.optionGroupEditShow = true;
-    $scope.optionGroupSelect = 0;
+
     $scope.optionGroupEdit = function(data) {
         if ($rootScope.privileges.edit_group === false) {
             $message.Warning('该用户无编辑权限，无法编辑队列内容');
@@ -269,29 +294,39 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             "value": false
         }];
         $scope.optionOldData = angular.copy($scope.opList.details);
+
         angular.forEach($scope.optionOldData, function(value, index) {
-            var data = {};
-            data.operation_name = value.op_name;
-            data.description = value.op_desc;
-            data.earliest = value.time_range.lower;
-            data.latest = value.time_range.upper;
-            data.need_authorized = value.need_authorized;
-            data.operation_id = value.id;
+            var data = {
+                operation_name: value.op_name,
+                description: value.op_desc,
+                earliest: null,
+                latest: null,
+                need_authorized: value.need_authorized,
+                operation_id: value.id,
+                book_id: value.book_id
+            };
             $scope.optionGroupCopy.operations.push(data);
         });
 
-        $scope.optionGroupSelectWhich = function(Id, data, index_id) {
+        $scope.optionGroupSelectWhich = function(option, data) {
             angular.forEach($scope.optionBooks, function(value, index) {
-                if (value.id == Id) {
+                if (value.id == option.id) {
                     data.book_id = value.id;
                     data.description = value.description;
                     data.operation_name = value.name;
-                    data.operation_id = "";
                 }
             });
-            var stringId = "#resetSelect" + index_id;
-            $(stringId).val("0");
         };
+
+        $scope.$watch('optionBooks', function() {
+            angular.forEach($scope.opList.details, function(value, index) {
+                angular.forEach($scope.optionBooks, function(v, i) {
+                    if (value.book_id === v.id) {
+                        $scope.optionGroupSelect[index] = v;
+                    }
+                });
+            });
+        });
 
         $scope.optionGroupEditShow = !$scope.optionGroupEditShow;
     };
@@ -308,6 +343,14 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     };
     $scope.optionGroupEditPostShow = true;
     $scope.optionGroupEditFinish = function() {
+        angular.forEach($scope.optionGroupCopy.operations, function(value, index) {
+            value.earliest = ($scope.optionEarliest[index] !== undefined &&
+                    $scope.optionEarliest[index] !== null && $scope.optionEarliest[index] !== '') ?
+                $scope.optionEarliest[index].getHours() + ':' + $scope.optionEarliest[index].getMinutes() : null;
+            value.latest = ($scope.optionLatiest[index] !== undefined &&
+                    $scope.optionLatiest[index] !== null && $scope.optionLatiest[index] !== '') ?
+                $scope.optionLatiest[index].getHours() + ':' + $scope.optionLatiest[index].getMinutes() : null;
+        });
         $operationBooks.optionGroupEditPut({
             optionGroup_id: $scope.optionGroupCopy.operation_group.id,
             data: $scope.optionGroupCopy,

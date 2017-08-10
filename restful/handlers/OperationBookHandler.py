@@ -5,10 +5,9 @@ from flask_restful import Resource
 from werkzeug.exceptions import BadRequest
 
 from app import db
-from app.models import OperationBook, PlatformType, ScriptType, TradeSystem
+from app.models import OperationBook, ScriptType, TradeSystem
 from restful.errors import (ApiError, DataEnumValueError, DataNotJsonError,
-                            DataNotNullError, DataUniqueError,
-                            PlatFormNotFoundError)
+                            DataNotNullError, DataUniqueError)
 from restful.protocol import RestProtocol
 
 
@@ -44,7 +43,7 @@ class OperationBookListApi(Resource):
         else:
             try:
                 if not data.get('name') or not data.get('sys_id') or \
-                    not data.get('mod') or not data.get('catalog_id') or not data.get('type'):
+                        not data.get('mod') or not data.get('catalog_id') or not data.get('type'):
                     raise DataNotNullError
                 try:
                     ScriptType[data.get('type')]

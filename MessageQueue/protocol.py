@@ -5,4 +5,3 @@ class WebsocketProtocol(dict):
 
     def __init__(self, **kwargs):
         super(WebsocketProtocol, self).__init__()
-        

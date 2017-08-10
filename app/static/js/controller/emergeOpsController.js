@@ -67,7 +67,7 @@ app.controller('emergeOpsController', ['$scope', '$http', '$routeParams', '$oper
             $scope.optionBookEditDataList[cata_index].push(data);
         });
         $scope.optionBookEditCancel = function(index) {
-            $scope.optionBookEditShow[id] = true;
+            $scope.optionBookEditShow[index] = true;
         };
         $scope.optionBookEditDelete = function(index_del) {
             $scope.optionBookEditDataList[cata_index][index_del].disabled = true;

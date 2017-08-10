@@ -1,10 +1,12 @@
 # -*- coding: UTF-8 -*-
-from flask_restful import Resource, reqparse, request
+import re
 
-from app.models import Server, PlatformType
 from flask import request
+from flask_restful import Resource
 from werkzeug.exceptions import BadRequest
+
 from app import db
+from app.models import Server, PlatformType
 from restful.errors import (DataNotJsonError,
                             DataUniqueError,
                             DataNotNullError,
@@ -12,7 +14,6 @@ from restful.errors import (DataNotJsonError,
                             DataTypeError,
                             ApiError)
 from restful.protocol import RestProtocol
-import re
 
 
 class DeviceApi(Resource):
@@ -23,7 +24,7 @@ class DeviceApi(Resource):
     def get(self, **kwargs):
         dev = Server.find(**kwargs)
         if dev:
-            return RestProtocol(device)
+            return RestProtocol(dev)
         else:
             return RestProtocol(message='Server not found', error_code=-1), 404
 

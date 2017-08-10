@@ -1,22 +1,61 @@
 app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout', '$uidatas', '$operationBooks', '$users', function($scope, $rootScope, $location, $timeout, $uidatas, $operationBooks, $users) {
     $scope.messagePosition = {};
+<<<<<<< HEAD
     $("body").scroll(function() {
         $timeout(function() {
             console.log("top1" + $("body").scrollTop);
             console.log("top2" + document.documentElement.scrollTop);
             var topDistance = document.documentElement.scrollHeight || document.body.scrollHeight;
             if (topDistance > 200) {
+=======
+
+    /* function getScrollTop() {
+        var scrollPos;
+        if (window.pageYOffset) {
+            scrollPos = window.pageYOffset;
+        } else if (document.compatMode && document.compatMode != 'BackCompat') {
+            scrollPos = document.documentElement.scrollTop;
+        } else if (document.body) {
+            scrollPos = document.body.scrollTop;
+        }
+        return scrollPos;
+    }
+
+    $('body').scroll(function(event) {
+        var topDistance = document.body.scrollTop;
+        if (topDistance > 86) {
+            $timeout(function() {
+>>>>>>> guanyf_devop
                 $scope.messagePosition = {
                     position: "fixed",
-                    top: 0,
+                    top: "3px",
                     left: 0,
                     right: "15px",
                     zIndex: "999"
                 };
-            } else {
+            });
+        } else {
+            $timeout(function() {
                 $scope.messagePosition = {};
-            }
-        });
+            });
+        }
+    }); */
+    $('body').on('scroll', function(event) {
+        if (event.offsetY >= 86) {
+            $timeout(function() {
+                $scope.messagePosition = {
+                    position: "fixed",
+                    top: "3px",
+                    left: 0,
+                    right: "15px",
+                    zIndex: "999"
+                };
+            });
+        } else {
+            $timeout(function() {
+                $scope.messagePosition = {};
+            });
+        }
     });
 
     /* Code 4 SideBar Start */

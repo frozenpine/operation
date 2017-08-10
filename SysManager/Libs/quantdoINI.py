@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 import shell
 
+
 def run(client, module):
     dest = module.get('quantdoINI')
     if dest:

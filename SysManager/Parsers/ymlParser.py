@@ -1,9 +1,10 @@
-from yaml import YAMLError, dump, dump_all, load
+from yaml import YAMLError, dump, load
 
 try:
     from yaml import CLoader as Loader, CDumper as Dumper
 except ImportError:
     from yaml import Loader, Dumper
+
 
 def Load(path, **kwargs):
     try:
@@ -17,6 +18,7 @@ def Load(path, **kwargs):
             print err
         else:
             return data
+
 
 def Dump(data, **kwargs):
     return dump(data, Dumper=Dumper, default_flow_style=False, **kwargs)

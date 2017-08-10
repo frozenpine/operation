@@ -29,17 +29,21 @@ def run(client, module):
     stderr.readlines = change_readlines_encoding(stderr.read())
     return stdout, stderr
 
+
 def change_read_encoding(cache):
     def _read():
         try:
             return cache.decode('utf-8').encode('utf-8').replace('\r\n', '\n')
         except UnicodeDecodeError:
             return cache.decode('gbk', 'ignore').encode('utf-8').replace('\r\n', '\n')
+
     return _read
+
 
 def change_readlines_encoding(cache):
     def _readlines():
         for line in cache.split('\n'):
             if line != "":
                 yield line
+
     return _readlines

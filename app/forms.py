@@ -1,10 +1,6 @@
 # -*- coding: UTF-8 -*-
-from flask_wtf import FlaskForm
-from wtforms import (BooleanField, IntegerField, PasswordField, SelectField,
-                     StringField)
-from wtforms.validators import DataRequired, Length
 
-#from app.models import Device
+# from app.models import Device
 
 '''
 class DeviceForm(FlaskForm):

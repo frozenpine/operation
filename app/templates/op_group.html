@@ -332,24 +332,18 @@
                                         <input type="text" style="padding: 5px 5px 5px 0;border: none;" value="data.description" ng-model="data.description" />
                                     </div>
                                     <div class="am-u-sm-1" style="padding-left: 6px;">
-                                        <input name='startTime{{$index}}' type="text" style="padding: 5px 5px 5px 0;border: none;width: 60px;" value="data.earliest" ng-model="data.earliest" ng-pattern="/^((0\d{1}|1\d{1}|2[0-3]|[0-9]):([0-5]\d{1})|(0\d{1}|1\d{1}|2[0-3]|[0-9]):([0-5]\d{1}):([0-5]\d{1}))$|[N][o][n][e]$/"
-                                        />
+                                        <!-- <input name='startTime{{$index}}' type="text" style="padding: 5px 5px 5px 0;border: none;width: 60px;" ng-model="data.earliest" ng-pattern="/^((0\d{1}|1\d{1}|2[0-3]|[0-9]):([0-5]\d{1})|(0\d{1}|1\d{1}|2[0-3]|[0-9]):([0-5]\d{1}):([0-5]\d{1}))$/" /> -->
+                                        <input name="startTime{{$index}}" type="time" style="padding: 5px 5px 5px 0;border: none;" ng-model="optionEarliest[$index]" />
                                     </div>
                                     <div class="am-u-sm-1" style="padding-left: 6px;">
-                                        <input name='endTime{{$index}}' type="text" style="padding: 5px 5px 5px 0;border: none;width: 60px;" value="data.latest" ng-model="data.latest" ng-pattern="/^((0\d{1}|1\d{1}|2[0-3]|[0-9]):([0-5]\d{1})|(0\d{1}|1\d{1}|2[0-3]|[0-9]):([0-5]\d{1}):([0-5]\d{1}))$|[N][o][n][e]$/"
-                                        />
+                                        <!-- <input name='endTime{{$index}}' type="text" style="padding: 5px 5px 5px 0;border: none;width: 60px;" ng-model="data.latest" ng-pattern="/^((0\d{1}|1\d{1}|2[0-3]|[0-9]):([0-5]\d{1})|(0\d{1}|1\d{1}|2[0-3]|[0-9]):([0-5]\d{1}):([0-5]\d{1}))$/" /> -->
+                                        <input name="endTime{{$index}}" type="time" style="padding: 5px 5px 5px 0;border: none;" ng-model="optionLatiest[$index]" />
                                     </div>
                                     <div class="am-u-sm-2">
-                                        <select id="resetSelect{{$index}}" ng-init="optionGroupSelect='0'" ng-model="optionGroupSelect" ng-change="optionGroupSelectWhich(optionGroupSelect,data,$index)">
-                    						<option value="0" ng-bind="data.operation_name"></option>
-                    						<option value="{{x.id}}" ng-repeat="x in optionBooks">
-                    							{{x.name}}
-                    						</option>
-                    	            </select>
+                                        <select ng-model="optionGroupSelect[$index]" ng-change="optionGroupSelectWhich(optionGroupSelect[$index],data)" ng-options="x.name for x in optionBooks"></select>
                                     </div>
                                     <div class="am-u-sm-1">
-                                        <select ng-model="data.need_authorization" ng-options="x.value as x.name for x in need_authorization">
-                    					</select>
+                                        <select ng-model="data.need_authorization" ng-options="x.value as x.name for x in need_authorization"></select>
                                     </div>
                                     <div class="am-u-sm-1" style="background: none;">
                                         <a ng-click="optionGroupEditDelete($index)" class="am-close am-close-alt am-icon-times"></a>

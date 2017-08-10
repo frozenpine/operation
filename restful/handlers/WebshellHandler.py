@@ -14,5 +14,5 @@ class WebshellUIApi(Resource):
             )
         else:
             return {
-                'message': 'trade system not found.'
-            }, 404
+                       'message': 'trade system not found.'
+                   }, 404

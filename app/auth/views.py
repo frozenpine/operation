@@ -4,13 +4,14 @@ from flask_login import current_user, login_required, login_user, logout_user
 
 from app import db
 from app.models import Operator
-
 from . import auth
 from .forms import LoginForm, RegisterForm
+
 
 @auth.route('/')
 def index():
     return redirect(url_for('auth.login'))
+
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
@@ -29,6 +30,7 @@ def login():
             flash("Invalid input data!")
     return render_template('login.html', title='Login', form=form)
 
+
 @auth.route('/logout')
 @login_required
 def logout():
@@ -36,15 +38,16 @@ def logout():
     flash('You have been logged out.')
     return redirect(url_for('auth.login'))
 
+
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegisterForm(request.form)
     if request.method == 'POST':
         if form.validate():
-            #usr = User.find(login=form.login.data)
+            # usr = User.find(login=form.login.data)
             usr = Operator.find(login=form.login.data)
             if usr:
-                #flash("User(id: {0}) \"{1}\" already exists!".format(usr.uuid, usr.name))
+                # flash("User(id: {0}) \"{1}\" already exists!".format(usr.uuid, usr.name))
                 flash("User(id: {0}) \"{1}\" already exists!".format(usr.id, usr.name))
             else:
                 try:

@@ -4,13 +4,14 @@ import re
 import sys
 from os import environ, path
 
-from SysManager import logger as logging
 from Common import AESCrypto
+from SysManager import logger as logging
 from excepts import ConfigInvalid
 
 sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
 
 SECRET_KEY = environ.get('FLASK_SECRET_KEY') or 'SOMEthing-you-WILL-never-Guess'
+
 
 class GlobalConfig(object):
     default_ssh_user = None
@@ -30,12 +31,13 @@ class GlobalConfig(object):
                     setattr(self, key, ini.get('Global', key))
                 except ConfigParser.NoSectionError:
                     logging.warning(
-                        'No section[Global] in INI file({})'\
+                        'No section[Global] in INI file({})' \
                             .format(global_file)
                     )
                     break
                 except ConfigParser.NoOptionError:
                     continue
+
 
 class RemoteConfig(object):
     def __init__(self, ip, user, password, port):
@@ -55,6 +57,7 @@ class RemoteConfig(object):
     def Create(sub_class, params):
         return globals()[sub_class](**params)
 
+
 class SSHConfig(RemoteConfig):
     def __init__(self, ip, user, password=None, port=22, pKey=None, key_pass=None):
         if not password and not pKey:
@@ -63,15 +66,18 @@ class SSHConfig(RemoteConfig):
         self.ssh_key_pass = key_pass
         RemoteConfig.__init__(self, ip, user, password, port)
 
+
 class WinRmConfig(RemoteConfig):
     def __init__(self, ip, user, password, encryption=True, port=5986):
         RemoteConfig.__init__(self, ip, user, password, port)
         self.encryption = encryption
 
+
 class HttpConfig(RemoteConfig):
     def __init__(self, ip, user=None, password=None, port=8080, **kwargs):
         RemoteConfig.__init__(self, ip, user, password, port)
         self.cookies = kwargs.get('cookies')
+
 
 class Result(object):
     destination = None
@@ -80,6 +86,7 @@ class Result(object):
     error_msg = ""
     data = {}
     lines = []
+
 
 if __name__ == '__main__':
     conf = GlobalConfig()

@@ -6,7 +6,6 @@ from flask import current_app
 from flask.testing import EnvironBuilder
 from geventwebsocket import WebSocketError
 
-from MessageQueue import logger
 from msgsink import JSONSinker, LogSinker
 
 
@@ -27,6 +26,7 @@ def req_subscribe(request):
             request['ws'].send(json.dumps({
                 'message': 'Topic {} not exist.'.format(topic)
             }))
+
 
 def req_unsubscribe(request):
     try:
@@ -50,10 +50,12 @@ def req_unsubscribe(request):
                 'error': 'Topic {} not exist.'.format(topic)
             }))
 
+
 def req_heartbeat(request):
     request['ws'].send(json.dumps({
         'heartbeat': time.strftime('%Y-%m-%d %H:%M:%S')
     }))
+
 
 def req_get(request):
     try:
@@ -72,10 +74,12 @@ def req_get(request):
                 'session': request['session']
             }))
 
+
 def req_topics(request):
     request['ws'].send(json.dumps({
         'topics': MessageQueues.keys()
     }))
+
 
 class MessageServer(object):
     def __init__(self, topic, sinker):
@@ -129,6 +133,7 @@ class MessageServer(object):
                 websocket.send(json.dumps({
                     'error': 'Request method not valid.'
                 }))
+
 
 MessageQueues = {
     'public': MessageServer('public', LogSinker('public')),

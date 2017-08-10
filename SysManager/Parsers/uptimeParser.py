@@ -1,7 +1,4 @@
 # -*- coding: UTF-8 -*-
-import re
-
-from listParser import OutputParser
 
 
 class uptimeParser():

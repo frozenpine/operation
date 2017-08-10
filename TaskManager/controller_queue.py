@@ -1,36 +1,30 @@
 # coding=utf-8
 
-
 import logging
 
 from enum import Enum
 from gevent.queue import JoinableQueue
 
 import get_time
+from controller_msg import msg_dict
 
 logging.basicConfig(level="INFO")
 
 
 class DispatchResult(Enum):
-    Dispatched = 0
-    EmptyQueue = -1
-    QueueBlock = -2
-    QueueMissing = -3
-    QueueNoError = -4
+    pass
+
 
 class TaskStatus(Enum):
-    InQueue = 0
-    Running = 1
-    Success = 2
-    Failed = 3
-    Skipped = 4
+    pass
 
 
 class ControllerQueue(object):
     def __init__(self, controller_queue_uuid, group_block):
         self.create_time = get_time.current_ymd_hms()
+        # self.create_time = "2017-01-01 12:00:00"
         self.group_block = group_block
-        self.block_flag = False
+        self.controller_queue_status = 0
         self.controller_queue_uuid = controller_queue_uuid
         self.controller_todo_task_queue = JoinableQueue()
         self.controller_task_list = list()
@@ -38,14 +32,17 @@ class ControllerQueue(object):
         self.controller_task_result_list = list()
 
     def to_dict(self):
+        """
+        转换为字典
+        """
         return {
-            'create_time': self.create_time,
-            'group_block': self.group_block,
-            'block_flag': self.block_flag,
-            'queue_id': self.controller_queue_uuid,
-            'task_list': self.controller_task_list,
-            'task_result_list': self.controller_task_result_list,
-            'task_status_list': self.controller_task_status_list
+            "create_time": self.create_time,
+            "group_block": self.group_block,
+            "controller_queue_status": self.controller_queue_status,
+            "controller_queue_uuid": self.controller_queue_uuid,
+            "task_list": self.controller_task_list,
+            "task_result_list": self.controller_task_result_list,
+            "task_status_list": self.controller_task_status_list
         }
 
     def put_controller_todo_task_queue(self, task, deserialize=False):
@@ -53,86 +50,93 @@ class ControllerQueue(object):
         将task放入controller的待做队列中
         :param task: task
         :param deserialize: 是否是反序列化
-        :return:
         """
         task_uuid = task["task_uuid"]
+        task_earliest = task["earliest"]
+        task_latest = task["latest"]
         if not deserialize:
             self.controller_task_list.append(task)
-            self.controller_task_status_list.append({task_uuid: 0})
+            self.controller_task_status_list.append({task_uuid: None})
             self.controller_task_result_list.append({task_uuid: None})
-        task = task["task"]
+        task = task["detail"]
         self.controller_todo_task_queue.put(
-            {"controller_queue_uuid": self.controller_queue_uuid, "task_uuid": task_uuid, "task": task})
+            {"controller_queue_uuid": self.controller_queue_uuid, "controller_queue_create_time": self.create_time,
+             "task_uuid": task_uuid, "task_earliest": task_earliest, "task_latest": task_latest, "task": task})
 
     def peek_controller_todo_task_queue(self, task_uuid):
         """
-         从controller的待做队列中查询第一个task
-        :return: -1 队列为空
-                 -2 不相等
+        从controller的待做队列中查询第一个task
+        :param task_uuid: task的uuid
         """
         if self.controller_todo_task_queue.empty():
-            return -1
+            return -1, msg_dict[-11]
         ret = self.controller_todo_task_queue.peek()
         if ret["task_uuid"] == task_uuid:
-            return 0
+            return 0, u"比对值相等"
         else:
-            return -2
+            return -1, u"比对值不相等"
 
     def get_controller_todo_task_queue(self):
         """
         从controller的待做队列中取出task
-        :return: -1 队列为空
-                 -2 队列被block
-        block_type    group_block    block
-           True          True        True
-           True          False       False
-           False         True        False
-           False         False       False
         """
         if self.controller_todo_task_queue.empty():
-            return -1, None
-        if self.block_flag and self.group_block:
-            return -2, None
-        if not self.controller_todo_task_queue.empty() and (not self.block_flag or not self.group_block):
+            return -1, msg_dict[-11]
+        if self.controller_queue_status != 0:
+            return -1, msg_dict[self.controller_queue_status]
+        if not self.controller_todo_task_queue.empty() and self.controller_queue_status == 0:
             task = self.controller_todo_task_queue.get()
-            self.block_flag = True
+            self.controller_queue_status = 11
             return 0, task
 
     def put_left_controller_todo_task_queue(self):
         """
         将失败任务压入待做队列
-        :return: -4 队列无失败任务
         """
-        # 寻找到失败任务的uuid
-        fail_task_uuid_list = list()
-        for each in self.controller_task_status_list:
-            if each.values()[0] == 3:
-                each.update({each.keys()[0]: 4})
-                fail_task_uuid_list.append(each.keys()[0])
-        if not fail_task_uuid_list:
-            return -4
-        # 将失败任务先压入队列中
-        temp_queue = JoinableQueue()
-        for each in self.controller_task_list:
-            if each["task_uuid"] in fail_task_uuid_list:
-                temp_queue.put(
-                    {"controller_queue_uuid": self.controller_queue_uuid,
-                     "task_uuid": each["task_uuid"], "task": each["task"]}
-                )
-        # 将原先任务也压入队列中
-        while not self.controller_todo_task_queue.empty():
-            temp_queue.put(self.controller_todo_task_queue.get())
-        self.controller_todo_task_queue = temp_queue
-        self.block_flag = False
-        return 0
+        if self.controller_queue_status != 14:
+            # 队列不可恢复
+            return -1, msg_dict[self.controller_queue_status]
+        else:
+            # 寻找到失败任务的uuid
+            fail_task_uuid_list = list()
+            for each in self.controller_task_status_list:
+                if each.values()[0] in (1, 2, 3):
+                    # 如果出现执行失败或者执行超时
+                    each.update({each.keys()[0]: None})
+                    fail_task_uuid_list.append(each.keys()[0])
+            if not fail_task_uuid_list:
+                return -1, u"队列无失败任务"
+            # 将失败任务先压入队列中
+            temp_queue = JoinableQueue()
+            for each in self.controller_task_list:
+                if each["task_uuid"] in fail_task_uuid_list:
+                    temp_queue.put(
+                        {"controller_queue_uuid": self.controller_queue_uuid,
+                         "controller_queue_create_time": self.create_time,
+                         "task_uuid": each["task_uuid"], "task_earliest": each["earliest"],
+                         "task_latest": each["latest"], "task": each["detail"]}
+                    )
+            # 将原先任务也压入队列中
+            while not self.controller_todo_task_queue.empty():
+                temp_queue.put(self.controller_todo_task_queue.get())
+            self.controller_todo_task_queue = temp_queue
+            self.controller_queue_status = 0
+            return 0, u"队列失败任务恢复成功"
 
     def pop_controller_todo_task_queue(self):
         """
         移除待做队列中的第一项
-        :return:
         """
-        self.controller_todo_task_queue.get()
-        return 0
+        if self.controller_todo_task_queue.empty():
+            return -1, msg_dict[-11]
+        task = self.controller_todo_task_queue.get()
+        task_uuid = task["task_uuid"]
+        # 更改任务状态列表
+        for each in self.controller_task_status_list:
+            for (k, v) in each.iteritems():
+                if k == task_uuid:
+                    each[k] = 4
+        return 0, u"队列第一项移除成功"
 
     def change_task_info(self, task_uuid, task_status, task_result):
         """
@@ -140,19 +144,32 @@ class ControllerQueue(object):
         :param task_uuid: task的uuid
         :param task_status: task的状态
         :param task_result: task的执行结果
-        :return:
         """
-        if task_status == 2:
-            # 任务执行成功,更改阻塞状态
-            self.block_flag = False
-        if task_status == 3:
-            # 任务执行失败,继续阻塞
-            pass
+        if task_status[0] == -1:
+            # 任务初始化失败
+            self.controller_queue_status = -13
+        if task_status[0] == 0:
+            # 任务执行成功
+            self.controller_queue_status = 0
+        if task_status[0] == 1:
+            # 任务执行失败
+            self.controller_queue_status = 14
+        if task_status[0] in (111, 112):
+            # 任务等待中
+            self.controller_queue_status = 13
+        if task_status[0] == 200:
+            # 任务开始执行
+            if not self.group_block:
+                # 非阻塞队列
+                self.controller_queue_status = 0
+            else:
+                # 阻塞队列
+                self.controller_queue_status = 12
         # 更改任务状态列表
         for each in self.controller_task_status_list:
             for (k, v) in each.iteritems():
                 if k == task_uuid:
-                    each[k] = task_status
+                    each[k] = task_status[0]
         for each in self.controller_task_result_list:
             for (k, v) in each.iteritems():
                 if k == task_uuid and task_result:

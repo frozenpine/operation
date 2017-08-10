@@ -1,22 +1,20 @@
 # -*- coding: UTF-8 -*-
 import sys
 from os import path
+
 sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
 
-import gevent
 import requests
 import winrm
 from paramiko import (AutoAddPolicy, PasswordRequiredException, RSAKey,
                       SSHClient)
 from paramiko.ssh_exception import (AuthenticationException,
                                     NoValidConnectionsError)
-from winrm import Response
-from winrm.exceptions import (WinRMError, WinRMOperationTimeoutError,
-                              WinRMTransportError)
 
 from SysManager import logger as logging
-from configs import HttpConfig, RemoteConfig, Result, SSHConfig, WinRmConfig
-from excepts import ImportRSAkeyFaild, ModuleNotFound
+from configs import HttpConfig, Result, SSHConfig, WinRmConfig
+from excepts import ImportRSAkeyFaild, ModuleNotFound, SSHNoValidConnectionsError, SSHAuthenticationException, \
+    SSHException
 
 
 class Executor():
@@ -36,6 +34,15 @@ class Executor():
         except Exception:
             return None
 
+    @staticmethod
+    def CreateByWorker(remote_config, parser=None, session=None):
+        if isinstance(remote_config, SSHConfig):
+            return SSHExecutor(remote_config, parser)
+        if isinstance(remote_config, WinRmConfig):
+            return WinRmExecutor(remote_config, parser)
+        if isinstance(remote_config, HttpConfig):
+            return HttpExecutor(remote_config, parser, session)
+
     def run(self, module):
         import_mod = 'import Libs.{} as mod'.format(module.get('name'))
         try:
@@ -43,12 +50,13 @@ class Executor():
         except ImportError:
             raise ModuleNotFound(module.get('name'))
         if not self.parser:
-            import_parser = 'from Parsers.{0}Parser import {0}Parser as par'\
+            import_parser = 'from Parsers.{0}Parser import {0}Parser as par' \
                 .format(module.get('name'))
             try:
                 exec import_parser
             except ImportError:
-                logging.info("Trying import with({}) failed.".format(import_parser))
+                logging.info(
+                    "Trying import with({}) failed.".format(import_parser))
             else:
                 self.parser = par
         stdout, stderr = mod.run(client=self.client, module=module)
@@ -65,6 +73,7 @@ class Executor():
             self.result.lines = [line for line in stdout.readlines()]
         return self.result
 
+
 class WinRmExecutor(Executor):
     def __init__(self, remote_config, parser=None):
         Executor.__init__(self, remote_config, parser)
@@ -75,16 +84,23 @@ class WinRmExecutor(Executor):
     def _connect(self, remote_config):
         if remote_config.encryption:
             return winrm.Session(
-                ':'.join([remote_config.remote_host, str(remote_config.remote_port)]),
-                auth=(remote_config.remote_user, remote_config.remote_password),
+                ':'.join([
+                    remote_config.remote_host,
+                    str(remote_config.remote_port)
+                ]),
+                auth=(remote_config.remote_user,
+                      remote_config.remote_password),
                 transport='ssl',
-                server_cert_validation='ignore'
-            )
+                server_cert_validation='ignore')
         else:
             return winrm.Session(
-                ':'.join([remote_config.remote_host, str(remote_config.remote_port)]),
-                auth=(remote_config.remote_user, remote_config.remote_password)
-            )
+                ':'.join([
+                    remote_config.remote_host,
+                    str(remote_config.remote_port)
+                ]),
+                auth=(remote_config.remote_user,
+                      remote_config.remote_password))
+
 
 class SSHExecutor(Executor):
     def __init__(self, remote_config, parser=None):
@@ -100,13 +116,13 @@ class SSHExecutor(Executor):
                 self.passConnect(remote_config)
         except NoValidConnectionsError, err:
             logging.error(err)
-            raise
+            raise SSHNoValidConnectionsError
         except AuthenticationException, err:
             logging.error(err)
-            raise
+            raise SSHAuthenticationException
         except Exception, err:
             logging.error(err)
-            raise
+            raise SSHException
 
     def pKeyConnect(self, ssh_config):
         try:
@@ -115,10 +131,9 @@ class SSHExecutor(Executor):
             if ssh_config.ssh_key_pass:
                 pKey = RSAKey.from_private_key_file(
                     filename=ssh_config.ssh_key,
-                    password=ssh_config.ssh_key_pass
-                )
+                    password=ssh_config.ssh_key_pass)
             else:
-                err_msg = 'Fail to Load RSAKey({}), make sure password for key is correct.'\
+                err_msg = 'Fail to Load RSAKey({}), make sure password for key is correct.' \
                     .format(ssh_config.ssh_key)
                 logging.warning(err_msg)
                 raise ImportRSAkeyFaild(err_msg)
@@ -127,16 +142,15 @@ class SSHExecutor(Executor):
                 hostname=ssh_config.remote_host,
                 port=ssh_config.remote_port,
                 username=ssh_config.remote_user,
-                pkey=pKey
-            )
+                pkey=pKey)
 
     def passConnect(self, ssh_config):
         self.client.connect(
             hostname=ssh_config.remote_host,
             port=ssh_config.remote_port,
             username=ssh_config.remote_user,
-            password=ssh_config.remote_password
-        )
+            password=ssh_config.remote_password)
+
 
 class HttpExecutor(Executor):
     def __init__(self, remote_config, parser=None, session=None):
@@ -147,6 +161,7 @@ class HttpExecutor(Executor):
     def run(self, module):
         pass
 
+
 if __name__ == '__main__':
     conf = SSHConfig('192.168.101.126', 'qdam', 'qdam')
     exe = Executor.Create(conf)
@@ -154,11 +169,7 @@ if __name__ == '__main__':
         'name': 'psaux',
         'args': {
             'processes': [
-                'qtrade',
-                'qdata',
-                'qmdb',
-                'qquery',
-                'qicegateway 1',
+                'qtrade', 'qdata', 'qmdb', 'qquery', 'qicegateway 1',
                 'qicegateway 2'
             ]
         }

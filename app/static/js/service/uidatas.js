@@ -21,7 +21,7 @@ app.service('$uidatas', function($http, $message) {
      *侧边栏
      */
     this.updateSideBar = function(params) {
-        $http.put('api/operation-groups',data = params.data)
+        $http.put('api/operation-groups', data = params.data)
             .success(function(response) {
                 if (response.error_code === 0) {
                     if (params.hasOwnProperty('onSuccess')) {
@@ -34,6 +34,25 @@ app.service('$uidatas', function($http, $message) {
             .error(function(response) {
                 console.log(response);
                 $message.Alert(response.message);
+            });
+    };
+
+    this.Inventory = function(params) {
+        $http.get('api/UI/inventory')
+            .success(function(response) {
+                if (response.error_code === 0) {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(response.data);
+                    }
+                } else if (params.hasOwnProperty('onError')) {
+                    params.onError(response.data);
+                }
+            })
+            .error(function(response) {
+                console.log(response);
+                if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                }
             });
     };
 });

@@ -1,8 +1,9 @@
 from flask import request
-from app import db
-from app.models import Operator, OpRole
 from flask_restful import Resource
 from werkzeug.exceptions import BadRequest
+
+from app import db
+from app.models import Operator, OpRole
 from ..errors import DataNotJsonError, DataNotMatchError, DataUniqueError
 from ..output import Output
 

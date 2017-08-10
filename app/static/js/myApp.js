@@ -490,6 +490,10 @@ app.filter('exe_result', function() {
                 return "跳过执行";
             case -4:
                 return "任务已调度";
+            case -5:
+                return "等待触发条件";
+            case -6:
+                return "执行超时";
             default:
                 return "执行失败";
         }

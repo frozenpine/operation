@@ -9,30 +9,28 @@ from flask import (current_app, make_response, render_template, request,
                    session, url_for)
 from flask_login import current_user
 from flask_restful import Resource
-from sqlalchemy import text
 
-from app import flask_logger as logging
+from SysManager.Common import AESCrypto
+# from TaskManager.controller_msg import msg_dict
+from TaskManager import QueueStatus, TaskStatus
 from app import db, globalEncryptKey, msgQueues, taskManager, taskRequests
+from app import flask_logger as logging
 from app.auth.errors import (AuthError, InvalidUsernameOrPassword,
                              LoopAuthorization, NoPrivilege)
 from app.auth.privileged import CheckPrivilege
 from app.models import (MethodType, OperateRecord, OperateResult, Operation,
-                        OperationGroup, Operator, ScriptType)
-from restful.errors import (ApiError, ExecuteError, ExecuteTimeOutOfRange,
+                        OperationGroup, Operator)
+from restful.errors import (ApiError, ExecuteTimeOutOfRange,
                             InvalidParams, ProxyExecuteError)
 from restful.protocol import RestProtocol
-from SysManager.Common import AESCrypto
-from SysManager.configs import RemoteConfig, Result, SSHConfig
-from SysManager.executor import Executor, HttpExecutor
-from TaskManager.controller_queue import DispatchResult, TaskStatus
 
-dispatchMessage = {
+''' dispatchMessage = {
     DispatchResult.Dispatched: u'任务调度成功',
     DispatchResult.EmptyQueue: u'队列任务已完成',
     DispatchResult.QueueBlock: u'上一项任务未完成，无法调度新任务',
     DispatchResult.QueueMissing: u'队列不存在',
     DispatchResult.QueueNoError: u'队列无失败任务'
-}
+} '''
 
 
 class OperationMixin(object):
@@ -43,7 +41,9 @@ class OperationMixin(object):
         if isinstance(self.snapshot, dict):
             for idx in xrange(len(self.snapshot['task_list'])):
                 if op.uuid == self.snapshot['task_list'][idx]['task_uuid']:
-                    return idx, TaskStatus(self.snapshot['task_status_list'][idx])
+                    if self.snapshot['task_status_list'][idx] != None:
+                        return idx, TaskStatus(self.snapshot['task_status_list'][idx])
+                    return idx, None
         return -1, None
 
     def make_operation_detail(self, op, op_session=None):
@@ -54,6 +54,7 @@ class OperationMixin(object):
             'grp_uuid': op.group.uuid,
             'op_name': op.name,
             'op_desc': op.description,
+            'book_id': op.book_id,
             'checker': {
                 'isTrue': op.operate_define.type.IsChecker(),
                 'checked': False
@@ -68,39 +69,40 @@ class OperationMixin(object):
             'need_authorized': op.need_authorization
         }
         idx, status = self.find_op_status(op)
-        if status == TaskStatus.InQueue:
-            dtl['exec_code'] = -1
-        elif status == TaskStatus.Running:
-            dtl['exec_code'] = -2
-            operator = Operator.find(id=op_session['operator_id'])
-            dtl['operator'] = {
-                'operator_id': operator.id,
-                'operator_uuid': operator.uuid,
-                'operator_name': operator.name
-            }
-            dtl['operated_at'] = arrow.get(op_session['operated_at'])\
-                .to('Asia/Shanghai').strftime('%Y-%m-%d %H:%M:%S')
-        elif status == TaskStatus.Success or status == TaskStatus.Failed:
-            dtl['exec_code'] = self.snapshot['task_result_list'][idx]['task_result']['return_code']
-            dtl['output_lines'] = self.snapshot['task_result_list'][idx]['task_result']['lines']
-            op_session = json.loads(self.snapshot['task_result_list'][idx]['session'])
-            operator = Operator.find(id=op_session['operator_id'])
-            dtl['operator'] = {
-                'operator_id': operator.id,
-                'operator_uuid': operator.uuid,
-                'operator_name': operator.name
-            }
-            dtl['operated_at'] = arrow.get(op_session['operated_at'])\
-                .to('Asia/Shanghai').strftime('%Y-%m-%d %H:%M:%S')
-        elif status == TaskStatus.Skipped:
-            dtl['exec_code'] = -3
+        if status != None:
+            if status != TaskStatus.InitFail:
+                if not op_session:
+                    op_session = json.loads(self.snapshot['task_result_list'][idx]['session'])
+                operator = Operator.find(id=op_session['operator_id'])
+                dtl['operator'] = {
+                    'operator_id': operator.id,
+                    'operator_uuid': operator.uuid,
+                    'operator_name': operator.name
+                }
+            if status == TaskStatus.Runnable:
+                dtl['exec_code'] = -4
+            elif status.IsWaiting:
+                dtl['exec_code'] = -5
+            elif status == TaskStatus.Running:
+                dtl['exec_code'] = -2
+                dtl['operated_at'] = arrow.get(op_session['operated_at']) \
+                    .to('Asia/Shanghai').strftime('%Y-%m-%d %H:%M:%S')
+            elif status == TaskStatus.Success or status == TaskStatus.Failed:
+                dtl['exec_code'] = self.snapshot['task_result_list'][idx]['task_result']['return_code']
+                dtl['output_lines'] = self.snapshot['task_result_list'][idx]['task_result']['lines']
+                dtl['operated_at'] = arrow.get(op_session['operated_at']) \
+                    .to('Asia/Shanghai').strftime('%Y-%m-%d %H:%M:%S')
+            elif status and status.IsTimeout:
+                dtl['exec_code'] = -6
+            elif status == TaskStatus.Skipped:
+                dtl['exec_code'] = -3
         else:
             dtl['exec_code'] = -1
         if idx > 0:
             dtl['enabled'] = (self.snapshot['task_status_list'][idx - 1]
                               == TaskStatus.Success.value) and \
-                (not self.snapshot['task_status_list'][idx]
-                 == TaskStatus.Success.value)
+                             (not self.snapshot['task_status_list'][idx]
+                                  == TaskStatus.Success.value)
         elif idx == 0:
             dtl['enabled'] = not self.snapshot['task_status_list'][0] == TaskStatus.Success.value
         else:
@@ -121,6 +123,7 @@ class OperationMixin(object):
             rtn['details'].append(self.make_operation_detail(op))
         return rtn
 
+
 class OperationListApi(OperationMixin, Resource):
     def __init__(self):
         super(OperationListApi, self).__init__()
@@ -128,13 +131,15 @@ class OperationListApi(OperationMixin, Resource):
     def get(self, **kwargs):
         op_group = OperationGroup.find(**kwargs)
         if op_group:
-            self.snapshot = taskManager.snapshot(op_group.uuid)
+            ret, self.snapshot = taskManager.snapshot(op_group.uuid)
             task_queue = {
                 op_group.uuid: {
                     'group_block': True,
                     'group_info': [{
                         'task_uuid': task.uuid,
-                        'task': task.operate_define.detail
+                        'detail': task.operate_define.detail,
+                        'earliest': task.earliest,
+                        'latest': task.latest
                     } for task in op_group.operations]
                 }
             }
@@ -150,19 +155,19 @@ class OperationListApi(OperationMixin, Resource):
                 )
             if isinstance(self.snapshot, dict):
                 create_time = datetime.datetime.strptime(
-                    self.snapshot['create_time'], '%Y%m%d-%H%M%S'
+                    self.snapshot['create_time'], '%Y-%m-%d %H:%M:%S'
                 )
                 if op_group.is_emergency or \
-                    (now_time.day - create_time.day >= 1 and \
-                    (isinstance(trigger_time, datetime.time) and now_time.time() > trigger_time)):
+                        (now_time.day - create_time.day >= 1 and \
+                                 (isinstance(trigger_time, datetime.time) and now_time.time() > trigger_time)):
                     taskManager.init(task_queue, True)
-                    self.snapshot = taskManager.snapshot(op_group.uuid)
+                    ret, self.snapshot = taskManager.snapshot(op_group.uuid)
                     rtn = self.make_operation_list(op_group)
                     msgQueues['tasks'].send_object(rtn)
             else:
                 if isinstance(trigger_time, datetime.time) and (now_time.time() > trigger_time):
                     taskManager.init(task_queue, True)
-                    self.snapshot = taskManager.snapshot(op_group.uuid)
+                    ret, self.snapshot = taskManager.snapshot(op_group.uuid)
                     rtn = self.make_operation_list(op_group)
                     msgQueues['tasks'].send_object(rtn)
             return RestProtocol(self.make_operation_list(op_group))
@@ -177,39 +182,43 @@ class OperationListApi(OperationMixin, Resource):
                     'group_block': True,
                     'group_info': [{
                         'task_uuid': task.uuid,
-                        'task': task.operate_define.detail
+                        'detail': task.operate_define.detail,
+                        'earliest': task.earliest,
+                        'latest': task.latest
                     } for task in op_group.operations]
                 }
             }
             taskManager.init(task_queue, True)
-            self.snapshot = taskManager.snapshot(op_group.uuid)
+            ret, self.snapshot = taskManager.snapshot(op_group.uuid)
             rtn = self.make_operation_list(op_group)
             msgQueues['tasks'].send_object(rtn)
             return RestProtocol(rtn)
         else:
             return RestProtocol(message='Operation group not found', error_code=-1), 404
 
+
 class OperationListSnapshotApi(Resource):
     def get(self, **kwargs):
         op_group = OperationGroup.find(**kwargs)
         if op_group:
-            snap = taskManager.snapshot(op_group.uuid)
-            if isinstance(snap, dict):
-                return RestProtocol(snap)
+            ret, data = taskManager.snapshot(op_group.uuid)
+            if ret == 0:
+                return RestProtocol(data)
             else:
-                ret = DispatchResult(snap)
-                return RestProtocol(message=dispatchMessage[ret], error_code=ret.value)
+                return RestProtocol(message=data, error_code=ret)
         else:
             return RestProtocol(message='Operation group not found', error_code=-1), 404
+
 
 class OperationListResumeApi(Resource):
     def get(self, **kwargs):
         op_group = OperationGroup.find(**kwargs)
         if op_group:
-            ret = DispatchResult(taskManager.resume(op_group.uuid))
-            return RestProtocol(message=dispatchMessage[ret], error_code=ret.value)
+            ret, msg = taskManager.resume(op_group.uuid)
+            return RestProtocol(message=msg, error_code=ret)
         else:
             return RestProtocol(message='Operation group not found', error_code=-1), 404
+
 
 class OperationListRunApi(OperationMixin, Resource):
     def __init__(self):
@@ -218,29 +227,29 @@ class OperationListRunApi(OperationMixin, Resource):
     def get(self, **kwargs):
         op_group = OperationGroup.find(**kwargs)
         if op_group:
-            ret_code, task_uuid = taskManager.run_next(
+            ret_code, data = taskManager.run_next(
                 op_group.uuid,
                 json.dumps({
                     'operator_id': Operator.find(login='admin').id,
                     'operated_at': unicode(arrow.utcnow())
                 })
             )
-            ret_code = DispatchResult(ret_code)
-            if ret_code == DispatchResult.Dispatched:
-                self.snapshot = taskManager.snapshot(op_group.uuid)
-                op = Operation.find(uuid=task_uuid)
+            if ret_code == 0:
+                ret, self.snapshot = taskManager.snapshot(op_group.uuid)
+                op = Operation.find(uuid=data)
                 return RestProtocol(
                     self.make_operation_detail(op),
-                    message=dispatchMessage[ret_code],
-                    error_code=ret_code.value
+                    message=u'任务调度成功',
+                    error_code=ret_code
                 )
             else:
                 return RestProtocol(
-                    error_code=ret_code.value,
-                    message=dispatchMessage[ret_code]
+                    error_code=ret_code,
+                    message=data
                 )
         else:
             return RestProtocol(message='Operation group not found', error_code=-1), 404
+
 
 class OperationListRunAllApi(OperationMixin, Resource):
     def __init__(self):
@@ -253,25 +262,26 @@ class OperationListRunAllApi(OperationMixin, Resource):
                 operator = current_user
             else:
                 operator = Operator.find(login='admin')
-            ret_code, task_uuid = taskManager.run_all(
+            session = {
+                'operator_id': operator.id,
+                'operated_at': unicode(arrow.utcnow())
+            }
+            ret_code, data = taskManager.run_all(
                 op_group.uuid,
-                json.dumps({
-                    'operator_id': operator.id,
-                    'operated_at': unicode(arrow.utcnow())
-                })
+                json.dumps(session)
             )
-            ret_code = DispatchResult(ret_code)
-            if ret_code == DispatchResult.Dispatched:
-                op = Operation.find(uuid=task_uuid)
-                self.snapshot = taskManager.snapshot(op_group.uuid)
-                return RestProtocol(self.make_operation_detail(op))
+            if ret_code == 0:
+                op = Operation.find(uuid=data)
+                ret, self.snapshot = taskManager.snapshot(op_group.uuid)
+                return RestProtocol(self.make_operation_detail(op, session))
             else:
                 return RestProtocol(
-                    message=dispatchMessage[ret_code],
-                    error_code=ret_code.value
+                    message=data,
+                    error_code=ret_code
                 )
         else:
             return RestProtocol(message='Operation group not found', error_code=-1), 404
+
 
 class OperationApi(OperationMixin, Resource):
     def __init__(self):
@@ -303,28 +313,30 @@ class OperationApi(OperationMixin, Resource):
         if op:
             try:
                 author = self.check_privileges(op)
-                ret = taskManager.peek(op.group.uuid, op.uuid)
+                ret, data = taskManager.peek(op.group.uuid, op.uuid)
                 if ret == 0:
+                    session = {
+                        'operation_id': op.id,
+                        'operator_id': current_user.id,
+                        'operated_at': unicode(arrow.utcnow()),
+                        'authorizor_id': author and author.uuid or None,
+                        'authorized_at': author and unicode(arrow.utcnow()) or None
+                    }
                     taskManager.run_next(
                         op.group.uuid,
-                        json.dumps({
-                            'operation_id': op.id,
-                            'operator_id': current_user.id,
-                            'operated_at': unicode(arrow.utcnow()),
-                            'authorizor_id': author and author.uuid or None,
-                            'authorized_at': author and unicode(arrow.utcnow()) or None
-                        })
+                        json.dumps(session)
                     )
-                    self.snapshot = taskManager.snapshot(op.group.uuid)
-                    return RestProtocol(self.make_operation_detail(op))
+                    ret, self.snapshot = taskManager.snapshot(op.group.uuid)
+                    return RestProtocol(self.make_operation_detail(op, session))
                 else:
-                    raise ApiError(dispatchMessage[DispatchResult(ret)])
+                    raise ApiError(data)
             except AuthError as err:
                 return RestProtocol(error_code=err.status_code, message=err.message)
             except ApiError as err:
                 return RestProtocol(error_code=err.error_code, message=err.message)
         else:
             return RestProtocol(error_code=-1, message="Operation not found"), 404
+
 
 class OperationCallbackApi(OperationMixin, Resource):
     def __init__(self):
@@ -342,8 +354,8 @@ class OperationCallbackApi(OperationMixin, Resource):
                     error_code=1
                 ), 406
             else:
-                self.snapshot = taskManager.snapshot(op.group.uuid)
-                status = TaskStatus(int(result['task_status']))
+                ret, self.snapshot = taskManager.snapshot(op.group.uuid)
+                status = TaskStatus(int(result['task_status'][0]))
                 record_params = json.loads(result['session'])
                 if status == TaskStatus.Running:
                     if not record_params.has_key('operation_id'):
@@ -376,7 +388,7 @@ class OperationUIApi(Resource):
             )
             if session.has_key(key):
                 if arrow.utcnow().timestamp >= \
-                    arrow.get(session[key].get('timeout')).timestamp:
+                        arrow.get(session[key].get('timeout')).timestamp:
                     session.pop(key)
                     valid_session = False
                 else:
@@ -413,6 +425,7 @@ class OperationUIApi(Resource):
         else:
             return "<h1>no ui template found</h1>"
 
+
 class OperationCaptchaApi(Resource):
     def get(self, id):
         op = Operation.find(id=id)
@@ -438,8 +451,9 @@ class OperationCaptchaApi(Resource):
             return rtn
         else:
             return {
-                'message': 'operation not found.'
-            }, 404
+                       'message': 'operation not found.'
+                   }, 404
+
 
 class OperationLoginApi(Resource):
     def post(self, id):
@@ -466,7 +480,7 @@ class OperationLoginApi(Resource):
                 return {
                     'errorCode': err.error_code,
                     'errorMsg': err.message
-                }   # 模拟HTTP接口的返回数据，用于前端UI模块正确显示数据。
+                }  # 模拟HTTP接口的返回数据，用于前端UI模块正确显示数据。
             else:
                 session[key] = {
                     'origin': rsp.cookies.get_dict(),
@@ -476,8 +490,9 @@ class OperationLoginApi(Resource):
                 return result
         else:
             return {
-                'message': 'operation not found.'
-            }, 404
+                       'message': 'operation not found.'
+                   }, 404
+
 
 class OperationExecuteApi(OperationApi):
     def post(self, id):
@@ -538,9 +553,9 @@ class OperationExecuteApi(OperationApi):
                 self.rtn['err_code'] = self.op_result.error_code
                 self.rtn['output_lines'] = self.op_result.detail
                 self.rtn['re_enter'] = (
-                    op.operate_define.type.IsChecker() and \
-                        not op.operate_define.type.IsBatcher()
-                ) or CheckPrivilege(
+                                           op.operate_define.type.IsChecker() and \
+                                           not op.operate_define.type.IsBatcher()
+                                       ) or CheckPrivilege(
                     current_user,
                     '/api/operation/id/',
                     MethodType.ReExecute
@@ -548,8 +563,9 @@ class OperationExecuteApi(OperationApi):
                 return self.rtn
         else:
             return {
-                'message': 'operation not found.'
-            }, 404
+                       'message': 'operation not found.'
+                   }, 404
+
 
 def _handlerJsonResponse(response):
     if response.ok:
@@ -565,6 +581,7 @@ def _handlerJsonResponse(response):
     else:
         raise ApiError('request failed.')
 
+
 def _format2json(data):
     formater = u'{0:0>2d}. {1[name]:15}{1[flag]:3}'
     rtn = []
@@ -578,6 +595,7 @@ def _format2json(data):
         else:
             rtn.append(data)
     return rtn
+
 
 class OperationCSVApi(OperationApi):
     def post(self, id):
@@ -633,9 +651,9 @@ class OperationCSVApi(OperationApi):
                     self.rtn['err_code'] = self.op_result.error_code
                     self.rtn['output_lines'] = self.op_result.detail
                     self.rtn['re_enter'] = (
-                        op.operate_define.type.IsChecker() and \
-                            not op.operate_define.type.IsBatcher()
-                    ) or CheckPrivilege(
+                                               op.operate_define.type.IsChecker() and \
+                                               not op.operate_define.type.IsBatcher()
+                                           ) or CheckPrivilege(
                         current_user,
                         '/api/operation/id/',
                         MethodType.ReExecute
@@ -643,9 +661,9 @@ class OperationCSVApi(OperationApi):
                     return self.rtn
             else:
                 return {
-                    'message': 'no file found.'
-                }, 412
+                           'message': 'no file found.'
+                       }, 412
         else:
             return {
-                'message': 'operation not found.'
-            }, 404
+                       'message': 'operation not found.'
+                   }, 404

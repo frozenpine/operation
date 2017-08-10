@@ -5,8 +5,6 @@ import time
 from Queue import Queue
 from threading import Thread
 
-from MessageQueue import logger
-
 
 class MessageQueue(Thread):
     def __init__(self, filename, timer=10):
@@ -49,6 +47,7 @@ class MessageQueue(Thread):
 
     def get_nowait(self):
         return self.queue.get(False)
+
 
 class LogQueue(MessageQueue):
     def sink(self):
