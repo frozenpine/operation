@@ -13,6 +13,10 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     $scope.user_uuid = $('#user_uuid').text();
     $scope.taskQueueRunning = false;
     $scope.queue_blocked = false;
+    $scope.optionGroupEditShow = true;
+    $scope.optionGroupSelect = [];
+    $scope.optionEarliest = [];
+    $scope.optionLatiest = [];
 
     $scope.$on('TaskStatusChanged', function(event, data) {
         if (data.hasOwnProperty('details')) {
@@ -43,12 +47,28 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         }
     });
 
+    function formatTime(time_string) {
+        var match = time_string.match(/\d{2}:\d{2}:\d{2}/);
+        if (match !== null) {
+            var datetime = new Date('The Jan 01 1970 ' + match[0] + ' GMT+0800');
+            return datetime;
+        } else {
+            return '';
+        }
+    }
+
     $scope.GetOperationList = function() {
         $operations.Detail({
             groupID: $routeParams.grpid,
             onSuccess: function(data) {
                 $scope.opList = data;
                 $scope.optionGroupSelect = new Array(data.details.length);
+                angular.forEach($scope.opList.details, function(value, index) {
+                    $scope.optionEarliest.push(formatTime(value.time_range.lower));
+                    $scope.optionLatiest.push(formatTime(value.time_range.upper));
+                });
+                // $scope.optionEarliest = new Array(data.details.length);
+                // $scope.optionLatiest = new Array(data.details.length);
                 TaskQueueStatus();
             }
         });
@@ -238,8 +258,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             }
         }
     };
-    $scope.optionGroupEditShow = true;
-    $scope.optionGroupSelect = [];
+
     $scope.optionGroupEdit = function(data) {
         if ($rootScope.privileges.edit_group === false) {
             $message.Warning('该用户无编辑权限，无法编辑队列内容');
@@ -277,22 +296,12 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         }];
         $scope.optionOldData = angular.copy($scope.opList.details);
 
-        function formatTime(time_string) {
-            var match = time_string.match(/\d{2}:\d{2}:\d{2}/);
-            if (match !== null) {
-                var datetime = new Date('The Jan 01 1970 ' + match[0] + ' GMT+0800');
-                return datetime;
-            } else {
-                return '';
-            }
-        }
-
         angular.forEach($scope.optionOldData, function(value, index) {
             var data = {
                 operation_name: value.op_name,
                 description: value.op_desc,
-                earliest: formatTime(value.time_range.lower),
-                latest: formatTime(value.time_range.upper),
+                earliest: null,
+                latest: null,
                 need_authorized: value.need_authorized,
                 operation_id: value.id,
                 book_id: value.book_id
@@ -336,10 +345,12 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     $scope.optionGroupEditPostShow = true;
     $scope.optionGroupEditFinish = function() {
         angular.forEach($scope.optionGroupCopy.operations, function(value, index) {
-            value.earliest = (value.earliest !== undefined && value.earliest !== null && value.earliest !== '') ?
-                value.earliest.getHours() + ':' + value.earliest.getMinutes() : '';
-            value.latest = (value.latest !== undefined && value.latest !== null && value.latest !== '') ?
-                value.latest.getHours() + ':' + value.latest.getMinutes() : '';
+            value.earliest = ($scope.optionEarliest[index] !== undefined &&
+                    $scope.optionEarliest[index] !== null && $scope.optionEarliest[index] !== '') ?
+                $scope.optionEarliest[index].getHours() + ':' + $scope.optionEarliest[index].getMinutes() : null;
+            value.latest = ($scope.optionLatiest[index] !== undefined &&
+                    $scope.optionLatiest[index] !== null && $scope.optionLatiest[index] !== '') ?
+                $scope.optionLatiest[index].getHours() + ':' + $scope.optionLatiest[index].getMinutes() : null;
         });
         $operationBooks.optionGroupEditPut({
             optionGroup_id: $scope.optionGroupCopy.operation_group.id,
