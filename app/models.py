@@ -514,8 +514,8 @@ class Socket(SQLModelMixin, db.Model):
             self.type = SocketType.TCP
         if parse['ip'] in ['127.0.0.1', 'localhost', u'127.0.0.1', u'localhost'] \
                 and (self.direction == SocketDirection.Listen.value or
-                             self.direction == SocketDirection.Listen or
-                             self.direction == None):
+                     self.direction == SocketDirection.Listen or
+                     self.direction == None):
             self.address = ip_address(u'0.0.0.0')
         else:
             self.address = ip_address(unicode(parse['ip']))
@@ -609,17 +609,17 @@ class TradeSystem(SQLModelMixin, db.Model):
                     "OperationGroup.disabled == False)"
     )
     operation_book = db.relationship(
-        'OperationBook', backref='system', lazy="dynamic",
+        'OperationBook', backref='system',
         primaryjoin="and_(OperationBook.sys_id == TradeSystem.id,"
                     "OperationBook.disabled == False)"
     )
     data_sources = db.relationship(
-        'DataSource', backref='system', lazy='dynamic',
+        'DataSource', backref='system',
         primaryjoin="and_(DataSource.sys_id == TradeSystem.id,"
                     "DataSource.disabled == False)"
     )
     config_files = db.relationship(
-        'ConfigFile', backref='system', lazy='dynamic',
+        'ConfigFile', backref='system',
         primaryjoin="and_(ConfigFile.sys_id == TradeSystem.id,"
                     "ConfigFile.disabled == False)"
     )
@@ -826,7 +826,8 @@ class OperationBook(SQLModelMixin, db.Model):
         sys = TradeSystem.find(id=sys_id)
         if sys:
             if not self.type.IsInteractivator():
-                new_dtl = {
+                new_dtl = json.loads(json.dumps(self.detail))
+                new_dtl.update({
                     'remote': {
                         'params': {
                             'ip': sys.ip,
@@ -835,8 +836,8 @@ class OperationBook(SQLModelMixin, db.Model):
                         },
                         'name': self.detail['remote']['name']
                     }
-                }
-                self.detail.update(new_dtl)
+                })
+                self.detail = new_dtl
 
 
 class OperationGroup(SQLModelMixin, db.Model):
