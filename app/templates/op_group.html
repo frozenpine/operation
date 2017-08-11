@@ -25,7 +25,7 @@
                         <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2">
                             <i class="am-icon-search am-icon-fw"></i>
                         </span>
-                        <input type="text" class="am-form-field" style="height: 25px" placeholder="关键字过滤" ng-model="keyword">
+                        <input type="text" class="am-form-field" style="height: 25px" placeholder="IP关键字过滤" ng-model="keyword">
                     </div>
                 </div>
             </div>
@@ -47,7 +47,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr ng-repeat="data in serverStatics | filter: keyword">
+                            <tr ng-repeat="data in serverStatics | filter: {server: keyword}">
                                 <td class="table-data" style="max-width: 120px">{{::data.server}}</td>
                                 <td class="table-data" style="max-width: 120px">{{data.uptime}}</td>
                                 <td class="table-data">

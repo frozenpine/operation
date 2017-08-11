@@ -28,6 +28,8 @@ build/target/
 Logs/*.log
 dump/**
 Flows/**
+uploads/*.*
+run/**
 .idea
 
 # Byte-compiled / optimized / DLL files
