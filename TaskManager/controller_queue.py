@@ -139,11 +139,12 @@ class ControllerQueue(object):
                     each[k] = 4
         return 0, u"队列第一项移除成功"
 
-    def change_task_info(self, task_uuid, task_status, task_result):
+    def change_task_info(self, task_uuid, task_status, session, task_result):
         """
         更改task_status_list和task_result_list中的任务状态
         :param task_uuid: task的uuid
         :param task_status: task的状态
+        :param session: 用户session
         :param task_result: task的执行结果
         """
         if task_status[0] == -1:
@@ -170,7 +171,7 @@ class ControllerQueue(object):
         for each in self.controller_task_status_list:
             for (k, v) in each.iteritems():
                 if k == task_uuid:
-                    each[k] = task_status[0]
+                    each[k] = (task_status[0], session)
         for each in self.controller_task_result_list:
             for (k, v) in each.iteritems():
                 if k == task_uuid and task_result:

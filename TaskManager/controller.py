@@ -3,6 +3,7 @@
 import json as pickle
 import logging
 import os
+
 import requests
 
 from controller_msg import msg_dict
@@ -59,17 +60,18 @@ class Controller(object):
         """
         self.controller_queue_dict[controller_queue_uuid].put_controller_todo_task_queue(task)
 
-    def __change_task_status(self, controller_queue_uuid, task_uuid, task_status, task_result):
+    def __change_task_status(self, controller_queue_uuid, task_uuid, task_status, session, task_result):
         """
         私有函数
         更改task_list中的任务状态
         :param controller_queue_uuid: controller_queue的uuid
         :param task_uuid: task的uuid
         :param task_status: task的状态
+        :param session: 用户session
         :param task_result: task的结果
         :return
         """
-        self.controller_queue_dict[controller_queue_uuid].change_task_info(task_uuid, task_status, task_result)
+        self.controller_queue_dict[controller_queue_uuid].change_task_info(task_uuid, task_status, session, task_result)
 
     def register_callback(self, event, callback):
         """
@@ -242,7 +244,8 @@ class Controller(object):
         :param result: 回调结果
         :return
         """
-        self.__change_task_status(result.controller_queue_uuid, result.task_uuid, result.task_status, None)
+        self.__change_task_status(result.controller_queue_uuid, result.task_uuid, result.task_status, result.session,
+                                  None)
         logging.info("task {0} init, user {1}".format(result.task_uuid, result.session))
         with open("dump/{0}.dump".format(result.controller_queue_uuid), "wb") as f:
             f.write(pickle.dumps(
@@ -264,7 +267,8 @@ class Controller(object):
         :param result: 回调结果
         :return
         """
-        self.__change_task_status(result.controller_queue_uuid, result.task_uuid, result.task_status, None)
+        self.__change_task_status(result.controller_queue_uuid, result.task_uuid, result.task_status, result.session,
+                                  None)
         logging.info("task {0} start, user {1}".format(result.task_uuid, result.session))
         with open("dump/{0}.dump".format(result.controller_queue_uuid), "wb") as f:
             f.write(pickle.dumps(
@@ -289,7 +293,8 @@ class Controller(object):
         :param result: 回调结果
         :return
         """
-        self.__change_task_status(result.controller_queue_uuid, result.task_uuid, result.task_status, result)
+        self.__change_task_status(result.controller_queue_uuid, result.task_uuid, result.task_status, result.session,
+                                  result)
         logging.info("task {0} end, user {1}".format(result.task_uuid, result.session))
         with open("dump/{0}.dump".format(result.controller_queue_uuid), "wb") as f:
             f.write(pickle.dumps(
