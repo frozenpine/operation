@@ -101,7 +101,7 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
 
     $scope.groupItemDelete = function(item) {
         item.disabled = true;
-    }
+    };
 
     $scope.groupCheckData = function(id) {
         var flag = false;
