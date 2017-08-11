@@ -1,5 +1,5 @@
 <div class="row" ng-controller="addServerControl" style="margin-top: -1px;">
-    <div class="tpl-portlet-components">
+    <div class="tpl-portlet-components" ng-show="editMode">
         <div class="portlet-title">
             <div class="caption font-green bold">
                 <label style="cursor: pointer;margin-right: 10px;">
@@ -120,7 +120,7 @@
                 <div class="am-btn-toolbar am-fr am-margin-right am-fl">
                     <div class="am-btn-group am-btn-group-sm">
                         <button class="am-btn am-btn-secondary am-round" ng-click="clearSysData()">
-							<i class="am-icon-recycle am-icon-fw"></i>重置
+							<i class="am-icon-recycle am-icon-fw"></i>取消
 						</button>
                         <button class="am-btn am-btn-secondary" ng-if="addServerRadio == 0" ng-disabled="!editOrPost" ng-click="addServerDataPost()">
 							<i class="am-icon-search "></i>新增
@@ -159,7 +159,7 @@
     </div>
 
     <div class="am-u-sm-6" style="padding-left: 0;padding-right: 0;">
-        <div class="tpl-portlet-components" class="am-u-sm-12" style="height: 280px;overflow-y: auto;">
+        <div class="tpl-portlet-components" class="am-u-sm-12" style="height: 280px;overflow-y: auto;" ng-click="clearSysData()">
             <div class="portlet-title">
                 <div class="caption font-green bold">
                     服务器信息
@@ -177,7 +177,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr ng-repeat="data in systemServerData track by $index" onselectstart="return false" ng-style="data.style" ng-dblclick="editServerData($index)">
+                                <tr ng-repeat="data in systemServerData" onselectstart="return false" ng-style="data.style" ng-click="selectServer(data, $event)" ng-dblclick="editServerData(data)" style="cursor: pointer">
                                     <td>{{data.name}}</td>
                                     <td>{{data.description}}</td>
                                     <td>{{data.manage_ip}}</td>
@@ -190,7 +190,7 @@
         </div>
     </div>
     <div class="am-u-sm-6" style="padding-right: 0;padding-left: 10px;">
-        <div class="tpl-portlet-components" class="am-u-sm-12" style="height: 280px;overflow-y: auto;">
+        <div class="tpl-portlet-components" class="am-u-sm-12" style="height: 280px;overflow-y: auto;" ng-click="clearSysData()">
             <div class="portlet-title">
                 <div class="caption font-green bold">
                     系统信息
@@ -199,31 +199,6 @@
             <div class="tpl-block">
                 <div class="am-g">
                     <ul ng-include="'systemTree'" class="am-list admin-sidebar-list am-list-border">
-                        <!--<li style="padding: 0;" ng-repeat="data in systemTreeData track by $index">
-							<a ng-dblclick="editSystemData(data.id)" style="padding-left: 0;">
-								<i class="am-icon-table am-margin-left-sm"></i>
-								<span>{{data.name}}</span>
-								<span>{{data.ip}}</span>
-							</a>
-							<ul ng-if="data.child.length > 0" class="am-list am-list-border" style="margin: 0;">
-								<li ng-repeat="child in data.child">
-									<a ng-dblclick="editSystemData(child.id)" href="" style="padding-left: 0;">
-										<i class="am-icon-table am-margin-left-sm"></i>
-										<span>{{child.name}}</span>
-										<span>{{child.ip}}</span>
-									</a>
-									<ul ng-if="child.child.length > 0" class="am-list am-list-border" style="margin: 0;">
-										<li ng-repeat="child2 in child.child">
-											<a ng-dblclick="editSystemData(child2.id)" href="" style="padding-left: 0;">
-												<i class="am-icon-table am-margin-left-sm"></i>
-												<span>{{child2.name}}</span>
-												<span>{{child2.ip}}</span>
-											</a>
-										</li>
-									</ul>
-								</li>
-							</ul>
-						</li>-->
                     </ul>
                 </div>
             </div>
@@ -231,7 +206,7 @@
     </div>
     <script id="systemTree" type="text/ng-template">
         <li style="padding: 0;" ng-repeat="data in systemTreeData">
-            <a ng-dblclick="editSystemData(data.id)" onselectstart="return false" ng-style="data.style" style="padding-left: 0;">
+            <a ng-dblclick="editSystemData(data)" ng-click="selectSystem(data, $event)" onselectstart="return false" ng-style="data.style" style="padding-left: 0;">
                 <i class="am-icon-table am-margin-left-sm"></i>
                 <span>{{data.name}}</span>
                 <span>{{data.ip}}</span>
@@ -247,7 +222,6 @@
                 </div>
                 <button ng-show="!editProcessBtn" ng-click="addNewProcess()" type="button" class="am-btn am-btn-primary am-round am-btn-sm am-fr">添加</button>
                 <button ng-show="editProcessBtn" ng-click="editProcessData()" type="button" class="am-btn am-btn-sm am-btn-primary am-round am-fr">编辑</button>
-
             </div>
             <div class="tpl-block" ng-if="editProcessBtn">
                 <div class="am-g">
@@ -266,7 +240,8 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr ng-repeat="data in newAddServerData">
+                                <!-- <tr ng-repeat="data in newAddServerData"> -->
+                                <tr ng-repeat="data in systemProcessData|processesFilter:selected">
                                     <td>{{data.name}}</td>
                                     <td>{{data.description}}</td>
                                     <td>{{data.type}}</td>

@@ -1,7 +1,12 @@
-app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$operationBooks', '$rootScope', '$timeout', function($scope, $systemServer, $message, $operationBooks, $rootScope, $timeout) {
+app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$operationBooks', '$rootScope', '$timeout', '$filter', function($scope, $systemServer, $message, $operationBooks, $rootScope, $timeout, $filter) {
     $scope.addServerRadio = 0;
     $scope.addServerData = null;
     $scope.editOrPost = true;
+    $scope.editMode = false;
+    $scope.selected = {
+        system: undefined,
+        server: undefined
+    };
     $systemServer.systemTypesGet({
         onSuccess: function(res) {
             $scope.systemTypes = res.records;
@@ -17,6 +22,7 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
     });
     $scope.clearSysData = function() {
         $scope.editOrPost = true;
+        $scope.editMode = false;
         $scope.addServerData = {
             "name": "",
             "ip": "",
@@ -27,54 +33,73 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
             "disabled": false
         };
         $scope.newAddServerData = angular.copy($scope.systemProcessData);
-    }
-    $scope.editServerData = function(index) {
-        $scope.clearSysData();
-        $scope.editOrPost = false;
-        angular.forEach($scope.systemServerData, function(data, dataIndex) {
-            if (index != dataIndex) {
-                data.style = {};
-            } else {
-                data.style = {
-                    backgroundColor: "#d7effb"
-                };
+        $scope.clearSvrSelect();
+        $scope.clearSysSelect($scope.systemTreeData);
+    };
+
+    $scope.clearSysSelect = function(systems) {
+        angular.forEach(systems, function(data, index) {
+            data.style = {};
+            if (data.child.length > 0) {
+                $scope.clearSysSelect(data.child);
             }
         });
-        $scope.addServerData.name = $scope.systemServerData[index].name;
-        $scope.addServerData.ip = $scope.systemServerData[index].manage_ip;
+        $scope.selected.system = undefined;
+    };
+
+    $scope.selectServer = function(server, $event) {
+        $scope.clearSvrSelect();
+        server.style = {
+            backgroundColor: "#d7effb"
+        };
+        $scope.selected.server = server;
+        if ($event !== undefined) {
+            $event.stopPropagation();
+        }
+    };
+
+    $scope.clearSvrSelect = function() {
+        angular.forEach($scope.systemServerData, function(value, index) {
+            value.style = {};
+        });
+        $scope.selected.server = undefined;
+    };
+
+    $scope.editServerData = function(server) {
+        $scope.clearSysData();
+        $scope.clearSysSelect($scope.systemTreeData);
+        $scope.editOrPost = false;
+        $scope.editMode = true;
+        $scope.selectServer(server);
+        $scope.addServerData.name = server.name;
+        $scope.addServerData.ip = server.manage_ip;
         $scope.addServerData.password = "";
-        $scope.addServerData.user = $scope.systemServerData[index].admin_user;
-        $scope.addServerData.platform = $scope.systemServerData[index].platform;
-        $scope.addServerData.description = $scope.systemServerData[index].description;
-        $scope.addServerData.id = $scope.systemServerData[index].id;
+        $scope.addServerData.user = server.admin_user;
+        $scope.addServerData.platform = server.platform;
+        $scope.addServerData.description = server.description;
+        $scope.addServerData.id = server.id;
         $scope.addServerRadio = 0;
     };
-    $scope.editSystemData = function(id) {
+
+    $scope.selectSystem = function(system, $event) {
+        $scope.clearSysSelect($scope.systemTreeData);
+        system.style = {
+            backgroundColor: "#d7effb"
+        };
+        $scope.selected.system = system;
+        if ($event !== undefined) {
+            $event.stopPropagation();
+        }
+    };
+
+    $scope.editSystemData = function(system) {
         $scope.clearSysData();
         $scope.editOrPost = false;
-        angular.forEach($scope.systemTreeData, function(data, dataIndex) {
-            if (id != data.id) {
-                for (var i = 0; i < data.child.length; i++) {
-                    if (id == data.child[i].id) {
-                        data.child[i].style = {
-                            backgroundColor: "#d7effb"
-                        };
-                    } else {
-                        data.child[i].style = {};
-                    }
-                }
-                data.style = {};
-            } else {
-                for (var j = 0; j < data.child.length; j++) {
-                    data.child[j].style = {};
-                }
-                data.style = {
-                    backgroundColor: "#d7effb"
-                };
-            }
-        });
+        $scope.editMode = true;
+        $scope.clearSvrSelect();
+        $scope.selectSystem(system);
         $systemServer.getSystem({
-            id: id,
+            id: system.id,
             onSuccess: function(res) {
                 $scope.childSystemData = res;
                 $scope.addServerData.id = $scope.childSystemData.id;
@@ -95,9 +120,7 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
             onError: function(res) {
                 $message.Alert(res);
             }
-
         });
-
     };
     $scope.editServerDataPut = function() {
         $systemServer.editServer({
@@ -115,8 +138,8 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
             onError: function(res) {
                 $message.Alert(res);
             }
-        })
-    }
+        });
+    };
     $scope.editSystemDataPut = function() {
         $systemServer.editSystem({
             data: $scope.addServerData,
@@ -158,12 +181,12 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
                     for (var i = 0; i < value.child.length; i++) {
                         $scope.systemTreeSecond.push(value.child[i]);
                     }
-            })
+            });
         },
         onError: function(res) {
             $message.Alert(res);
         }
-    })
+    });
     $scope.systemBelongGet = function() {
         $operationBooks.operationBookSystemsGet({
             onSuccess: function(res) {
@@ -183,28 +206,28 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
                 });
             }
         });
-    }
+    };
     $scope.systemBelongGet();
     $scope.$watch('addServerRadio', function(scope) {
-        if ($scope.editOrPost == false) {
+        if ($scope.editOrPost === false) {
             return;
         }
-        if ($scope.addServerRadio == 0) {
+        if ($scope.addServerRadio === 0) {
             $scope.clearSysData();
             $scope.checkDataFull = function(data) {
-                if (data.name == "" || data.ip == "" || data.password == "" || data.user == "" || data.platform == "")
+                if (data.name === "" || data.ip === "" || data.password === "" || data.user === "" || data.platform === "")
                     return true;
                 else
                     return false;
-            }
+            };
         } else {
             $scope.clearSysData();
             $scope.checkDataFull = function(data) {
-                if (data.name == "" || data.ip == "" || data.password == "" || data.user == "")
+                if (data.name === "" || data.ip === "" || data.password === "" || data.user === "")
                     return true;
                 else
                     return false;
-            }
+            };
         }
     });
     $scope.addSystemDataPost = function() {
@@ -221,7 +244,7 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
                     onError: function(res) {
                         $message.Alert(res);
                     }
-                })
+                });
             },
             onError: function(res) {
                 $message.Alert(res);
@@ -243,8 +266,8 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
             onError: function(res) {
                 $message.Alert(res);
             }
-        })
-    }
+        });
+    };
     $scope.editProcessBtn = true;
     $systemServer.getProcess({
         onSuccess: function(res) {
@@ -267,9 +290,10 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
     });
     $scope.editProcessData = function() {
         $scope.editProcessBtn = false;
-        $scope.systemProcessDataCopy = new Array();
-        angular.forEach($scope.newAddServerData, function(value, index) {
-            var data = new Object();
+        $scope.systemProcessDataCopy = [];
+        // angular.forEach($scope.newAddServerData, function(value, index) {
+        angular.forEach($filter('processesFilter')($scope.systemProcessData, $scope.selected), function(value, index) {
+            var data = {};
             data.name = value.name;
             data.description = value.description;
             data.type = value.type;
@@ -283,16 +307,16 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
             $scope.systemProcessDataCopy.push(data);
         });
         $scope.addNewProcess = function() {
-            var data = new Object();
+            var data = {};
             $scope.systemProcessDataCopy.push(data);
-        }
-    }
+        };
+    };
     $scope.processEditDelete = function(index) {
         $scope.systemProcessDataCopy[index].disabled = true;
-    }
+    };
     $scope.editProcessCancel = function() {
         $scope.editProcessBtn = true;
-    }
+    };
     $scope.addProcessData = function() {
         $systemServer.addProcess({
             data: $scope.systemProcessDataCopy,
