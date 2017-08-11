@@ -594,10 +594,13 @@ class TradeSystem(SQLModelMixin, db.Model):
     )
     vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.id'), index=True)
     parent_sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
-    parent_system = db.relationship(
+    ''' parent_system = db.relationship(
         'TradeSystem', backref='child_systems', remote_side=[id],
         primaryjoin="and_(TradeSystem.parent_sys_id == TradeSystem.id,"
                     "TradeSystem.disabled == False)"
+    ) '''
+    parent_system = db.relationship(
+        'TradeSystem', backref='child_systems', remote_side=[id]
     )
     operation_groups = db.relationship(
         'OperationGroup', backref='system',
