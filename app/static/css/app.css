@@ -2114,15 +2114,11 @@ div#optionEditTitle ul li {
     margin-right: 10px;
 }
 
-input.invalid {
-    border-style: solid;
+.invalid {
+    /* border-style: solid;
     border-width: 2px;
-    border-color: coral;
-}
-
-select.invalid {
-    border-color: coral;
-    border-width: 2px;
+    border-color: coral; */
+    box-shadow: 0 0 5px coral;
 }
 
 
