@@ -2,6 +2,7 @@
 
 import sys
 
+import time
 import zerorpc
 import zmq.green as zmq
 from gevent import monkey
@@ -13,12 +14,14 @@ if __name__ == "__main__":
     # 阻塞 + 非阻塞
     task_dict = {
         "task_group1": {
+            # 同步True, 异步False
             "group_block": True,
+            "trigger_time": "12:00",
             "group_info": [
                 {
                     "task_uuid": "task1",
-                    "earliest": "9:20",
-                    "latest": "",
+                    "earliest": "17:30",
+                    "latest": "18:00",
                     "detail": {
                         "remote": {
                             "params": {
@@ -29,7 +32,7 @@ if __name__ == "__main__":
                             "name": "SSHConfig"
                         },
                         "mod": {
-                            "shell": "sleep 5",
+                            "shell": "sleep 10",
                             "name": "shell"
                         }
                     }
@@ -73,71 +76,12 @@ if __name__ == "__main__":
                     }
                 }
             ]
-        },
-        "task_group2": {
-            "group_block": True,
-            "group_info": [
-                {
-                    "task_uuid": "task6",
-                    "earliest": "13:00",
-                    "latest": "18:00",
-                    "detail": {
-                        "remote": {
-                            "params": {
-                                "ip": "192.168.100.90",
-                                "password": "qdam",
-                                "user": "qdam"
-                            },
-                            "name": "SSHConfig"
-                        },
-                        "mod": {
-                            "shell": "sleep 5",
-                            "name": "shell"
-                        }
-                    }
-                },
-                {
-                    "task_uuid": "task7",
-                    "earliest": "13:00",
-                    "latest": "20:00",
-                    "detail": {
-                        "remote": {
-                            "params": {
-                                "ip": "192.168.100.90",
-                                "password": "qdam1",
-                                "user": "qdam"
-                            },
-                            "name": "SSHConfig"
-                        },
-                        "mod": {
-                            "shell": "sleep 5",
-                            "name": "shell"
-                        }
-                    }
-                },
-                {
-                    "task_uuid": "task8",
-                    "earliest": "16:00",
-                    "latest": "18:00",
-                    "detail": {
-                        "remote": {
-                            "params": {
-                                "ip": "192.168.100.90",
-                                "password": "qdam",
-                                "user": "qdam"
-                            },
-                            "name": "SSHConfig"
-                        },
-                        "mod": {
-                            "shell": "sleep 5",
-                            "name": "shell"
-                        }
-                    }
-                }
-            ]
         }
     }
     client = zerorpc.Client()
     client.connect("tcp://127.0.0.1:6000")
-    print client.init(task_dict, True)
-    print client.run_all("task_group1")
+    client.init(task_dict, True)
+    client.run_all("task_group1")
+    time.sleep(5)
+    print client.kill("task1")
+    # client.resume("task_group1")

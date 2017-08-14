@@ -61,11 +61,12 @@ class Result(object):
 
 
 class RunTask(Process):
-    def __init__(self, controller_queue_uuid, controller_queue_create_time, task_uuid,
+    def __init__(self, controller_queue_uuid, controller_queue_create_time, controller_queue_trigger_time, task_uuid,
                  task_earliest, task_latest, task, pipe_child, session, run_all, idle_process_count):
         Process.__init__(self)
         self.controller_queue_uuid = controller_queue_uuid
         self.controller_queue_create_time = controller_queue_create_time
+        self.controller_queue_trigger_time = controller_queue_trigger_time
         self.task_uuid = task_uuid
         self.task = task
         self.task_earliest = task_earliest
@@ -76,7 +77,7 @@ class RunTask(Process):
         # 计算是否需要睡眠等待以及当前进程池是否已满
         if idle_process_count < 0:
             pass
-        ret_code, ret_msg = get_time.compare_timestamps(self.controller_queue_create_time, self.task_earliest,
+        ret_code, ret_msg = get_time.compare_timestamps(self.controller_queue_trigger_time, self.task_earliest,
                                                         self.task_latest)
         if ret_code == 3:
             # 无法执行
@@ -131,7 +132,7 @@ class RunTask(Process):
             return -1
         # 开始正式执行
         ret_code, ret_msg = get_time.compare_timestamps(
-            self.controller_queue_create_time, self.task_earliest, self.task_latest
+            self.controller_queue_trigger_time, self.task_earliest, self.task_latest
         )
         if ret_code == 2:
             logging.info('create: {}, earlist: {}, latest: {}, timegap: {}'.format(
@@ -214,6 +215,7 @@ class Worker(object):
             ret = msg_queue.todo_task_queue.get()
             controller_queue_uuid = ret["controller_queue_uuid"]
             controller_queue_create_time = ret["controller_queue_create_time"]
+            controller_queue_trigger_time = ret["controller_queue_trigger_time"]
             task_uuid = ret["task_uuid"]
             task_earliest = ret["task_earliest"]
             task_latest = ret["task_latest"]
@@ -221,9 +223,8 @@ class Worker(object):
             run_all = ret["run_all"]
             session = ret["session"]
             idle_process_count = max_process - len(self.process_dict)
-            t = RunTask(controller_queue_uuid, controller_queue_create_time, task_uuid, task_earliest, task_latest,
-                        task, pipe_child, session,
-                        run_all, idle_process_count)
+            t = RunTask(controller_queue_uuid, controller_queue_create_time, controller_queue_trigger_time, task_uuid,
+                        task_earliest, task_latest, task, pipe_child, session, run_all, idle_process_count)
             while 1:
                 for k in self.process_dict.keys():
                     if not self.process_dict[k][0].is_alive():
@@ -244,6 +245,7 @@ class Worker(object):
         :return:
         """
         if task_uuid in self.process_dict.keys():
+            self.process_dict[task_uuid][0].terminate()
             self.process_dict.pop(task_uuid)
             return 0, u"终止进程成功"
         else:

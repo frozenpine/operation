@@ -20,10 +20,11 @@ class TaskStatus(Enum):
 
 
 class ControllerQueue(object):
-    def __init__(self, controller_queue_uuid, group_block):
+    def __init__(self, controller_queue_uuid, group_block, trigger_time):
         self.create_time = get_time.current_ymd_hms()
         # self.create_time = "2017-01-01 12:00:00"
         self.group_block = group_block
+        self.trigger_time = trigger_time
         self.controller_queue_status = 0
         self.controller_queue_uuid = controller_queue_uuid
         self.controller_todo_task_queue = JoinableQueue()
@@ -37,6 +38,7 @@ class ControllerQueue(object):
         """
         return {
             "create_time": self.create_time,
+            "trigger_time": self.trigger_time,
             "group_block": self.group_block,
             "controller_queue_status": self.controller_queue_status,
             "controller_queue_uuid": self.controller_queue_uuid,
@@ -61,7 +63,8 @@ class ControllerQueue(object):
         task = task["detail"]
         self.controller_todo_task_queue.put(
             {"controller_queue_uuid": self.controller_queue_uuid, "controller_queue_create_time": self.create_time,
-             "task_uuid": task_uuid, "task_earliest": task_earliest, "task_latest": task_latest, "task": task})
+             "controller_queue_trigger_time": self.trigger_time, "task_uuid": task_uuid, "task_earliest": task_earliest,
+             "task_latest": task_latest, "task": task})
 
     def peek_controller_todo_task_queue(self, task_uuid):
         """
@@ -101,7 +104,7 @@ class ControllerQueue(object):
             # 寻找到失败任务的uuid
             fail_task_uuid_list = list()
             for each in self.controller_task_status_list:
-                if each.values()[0] in (1, 2, 3):
+                if each.values()[0] and each.values()[0][0] in (1, 2, 3):
                     # 如果出现执行失败或者执行超时
                     each.update({each.keys()[0]: None})
                     fail_task_uuid_list.append(each.keys()[0])
@@ -114,10 +117,19 @@ class ControllerQueue(object):
                     temp_queue.put(
                         {"controller_queue_uuid": self.controller_queue_uuid,
                          "controller_queue_create_time": self.create_time,
+                         "controller_queue_trigger_time": self.trigger_time,
                          "task_uuid": each["task_uuid"], "task_earliest": each["earliest"],
                          "task_latest": each["latest"], "task": each["detail"]}
                     )
-            # 将原先任务也压入队列中
+            # 更改task_status_list和task_result_list
+            for each1 in fail_task_uuid_list:
+                for each2 in self.controller_task_status_list:
+                    if each1 == each2.keys()[0]:
+                        each2.update({each1: None})
+                for each2 in self.controller_task_result_list:
+                    if each1 == each2.keys()[0]:
+                        each2.update({each1: None})
+            # 将原先任务也压入队列
             while not self.controller_todo_task_queue.empty():
                 temp_queue.put(self.controller_todo_task_queue.get())
             self.controller_todo_task_queue = temp_queue
