@@ -17,7 +17,7 @@ if __name__ == "__main__":
             "group_info": [
                 {
                     "task_uuid": "task1",
-                    "earliest": "16:40",
+                    "earliest": "9:20",
                     "latest": "",
                     "detail": {
                         "remote": {
@@ -138,6 +138,6 @@ if __name__ == "__main__":
         }
     }
     client = zerorpc.Client()
-    client.connect("tcp://127.0.0.1:2017")
+    client.connect("tcp://127.0.0.1:6000")
     print client.init(task_dict, True)
     print client.run_all("task_group1")

@@ -18,7 +18,7 @@ except ImportError:
 tm_host = environ.get("TM_HOST") or "0.0.0.0"
 tm_port = environ.get("TM_PORT") or 6000
 
-monkey.patch_all(socket=False, thread=False)
+monkey.patch_all(socket=False, thread=False, time=False)
 
 if __name__ == "__main__":
     controller = Controller()

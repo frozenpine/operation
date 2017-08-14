@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import json
+import time
 from multiprocessing import Process, Pipe
 from threading import Thread
 
@@ -131,7 +132,7 @@ class RunTask(Process):
             self.controller_queue_create_time, self.task_earliest, self.task_latest
         )
         if ret_code == 2:
-            gevent.sleep(ret_msg)
+            time.sleep(ret_msg)
         status_code, status_msg = 200, u"开始执行"
         self.pipe_child.send(
             Result(controller_queue_uuid=self.controller_queue_uuid, task_uuid=self.task_uuid,
