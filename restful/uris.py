@@ -135,7 +135,7 @@ resources.add_resource(
 resources.add_resource(
     OperationApi,
     '/operation/id/<int:id>',
-    methods=['GET'],
+    methods=['GET', 'DELETE'],
     endpoint='operation'
 )
 

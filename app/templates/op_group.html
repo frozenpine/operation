@@ -163,7 +163,8 @@
     <div class="tpl-portlet-components">
         <div class="portlet-title">
             <div class="caption font-green bold">
-                系统操作 - {{opList.system_name}} : {{opList.name}}
+                <p>系统操作 - {{opList.system_name}} : {{opList.name}}</p>
+                <p>创建时间：{{opList.create_time}}</p>
             </div>
             <button ng-show="!optionGroupEditShow" ng-click="optionGroupEditAdd()" type="button" class="am-btn am-btn-primary am-round am-btn-sm am-fr">添加</button>
             <button ng-show="optionGroupEditShow" ng-click="optionGroupEdit(opList)" type="button" class="am-btn am-btn-sm am-btn-primary am-round am-fr">编辑</button>
@@ -241,11 +242,11 @@
                             </div>
                             <tr ng-repeat="data in opList.details">
                                 <td>{{data.op_name}}</td>
-                                <td>{{data.op_desc}}</td>
+                                <td class="am-text-break">{{data.op_desc}}</td>
                                 <td>{{data.time_range.lower}} ~ {{data.time_range.upper}}</td>
                                 <td>
                                     <div class="am-btn-group am-btn-group-xs">
-                                        <button class="am-btn am-btn-default am-btn-xs am-text-secondary" ng-class="{true: '', false: 'am-disabled'}[data.enabled && data.re_enter && !queue_blocked]" ng-click="execute($index, data.id)">
+                                        <button class="am-btn am-btn-default am-btn-xs am-text-secondary" ng-class="{true: '', false: 'am-disabled'}[data.enabled && opList.status_code==0]" ng-click="execute($index, data.id)">
                                             <span class="am-icon-pencil-square-o"></span> 执行
                                         </button>
                                     </div>
@@ -332,11 +333,9 @@
                                         <input type="text" style="padding: 5px 5px 5px 0;border: none;" value="data.description" ng-model="data.description" />
                                     </div>
                                     <div class="am-u-sm-1" style="padding-left: 6px;">
-                                        <!-- <input name='startTime{{$index}}' type="text" style="padding: 5px 5px 5px 0;border: none;width: 60px;" ng-model="data.earliest" ng-pattern="/^((0\d{1}|1\d{1}|2[0-3]|[0-9]):([0-5]\d{1})|(0\d{1}|1\d{1}|2[0-3]|[0-9]):([0-5]\d{1}):([0-5]\d{1}))$/" /> -->
                                         <input name="startTime{{$index}}" type="time" style="padding: 5px 5px 5px 0;border: none;" ng-model="optionEarliest[$index]" />
                                     </div>
                                     <div class="am-u-sm-1" style="padding-left: 6px;">
-                                        <!-- <input name='endTime{{$index}}' type="text" style="padding: 5px 5px 5px 0;border: none;width: 60px;" ng-model="data.latest" ng-pattern="/^((0\d{1}|1\d{1}|2[0-3]|[0-9]):([0-5]\d{1})|(0\d{1}|1\d{1}|2[0-3]|[0-9]):([0-5]\d{1}):([0-5]\d{1}))$/" /> -->
                                         <input name="endTime{{$index}}" type="time" style="padding: 5px 5px 5px 0;border: none;" ng-model="optionLatiest[$index]" />
                                     </div>
                                     <div class="am-u-sm-2">
@@ -364,7 +363,7 @@
                 <div class="am-fr" ng-show="optionGroupEditShow">
                     <div class="am-btn-group am-btn-group-sm">
                         <button ng-click="InitQueue()" type="button" class="am-btn am-btn-primary am-round">初始化队列</button>
-                        <button ng-click="resumeQueue()" type="button" class="am-btn am-btn-primary am-round" ng-class="{true: '', false: 'am-disabled'}[queue_blocked]">恢复队列</button>
+                        <button ng-click="resumeQueue()" type="button" class="am-btn am-btn-primary am-round" ng-disabled="opList.status_code!=14">恢复队列</button>
                         <button class="am-btn am-btn-primary am-round" ng-click="runAll()">全部执行</button>
                     </div>
                 </div>

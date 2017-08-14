@@ -38,7 +38,7 @@
                         <tbody>
                             <tr ng-repeat="dtl in data.details">
                                 <td>{{::dtl.op_name}}</td>
-                                <td>{{::dtl.op_desc}}</td>
+                                <td class="am-text-break">{{::dtl.op_desc}}</td>
                                 <td>
                                     <div class="am-btn-group am-btn-group-xs">
                                         <button class="am-btn am-btn-default am-btn-xs am-text-secondary" ng-click="execute(data.name, $index, dtl.id)">
@@ -132,40 +132,38 @@
                             <ul sv-root sv-part="optionBookEditDataList[$index]">
                                 <li ng-repeat="dtl in optionBookEditDataList[$index]" ng-show="!dtl.disabled" sv-element>
                                     <div class="am-u-sm-2" style="padding: 3px;">
-                                        <select ng-model="dtl.sys_id" style="width: 100%;">
+                                        <select ng-model="dtl.sys_id" style="width: 100%;" required>
                     	                	<option value="{{x.id}}" ng-repeat="x in systemListData">
                     	                		{{x.name}}
                     	                	</option>
                     	                </select>
-                                        <!--<input type="text" style="padding: 5px 5px 5px 0;border: none;" value="dtl.op_name" ng-model="dtl.op_name" />-->
                                     </div>
                                     <div class="am-u-sm-2" style="padding: 3px;">
-                                        <input type="text" style="width: 100%;border: none;" value="dtl.op_name" ng-model="dtl.op_name" />
+                                        <input type="text" style="width: 100%;border: none;" value="dtl.op_name" ng-model="dtl.op_name" ng-class="{true: 'invalid', false: ''}[dtl.op_name==undefined]" required/>
                                     </div>
                                     <div class="am-u-sm-3" style="padding: 3px;">
                                         <input type="text" style="border: none;width: 100%;" value="dtl.op_desc" ng-model="dtl.op_desc" />
                                     </div>
                                     <div class="am-u-sm-1" style="padding: 3px;">
-                                        <select ng-model="dtl.catalog_id" style="width: 100%;">
+                                        <select ng-model="dtl.catalog_id" style="width: 100%;" required>
                     	                	<option value="{{x.id}}" ng-repeat="x in operationCatalogs">
                     	                		{{x.name}}
                     	                	</option>
                     	                </select>
                                     </div>
                                     <div class="am-u-sm-1" style="padding: 3px;">
-                                        <select ng-model="dtl.type" style="width: 100%;">
+                                        <select ng-model="dtl.type" style="width: 100%;" required>
                                     		<option value="Checker">检查</option>
                                     		<option value="Executor">执行</option>
-                                    		<option value="Interactivator">交互</option>
+                                    		<!-- <option value="Interactivator">交互</option>
                                     		<option value="Execute_Checker">执行与检查</option>
-                                    		<option value="Interactive_Checker">交互与检查</option>
+                                    		<option value="Interactive_Checker">交互与检查</option> -->
                                     	</select>
                                     </div>
                                     <div class="am-u-sm-1" style="padding: 3px;">
                                         {{dtl.connection}}
                                     </div>
                                     <div class="am-u-sm-1" style="background: none; padding: 3px;">
-                                        <!--<button style="background-color: none;" ng-click="optionGroupEditDelete($index)">删除</button>-->
                                         <a ng-click="optionBookEditDelete($index)" class="am-close am-close-alt am-icon-times"></a>
                                     </div>
                                     <div>
@@ -178,7 +176,7 @@
                     <hr/>
                     <div class="am-fr" style="margin-bottom: 20px;" ng-show="!optionBookEditShow[$index]">
                         <button ng-click="optionBookEditCancel($index)" class="am-btn am-btn-primary am-btn-sm am-round">取消</button>
-                        <button ng-click="optionBookEditPut()" type="submit" class="am-btn am-btn-primary am-btn-sm am-round">确定</button>
+                        <button ng-click="optionBookEditPut()" type="submit" class="am-btn am-btn-primary am-btn-sm am-round" ng-disabled="optionGroupEditSub.$invalid">确定</button>
                     </div>
                 </div>
             </div>

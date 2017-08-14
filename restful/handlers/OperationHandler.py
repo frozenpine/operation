@@ -102,10 +102,10 @@ class OperationMixin(object):
         if idx > 0:
             dtl['enabled'] = (self.snapshot['task_status_list'][idx - 1]
                               == TaskStatus.Success.value) and \
-                             (not self.snapshot['task_status_list'][idx]
+                             not (self.snapshot['task_status_list'][idx]
                                   == TaskStatus.Success.value)
         elif idx == 0:
-            dtl['enabled'] = not self.snapshot['task_status_list'][0] == TaskStatus.Success.value
+            dtl['enabled'] = not (self.snapshot['task_status_list'][0] == TaskStatus.Success.value)
         else:
             dtl['enabled'] = False
         return dtl
@@ -120,6 +120,8 @@ class OperationMixin(object):
         rtn['grp_uuid'] = op_group.uuid
         rtn['trigger_time'] = op_group.trigger_time
         rtn['sys_uuid'] = op_group.system.uuid
+        rtn['status_code'] = self.snapshot['controller_queue_status']
+        rtn['create_time'] = self.snapshot['create_time']
         for op in op_group.operations:
             rtn['details'].append(self.make_operation_detail(op))
         return rtn
@@ -136,6 +138,7 @@ class OperationListApi(OperationMixin, Resource):
             task_queue = {
                 op_group.uuid: {
                     'group_block': True,
+                    'trigger_time': op_group.trigger_time,
                     'group_info': [{
                         'task_uuid': task.uuid,
                         'detail': task.operate_define.detail,
@@ -164,7 +167,7 @@ class OperationListApi(OperationMixin, Resource):
                 )
                 if op_group.is_emergency or \
                         (now_time.day - create_time.day >= 1 and \
-                                 (isinstance(trigger_time, datetime.time) and now_time.time() > trigger_time)):
+                            (isinstance(trigger_time, datetime.time) and now_time.time() > trigger_time)):
                     taskManager.init(task_queue, True)
                     ret, self.snapshot = taskManager.snapshot(op_group.uuid)
                     rtn = self.make_operation_list(op_group)
@@ -185,6 +188,7 @@ class OperationListApi(OperationMixin, Resource):
             task_queue = {
                 op_group.uuid: {
                     'group_block': True,
+                    'tiggger_time': op_group.trigger_time,
                     'group_info': [{
                         'task_uuid': task.uuid,
                         'detail': task.operate_define.detail,
@@ -339,6 +343,14 @@ class OperationApi(OperationMixin, Resource):
                 return RestProtocol(error_code=err.status_code, message=err.message)
             except ApiError as err:
                 return RestProtocol(error_code=err.error_code, message=err.message)
+        else:
+            return RestProtocol(error_code=-1, message="Operation not found"), 404
+
+    def delete(self, **kwargs):
+        op = Operation.find(**kwargs)
+        if op:
+            ret, msg = taskManager.kill(op.uuid)
+            return RestProtocol(error_code=ret, message=msg)
         else:
             return RestProtocol(error_code=-1, message="Operation not found"), 404
 

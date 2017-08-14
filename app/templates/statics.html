@@ -218,7 +218,7 @@
                         <tbody>
                             <tr ng-repeat="child in data.detail" ng-class="{true: 'am-danger', false: ''}[child.status.stat=='stopped']">
                                 <td class="table-data">
-                                    <span class="am-dropdown" ng-mouseover="showProcVer[$index] = true" ng-mouseleave="showProcVer[$index] = false">
+                                    <span class="am-dropdown" ng-mouseover="showProcVer[$index] = true" ng-mouseleave="showProcVer[$index] = false" style="cursor: pointer">
                                         {{::child.process}}
                                         <div class="am-dropdown-content" ng-if="child.version.length>0" ng-show="showProcVer[$index]" style="display: block;margin-top: 0;">
                                             <ul style="color: #93a2a9" ng-repeat="line in child.version">

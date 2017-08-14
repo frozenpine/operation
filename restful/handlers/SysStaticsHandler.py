@@ -595,7 +595,7 @@ class ConfigList(object):
         self.rtn = []
 
     def find_systems(self, sys):
-        if len(sys.config_files.all()) > 0:
+        if len(sys.config_files) > 0:
             self.system_list.append(sys)
         if len(sys.child_systems) > 0:
             for child_sys in sys.child_systems:
@@ -621,7 +621,7 @@ class ConfigList(object):
                                     conf.pre_hash_code != conf.hash_code or False,
                     'timestamp': conf.timestamp and \
                                  conf.timestamp.to('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss')
-                } for conf in each_sys.config_files.all()]
+                } for conf in each_sys.config_files]
             })
 
 class ConfigListApi(Resource, ConfigList):

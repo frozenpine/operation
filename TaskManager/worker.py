@@ -1,17 +1,19 @@
 # coding=utf-8
 
 import json
+import logging
 import time
-from multiprocessing import Process, Pipe
+from multiprocessing import Pipe, Process
 from threading import Thread
 
 import gevent
 
 import get_time
-from SysManager.configs import SSHConfig
-from SysManager.excepts import SSHException, SSHAuthenticationException, SSHNoValidConnectionsError, ConfigInvalid
-from SysManager.executor import Executor
 from msg_queue import msg_queue
+from SysManager.configs import SSHConfig
+from SysManager.excepts import (ConfigInvalid, SSHAuthenticationException,
+                                SSHException, SSHNoValidConnectionsError)
+from SysManager.executor import Executor
 from worker_queue import WorkerQueue
 
 
@@ -132,6 +134,10 @@ class RunTask(Process):
             self.controller_queue_create_time, self.task_earliest, self.task_latest
         )
         if ret_code == 2:
+            logging.info('create: {}, earlist: {}, latest: {}, timegap: {}'.format(
+                self.controller_queue_create_time, self.task_earliest,
+                self.task_latest, ret_msg
+            ))
             time.sleep(ret_msg)
         status_code, status_msg = 200, u"开始执行"
         self.pipe_child.send(

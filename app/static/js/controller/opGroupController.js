@@ -11,7 +11,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     $scope.batch_run = false;
     $scope.user_uuid = $('#user_uuid').text();
     $scope.taskQueueRunning = false;
-    $scope.queue_blocked = false;
+    // $scope.queue_blocked = false;
     $scope.optionGroupEditShow = true;
     $scope.optionGroupSelect = [];
     $scope.optionEarliest = [];
@@ -74,7 +74,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     };
 
     $scope.InitQueue = function() {
-        $scope.queue_blocked = false;
+        // $scope.queue_blocked = false;
         $operations.InitQueue({
             groupID: $routeParams.grpid
         });
@@ -102,7 +102,8 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             groupID: $routeParams.grpid,
             onSuccess: function() {
                 $timeout(function() {
-                    $scope.queue_blocked = false;
+                    // $scope.queue_blocked = false;
+                    $scope.opList.status_code = 0;
                 }, 0);
                 $message.Success('队列已恢复');
                 $scope.GetOperationList();
@@ -114,7 +115,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     };
 
     $scope.runAll = function() {
-        if ($scope.queue_blocked) {
+        if ( /* $scope.queue_blocked */ $scope.opList.status_code === 14) {
             $message.Warning('队列执行失败已阻塞，请先恢复队列。');
             return;
         }
@@ -142,7 +143,10 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     function TaskStatus(data, index) {
         $timeout(function() {
             $scope.opList.details[index] = data;
-            $scope.queue_blocked = data.exec_code > 0;
+            // $scope.queue_blocked = data.exec_code > 0;
+            if (data.exec_code === 1) {
+                $scope.opList.status_code = 14;
+            }
         }, 0);
         if (!$scope.batch_run) {
             $timeout(function() {
@@ -173,9 +177,10 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     function TaskQueueStatus() {
         $timeout(function() {
             angular.forEach($scope.opList.details, function(value, index) {
-                if (value.exec_code > 0) {
-                    $scope.queue_blocked = true;
-                }
+                /* if (value.exec_code > 0) {
+                    // $scope.queue_blocked = true;
+                    $scope.opList.status_code = 14;
+                } */
                 if (index > 0 && $scope.opList.details[index - 1].checker.isTrue) {
                     checked = $sessionStorage[$scope.opList.details[index - 1].uuid];
                     $scope.opList.details[index].enabled = value.enabled && checked === true;
@@ -196,7 +201,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     }
 
     $scope.execute = function(index, id) {
-        if ($scope.queue_blocked) {
+        if ( /* $scope.queue_blocked */ $scope.opList.status_code === 14) {
             $message.Warning('队列执行失败已阻塞，请先恢复队列。');
             return;
         }
