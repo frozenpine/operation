@@ -4,6 +4,8 @@ import json as pickle
 import logging
 import os
 
+import requests
+
 from controller_msg import msg_dict
 from controller_queue import ControllerQueue
 from msg_queue import msg_queue
@@ -261,14 +263,14 @@ class Controller(object):
                 self.controller_queue_dict[result.controller_queue_uuid].to_dict()
             ))
         logging.info(result.to_str())
-        # requests.post(
-        #     "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
-        #         ip=app_host,
-        #         port=app_port,
-        #         id=result.task_uuid
-        #     ),
-        #     json=result.to_dict()
-        # )
+        requests.post(
+            "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
+                ip=app_host,
+                port=app_port,
+                id=result.task_uuid
+            ),
+            json=result.to_dict()
+        )
 
     def worker_start_callback(self, result):
         """
@@ -284,14 +286,14 @@ class Controller(object):
                 self.controller_queue_dict[result.controller_queue_uuid].to_dict()
             ))
         logging.info(result.to_str())
-        # requests.post(
-        #     "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
-        #         ip=app_host,
-        #         port=app_port,
-        #         id=result.task_uuid
-        #     ),
-        #     json=result.to_dict()
-        # )
+        requests.post(
+            "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
+                ip=app_host,
+                port=app_port,
+                id=result.task_uuid
+            ),
+            json=result.to_dict()
+        )
         # 非阻塞队列开始执行后
         if result.run_all and not self.__get_group_block(result.controller_queue_uuid):
             self.get_task_from_controller_queue(result.controller_queue_uuid, True)
@@ -310,14 +312,14 @@ class Controller(object):
                 self.controller_queue_dict[result.controller_queue_uuid].to_dict()
             ))
         logging.info(result.to_str())
-        # requests.post(
-        #     "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
-        #         ip=app_host,
-        #         port=app_port,
-        #         id=result.task_uuid
-        #     ),
-        #     json=result.to_dict()
-        # )
+        requests.post(
+            "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
+                ip=app_host,
+                port=app_port,
+                id=result.task_uuid
+            ),
+            json=result.to_dict()
+        )
         # 阻塞队列执行完成后
         if result.run_all and self.__get_group_block(result.controller_queue_uuid) and result.task_status[0] == 0:
             self.get_task_from_controller_queue(result.controller_queue_uuid, result.session, True)
