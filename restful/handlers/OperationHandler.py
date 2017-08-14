@@ -43,7 +43,7 @@ class OperationMixin(object):
             for idx in xrange(len(self.snapshot['task_list'])):
                 if op.uuid == self.snapshot['task_list'][idx]['task_uuid']:
                     if self.snapshot['task_status_list'][idx] != None:
-                        return idx, TaskStatus(self.snapshot['task_status_list'][idx])
+                        return idx, TaskStatus(self.snapshot['task_status_list'][idx][0])
                     return idx, None
         return -1, None
 
@@ -73,7 +73,7 @@ class OperationMixin(object):
         if status != None:
             if status != TaskStatus.InitFail:
                 if not op_session:
-                    op_session = json.loads(self.snapshot['task_result_list'][idx]['session'])
+                    op_session = json.loads(self.snapshot['task_status_list'][idx][1])
                 operator = Operator.find(id=op_session['operator_id'])
                 dtl['operator'] = {
                     'operator_id': operator.id,
