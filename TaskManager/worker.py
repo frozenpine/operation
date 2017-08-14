@@ -132,34 +132,38 @@ class RunTask(Process):
         ret_code, ret_msg = get_time.compare_timestamps(
             self.controller_queue_trigger_time, self.task_earliest, self.task_latest
         )
-        if ret_code == 2:
-            time.sleep(ret_msg)
-        status_code, status_msg = 200, u"开始执行"
-        self.pipe_child.send(
-            Result(controller_queue_uuid=self.controller_queue_uuid, task_uuid=self.task_uuid,
-                   status_code=status_code, status_msg=status_msg, session=self.session, run_all=self.run_all))
-        mod = self.task["mod"]
-        if isinstance(mod, dict):
-            # 一个任务
-            task_result = exe.run(mod)
-            status_code = task_result.return_code
-            if status_code != 0:
-                status_code = 1
-                status_msg = u"单任务执行失败"
-            else:
-                status_msg = u"单任务执行成功"
-        if isinstance(mod, list):
-            # 多个任务
-            for each in mod:
-                task_result = exe.run(each)
+        if ret_code == 3:
+            # 直接跳过不执行
+            pass
+        else:
+            if ret_code == 2:
+                time.sleep(ret_msg)
+            status_code, status_msg = 200, u"开始执行"
+            self.pipe_child.send(
+                Result(controller_queue_uuid=self.controller_queue_uuid, task_uuid=self.task_uuid,
+                       status_code=status_code, status_msg=status_msg, session=self.session, run_all=self.run_all))
+            mod = self.task["mod"]
+            if isinstance(mod, dict):
+                # 一个任务
+                task_result = exe.run(mod)
                 status_code = task_result.return_code
                 if status_code != 0:
                     status_code = 1
-                    status_msg = u"多任务执行失败"
-                    break
+                    status_msg = u"单任务执行失败"
                 else:
-                    status_msg = u"多任务执行成功"
-        self.send(status_code, status_msg, task_result)
+                    status_msg = u"单任务执行成功"
+            if isinstance(mod, list):
+                # 多个任务
+                for each in mod:
+                    task_result = exe.run(each)
+                    status_code = task_result.return_code
+                    if status_code != 0:
+                        status_code = 1
+                        status_msg = u"多任务执行失败"
+                        break
+                    else:
+                        status_msg = u"多任务执行成功"
+            self.send(status_code, status_msg, task_result)
 
 
 class ParentPipe(Thread):
