@@ -75,34 +75,6 @@ def compare_timestamps(create_time, earliest, latest):
         else:
             return 3, None
 
-# if __name__ == "__main__":
-#     # test case 1
-#     create_time = "2017-01-01 22:00:00"
-#     current_time = "2017-01-01 23:30:00"
-#     earliest = "01:00"
-#     latest = "02:00"
-#     print compare_timestamps(create_time, earliest, latest)
-#     # test case 2
-#     create_time = "2017-01-01 01:00:00"
-#     current_time = "2017-01-01 02:30:00"
-#     earliest = "10:00"
-#     latest = "11:00"
-#     print compare_timestamps(create_time, earliest, latest)
-#     # test case 3
-#     create_time = "2017-01-01 22:00:00"
-#     current_time = "2017-01-01 23:30:00"
-#     earliest = ""
-#     latest = ""
-#     print compare_timestamps(create_time, earliest, latest)
-#     # test case 4
-#     create_time = "2017-01-01 01:00:00"
-#     current_time = "2017-01-01 02:30:00"
-#     earliest = ""
-#     latest = ""
-#     print compare_timestamps(create_time, earliest, latest)
-#     # test case 5
-#     create_time = "2017-01-01 22:00:00"
-#     current_time = "2017-01-01 23:30:00"
-#     earliest = "16:00"
-#     latest = "17:00"
-#     print compare_timestamps(create_time, earliest, latest)
+
+if __name__ == "__main__":
+    print compare_timestamps("2017-08-14 10:00:00", "07:00", "09:00")
