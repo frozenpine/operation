@@ -4,13 +4,9 @@ import json as pickle
 import logging
 import os
 
-import requests
-
 from controller_msg import msg_dict
 from controller_queue import ControllerQueue
 from msg_queue import msg_queue
-
-# import requests
 
 app_host = os.environ.get("FLASK_HOST") or "127.0.0.1"
 app_port = os.environ.get("FLASK_PORT") or 6001
@@ -31,6 +27,15 @@ class Controller(object):
         :return controller_queue的创建时间
         """
         return self.controller_queue_dict[controller_queue_uuid].create_time
+
+    def __get_trigger_time(self, controller_queue_uuid):
+        """
+        私有函数
+        获取controller_queue的触发时间
+        :param controller_queue_uuid: controller_queue的controller_queue_uuid
+        :return controller_queue的创建时间
+        """
+        return self.controller_queue_dict[controller_queue_uuid].trigger_time
 
     def __get_group_block(self, controller_queue_uuid):
         """
@@ -111,7 +116,7 @@ class Controller(object):
             return -1, msg_dict[-1]
         if force:
             for (k, v) in task_dict.iteritems():
-                self.controller_queue_dict[k] = ControllerQueue(k, v["group_block"])
+                self.controller_queue_dict[k] = ControllerQueue(k, v["group_block"], v["trigger_time"])
                 for each in v["group_info"]:
                     self.__put_task_to_controller_queue(k, each)
                     with open("dump/{0}.dump".format(k), "wb") as f:
@@ -126,11 +131,12 @@ class Controller(object):
                     ret_dict.update({
                         k: {
                             "create_time": self.__get_create_time(k),
+                            "trigger_time": self.__get_trigger_time(k),
                             "group_task": self.get_snapshot(k)
                         }
                     })
                 else:
-                    self.controller_queue_dict[k] = ControllerQueue(k, v["group_block"])
+                    self.controller_queue_dict[k] = ControllerQueue(k, v["group_block"], v["trigger_time"])
                     for each in v["group_info"]:
                         self.__put_task_to_controller_queue(k, each)
                         with open("dump/{0}.dump".format(k), "wb") as f:
@@ -186,11 +192,14 @@ class Controller(object):
             task_latest = msg["task_latest"]
             task = msg["task"]
             controller_queue_create_time = msg["controller_queue_create_time"]
+            controller_queue_trigger_time = msg["controller_queue_trigger_time"]
             msg_queue.todo_task_queue.put(
                 {"controller_queue_uuid": controller_queue_uuid,
-                 "controller_queue_create_time": controller_queue_create_time, "task_uuid": task_uuid,
-                 "task_earliest": task_earliest, "task_latest": task_latest, "task": task, "session": session,
-                 "run_all": run_all})
+                 "controller_queue_create_time": controller_queue_create_time,
+                 "controller_queue_trigger_time": controller_queue_trigger_time,
+                 "task_uuid": task_uuid, "task_earliest": task_earliest, "task_latest": task_latest, "task": task,
+                 "session": session, "run_all": run_all}
+            )
             return 0, task_uuid
 
     def get_tasks_from_controller_queue(self, controller_queue_uuid, session=None):
@@ -252,14 +261,14 @@ class Controller(object):
                 self.controller_queue_dict[result.controller_queue_uuid].to_dict()
             ))
         logging.info(result.to_str())
-        requests.post(
-            "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
-                ip=app_host,
-                port=app_port,
-                id=result.task_uuid
-            ),
-            json=result.to_dict()
-        )
+        # requests.post(
+        #     "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
+        #         ip=app_host,
+        #         port=app_port,
+        #         id=result.task_uuid
+        #     ),
+        #     json=result.to_dict()
+        # )
 
     def worker_start_callback(self, result):
         """
@@ -275,14 +284,14 @@ class Controller(object):
                 self.controller_queue_dict[result.controller_queue_uuid].to_dict()
             ))
         logging.info(result.to_str())
-        requests.post(
-            "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
-                ip=app_host,
-                port=app_port,
-                id=result.task_uuid
-            ),
-            json=result.to_dict()
-        )
+        # requests.post(
+        #     "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
+        #         ip=app_host,
+        #         port=app_port,
+        #         id=result.task_uuid
+        #     ),
+        #     json=result.to_dict()
+        # )
         # 非阻塞队列开始执行后
         if result.run_all and not self.__get_group_block(result.controller_queue_uuid):
             self.get_task_from_controller_queue(result.controller_queue_uuid, True)
@@ -301,14 +310,14 @@ class Controller(object):
                 self.controller_queue_dict[result.controller_queue_uuid].to_dict()
             ))
         logging.info(result.to_str())
-        requests.post(
-            "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
-                ip=app_host,
-                port=app_port,
-                id=result.task_uuid
-            ),
-            json=result.to_dict()
-        )
+        # requests.post(
+        #     "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
+        #         ip=app_host,
+        #         port=app_port,
+        #         id=result.task_uuid
+        #     ),
+        #     json=result.to_dict()
+        # )
         # 阻塞队列执行完成后
         if result.run_all and self.__get_group_block(result.controller_queue_uuid) and result.task_status[0] == 0:
             self.get_task_from_controller_queue(result.controller_queue_uuid, result.session, True)
@@ -331,14 +340,18 @@ class Controller(object):
                 logging.error("TaskQueue deserializing failed")
                 return -1, msg_dict[-1]
             else:
+                controller_queue_status = queue_status["controller_queue_status"]
                 create_time = queue_status["create_time"]
+                trigger_time = queue_status["trigger_time"]
                 group_block = queue_status["group_block"]
                 queue_id = queue_status["controller_queue_uuid"]
                 task_list = queue_status["task_list"]
                 task_result_list = queue_status["task_result_list"]
                 task_status_list = queue_status["task_status_list"]
-                self.controller_queue_dict[queue_id] = ControllerQueue(queue_id, group_block)
+                self.controller_queue_dict[queue_id] = ControllerQueue(queue_id, group_block, trigger_time)
+                self.controller_queue_dict[queue_id].controller_queue_status = controller_queue_status
                 self.controller_queue_dict[queue_id].create_time = create_time
+                self.controller_queue_dict[queue_id].trigger_time = trigger_time
                 self.controller_queue_dict[queue_id].controller_task_list = task_list
                 self.controller_queue_dict[queue_id].controller_task_result_list = task_result_list
                 self.controller_queue_dict[queue_id].controller_task_status_list = task_status_list
