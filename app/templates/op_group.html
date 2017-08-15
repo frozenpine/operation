@@ -164,7 +164,8 @@
         <div class="portlet-title">
             <div class="caption font-green bold">
                 <p>系统操作 - {{opList.system_name}} : {{opList.name}}</p>
-                <p>创建时间：{{opList.create_time}}</p>
+                <p ng-if="opList.create_time">创建时间：{{opList.create_time}}</p>
+                <p ng-if="!opList.create_time">创建时间：未创建</p>
             </div>
             <button ng-show="!optionGroupEditShow" ng-click="optionGroupEditAdd()" type="button" class="am-btn am-btn-primary am-round am-btn-sm am-fr">添加</button>
             <button ng-show="optionGroupEditShow" ng-click="optionGroupEdit(opList)" type="button" class="am-btn am-btn-sm am-btn-primary am-round am-fr">编辑</button>
@@ -263,7 +264,7 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span ng-class="{'am-text-success': data.exec_code==0, 'am-text-danger': data.exec_code>0, 'am-text-warning': data.exec_code<0 }">
+                                    <span ng-class="{'am-text-success bold': data.exec_code==0, 'am-text-danger bold': data.exec_code>0, 'am-text-warning': data.exec_code<0 }">
                                         <i class="am-icon-spinner am-icon-pulse" ng-show="data.exec_code == -2"></i>
                                         {{data.exec_code | exe_result}}
                                     </span>

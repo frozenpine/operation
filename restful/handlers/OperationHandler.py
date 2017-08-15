@@ -122,8 +122,12 @@ class OperationMixin(object):
         rtn['grp_uuid'] = op_group.uuid
         rtn['trigger_time'] = op_group.trigger_time
         rtn['sys_uuid'] = op_group.system.uuid
-        rtn['status_code'] = self.snapshot['controller_queue_status']
-        rtn['create_time'] = self.snapshot['create_time']
+        if isinstance(self.snapshot, dict):
+            rtn['status_code'] = self.snapshot['controller_queue_status']
+            rtn['create_time'] = self.snapshot['create_time']
+        else:
+            rtn['status_code'] = QueueStatus.Missing.value
+            rtn['create_time'] = None
         for op in op_group.operations:
             rtn['details'].append(self.make_operation_detail(op))
         return rtn
