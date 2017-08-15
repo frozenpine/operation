@@ -1,9 +1,9 @@
 app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$operationBooks', '$rootScope', '$timeout', '$filter', function($scope, $systemServer, $message, $operationBooks, $rootScope, $timeout, $filter) {
-    $scope.addServerRadio = 0;
+    $scope.addServerRadio = true;
     $scope.addServerData = null;
     // $scope.editOrPost = true;
     $scope.editMode = false;
-    $scope.newMode = false;
+    $scope.newSvrOrSysMode = false;
     $scope.selected = {
         system: undefined,
         server: undefined
@@ -24,14 +24,16 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
 
     $scope.addSvrOrSystem = function(svr_or_sys) {
         $scope.clearSysData();
-        $scope.newMode = true;
-        $scope.addServerRadio = svr_or_sys;
+        $timeout(function() {
+            $scope.newSvrOrSysMode = true;
+            $scope.addServerRadio = svr_or_sys;
+        });
     };
 
     $scope.clearSysData = function() {
         // $scope.editOrPost = true;
         $scope.editMode = false;
-        $scope.newMode = false;
+        $scope.newSvrOrSysMode = false;
         $scope.addServerData = {
             "name": "",
             "ip": "",
@@ -88,7 +90,7 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
         $scope.addServerData.platform = server.platform;
         $scope.addServerData.description = server.description;
         $scope.addServerData.id = server.id;
-        $scope.addServerRadio = 0;
+        $scope.addServerRadio = true;
     };
 
     $scope.selectSystem = function(system, $event) {
@@ -131,7 +133,7 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
                 $message.Alert(res);
             }
         });
-        $scope.addServerRadio = 1;
+        $scope.addServerRadio = false;
     };
     $scope.editServerDataPut = function() {
         $systemServer.editServer({
@@ -219,11 +221,11 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
         });
     };
     $scope.systemBelongGet();
-    $scope.$watch('addServerRadio', function(scope) {
-        /* if ($scope.editOrPost === false) {
-            return;
-        } */
-        if ($scope.addServerRadio === 0) {
+    /* $scope.$watch('addServerRadio', function(scope) {
+        // if ($scope.editOrPost === false) {
+        //     return;
+        // }
+        if ($scope.addServerRadio) {
             $scope.clearSysData();
             $scope.checkDataFull = function(data) {
                 if (data.name === "" || data.ip === "" || data.password === "" || data.user === "" || data.platform === "")
@@ -240,7 +242,7 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
                     return false;
             };
         }
-    });
+    }); */
     $scope.addSystemDataPost = function() {
         $systemServer.addSystem({
             data: $scope.addServerData,
