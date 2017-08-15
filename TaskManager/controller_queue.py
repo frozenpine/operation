@@ -193,8 +193,6 @@ class ControllerQueue(object):
         if task_uuid not in map(lambda x: x["task_uuid"], self.controller_task_list):
             return -1, u"未找到对应任务"
         else:
-            # 获取todo_task_list
-            todo_task_list = filter(lambda x: not x.values()[0], self.controller_task_status_list)
             # 更新task_status_list
             for each in self.controller_task_status_list:
                 if task_uuid in each.keys():
@@ -212,7 +210,10 @@ class ControllerQueue(object):
             # 更新task_list
             for each in self.controller_task_list:
                 if task_uuid == each.get("task_uuid"):
-                    each[self.controller_task_list.index(each)] = task_info
+                    self.controller_task_list[self.controller_task_list.index(each)] = task_info
+            # 获取todo_task_list
+                todo_task_list = filter(lambda x: not x.values()[0], self.controller_task_status_list)
+                todo_task_list = map(lambda x: x.keys()[0], todo_task_list)
             # 重新压队列
             self.controller_todo_task_queue = JoinableQueue()
             for task_uuid in todo_task_list:
@@ -223,4 +224,6 @@ class ControllerQueue(object):
                              "controller_queue_create_time": self.create_time,
                              "controller_queue_trigger_time": self.trigger_time, "task_uuid": task_uuid,
                              "task_earliest": each.get("task_earliest"), "task_latest": each.get("task_latest"),
-                             "task": each.get("task")})
+                             "task": each.get("detail")})
+            self.controller_queue_status = 0
+            return 0, u"更新成功"

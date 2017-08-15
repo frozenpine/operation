@@ -104,11 +104,11 @@ class Controller(object):
             snap["task_status_list"] = map(lambda x: x.values()[0], snap["task_status_list"])
             return 0, snap
 
-    def init_controller_queue(self, task_dict, force=False):
+    def init_controller_queue(self, task_dict, specified_time=None):
         """
         初始化controller_queue, 并向controller_queue中添加任务
         :param task_dict: 任务组和任务字典
-        :param force: 强制
+        :param specified_time: 指定时间
         :return 0正常
                 如非强制模式,返回有重合的队列状态
                 如强制模式,返回空
@@ -116,8 +116,10 @@ class Controller(object):
         """
         if not isinstance(task_dict, dict):
             return -1, msg_dict[-1]
-        if force:
+        else:
             for (k, v) in task_dict.iteritems():
+                if specified_time:
+                    v["trigger_time"] = "{0} {1}".format(specified_time, v["trigger_time"])
                 self.controller_queue_dict[k] = ControllerQueue(k, v["group_block"], v["trigger_time"])
                 for each in v["group_info"]:
                     self.__put_task_to_controller_queue(k, each)
@@ -126,26 +128,6 @@ class Controller(object):
                 if not v["group_block"]:
                     self.get_tasks_from_controller_queue(k)
             return 0, None
-        else:
-            ret_dict = dict()
-            for (k, v) in task_dict.iteritems():
-                if self.__controller_queue_exists(k):
-                    ret_dict.update({
-                        k: {
-                            "create_time": self.__get_create_time(k),
-                            "trigger_time": self.__get_trigger_time(k),
-                            "group_task": self.get_snapshot(k)
-                        }
-                    })
-                else:
-                    self.controller_queue_dict[k] = ControllerQueue(k, v["group_block"], v["trigger_time"])
-                    for each in v["group_info"]:
-                        self.__put_task_to_controller_queue(k, each)
-                        with open("dump/{0}.dump".format(k), "wb") as f:
-                            f.write(pickle.dumps(self.controller_queue_dict[k].to_dict()))
-                    if not v["group_block"]:
-                        self.get_tasks_from_controller_queue(k)
-            return 0, ret_dict
 
     def update_task_info(self, controller_queue_uuid, task_uuid, task_info):
         """
@@ -158,7 +140,10 @@ class Controller(object):
         if not self.__controller_queue_exists(controller_queue_uuid):
             return -1, msg_dict[-12]
         else:
-            self.controller_queue_dict[controller_queue_uuid].update_task_info(task_uuid, task_info)
+            ret, msg = self.controller_queue_dict[controller_queue_uuid].update_task_info(task_uuid, task_info)
+            with open("dump/{0}.dump".format(controller_queue_uuid), "wb") as f:
+                f.write(pickle.dumps(self.controller_queue_dict[controller_queue_uuid].to_dict()))
+            return ret, msg
 
     def del_controller_queue(self, controller_queue_uuid):
         """
