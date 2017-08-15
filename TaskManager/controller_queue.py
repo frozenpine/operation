@@ -165,7 +165,7 @@ class ControllerQueue(object):
         if task_status[0] == 0:
             # 任务执行成功
             self.controller_queue_status = 0
-        if task_status[0] == 1:
+        if task_status[0] in (1, 121):
             # 任务执行失败
             self.controller_queue_status = 14
         if task_status[0] in (111, 112):
