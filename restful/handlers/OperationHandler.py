@@ -188,7 +188,7 @@ class OperationListApi(OperationMixin, Resource):
             task_queue = {
                 op_group.uuid: {
                     'group_block': True,
-                    'tiggger_time': op_group.trigger_time,
+                    'trigger_time': op_group.trigger_time,
                     'group_info': [{
                         'task_uuid': task.uuid,
                         'detail': task.operate_define.detail,

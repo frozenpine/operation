@@ -23,7 +23,7 @@ app.directive('modalDialog', function($http, $message) {
             '</div>' +
             '</div></div>',
         link: function(scope, ele, attr) {
-            console.log(scope);
+            // console.log(scope);
             $http.get(scope.url)
                 .success(function(response) {
                     scope.bodyHtml = response;
