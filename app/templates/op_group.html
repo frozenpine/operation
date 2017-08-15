@@ -263,7 +263,7 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span ng-class="{'am-text-success': data.exec_code==0, 'am-text-danger': data.exec_code>0, 'am-text-warning': data.exec_code==-3 }">
+                                    <span ng-class="{'am-text-success': data.exec_code==0, 'am-text-danger': data.exec_code>0, 'am-text-warning': data.exec_code<0 }">
                                         <i class="am-icon-spinner am-icon-pulse" ng-show="data.exec_code == -2"></i>
                                         {{data.exec_code | exe_result}}
                                     </span>

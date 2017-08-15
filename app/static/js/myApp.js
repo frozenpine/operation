@@ -494,6 +494,8 @@ app.filter('exe_result', function() {
                 return "等待触发条件";
             case -6:
                 return "执行超时";
+            case -7:
+                return "超出时间范围";
             default:
                 return "执行失败";
         }
