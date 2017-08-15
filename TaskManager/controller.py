@@ -147,6 +147,19 @@ class Controller(object):
                         self.get_tasks_from_controller_queue(k)
             return 0, ret_dict
 
+    def update_task_info(self, controller_queue_uuid, task_uuid, task_info):
+        """
+        更新指定的task任务
+        :param controller_queue_uuid: controller_queue的controller_queue_uuid
+        :param task_uuid: task的uuid
+        :param task_info: task的信息
+        :return:
+        """
+        if not self.__controller_queue_exists(controller_queue_uuid):
+            return -1, msg_dict[-12]
+        else:
+            self.controller_queue_dict[controller_queue_uuid].update_task_info(task_uuid, task_info)
+
     def del_controller_queue(self, controller_queue_uuid):
         """
         删除指定的controller_queue
@@ -369,6 +382,9 @@ class Controller(object):
 
     def init(self, task_dict, force=False):
         return self.init_controller_queue(task_dict, force)
+
+    def update(self, controller_queue_uuid, task_uuid, task_info):
+        return self.update_task_info(controller_queue_uuid, task_uuid, task_info)
 
     def run_all(self, controller_queue_uuid, session=None):
         return self.get_tasks_from_controller_queue(controller_queue_uuid, session)

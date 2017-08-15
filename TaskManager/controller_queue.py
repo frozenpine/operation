@@ -188,3 +188,39 @@ class ControllerQueue(object):
             for (k, v) in each.iteritems():
                 if k == task_uuid and task_result:
                     each[k] = task_result.to_dict()
+
+    def update_task_info(self, task_uuid, task_info):
+        if task_uuid not in map(lambda x: x["task_uuid"], self.controller_task_list):
+            return -1, u"未找到对应任务"
+        else:
+            # 获取todo_task_list
+            todo_task_list = filter(lambda x: not x.values()[0], self.controller_task_status_list)
+            # 更新task_status_list
+            for each in self.controller_task_status_list:
+                if task_uuid in each.keys():
+                    if each.get(task_uuid) == 0:
+                        return -1, u"成功任务不可更改"
+                    else:
+                        each.update({task_uuid: None})
+            # 更新task_result_list
+            for each in self.controller_task_result_list:
+                if task_uuid in each.keys():
+                    if isinstance(each.get(task_uuid), list) and each.get(task_uuid)[0] == 0:
+                        return -1, u"成功任务不可更改"
+                    else:
+                        each.update({task_uuid: None})
+            # 更新task_list
+            for each in self.controller_task_list:
+                if task_uuid == each.get("task_uuid"):
+                    each[self.controller_task_list.index(each)] = task_info
+            # 重新压队列
+            self.controller_todo_task_queue = JoinableQueue()
+            for task_uuid in todo_task_list:
+                for each in self.controller_task_list:
+                    if each.get("task_uuid") == task_uuid:
+                        self.controller_todo_task_queue.put(
+                            {"controller_queue_uuid": self.controller_queue_uuid,
+                             "controller_queue_create_time": self.create_time,
+                             "controller_queue_trigger_time": self.trigger_time, "task_uuid": task_uuid,
+                             "task_earliest": each.get("task_earliest"), "task_latest": each.get("task_latest"),
+                             "task": each.get("task")})
