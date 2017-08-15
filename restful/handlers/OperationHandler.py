@@ -82,6 +82,8 @@ class OperationMixin(object):
                 }
             if status == TaskStatus.Runnable:
                 dtl['exec_code'] = -4
+            if status == TaskStatus.TimeRangeExcept:
+                dtl['exec_code'] = -7
             elif status.IsWaiting:
                 dtl['exec_code'] = -5
             elif status == TaskStatus.Running:

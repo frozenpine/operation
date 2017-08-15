@@ -136,7 +136,9 @@ class RunTask(Process):
         )
         if ret_code == 3:
             # 直接跳过不执行
-            pass
+            self.pipe_child.send(
+                Result(controller_queue_uuid=self.controller_queue_uuid, task_uuid=self.task_uuid,
+                       status_code=121, status_msg=u'超出时间范围', session=self.session, run_all=self.run_all))
         else:
             if ret_code == 2:
                 time.sleep(ret_msg)

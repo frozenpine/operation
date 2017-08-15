@@ -75,9 +75,9 @@ class ControllerQueue(object):
             return -1, msg_dict[-11]
         ret = self.controller_todo_task_queue.peek()
         if ret["task_uuid"] == task_uuid:
-            return 0, u"比对值相等"
+            return 0, u"该任务为待执行任务"
         else:
-            return -1, u"比对值不相等"
+            return -1, u"该任务非待执行任务"
 
     def get_controller_todo_task_queue(self):
         """
