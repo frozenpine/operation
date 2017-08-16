@@ -1,0 +1,67 @@
+# -*- coding: UTF-8 -*-
+
+def run(client, module):
+    # ps_script = module.get('ps')
+    args = module.get('args')
+    if args and args.has_key('chdir'):
+        base_dir = args['chdir']
+        cmd_script = 'cd {base_dir}&&{cmd}'.format(base_dir=base_dir, cmd=module.get('cmd'))
+    else:
+        cmd_script = module.get('cmd')
+    channel = client.run_cmd(cmd_script, codepage=936)
+    stdout, stderr = _stdout(), _stderr()
+    stdout.channel.recv_exit_status = lambda: channel.status_code
+    stdout.read = change_read_encoding(channel.std_out)
+    stdout.readlines = change_readlines_encoding(stdout.read)
+    stderr.read = change_read_encoding(channel.std_err)
+    stderr.readlines = change_readlines_encoding(stderr.read)
+    return stdout, stderr
+
+
+class _output(object):
+    def read(self):
+        pass
+
+    def readlines(self):
+        pass
+
+
+class _stdout(_output):
+    def __init__(self):
+        super(_stdout, self).__init__()
+        self.channel = _channel()
+
+
+class _channel():
+    def recv_exit_status(self):
+        pass
+
+
+class _stderr(_output):
+    pass
+
+
+def change_read_encoding(cache):
+    def _read():
+        try:
+            formatted_cache = cache.decode('utf-8')
+        except UnicodeDecodeError:
+            formatted_cache = cache.decode('gbk', 'ignore')
+        window_lines = formatted_cache.split('\r\n')
+        not_join = reduce(lambda x, y: x and y, map(lambda x: len(x) < 79, window_lines))
+        if not_join:
+            ret = reduce(lambda x, y: x + '\n' + y, window_lines)
+        else:
+            ret = reduce(lambda x, y: len(y) == 79 and x + u'\n' + y or x + y, window_lines)
+        return ret.lstrip('\n').encode('utf-8')
+
+    return _read
+
+
+def change_readlines_encoding(func):
+    def _readlines():
+        for line in func().split('\n'):
+            if line != "":
+                yield line
+
+    return _readlines
