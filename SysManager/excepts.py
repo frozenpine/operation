@@ -40,3 +40,13 @@ class SSHAuthenticationException(ExecuteError):
 class SSHException(ExecuteError):
     def __init__(self, msg="SSH Unexpected Error"):
         super(SSHException, self).__init__(msg)
+
+
+class WinRmNoValidConnectionsError(ExecuteError):
+    def __init__(self, msg="WinRm No Valid Connections"):
+        super(WinRmNoValidConnectionsError, self).__init__(msg)
+
+
+class WinRmAuthenticationException(ExecuteError):
+    def __init__(self, msg="Authentiacation Failed"):
+        super(WinRmAuthenticationException, self).__init__(msg)

@@ -9,8 +9,8 @@ import gevent
 
 import get_time
 from SysManager.configs import RemoteConfig
-from SysManager.excepts import (ConfigInvalid, SSHAuthenticationException,
-                                SSHException, SSHNoValidConnectionsError)
+from SysManager.excepts import ConfigInvalid, SSHAuthenticationException, SSHException, SSHNoValidConnectionsError, \
+    WinRmNoValidConnectionsError, WinRmAuthenticationException
 from SysManager.executor import Executor
 from msg_queue import msg_queue
 from worker_queue import WorkerQueue
@@ -129,6 +129,7 @@ class RunTask(Process):
             task_result = None
             self.send(status_code, status_msg, task_result)
             return -1
+
         # 开始正式执行
         ret_code, ret_msg = get_time.compare_timestamps(
             self.controller_queue_trigger_time, self.task_earliest, self.task_latest
@@ -145,8 +146,15 @@ class RunTask(Process):
                        status_code=status_code, status_msg=status_msg, session=self.session, run_all=self.run_all))
             mod = self.task["mod"]
             if isinstance(mod, dict):
-                # 一个任务
-                task_result = exe.run(mod)
+                try:
+                    # 一个任务
+                    task_result = exe.run(mod)
+                except (WinRmNoValidConnectionsError, WinRmAuthenticationException), status_msg:
+                    status_code = -1
+                    status_msg = status_msg.message
+                    task_result = None
+                    self.send(status_code, status_msg, task_result)
+                    return -1
                 status_code = task_result.return_code
                 if status_code != 0:
                     status_code = 1
@@ -155,15 +163,22 @@ class RunTask(Process):
                     status_msg = u"单任务执行成功"
             if isinstance(mod, list):
                 # 多个任务
-                for each in mod:
-                    task_result = exe.run(each)
-                    status_code = task_result.return_code
-                    if status_code != 0:
-                        status_code = 1
-                        status_msg = u"多任务执行失败"
-                        break
-                    else:
-                        status_msg = u"多任务执行成功"
+                try:
+                    for each in mod:
+                        task_result = exe.run(each)
+                        status_code = task_result.return_code
+                        if status_code != 0:
+                            status_code = 1
+                            status_msg = u"多任务执行失败"
+                            break
+                        else:
+                            status_msg = u"多任务执行成功"
+                except (WinRmNoValidConnectionsError, WinRmAuthenticationException), status_msg:
+                    status_code = -1
+                    status_msg = status_msg.message
+                    task_result = None
+                    self.send(status_code, status_msg, task_result)
+                    return -1
             self.send(status_code, status_msg, task_result)
 
 

@@ -1,18 +1,34 @@
 # -*- coding: UTF-8 -*-
 
+import logging
+
+from requests.exceptions import ConnectionError
+from winrm.exceptions import InvalidCredentialsError
+
+from ..excepts import WinRmNoValidConnectionsError, WinRmAuthenticationException
+
+
 def run(client, module):
     ps_script = module.get('ps')
     args = module.get('args')
     if args and args.has_key('chdir'):
         base_dir = args['chdir']
-    channel = client.run_ps(ps_script)
-    stdout, stderr = _stdout(), _stderr()
-    stdout.channel.recv_exit_status = lambda: channel.status_code
-    stdout.read = change_read_encoding(channel.std_out)
-    stdout.readlines = change_readlines_encoding(stdout.read)
-    stderr.read = change_read_encoding(channel.std_err)
-    stderr.readlines = change_readlines_encoding(stderr.read)
-    return stdout, stderr
+    try:
+        channel = client.run_ps(ps_script)
+    except ConnectionError, err:
+        logging.error(err)
+        raise WinRmNoValidConnectionsError
+    except InvalidCredentialsError, err:
+        logging.error(err)
+        raise WinRmAuthenticationException
+    else:
+        stdout, stderr = _stdout(), _stderr()
+        stdout.channel.recv_exit_status = lambda: channel.status_code
+        stdout.read = change_read_encoding(channel.std_out)
+        stdout.readlines = change_readlines_encoding(stdout.read)
+        stderr.read = change_read_encoding(channel.std_err)
+        stderr.readlines = change_readlines_encoding(stderr.read)
+        return stdout, stderr
 
 
 class _output(object):
