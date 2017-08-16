@@ -1,7 +1,6 @@
 # coding=utf-8
 
 import json
-import logging
 import time
 from multiprocessing import Pipe, Process
 from threading import Thread
@@ -9,11 +8,11 @@ from threading import Thread
 import gevent
 
 import get_time
-from msg_queue import msg_queue
-from SysManager.configs import SSHConfig
+from SysManager.configs import RemoteConfig
 from SysManager.excepts import (ConfigInvalid, SSHAuthenticationException,
                                 SSHException, SSHNoValidConnectionsError)
 from SysManager.executor import Executor
+from msg_queue import msg_queue
 from worker_queue import WorkerQueue
 
 
@@ -113,7 +112,7 @@ class RunTask(Process):
         """
         # 实例化SSHConfig初始化判断
         try:
-            conf = SSHConfig(**self.task["remote"]["params"])
+            conf = RemoteConfig.Create(self.task["remote"]["name"], self.task["remote"]["params"])
         except ConfigInvalid, status_msg:
             # 配置文件格式错误
             status_code = -1
