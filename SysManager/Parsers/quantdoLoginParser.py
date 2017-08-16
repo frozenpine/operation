@@ -4,14 +4,14 @@ from listParser import OutputParser
 
 
 class quantdoLoginParser(OutputParser):
-    def __init__(self, output_lines):
+    def __init__(self, output_lines, **kwargs):
         OutputParser.__init__(
             self,
             output_lines=output_lines,
             re_str=
-            r'^(.+us) .+EXID:([^,]+),SeatID:([^,]*),.+Main:\d+:(.+)$',
+            ur'^.*(?:OnFrontConnected|OnRspUserLogin|OnFrontDisConnected) \d (.*席位\[(\d+)\].*)$',
             key_list=[
-                'timestamp', 'exid', 'seatid', 'message'
+                'message', 'seatid'
             ],
             primary_key='seatid',
             skip_headline=False

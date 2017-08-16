@@ -1,5 +1,5 @@
 app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout', '$uidatas', '$operationBooks', '$users', '$message', function($scope, $rootScope, $location, $timeout, $uidatas, $operationBooks, $users, $message) {
-    $rootScope.staticsShow = true;
+    $rootScope.staticsShow = false;
     $scope.messagePosition = {};
     $scope.opGroupTriggerTime = {};
     $scope.opGroupEditList = {};

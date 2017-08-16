@@ -53,8 +53,7 @@ def change_read_encoding(cache):
             ret = reduce(lambda x, y: x + '\n' + y, window_lines)
         else:
             ret = reduce(lambda x, y: len(y) == 79 and x + u'\n' + y or x + y, window_lines)
-        return ret.lstrip('\n').encode('utf-8')
-
+        return ret.lstrip('\n')
     return _read
 
 

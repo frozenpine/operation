@@ -33,9 +33,9 @@ def run(client, module):
 def change_read_encoding(cache):
     def _read():
         try:
-            return cache.decode('utf-8').encode('utf-8').replace('\r\n', '\n')
+            return cache.decode('utf-8').replace('\r\n', '\n')
         except UnicodeDecodeError:
-            return cache.decode('gbk', 'ignore').encode('utf-8').replace('\r\n', '\n')
+            return cache.decode('gbk', 'ignore').replace('\r\n', '\n')
 
     return _read
 

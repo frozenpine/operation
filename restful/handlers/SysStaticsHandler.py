@@ -499,10 +499,11 @@ class LoginCheckApi(Resource):
                 data['seat_id'] = k
                 data['updated_time'] = arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss')
                 for each in v:
-                    try:
+                    ''' try:
                         message = each.get('message').decode('utf-8')
                     except UnicodeDecodeError:
-                        message = each.get('mesage').decode('gbk')
+                        message = each.get('mesage').decode('gbk') '''
+                    message = each.get('message')
                     if datas['key_words']['conn'] in message:
                         data['seat_status'] = u'连接成功'
                         data['conn_count'] += 1
