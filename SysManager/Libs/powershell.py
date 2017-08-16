@@ -5,9 +5,9 @@ def run(client, module):
     args = module.get('args')
     if args and args.has_key('chdir'):
         base_dir = args['chdir']
+        ps_script = 'cd {base_dir}; {ps}'.format(base_dir=base_dir, ps=module.get('ps'))
     else:
-        base_dir = ''
-    ps_script = r'cd {base_dir}; {ps}'.format(base_dir=base_dir, ps=module.get('ps'))
+        ps_script = module.get('ps')
     channel = client.run_ps(ps_script, codepage=936)
     stdout, stderr = _stdout(), _stderr()
     stdout.channel.recv_exit_status = lambda: channel.status_code
