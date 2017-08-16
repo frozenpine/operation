@@ -1,4 +1,5 @@
 app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout', '$uidatas', '$operationBooks', '$users', '$message', function($scope, $rootScope, $location, $timeout, $uidatas, $operationBooks, $users, $message) {
+    $rootScope.staticsShow = true;
     $scope.messagePosition = {};
     $scope.opGroupTriggerTime = {};
     $scope.opGroupEditList = {};
@@ -249,7 +250,7 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
                 }).error(function(response) {
                     console.log(response);
                 }); */
-                $users({
+                $users.ModifyPassword({
                     userID: usr_id,
                     data: {
                         old_password: $('#oldPwd').val(),

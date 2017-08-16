@@ -1,5 +1,5 @@
 <div class="row" ng-controller="opGroupController" style="margin-top: -1px;">
-    <div class="tpl-portlet-components" ng-controller="svrStaticsControl" id="server_statics">
+    <div class="tpl-portlet-components" ng-controller="svrStaticsControl" id="server_statics" ng-if="staticsShow">
         <div class="portlet-title">
             <div class="caption font-green bold">
                 <span ng-click="svrShowDetail = !svrShowDetail;" style="cursor: pointer">状态信息 - 服务器 <i ng-class="{true: 'am-icon-angle-double-up am-icon-sm', false: 'am-icon-angle-double-down am-icon-sm'}[svrShowDetail]"></i></span>
