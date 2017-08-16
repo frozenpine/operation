@@ -1,11 +1,14 @@
 # -*- coding: UTF-8 -*-
 
 def run(client, module):
-    ps_script = module.get('ps')
+    # ps_script = module.get('ps')
     args = module.get('args')
     if args and args.has_key('chdir'):
         base_dir = args['chdir']
-    channel = client.run_ps(ps_script)
+    else:
+        base_dir = ''
+    ps_script = r'cd {base_dir}; {ps}'.format(base_dir=base_dir, ps=module.get('ps'))
+    channel = client.run_ps(ps_script, codepage=936)
     stdout, stderr = _stdout(), _stderr()
     stdout.channel.recv_exit_status = lambda: channel.status_code
     stdout.read = change_read_encoding(channel.std_out)
@@ -41,9 +44,16 @@ class _stderr(_output):
 def change_read_encoding(cache):
     def _read():
         try:
-            return cache.decode('utf-8').encode('utf-8').replace('\r\n', '\n')
+            formatted_cache = cache.decode('utf-8')
         except UnicodeDecodeError:
-            return cache.decode('gbk', 'ignore').encode('utf-8').replace('\r\n', '\n')
+            formatted_cache = cache.decode('gbk', 'ignore')
+        window_lines = formatted_cache.split('\r\n')
+        not_join = reduce(lambda x, y: x and y, map(lambda x: len(x) < 79, window_lines))
+        if not_join:
+            ret = reduce(lambda x, y: x + '\n' + y, window_lines)
+        else:
+            ret = reduce(lambda x, y: len(y) == 79 and x + u'\n' + y or x + y, window_lines)
+        return ret.lstrip('\n').encode('utf-8')
 
     return _read
 
