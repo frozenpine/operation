@@ -2,7 +2,6 @@
 
 import sys
 
-import time
 import zerorpc
 import zmq.green as zmq
 from gevent import monkey
@@ -16,11 +15,11 @@ if __name__ == "__main__":
         "task_group1": {
             # 同步True, 异步False
             "group_block": True,
-            "trigger_time": "12:00",
+            "trigger_time": "20:00",
             "group_info": [
                 {
                     "task_uuid": "task1",
-                    "earliest": "17:30",
+                    "earliest": "12:30",
                     "latest": "18:00",
                     "detail": {
                         "remote": {
@@ -32,7 +31,7 @@ if __name__ == "__main__":
                             "name": "SSHConfig"
                         },
                         "mod": {
-                            "shell": "sleep 10",
+                            "shell": "exit 1",
                             "name": "shell"
                         }
                     }
@@ -76,12 +75,93 @@ if __name__ == "__main__":
                     }
                 }
             ]
-        }
+        },
+        "task_group2": {
+            # 同步True, 异步False
+            "group_block": True,
+            "trigger_time": "20:00",
+            "group_info": [
+                {
+                    "task_uuid": "task1",
+                    "earliest": "12:30",
+                    "latest": "18:00",
+                    "detail": {
+                        "remote": {
+                            "params": {
+                                "ip": "192.168.56.2",
+                                "password": "022010blue@safe",
+                                "user": "administrator"
+                            },
+                            "name": "WinRmConfig"
+                        },
+                        "mod": {
+                            "name": "wincpu"
+                        }
+                    }
+                },
+                {
+                    "task_uuid": "task2",
+                    "earliest": "",
+                    "latest": "",
+                    "detail": {
+                        "remote": {
+                            "params": {
+                                "ip": "192.168.100.90",
+                                "password": "qdam",
+                                "user": "qdam"
+                            },
+                            "name": "WinRmConfig"
+                        },
+                        "mod": {
+                            "shell": "sleep 5",
+                            "name": "shell"
+                        }
+                    }
+                },
+                {
+                    "task_uuid": "task3",
+                    "earliest": "",
+                    "latest": "",
+                    "detail": {
+                        "remote": {
+                            "params": {
+                                "ip": "192.168.100.90",
+                                "password": "qdam",
+                                "user": "qdam"
+                            },
+                            "name": "WinRmConfig"
+                        },
+                        "mod": {
+                            "shell": "sleep 5",
+                            "name": "shell"
+                        }
+                    }
+                }
+            ]
+        },
     }
     client = zerorpc.Client()
     client.connect("tcp://127.0.0.1:6000")
-    client.init(task_dict, True)
-    client.run_all("task_group1")
-    time.sleep(5)
-    print client.kill("task1")
-    # client.resume("task_group1")
+    client.init(task_dict, "2017-08-14")
+    client.run_next("task_group2")
+    # print client.update("task_group1", "task1",
+    #                     {
+    #                         "task_uuid": "task1",
+    #                         "earliest": "",
+    #                         "latest": "",
+    #                         "detail": {
+    #                             "remote": {
+    #                                 "params": {
+    #                                     "ip": "192.168.100.90",
+    #                                     "password": "qdam",
+    #                                     "user": "qdam"
+    #                                 },
+    #                                 "name": "SSHConfig"
+    #                             },
+    #                             "mod": {
+    #                                 "shell": "sleep 8",
+    #                                 "name": "shell"
+    #                             }
+    #                         }
+    #                     })
+    # client.run_next("task_group1")
