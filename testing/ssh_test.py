@@ -12,8 +12,8 @@ if __name__ == '__main__':
     conf = SSHConfig('192.168.101.163', 'Administrator', 'Quantdo123456')
     exe = Executor.Create(conf)
     mod = {
-        'name': 'quantdoLogin',
-        'quantdoLogin': '/home/Administrator/qgwgtja/bin/Syslog.log'
+        'name': 'shell',
+        'shell': 'which pwd'
     }
     ''' mod = {
         'name': 'windf',
