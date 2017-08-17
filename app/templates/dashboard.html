@@ -18,7 +18,7 @@
                     </div>
                     <ul class="am-avg-sm-1">
                         <li ng-repeat="svr in inventory">
-                            <div class="am-panel am-panel-secondary">
+                            <div class="am-panel am-panel-secondary am-radius" style="box-shadow: 3px 5px aliceblue; border-radius: 10px;overflow: hidden;">
                                 <div class="am-panel-hd bold">{{::svr.svr_name}} - {{::svr.svr_ip}}</div>
                                 <div class="am-panel-bd" style="background-color: floralwhite;">
                                     <ul>
@@ -35,6 +35,16 @@
                             </div>
                         </li>
                     </ul>
+                </div>
+                <div class="am-u-sm-2">
+                    <div class="am-text-center caption font-green bold am-text-md am-margin-botton-sm">
+                        middle
+                    </div>
+                </div>
+                <div class="am-u-sm-5">
+                    <div class="am-text-center caption font-green bold am-text-md am-margin-botton-sm">
+                        right
+                    </div>
                 </div>
             </div>
         </div>
