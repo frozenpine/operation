@@ -83,17 +83,17 @@ class ServerStaticApi(Resource, ServerList):
             self.rtn['sys_id'] = sys.id
             self.find_servers(sys)
             for entry in self.server_list.values():
-                # self.checker.append(gevent.spawn(self.check_svr, entry))
-                self.checker.append(threading.Thread(
+                self.checker.append(gevent.spawn(self.check_svr, entry))
+                ''' self.checker.append(threading.Thread(
                     target=self.check_svr,
                     args=(entry,)
-                ))
-            for tr in self.checker:
+                )) '''
+            ''' for tr in self.checker:
                 tr.setDaemon(True)
                 tr.start()
                 # gevent.sleep(0)
-                tr.join()
-            # gevent.joinall(self.checker)
+                tr.join() '''
+            gevent.joinall(self.checker)
             self.make_response()
             return RestProtocol(self.rtn)
         else:
@@ -274,7 +274,7 @@ class ProcStaticApi(Resource, SystemList):
                     }
                 }
                 proc.version = executor.run(mod).lines '''
-                # gevent.sleep(0)
+        gevent.sleep(0)
         mod = {
             'name': 'psaux',
             'args': {
@@ -282,7 +282,7 @@ class ProcStaticApi(Resource, SystemList):
             }
         }
         results = executor.run(mod).data
-        # gevent.sleep(0)
+        gevent.sleep(0)
         find = lambda x, y: x and x in y
         for proc in processes:
             match = False
@@ -325,7 +325,7 @@ class ProcStaticApi(Resource, SystemList):
             mod['args']['processes'] = list(process_list)
         if mod.has_key('args'):
             socket_result = executor.run(mod)
-            # gevent.sleep(0)
+            gevent.sleep(0)
             if 'LISTEN' in socket_result.data.keys():
                 # 处理Windows Linux平台的不同
                 try:
@@ -362,19 +362,19 @@ class ProcStaticApi(Resource, SystemList):
             self.find_systems(sys)
             self.find_processes()
             for entry, proc_list in self.proc_list.iteritems():
-                '''self.checker.append(
+                self.checker.append(
                     gevent.spawn(self.check_proc, entry, proc_list)
-                )'''
-                self.checker.append(threading.Thread(
+                )
+                ''' self.checker.append(threading.Thread(
                     target=self.check_proc,
                     args=(entry, proc_list,)
-                ))
-            for tr in self.checker:
+                )) '''
+            ''' for tr in self.checker:
                 tr.setDaemon(True)
                 tr.start()
                 # gevent.sleep(0)
-                tr.join()
-            # gevent.joinall(self.checker)
+                tr.join() '''
+            gevent.joinall(self.checker)
             self.make_response()
             return RestProtocol(self.rtn)
         else:
@@ -676,19 +676,19 @@ class ConfigCheckApi(Resource, ConfigList):
             self.find_systems(sys)
             self.find_configs()
             for remote, configs in self.config_file_list.iteritems():
-                '''self.checker.append(
+                self.checker.append(
                     gevent.spawn(self.checkConfig, remote, configs)
-                )'''
-                self.checker.append(threading.Thread(
+                )
+                ''' self.checker.append(threading.Thread(
                     target=self.checkConfig,
                     args=(remote, configs,)
-                ))
-            for tr in self.checker:
+                )) '''
+            ''' for tr in self.checker:
                 tr.setDaemon(True)
                 tr.start()
                 # gevent.sleep(0)
-                tr.join()
-            # gevent.joinall(self.checker)
+                tr.join() '''
+            gevent.joinall(self.checker)
             self.make_response()
             return RestProtocol(self.rtn)
         else:
