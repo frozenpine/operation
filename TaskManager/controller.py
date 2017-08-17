@@ -358,7 +358,7 @@ class Controller(object):
                 self.controller_queue_dict[queue_id].controller_task_result_list = task_result_list
                 self.controller_queue_dict[queue_id].controller_task_status_list = task_status_list
                 for i in range(0, len(task_list), 1):
-                    if task_status_list[i].values()[0] in (0, 1, 3):
+                    if not task_status_list[i].values()[0]:
                         self.controller_queue_dict[queue_id].put_controller_todo_task_queue(task_list[i], True)
         logging.info("TaskQueue deserializing ended")
         return 0, u"反序列化完成"
