@@ -107,8 +107,42 @@ class ConfigFileApi(Resource):
         else:
             return RestProtocol(message='Config file not found', error_code=-1), 404
 
-    def put(self):
-        pass
+    def post(self, **kwargs):
+        config_file = ConfigFile.find(**kwargs)
+        if config_file:
+            remote_config = SSHConfig(
+                config_file.process.server.ip,
+                config_file.process.system.user,
+                config_file.process.system.password
+            )
+            exe = Executor.Create(remote_config)
+            mod = {
+                'name': 'md5',
+                'args': {
+                    'dir': config_file.dir,
+                    'file': config_file.file
+                }
+            }
+            result = exe.run(mod)
+            if result.return_code == 0:
+                config_file.pre_hash_code = config_file.hash_code
+                config_file.pre_timestamp = config_file.timestamp
+                config_file.hash_code = result.lines[0]
+                config_file.timestamp = arrow.utcnow()
+            return RestProtocol({
+                'id': config_file.id,
+                'uuid': config_file.uuid,
+                'name': config_file.name,
+                'type': config_file.config_type.name,
+                'dir': config_file.dir,
+                'file': config_file.file,
+                'hash': config_file.hash_code,
+                'timestamp': config_file.timestamp and \
+                    config_file.timestamp.to('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss'),
+                'hash_changed': False
+            })
+        else:
+            return RestProtocol(message='Config file not found', error_code=-1), 404
 
 
 class ConfigFileCheckApi(Resource):

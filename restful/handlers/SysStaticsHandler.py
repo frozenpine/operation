@@ -93,6 +93,7 @@ class ServerStaticApi(Resource, ServerList):
                 tr.start()
                 # gevent.sleep(0)
                 tr.join() '''
+            gevent.sleep(0)
             gevent.joinall(self.checker)
             self.make_response()
             return RestProtocol(self.rtn)
@@ -129,16 +130,13 @@ class SystemList(object):
         self.proc_status = {}
 
     def find_systems(self, sys):
-        logging.info('SystemStatic find_systems started: {}'.format(arrow.now()))
         if len(sys.processes) > 0:
             self.system_list.append(sys)
         if len(sys.child_systems) > 0:
             for child_sys in sys.child_systems:
                 self.find_systems(child_sys)
-        logging.info('SystemStatic find_systems finished: {}'.format(arrow.now()))
 
     def make_response(self):
-        logging.info('SystemList make_response started: {}'.format(arrow.now()))
         for each_sys in self.system_list:
             self.rtn.append(
                 {
@@ -211,7 +209,6 @@ class SystemList(object):
                     } for proc in each_sys.processes]
                 }
             )
-        logging.info('SystemList make_response finished: {}'.format(arrow.now()))
 
 class SystemStaticListApi(Resource, SystemList):
     def __init__(self):
@@ -258,9 +255,6 @@ class ProcStaticApi(Resource, SystemList):
                 'Executor init failed with ip: {ip}, user: {user}' \
                     .format(ip=conf.remote_host, user=conf.remote_user)
             )
-            return
-        if not executor:
-            logging.warning('ip: {ip}, user: {user}'.format(ip=conf.remote_host, user=conf.remote_user))
             return
         for proc in processes:
             process_list.add((proc.exec_file, proc.param or ''))
@@ -374,6 +368,7 @@ class ProcStaticApi(Resource, SystemList):
                 tr.start()
                 # gevent.sleep(0)
                 tr.join() '''
+            gevent.sleep(0)
             gevent.joinall(self.checker)
             self.make_response()
             return RestProtocol(self.rtn)
@@ -537,6 +532,7 @@ class LoginCheckApi(Resource):
             self.find_syslog(sys)
             for (k, v) in self.syslog_list.items():
                 self.checker.append(gevent.spawn(self.check_log, k, v))
+            gevent.sleep(0)
             gevent.joinall(self.checker)
             return RestProtocol(self.rtn)
         else:
@@ -594,35 +590,37 @@ class ConfigList(object):
     def __init__(self):
         self.system_list = []
         self.rtn = []
+        self.check_result = {}
 
     def find_systems(self, sys):
-        if len(sys.config_files) > 0:
-            self.system_list.append(sys)
+        for proc in sys.processes:
+            if len(proc.config_files) > 0:
+                self.system_list.append(sys)
+                break
         if len(sys.child_systems) > 0:
             for child_sys in sys.child_systems:
                 self.find_systems(child_sys)
 
     def make_response(self):
         for each_sys in self.system_list:
+            sys_configs = []
+            for proc in each_sys.processes:
+                sys_configs.extend(proc.config_files)
             self.rtn.append({
                 'name': each_sys.name,
                 'sys_id': each_sys.id,
                 'detail': [{
+                    'id': conf.id,
+                    'uuid': conf.uuid,
                     'name': conf.name,
-                    'processes': [x.name for x in conf.processes],
                     'type': conf.config_type.name,
                     'dir': conf.dir,
                     'file': conf.file,
-                    'pre_hash': conf.pre_hash_code,
-                    'pre_timestamp':
-                        conf.pre_timestamp and \
-                        conf.pre_timestamp.to('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss'),
                     'hash': conf.hash_code,
-                    'hash_changed': conf.pre_hash_code and \
-                                    conf.pre_hash_code != conf.hash_code or False,
                     'timestamp': conf.timestamp and \
-                                 conf.timestamp.to('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss')
-                } for conf in each_sys.config_files]
+                                 conf.timestamp.to('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss'),
+                    'hash_changed': self.check_result.get(conf)
+                } for conf in sys_configs]
             })
 
 class ConfigListApi(Resource, ConfigList):
@@ -646,11 +644,11 @@ class ConfigCheckApi(Resource, ConfigList):
 
     def find_configs(self):
         for each_sys in self.system_list:
-            for conf_file in each_sys.config_files:
-                key = (each_sys.ip, each_sys.user, each_sys.password)
+            for proc in each_sys.processes:
+                key = (proc.server.ip, each_sys.user, each_sys.password)
                 if not self.config_file_list.has_key(key):
                     self.config_file_list[key] = []
-                self.config_file_list[key].append(conf_file)
+                self.config_file_list[key].extend(proc.config_files)
 
     def checkConfig(self, entry, config_files):
         remote_config = SSHConfig(entry[0], entry[1], entry[2])
@@ -667,8 +665,9 @@ class ConfigCheckApi(Resource, ConfigList):
             if result.return_code == 0:
                 ''' conf_file.pre_hash_code = conf_file.hash_code
                 conf_file.pre_timestamp = conf_file.timestamp '''
-                conf_file.hash_code = result.lines[0]
-                conf_file.timestamp = arrow.utcnow()
+                # conf_file.hash_code = result.lines[0]
+                # conf_file.timestamp = arrow.utcnow()
+                self.check_result[conf_file] = conf_file.hash_code != result.lines[0]
 
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
@@ -688,6 +687,7 @@ class ConfigCheckApi(Resource, ConfigList):
                 tr.start()
                 # gevent.sleep(0)
                 tr.join() '''
+            gevent.sleep(0)
             gevent.joinall(self.checker)
             self.make_response()
             return RestProtocol(self.rtn)

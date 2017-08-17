@@ -188,7 +188,10 @@
                     <span class="caption font-green am-inline-block am-margin-bottom-xs">{{::system.name}} 配置文件：</span>
                     <ul class="am-avg-sm-4 am-avg-md-7 am-avg-lg-9 am-margin-left-sm am-margin-right-sm">
                         <li ng-repeat="conf in system.detail" class="am-padding-left-xs" style="text-align: center;">
-                            <span class="am-badge am-radius" ng-class="{true: 'am-badge-danger', false: 'am-badge-success'}[conf.hash_changed]" style="line-height: 30px; width: 100%">{{::conf.name}}</span>
+                            <span class="am-badge am-radius" ng-class="{true: 'am-badge-danger pointer',false: 'am-badge-success', null: ''}[conf.hash_changed]" style="line-height: 30px; width: 100%" ng-click="confirmConfig(conf)">
+                                <i class="am-icon-spinner am-icon-spin" ng-show="conf.updating"></i>
+                                {{::conf.name}}
+                            </span>
                         </li>
                     </ul>
                 </div>
@@ -241,7 +244,13 @@
                                     </div>
                                 </div>
                             </div>
-                            <tr ng-repeat="data in opList.details">
+                            <tr ng-show="checkingSystemConfig && !configChecked">
+                                <td colspan="6" align="center">
+                                    <i class="am-icon-spinner am-icon-spin"></i>
+                                    <span>检查配置文件，请稍候...</span>
+                                </td>
+                            </tr>
+                            <tr ng-repeat="data in opList.details" ng-show="configChecked">
                                 <td>{{data.op_name}}</td>
                                 <td class="am-text-break">{{data.op_desc}}</td>
                                 <td>{{data.time_range.lower}} ~ {{data.time_range.upper}}</td>
@@ -375,7 +384,6 @@
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 </div>

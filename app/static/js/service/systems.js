@@ -242,11 +242,55 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
         // $http.get()
     };
 
+    this.QuantdoConfigList = function(params) {
+        if (params.sysID === undefined) {
+            return false;
+        }
+        $http.get('api/system/id/' + params.sysID + '/config_files')
+            .success(function(response) {
+                if (response.error_code === 0) {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(response.data);
+                    }
+                } else if (params.hasOwnProperty('onError')) {
+                    params.onError(response.data);
+                }
+            })
+            .error(function(response) {
+                console.log(response);
+                if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                }
+            });
+    };
+
     this.QuantdoConfigCheck = function(params) {
         if (params.sysID === undefined) {
             return false;
         }
         $http.get('api/system/id/' + params.sysID + '/config_files/check')
+            .success(function(response) {
+                if (response.error_code === 0) {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(response.data);
+                    }
+                } else if (params.hasOwnProperty('onError')) {
+                    params.onError(response.data);
+                }
+            })
+            .error(function(response) {
+                console.log(response);
+                if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                }
+            });
+    };
+
+    this.QuantdoConfigRenew = function(params) {
+        if (params.configID === undefined) {
+            return false;
+        }
+        $http.post('api/config/id/' + params.configID)
             .success(function(response) {
                 if (response.error_code === 0) {
                     if (params.hasOwnProperty('onSuccess')) {

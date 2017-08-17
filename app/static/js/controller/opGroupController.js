@@ -16,6 +16,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     $scope.optionGroupSelect = [];
     $scope.optionEarliest = [];
     $scope.optionLatiest = [];
+    $scope.configChecked = false;
 
     $scope.$on('TaskStatusChanged', function(event, data) {
         if (data.hasOwnProperty('details')) {
@@ -373,16 +374,63 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         });
     };
 
+    $systems.QuantdoConfigList({
+        sysID: $routeParams.sysid,
+        onSuccess: function(data) {
+            $scope.configFileList = data.records;
+            $scope.CheckSystemConfig();
+        }
+    });
+
     $scope.CheckSystemConfig = function() {
         $scope.checkingSystemConfig = true;
+        $scope.configChecked = false;
         $systems.QuantdoConfigCheck({
             sysID: $routeParams.sysid,
             onSuccess: function(data) {
+                var check_failed = false;
+                angular.forEach(data.records, function(value, index) {
+                    angular.forEach(value.detail, function(conf, idx) {
+                        if (conf.hash_changed) {
+                            check_failed = true;
+                        }
+                    });
+                });
+                if (check_failed) {
+                    $message.Warning('配置文件被修改，确认配置前无法进行操作！', 10);
+                }
                 $timeout(function() {
                     $scope.configFileList = data.records;
                     $scope.checkingSystemConfig = false;
+                    $scope.configChecked = !check_failed;
+                    // console.log($scope.configChecked);
                 }, 0);
             }
         });
+    };
+
+    $scope.confirmConfig = function(config) {
+        if (config.hash_changed) {
+            if (confirm('确认更新配置文件的HASH值？')) {
+                config.updating = true;
+                $systems.QuantdoConfigRenew({
+                    configID: config.id,
+                    onSuccess: function(data) {
+                        $timeout(function() {
+                            angular.forEach($scope.configFileList, function(value, index) {
+                                angular.forEach(value.detail, function(conf, idx) {
+                                    if (conf.uuid === data.uuid) {
+                                        angular.merge(conf, data);
+                                    }
+                                });
+                            });
+                            config.updating = false;
+                        }, 0);
+                        $scope.CheckSystemConfig();
+                        $message.Success('配置文件HASH值更新成功。');
+                    }
+                });
+            }
+        }
     };
 }]);

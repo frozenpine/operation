@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 from . import resources
+from .handlers.ConfigFileHandler import ConfigFileApi
 from .handlers.DeviceHandler import DeviceApi, DeviceListApi
 from .handlers.EmergeOpHandler import (EmergeOpApi, EmergeOpCaptchaApi,
                                        EmergeOpCSVApi, EmergeOpExecuteApi,
@@ -449,4 +450,11 @@ resources.add_resource(
     '/system/tree-structure',
     methods=['GET'],
     endpoint='sys_tree_structure'
+)
+
+resources.add_resource(
+    ConfigFileApi,
+    '/config/id/<int:id>',
+    methods=['GET', 'POST', 'PUT'],
+    endpoint='config'
 )
