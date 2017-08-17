@@ -6,7 +6,7 @@
             </div>
         </div>
         <div class="tpl-block">
-            <div>
+            <div class="am-g">
                 <div class="am-margin-left-sm am-fl">
                     <div class="am-form-group">
                         <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 250px">
@@ -84,10 +84,20 @@
                     </div>
                 </div>
             </div>
-            <div class="am-btn-toolbar am-fr am-margin-right">
-                <div class="am-btn-group am-btn-group-sm">
-                    <button class="am-btn am-btn-secondary am-round" ng-click="filter_keywords={}"><i class="am-icon-trash am-icon-fw"></i>清除</button>
-                    <button class="am-btn am-btn-secondary am-round am-disabled"><i class="am-icon-search am-icon-fw"></i>查询</button>
+            <div class="am-g">
+                <div class="am-input-group am-input-group-sm am-input-group-secondary am-fl" style="width: 250px; margin-left: 1rem;">
+                    <span class="am-input-group-label" style="padding: 0 5px; line-height: normal;">
+                        <i class="am-icon-pagelines am-icon-fw"></i>
+                        每页记录数：
+                    </span>
+                    <select class="am-form-field" ng-model="listsPerPage" ng-options="count for count in listCounts">
+                    </select>
+                </div>
+                <div class="am-btn-toolbar am-fr am-margin-right">
+                    <div class="am-btn-group am-btn-group-sm">
+                        <button class="am-btn am-btn-secondary am-round" ng-click="filter_keywords={}"><i class="am-icon-trash am-icon-fw"></i>清除</button>
+                        <button class="am-btn am-btn-secondary am-round am-disabled"><i class="am-icon-search am-icon-fw"></i>查询</button>
+                    </div>
                 </div>
             </div>
         </div>
