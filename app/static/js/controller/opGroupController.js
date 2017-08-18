@@ -26,6 +26,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                 angular.forEach($scope.opList.details, function(value, index) {
                     delete $sessionStorage[value.uuid];
                 });
+                delete $sessionStorage['configStatics_' + $routeParams.sysid]; // 删除缓存，强制配置文件检查刷新
                 $scope.taskQueueRunning = false;
                 $scope.batch_run = false;
             }, 0);
@@ -137,11 +138,6 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
 
     function TaskStatus(data, index) {
         $timeout(function() {
-            if (index === 0 && data.exec_code === -1) {
-                $scope.taskQueueInitial = false;
-            } else {
-                $scope.taskQueueInitial = false;
-            }
             $scope.opList.details[index] = data;
             if (data.exec_code === 1) {
                 $scope.opList.status_code = 14;
