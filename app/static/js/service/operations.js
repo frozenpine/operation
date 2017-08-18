@@ -77,14 +77,11 @@ app.service('$operations', function($websocket, $http, $message, $sessionStorage
             .success(function(response) {
                 if (response.error_code === 0) {
                     response.data.exec_code = -4;
-                    params.onSuccess(response.data);
-                } else {
-                    console.log(response);
-                    if (params.hasOwnProperty('onError')) {
-                        params.onError(response.message);
-                    } else {
-                        $message.Warning(response.message);
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(response.data);
                     }
+                } else if (params.hasOwnProperty('onError')) {
+                    params.onError(response.data);
                 }
             })
             .error(function(response) {

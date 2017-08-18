@@ -12,11 +12,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     $scope.user_uuid = $('#user_uuid').text();
     $scope.taskQueueRunning = false;
     $scope.taskQueueInitial = false;
-    // $scope.queue_blocked = false;
     $scope.optionGroupEditShow = true;
-    /* $scope.optionGroupSelect = [];
-    $scope.optionEarliest = [];
-    $scope.optionLatiest = []; */
     $scope.configChecked = false;
     $scope.optionGroupEditList = {
         operation_group: {},
@@ -32,10 +28,8 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                 });
                 $scope.taskQueueRunning = false;
                 $scope.batch_run = false;
-                TaskQueueStatus();
-                $scope.taskQueueInitial = true;
             }, 0);
-            // TaskQueueStatus();
+            TaskQueueStatus();
             $message.Warning('任务队列被重新初始化');
         } else {
             angular.forEach($scope.opList.details, function(value, index) {
@@ -48,10 +42,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                     } else {
                         $scope.triggered_ouside = false;
                     }
-                    $timeout(function() {
-                        TaskStatus(data, index);
-                    }, 0);
-                    // TaskStatus(data, index);
+                    TaskStatus(data, index);
                 }
             });
         }
@@ -72,13 +63,6 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             groupID: $routeParams.grpid,
             onSuccess: function(data) {
                 $scope.opList = data;
-                /* $scope.optionGroupSelect = new Array(data.details.length);
-                $scope.optionEarliest = new Array(data.details.length);
-                $scope.optionLatiest = new Array(data.details.length);
-                angular.forEach($scope.opList.details, function(value, index) {
-                    $scope.optionEarliest[index] = formatTime(value.time_range.lower);
-                    $scope.optionLatiest[index] = formatTime(value.time_range.upper);
-                }); */
                 TaskQueueStatus();
             }
         });
@@ -152,13 +136,17 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     };
 
     function TaskStatus(data, index) {
-        // $timeout(function() {
-        $scope.opList.details[index] = data;
-        // $scope.queue_blocked = data.exec_code > 0;
-        if (data.exec_code === 1) {
-            $scope.opList.status_code = 14;
-        }
-        // }, 0);
+        $timeout(function() {
+            if (index === 0 && data.exec_code === -1) {
+                $scope.taskQueueInitial = false;
+            } else {
+                $scope.taskQueueInitial = false;
+            }
+            $scope.opList.details[index] = data;
+            if (data.exec_code === 1) {
+                $scope.opList.status_code = 14;
+            }
+        }, 0);
         if (!$scope.batch_run) {
             $timeout(function() {
                 if (!$scope.triggered_ouside && data.hasOwnProperty('output_lines') && data.output_lines.length > 0) {
@@ -169,13 +157,13 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                 }
             });
         } else {
-            // $timeout(function() {
-            $scope.opList.details[index].enabled = false;
-            if (data.checker.isTrue && data.exec_code === 0) {
-                $sessionStorage[data.uuid] = true;
-                $scope.opList.details[index].checker.checked = true;
-            }
-            // }, 0);
+            $timeout(function() {
+                $scope.opList.details[index].enabled = false;
+                if (data.checker.isTrue && data.exec_code === 0) {
+                    $sessionStorage[data.uuid] = true;
+                    $scope.opList.details[index].checker.checked = true;
+                }
+            }, 0);
         }
         if (index < $scope.opList.details.length - 1) {
             $scope.taskQueueRunning = true;
@@ -186,36 +174,34 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     }
 
     function TaskQueueStatus() {
-        // $timeout(function() {
         angular.forEach($scope.opList.details, function(value, index) {
-            /* if (value.exec_code > 0) {
-                // $scope.queue_blocked = true;
-                $scope.opList.status_code = 14;
-            } */
-            if (index === 0 && value.exec_code === -1) {
-                $scope.taskQueueInitial = true;
-            }
-            if (index > 0 && $scope.opList.details[index - 1].checker.isTrue) {
-                checked = $sessionStorage[$scope.opList.details[index - 1].uuid];
-                $scope.opList.details[index].enabled = value.enabled && checked === true;
-            }
-            if (index < $scope.opList.details.length - 1) {
-                $scope.taskQueueRunning = value.exec_code >= 0;
-                if (value.checker.isTrue && $scope.opList.details[index + 1].exec_code === 0) {
-                    $sessionStorage[value.uuid] = true;
+            $timeout(function() {
+                if (index === 0 && value.exec_code === -1) {
+                    $scope.taskQueueInitial = true;
+                } else {
+                    $scope.taskQueueInitial = false;
                 }
-            } else if (value.exec_code === 0) {
-                $scope.taskQueueRunning = false;
-            }
-            if (value.checker.isTrue) {
-                $scope.opList.details[index].checker.checked = $sessionStorage[value.uuid] === true;
-            }
+                if (index > 0 && $scope.opList.details[index - 1].checker.isTrue) {
+                    checked = $sessionStorage[$scope.opList.details[index - 1].uuid];
+                    $scope.opList.details[index].enabled = value.enabled && checked === true;
+                }
+                if (index < $scope.opList.details.length - 1) {
+                    $scope.taskQueueRunning = value.exec_code >= 0;
+                    if (value.checker.isTrue && $scope.opList.details[index + 1].exec_code === 0) {
+                        $sessionStorage[value.uuid] = true;
+                    }
+                } else if (value.exec_code === 0) {
+                    $scope.taskQueueRunning = false;
+                }
+                if (value.checker.isTrue) {
+                    $scope.opList.details[index].checker.checked = $sessionStorage[value.uuid] === true;
+                }
+            });
         });
-        // });
     }
 
     $scope.execute = function(index, id) {
-        if ( /* $scope.queue_blocked */ $scope.opList.status_code === 14) {
+        if ($scope.opList.status_code === 14) {
             $message.Warning('队列执行失败已阻塞，请先恢复队列。');
             return;
         }
@@ -255,7 +241,8 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                         groupID: $routeParams.grpid,
                         authorizor: data,
                         onSuccess: function(data) {
-                            $scope.opList.details[index] = data;
+                            // $scope.opList.details[index] = data;
+                            $scope.opList.details[index].enabled = false;
                         }
                     });
                 });
@@ -271,7 +258,8 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                     groupID: $routeParams.grpid,
                     operationID: id,
                     onSuccess: function(data) {
-                        $scope.opList.details[index] = data;
+                        // $scope.opList.details[index] = data;
+                        $scope.opList.details[index].enabled = false;
                     }
                 });
             }
@@ -315,15 +303,6 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             });
         });
 
-        /* $scope.optionGroupCopy = {
-            "operation_group": {
-                "id": data.grp_id,
-                "name": data.name,
-                "description": null,
-                "is_emergency": null
-            },
-            "operations": []
-        }; */
         $scope.need_authorization = [{
             "name": "是",
             "value": true
@@ -331,65 +310,20 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             "name": "否",
             "value": false
         }];
-        /* $scope.optionOldData = angular.copy($scope.opList.details);
-
-        angular.forEach($scope.optionOldData, function(value, index) {
-            var data = {
-                operation_name: value.op_name,
-                description: value.op_desc,
-                earliest: null,
-                latest: null,
-                need_authorized: value.need_authorized,
-                operation_id: value.id,
-                book_id: value.book_id
-            };
-            $scope.optionGroupCopy.operations.push(data);
-        }); */
-
-        /* $scope.optionGroupSelectWhich = function(option, data) {
-            angular.forEach($scope.optionBooks, function(value, index) {
-                if (value.id == option.id) {
-                    data.book_id = value.id;
-                    data.description = value.description;
-                    data.operation_name = value.name;
-                }
-            });
-        };
-
-        $scope.$watch('optionBooks', function() {
-            angular.forEach($scope.opList.details, function(value, index) {
-                angular.forEach($scope.optionBooks, function(v, i) {
-                    if (value.book_id === v.id) {
-                        $scope.optionGroupSelect[index] = v;
-                    }
-                });
-            });
-        }); */
 
         $scope.optionGroupEditShow = !$scope.optionGroupEditShow;
     };
     $scope.optionGroupEditAdd = function() {
-        /* $scope.optionGroupNew = {};
-        $scope.optionGroupCopy.operations.push($scope.optionGroupNew); */
         $scope.optionGroupEditList.operations.push({});
     };
     $scope.optionGroupEditCancel = function() {
         $scope.optionGroupEditShow = !$scope.optionGroupEditShow;
     };
     $scope.optionGroupEditDelete = function(index_del) {
-        // $scope.optionGroupCopy.operations.splice(index_del, 1);
         $scope.optionGroupEditList.operations.splice(index_del, 1);
     };
     $scope.optionGroupEditPostShow = true;
     $scope.optionGroupEditFinish = function() {
-        /* angular.forEach($scope.optionGroupCopy.operations, function(value, index) {
-            value.earliest = ($scope.optionEarliest[index] !== undefined &&
-                    $scope.optionEarliest[index] !== null && $scope.optionEarliest[index] !== '') ?
-                $scope.optionEarliest[index].getHours() + ':' + $scope.optionEarliest[index].getMinutes() : null;
-            value.latest = ($scope.optionLatiest[index] !== undefined &&
-                    $scope.optionLatiest[index] !== null && $scope.optionLatiest[index] !== '') ?
-                $scope.optionLatiest[index].getHours() + ':' + $scope.optionLatiest[index].getMinutes() : null;
-        }); */
         $operationBooks.optionGroupEditPut({
             optionGroup_id: $scope.optionGroupEditList.operation_group.id,
             data: $scope.optionGroupEditList,
@@ -406,19 +340,20 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         });
     };
 
-    $scope.$watch('taskQueueInitial', function(newValue, oldValue) {
-        if (newValue !== oldValue && newValue) {
-            $systems.QuantdoConfigList({
-                sysID: $routeParams.sysid,
-                onSuccess: function(data) {
-                    $scope.configFileList = data.records;
-                    $scope.CheckSystemConfig();
-                }
-            });
+    $systems.QuantdoConfigList({
+        sysID: $routeParams.sysid,
+        onSuccess: function(data) {
+            $scope.configFileList = data.records;
         }
     });
 
-    $scope.CheckSystemConfig = function() {
+    $scope.$watch('taskQueueInitial', function(newValue, oldValue) {
+        if (newValue !== oldValue && newValue) {
+            $scope.CheckSystemConfig();
+        }
+    });
+
+    $scope.CheckSystemConfig = function(force) {
         $scope.checkingSystemConfig = true;
         $scope.configChecked = false;
         $systems.QuantdoConfigCheck({
@@ -442,7 +377,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                     // console.log($scope.configChecked);
                 }, 0);
             }
-        });
+        }, force);
     };
 
     $scope.confirmConfig = function(config) {

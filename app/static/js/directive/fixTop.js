@@ -5,6 +5,7 @@ app.directive('fixTop', function(scroll) {
             offsetTop: '@',
             fixStyle: '='
         },
+        require: '',
         link: function(scope, element, attr) {
             scroll.bind();
             scope.$on('scroll', function(event, data) {

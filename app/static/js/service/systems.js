@@ -264,13 +264,38 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
             });
     };
 
-    this.QuantdoConfigCheck = function(params) {
+    this.QuantdoConfigCheck = function(params, force) {
         if (params.sysID === undefined) {
             return false;
+        }
+        if (force === undefined) {
+            force = false;
+        }
+        var request_timestamp = new Date().getTime();
+        if ($sessionStorage.hasOwnProperty('configStatics_' + params.sysID)) {
+            if ($sessionStorage['configStatics_' + params.sysID].hasOwnProperty('last_request')) {
+                last_request = parseInt($sessionStorage['configStatics_' + params.sysID].last_request);
+                if (!force && request_timestamp - last_request < 15 * 3600 * 1000) {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess($sessionStorage['configStatics_' + params.sysID]);
+                        return;
+                    }
+                }
+            }
+            $timeout(function() {
+                angular.extend(
+                    $sessionStorage['configStatics_' + params.sysID], { last_request: request_timestamp }
+                );
+            }, 0);
         }
         $http.get('api/system/id/' + params.sysID + '/config_files/check')
             .success(function(response) {
                 if (response.error_code === 0) {
+                    $timeout(function() {
+                        $sessionStorage['configStatics_' + params.sysID] = angular.merge(
+                            response.data, { last_request: request_timestamp }
+                        );
+                    });
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess(response.data);
                     }

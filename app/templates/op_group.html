@@ -171,7 +171,7 @@
             <button ng-show="optionGroupEditShow" ng-click="optionGroupEdit(opList)" type="button" class="am-btn am-btn-sm am-btn-primary am-round am-fr">编辑</button>
             <div class="am-fr am-margin-right">
                 <div class="am-btn-group am-btn-group-sm">
-                    <button ng-click="CheckSystemConfig()" class="am-btn am-btn-primary am-round">
+                    <button ng-click="CheckSystemConfig(true)" class="am-btn am-btn-primary am-round">
                         <i class="am-icon-spinner am-icon-spin" ng-show="checkingSystemConfig"></i>
                         配置文件检查
                     </button>
@@ -244,13 +244,13 @@
                                     </div>
                                 </div>
                             </div>
-                            <tr ng-show="checkingSystemConfig && !configChecked">
+                            <tr ng-show="checkingSystemConfig">
                                 <td colspan="6" align="center">
                                     <i class="am-icon-spinner am-icon-spin"></i>
                                     <span>检查配置文件，请稍候...</span>
                                 </td>
                             </tr>
-                            <tr ng-repeat="data in opList.details" ng-show="configChecked">
+                            <tr ng-repeat="data in opList.details" ng-show="!checkingSystemConfig">
                                 <td>{{data.op_name}}</td>
                                 <td class="am-text-break">{{data.op_desc}}</td>
                                 <td>{{data.time_range.lower}} ~ {{data.time_range.upper}}</td>
@@ -374,7 +374,7 @@
                     <div class="am-btn-group am-btn-group-sm">
                         <button ng-click="InitQueue()" type="button" class="am-btn am-btn-primary am-round">初始化队列</button>
                         <button ng-click="resumeQueue()" type="button" class="am-btn am-btn-primary am-round" ng-disabled="opList.status_code!=14">恢复队列</button>
-                        <button class="am-btn am-btn-primary am-round" ng-disabled="opList.status_code==14" ng-click="runAll()">全部执行</button>
+                        <button class="am-btn am-btn-primary am-round" ng-disabled="opList.status_code==14 || checkingSystemConfig" ng-click="runAll()">全部执行</button>
                     </div>
                 </div>
                 <div class="am-fr" ng-show="!optionGroupEditShow">
