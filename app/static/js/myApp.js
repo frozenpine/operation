@@ -153,6 +153,9 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
                     ws.send(JSON.stringify({
                         method: 'topics'
                     }));
+                    ws.send(JSON.stringify({
+                        method: 'heartbeat'
+                    }));
                     heatbeat_interval = $interval(function() {
                         ws.send(JSON.stringify({
                             method: 'heartbeat'
@@ -201,6 +204,10 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
         var onMessage = function(msg) {
             if (msg.hasOwnProperty('heartbeat')) {
                 console.log('[Server] Heartbeat: ' + msg.heartbeat);
+                $timeout(function() {
+                    time_tuple = msg.heartbeat.split(' ')[1].split(':');
+                    $rootScope.serverTime = time_tuple[0] + ':' + time_tuple[1];
+                });
             } else if (msg.hasOwnProperty('topics')) {
                 msg.topics.forEach(function(topic_name) {
                     console.log('[Client] Subscribing topic: ' + topic_name);
