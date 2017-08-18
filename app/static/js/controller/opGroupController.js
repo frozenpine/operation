@@ -241,6 +241,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                             $scope.opList.details[index].enabled = false;
                         } */
                     });
+                    $scope.opList.details[index].enabled = false;
                 });
                 $('#authorizor').modal({
                     relatedTarget: this,
@@ -258,6 +259,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                         $scope.opList.details[index].enabled = false;
                     } */
                 });
+                $scope.opList.details[index].enabled = false;
             }
         }
     };
