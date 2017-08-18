@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="[[ url_for('static', filename='css/app.css', _external=True) ]]"> {% if title %}
     <title>[[title]] - Quantdo</title>
     {% else %}
-    <title>Welcome to Quantdo Ops Platform</title>
+    <title>Welcome to Quantdo - QOPS</title>
     {% endif %}
 </head>
 
@@ -69,13 +69,13 @@
                         <label for="doc-ipt-3-b" class="am-u-sm-2 am-form-label font-green">操作组名</label>
                         <div class="am-u-sm-5">
                             <input type="text" name="optionGroup_name" ng-model="optionGroupName" ng-class="{true: 'invalid', false: ''}[optionGroupConfirm.operation_group.sys_id!==null && optionGroupName===undefined]" ng-disabled="optionGroupConfirm.operation_group.sys_id===null"
-                                placeholder="必填项" required>
+                                placeholder="必填项" maxlength="10" required>
                         </div>
                     </div>
                     <div class="am-form-group am-form-icon font-green am-g">
                         <label for="doc-ipt-3-b" class="am-u-sm-2 am-form-label font-green">操作组描述</label>
                         <div class="am-u-sm-3">
-                            <input type="text" name="optionGroup_des" ng-model="optionGroupDescription" ng-disabled="optionGroupConfirm.operation_group.sys_id===null" placeholder="选填项">
+                            <input type="text" name="optionGroup_des" ng-model="optionGroupDescription" ng-disabled="optionGroupConfirm.operation_group.sys_id===null" maxlength="30" placeholder="选填项">
                         </div>
                         <label for="doc-ipt-3-b" class="am-u-sm-2 am-form-label font-green">初始化时间</label>
                         <div class="am-u-sm-2">
@@ -129,10 +129,10 @@
                                         <ul sv-root sv-part="optionGroupConfirm.operations">
                                             <li ng-repeat="data in optionGroupConfirm.operations" sv-element>
                                                 <div class="am-u-sm-3" style="padding: 1px">
-                                                    <input type="text" style="border: none;" ng-model="data.name" />
+                                                    <input type="text" style="border: none;" ng-model="data.name" maxlength="10" />
                                                 </div>
                                                 <div class="am-u-sm-4" style="padding: 1px">
-                                                    <input type="text" style="border: none" ng-model="data.description"></input>
+                                                    <input type="text" style="border: none" ng-model="data.description" maxlength="30" />
                                                 </div>
                                                 <div class="am-u-sm-2" style="padding: 1px">
                                                     <input name="startTime{{$index}}" type="text" style="border: none;" value="{{data.earliest}}" ng-model="data.earliest" ng-pattern="/^(0\d{1}|1\d{1}|2[0-3]):([0-5]\d{1})$/" />
@@ -211,8 +211,7 @@
                     <div class="am-form-group am-form-icon font-green">
                         <label for="doc-ipt-3-b" class="am-u-sm-2 am-form-label">名称</label>
                         <div class="am-u-sm-3">
-                            <input type="text" name="optionGroup_name" ng-disabled="optionBookEditData.sys=='' || optionBookEditData.sys==undefined" id="doc-ipt-3-b" value="optionBookEditData.name" ng-model="optionBookEditData.name" placeholder="必填项" ng-class="{true: 'invalid', false: ''}[optionBookEditData.name===undefined]"
-                                required>
+                            <input type="text" name="optionGroup_name" ng-disabled="optionBookEditData.sys=='' || optionBookEditData.sys==undefined" id="doc-ipt-3-b" value="optionBookEditData.name" ng-model="optionBookEditData.name" placeholder="必填项" ng-class="{true: 'invalid', false: ''}[optionBookEditData.name===undefined]" maxlength="10" required>
                         </div>
                         <label for="doc-ipt-3-d" class="am-u-sm-2 am-form-label">分类</label>
                         <div class="am-u-sm-5">
@@ -225,18 +224,18 @@
                     <div class="am-form-group am-form-icon font-green">
                         <label for="doc-ipt-3-c" class="am-u-sm-2 am-form-label">描述</label>
                         <div class="am-u-sm-10">
-                            <input type="text" name="optionGroup_des" id="doc-ipt-3-c" ng-disabled="optionBookEditData.sys=='' || optionBookEditData.sys==undefined" ng-model="optionBookEditData.description" placeholder="选填项">
+                            <input type="text" name="optionGroup_des" id="doc-ipt-3-c" ng-disabled="optionBookEditData.sys=='' || optionBookEditData.sys==undefined" ng-model="optionBookEditData.description" maxlength="30" placeholder="选填项">
                         </div>
                     </div>
                     <div class="am-form-group am-form-icon font-green" ng-repeat="data in optionBookCommand track by $index">
                         <label for="doc-ta-1" class="am-u-sm-2 am-form-label font-green">命令输入</label>
                         <div class="am-u-sm-3">
-                            <input type="text" ng-model="data.shell" ng-change="shellChanged()" ng-disabled="optionBookEditData.sys=='' || optionBookEditData.sys==undefined" placeholder="必填项" ng-class="{true: 'invalid', false: ''}[data.shell===undefined]" required/>
+                            <input type="text" ng-model="data.shell" ng-change="shellChanged()" ng-disabled="optionBookEditData.sys=='' || optionBookEditData.sys==undefined" placeholder="必填项" ng-class="{true: 'invalid', false: ''}[data.shell===undefined]" maxlength="30" required/>
                         </div>
                         <div class="am-u-sm-5">
                             <div class="am-input-group">
                                 <span class="am-input-group-label font-green">命令目录 :</span>
-                                <input type="text" class="am-form-field" ng-change="shellChanged()" ng-disabled="optionBookEditData.sys=='' || optionBookEditData.sys==undefined" ng-model="data.chdir" placeholder="选填项" />
+                                <input type="text" class="am-form-field" ng-change="shellChanged()" ng-disabled="optionBookEditData.sys=='' || optionBookEditData.sys==undefined" ng-model="data.chdir" maxlength="100" placeholder="选填项" />
                             </div>
                         </div>
                         <div class="am-u-sm-2">

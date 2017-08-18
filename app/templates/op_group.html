@@ -334,22 +334,22 @@
                                     <li class="am-u-sm-1" style="border-top: 0;">排序</li>
                                 </ul>
                             </div>
-                            <ul sv-root sv-part="optionGroupCopy.operations">
-                                <li ng-repeat="data in optionGroupCopy.operations" sv-element>
+                            <ul sv-root sv-part="optionGroupEditList.operations">
+                                <li ng-repeat="data in optionGroupEditList.operations" sv-element>
                                     <div class="am-u-sm-2" style="padding: 0;">
-                                        <input type="text" style="padding: 5px 5px 5px 0;border: none;" value="data.operation_name" ng-model="data.operation_name" />
+                                        <input type="text" style="padding: 5px 5px 5px 0;border: none;" value="data.operation_name" ng-model="data.operation_name" maxlength="10" />
                                     </div>
                                     <div class="am-u-sm-3" style="padding-left: 4px;">
-                                        <input type="text" style="padding: 5px 5px 5px 0;border: none;" value="data.description" ng-model="data.description" />
+                                        <input type="text" style="padding: 5px 5px 5px 0;border: none;" value="data.description" ng-model="data.description" maxlength="30" />
                                     </div>
                                     <div class="am-u-sm-1" style="padding-left: 6px;">
-                                        <input name="startTime{{$index}}" type="time" style="padding: 5px 5px 5px 0;border: none;" ng-model="optionEarliest[$index]" />
+                                        <input name="startTime{{$index}}" type="time" style="padding: 5px 5px 5px 0;border: none;" ng-model="data.earliest" />
                                     </div>
                                     <div class="am-u-sm-1" style="padding-left: 6px;">
-                                        <input name="endTime{{$index}}" type="time" style="padding: 5px 5px 5px 0;border: none;" ng-model="optionLatiest[$index]" />
+                                        <input name="endTime{{$index}}" type="time" style="padding: 5px 5px 5px 0;border: none;" ng-model="data.latest" />
                                     </div>
                                     <div class="am-u-sm-2">
-                                        <select ng-model="optionGroupSelect[$index]" ng-change="optionGroupSelectWhich(optionGroupSelect[$index],data)" ng-options="x.name for x in optionBooks"></select>
+                                        <select ng-model="data.book_id" ng-options="x.id as x.name for x in optionBooks"></select>
                                     </div>
                                     <div class="am-u-sm-1">
                                         <select ng-model="data.need_authorization" ng-options="x.value as x.name for x in need_authorization"></select>
@@ -362,7 +362,7 @@
                                     </div>
                                     <div>
                                         <span style="font-size: 10px; color: red;position: relative;right: 43%;" ng-show="!optionGroupEditSub.startTime{{$index}}.$valid
-                    						|| !optionGroupEditSub.endTime{{$index}}.$valid">时间格式错误</span>
+                                            || !optionGroupEditSub.endTime{{$index}}.$valid">时间格式错误</span>
                                     </div>
                                 </li>
                             </ul>
@@ -374,7 +374,7 @@
                     <div class="am-btn-group am-btn-group-sm">
                         <button ng-click="InitQueue()" type="button" class="am-btn am-btn-primary am-round">初始化队列</button>
                         <button ng-click="resumeQueue()" type="button" class="am-btn am-btn-primary am-round" ng-disabled="opList.status_code!=14">恢复队列</button>
-                        <button class="am-btn am-btn-primary am-round" ng-click="runAll()">全部执行</button>
+                        <button class="am-btn am-btn-primary am-round" ng-disabled="opList.status_code==14" ng-click="runAll()">全部执行</button>
                     </div>
                 </div>
                 <div class="am-fr" ng-show="!optionGroupEditShow">

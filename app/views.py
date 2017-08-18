@@ -18,7 +18,7 @@ from . import main
 @login_required
 def index():
     return render_template(
-        "index.html", title='Ops Platform',
+        "index.html", title='Unified OPs System',
         user_name=current_user.name,
         user_id=current_user.id,
         user_login=current_user.login,
