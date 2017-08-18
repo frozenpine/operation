@@ -236,10 +236,10 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                         operationID: id,
                         groupID: $routeParams.grpid,
                         authorizor: data,
-                        onSuccess: function(data) {
+                        /* onSuccess: function(data) {
                             // $scope.opList.details[index] = data;
                             $scope.opList.details[index].enabled = false;
-                        }
+                        } */
                     });
                 });
                 $('#authorizor').modal({
@@ -253,10 +253,10 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                 $operations.RunNext({
                     groupID: $routeParams.grpid,
                     operationID: id,
-                    onSuccess: function(data) {
+                    /* onSuccess: function(data) {
                         // $scope.opList.details[index] = data;
                         $scope.opList.details[index].enabled = false;
-                    }
+                    } */
                 });
             }
         }
