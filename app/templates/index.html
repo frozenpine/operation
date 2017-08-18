@@ -211,7 +211,8 @@
                     <div class="am-form-group am-form-icon font-green">
                         <label for="doc-ipt-3-b" class="am-u-sm-2 am-form-label">名称</label>
                         <div class="am-u-sm-3">
-                            <input type="text" name="optionGroup_name" ng-disabled="optionBookEditData.sys=='' || optionBookEditData.sys==undefined" id="doc-ipt-3-b" value="optionBookEditData.name" ng-model="optionBookEditData.name" placeholder="必填项" ng-class="{true: 'invalid', false: ''}[optionBookEditData.name===undefined]" maxlength="10" required>
+                            <input type="text" name="optionGroup_name" ng-disabled="optionBookEditData.sys=='' || optionBookEditData.sys==undefined" id="doc-ipt-3-b" value="optionBookEditData.name" ng-model="optionBookEditData.name" placeholder="必填项" ng-class="{true: 'invalid', false: ''}[optionBookEditData.name===undefined]"
+                                maxlength="10" required>
                         </div>
                         <label for="doc-ipt-3-d" class="am-u-sm-2 am-form-label">分类</label>
                         <div class="am-u-sm-5">
@@ -343,13 +344,13 @@
                 </li>
                 <li class="am-dropdown" data-am-dropdown data-am-dropdown-toggle>
                     <a class="tpl-header-list-link am-dropdown-toggle" href="">
-                        <span class="am-icon-cogs"></span> 设置中心</span>
+                        <span class="am-icon-cogs"> 设置中心</span>
                     </a>
                     <ul class="am-dropdown-content">
                         <li>
                             <a href="javascript: void(0)">
                                 <i class="am-icon-cog am-icon-fw"></i>
-                                <span disabled>全局配置</span>
+                                <span>全局配置</span>
                             </a>
                         </li>
                         <li>
@@ -410,7 +411,7 @@
             </ul>
         </div>
     </header>
-    <div id="alertMessage" ng-style="messagePosition" style="margin-bottom: 16px"></div>
+    <div id="alertMessage" ng-style="messagePosition" style="margin-bottom: 16px" fix-style="messagePosition" offset-top="86" fix-top></div>
     <aside class="tpl-page-container tpl-page-header-fixed">
         <div class="tpl-left-nav tpl-left-nav-hover" style="display: none; width: 55px;">
             <div class="tpl-left-nav-title">
@@ -533,6 +534,7 @@
     <script src="[[ url_for('static', filename='js/angular-route.min.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/angular-sortable-view.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/ngStorage.min.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/ngscroll.min.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/amazeui.min.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/echarts.min.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/app.js', _external=True) ]]" type="text/javascript" charset="utf-8"></script>
@@ -552,6 +554,7 @@
     <script src="[[ url_for('static', filename='js/directive/fileModel.js', _external=True) ]]"></script>
     <!-- <script src="[[ url_for('static', filename='js/directive/idcmap.js', _external=True) ]]"></script> -->
     <script src="[[ url_for('static', filename='js/directive/repeatFinish.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/directive/fixTop.js', _external=True) ]]"></script>
     <!-- <script src="[[ url_for('static', filename='js/directive/relamap.js', _external=True) ]]"></script> -->
     <script src="[[ url_for('static', filename='js/directive/modalDialog.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/controller/mainController.js', _external=True) ]]"></script>

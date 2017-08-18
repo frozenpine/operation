@@ -5,7 +5,7 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
     $scope.opGroupEditList = {};
     $scope.grpOrderEdit = {};
 
-    $('body').on('scroll', function(event) {
+    /* $('body').on('scroll', function(event) {
         if (event.offsetY >= 86) {
             $timeout(function() {
                 $scope.messagePosition = {
@@ -21,7 +21,7 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
                 $scope.messagePosition = {};
             });
         }
-    });
+    }); */
 
     /* Code 4 SideBar Start */
     $scope.tabList = [];
