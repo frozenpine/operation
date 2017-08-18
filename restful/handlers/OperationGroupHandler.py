@@ -74,7 +74,7 @@ class OperationGroupListApi(Resource):
             db.session.commit()
             return RestProtocol(og)
 
-    def put(self):
+    ''' def put(self):
         try:
             data_list = request.get_json(force=True)
         except BadRequest:
@@ -101,7 +101,7 @@ class OperationGroupListApi(Resource):
             db.session.add_all(self.op_group_list)
             db.session.add_all(self.disabled_list)
             db.session.commit()
-            return RestProtocol(message='Success')
+            return RestProtocol(message='Success') '''
 
 
 class OperationGroupApi(Resource):
@@ -152,12 +152,12 @@ class OperationGroupApi(Resource):
                                     used_id.append(op_e.id)
                                     op_e.name = op_list[i].get('operation_name', op_e.name)
                                     op_e.description = op_list[i].get('description', op_e.description)
-                                    if op_list[i].get('earliest') != '':
+                                    if op_list[i].get('earliest') and op_list[i].get('earliest') != '':
                                         op_e.earliest = arrow.get(op_list[i].get('earliest'))\
                                         .to('Asia/Shanghai').strftime('%H:%M:%S')
                                     else:
                                         op_e.earliest = None
-                                    if op_list[i].get('latest') != '':
+                                    if op_list[i].get('latest') and op_list[i].get('latest') != '':
                                         op_e.latest = arrow.get(op_list[i].get('latest'))\
                                             .to('Asia/Shanghai').strftime('%H:%M:%S')
                                     else:
@@ -179,12 +179,12 @@ class OperationGroupApi(Resource):
                                 index += 1
                                 operations[index].name = op_list[i].get('operation_name')
                                 operations[index].description = op_list[i].get('description')
-                                if op_list[i].get('earliest') != '':
+                                if op_list[i].get('earliest') and op_list[i].get('earliest') != '':
                                     operations[index].earliest = arrow.get(op_list[i].get('earliest'))\
                                         .to('Asia/Shanghai').strftime('%H:%M:%S')
                                 else:
                                     operations[index].earliest = None
-                                if op_list[i].get('latest') != '':
+                                if op_list[i].get('latest') and op_list[i].get('latest') != '':
                                     operations[index].latest = arrow.get(op_list[i].get('latest'))\
                                         .to('Asia/Shanghai').strftime('%H:%M:%S')
                                 else:

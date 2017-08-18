@@ -320,7 +320,7 @@ resources.add_resource(
     OperationGroupListApi,
     '/operation-groups',
     '/operation-groups/',
-    methods=['GET', 'POST', 'PUT'],
+    methods=['GET', 'POST'],
     endpoint='operation_groups'
 )
 
