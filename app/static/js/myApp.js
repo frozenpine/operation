@@ -126,6 +126,14 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
         };
     });
 
+    $provide.factory('$dialog', function() {
+        return {
+            Confirm: function() {
+
+            }
+        };
+    });
+
     $provide.factory('$websocket', function($rootScope, $location, $interval, $timeout, $message, $sessionStorage, $uuid) {
         if (!$sessionStorage.hasOwnProperty('messages')) {
             $sessionStorage.messages = [];
@@ -270,8 +278,8 @@ app.config(['$routeProvider', function($routeProvider) {
         .when('/op_records', {
             templateUrl: 'UI/views/op_records'
         })
-        .when('/sys_ser', {
-            templateUrl: 'UI/views/sys_ser_pro'
+        .when('/inventory', {
+            templateUrl: 'UI/views/inventory'
         })
         .when('/statics/:sysid', {
             templateUrl: 'UI/views/statics'
@@ -287,7 +295,7 @@ app.config(['$routeProvider', function($routeProvider) {
         });
 }]);
 
-app.run(function($rootScope, $websocket, $sessionStorage, $localStorage, $operationBooks) {
+app.run(function($rootScope, $websocket, $sessionStorage, $localStorage, $location, $message) {
     $rootScope.tab = 1; //default
     $rootScope.status = "normal";
     $rootScope.currentId = null;
@@ -298,6 +306,19 @@ app.run(function($rootScope, $websocket, $sessionStorage, $localStorage, $operat
         sessionStaticsInterval: { default: 60, current: 60 },
         cpuIdleThreshold: { upper: 100, lower: 50 }
     };
+    $rootScope.$on('$routeChangeStart', function(evt, next, current) {
+        if ($rootScope.privileges === undefined) {
+            $location.url('/dashboard');
+        } else {
+            angular.forEach($rootScope.privileges, function(value, key) {
+                var ui_view = next.$$route.templateUrl.split('/').pop();
+                if ('#' + ui_view === key && !value) {
+                    evt.defaultPrevented = true;
+                    $message.Warning('用户无权限访问该URI!');
+                }
+            });
+        }
+    });
 });
 
 app.filter('paging', function() {

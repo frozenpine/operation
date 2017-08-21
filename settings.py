@@ -5,7 +5,7 @@ import os
 base_dir = os.path.abspath(os.path.dirname(__file__))
 
 
-class Config:
+class Config(object):
     WTF_CSRF_ENABLED = True
     SECRET_KEY = os.environ.get('FLASK_SECRET_KEY') or 'SOMEthing-you-WILL-never-Guess'
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
@@ -21,6 +21,18 @@ class Config:
     JINJA_VAR_START = os.environ.get('JINJA_VAR_START') or '[['
     JINJA_VAR_STOP = os.environ.get('JINJA_VAR_STOP') or ']]'
     UPLOAD_DIR = 'uploads'
+
+    UI_PROTECTION = {
+        'ui_element': [
+            '#addNewGroups', '#defineOptionBook', '#inventory', '#operate-books',
+            '#editGroup', '#initGroup'
+        ],
+        'ui_uri': [
+            '/api/operation-groups', '/api/operation-books', '/api/systems', '/api/emerge_ops',
+            '/api/operation-groups', '/api/op_group'
+        ]
+    }
+
 
     @classmethod
     def init_app(cls, app):
@@ -38,17 +50,17 @@ class DevelopmentConfig(Config):
     DEBUG = True
     # NEO4J_HOST = '192.168.101.152'
     SQLALCHEMY_DATABASE_URI = os.environ.get('FLASK_SQLALCHEMY_DATABASE_URI') or \
-                              'sqlite:///' + os.path.join(base_dir, 'database/flask.db')
-
+                                'sqlite:///' + os.path.join(base_dir, 'database/flask.db')
+    NEED_UI_PROTECTION = False
 
 class ProductionConfig(Config):
     DEBUG = False
     SQLALCHEMY_DATABASE_URI = os.environ.get('FLASK_SQLALCHEMY_DATABASE_URI') or \
-                              'sqlite:///' + os.path.join(base_dir, 'database/flask.db')
-
+                              'sqlite:///' + os.path.join(base_dir, 'database/flask1.db')
+    NEED_UI_PROTECTION = True
 
 config = {
-    'development': DevelopmentConfig,
-    'production': ProductionConfig,
-    'default': DevelopmentConfig
+    'development': 'DevelopmentConfig',
+    'production': 'ProductionConfig',
+    'default': 'DevelopmentConfig'
 }

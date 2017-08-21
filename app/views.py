@@ -29,9 +29,16 @@ def index():
 @main.route('/UI/views/<string:name>')
 @login_required
 def UIView(name):
-    if name == 'emerge_ops' and \
-            not CheckPrivilege(current_user, '/api/emerge_ops', MethodType.Execute):
-        return render_template("errors/403.html")
+    protection = current_app.config['UI_PROTECTION']
+    if current_app.config['NEED_UI_PROTECTION']:
+        ''' if name == 'emerge_ops' and \
+                not CheckPrivilege(current_user, '/api/emerge_ops', MethodType.Authorize):
+            return render_template("errors/403.html") '''
+        protection = dict(zip(protection['ui_element'], protection['ui_uri']))
+        ui_element = '#' + name
+        if ui_element in protection.keys() and \
+            not CheckPrivilege(current_user, protection[ui_element], MethodType.Authorize):
+            return render_template('errors/403.html')
     return render_template("{}.html".format(name))
 
 @main.route('/UI/dialogs/<string:name>')

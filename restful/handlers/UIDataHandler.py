@@ -55,14 +55,14 @@ class UIDataApi(Resource):
     def sideBarCtrl(self):
         systems = TradeSystem.query.filter(TradeSystem.parent_sys_id == None).all()
         rtn = []
-        privileged = CheckPrivilege(current_user, '/api/emerge_ops', MethodType.Execute)
+        # privileged = CheckPrivilege(current_user, '/api/emerge_ops', MethodType.Authorize)
         for sys in systems:
             system = {
                 'id': sys.id,
                 'icon': 'am-icon-table',
                 'name': sys.name,
                 'desc': sys.description,
-                'isSecond': len(sys.operation_groups.all()) > 0 or privileged,
+                'isSecond': len(sys.operation_groups.all()) > 0,
                 'isShow': False,
                 'Url': '#statics/{}'.format(sys.id),
                 'secondName': [
@@ -74,11 +74,11 @@ class UIDataApi(Resource):
                         'is_emerge': group.is_emergency
                     } for group in sys.operation_groups]
             }
-            if privileged:
-                system['emerge_ops'] = {
-                    'name': u'全部操作节点',
-                    'Url': '#system/{}/operate-books'.format(sys.id)
-                }
+            # if privileged:
+            system['emerge_ops'] = {
+                'name': u'全部操作节点',
+                'Url': '#system/{}/operate-books'.format(sys.id)
+            }
             rtn.append(system)
         return rtn
 

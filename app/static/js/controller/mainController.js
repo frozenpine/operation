@@ -5,28 +5,18 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
     $scope.opGroupEditList = {};
     $scope.grpOrderEdit = {};
 
-    /* $('body').on('scroll', function(event) {
-        if (event.offsetY >= 86) {
-            $timeout(function() {
-                $scope.messagePosition = {
-                    position: "fixed",
-                    top: "3px",
-                    left: 0,
-                    right: "15px",
-                    zIndex: "999"
-                };
-            });
+    $scope.showModalDialog = function(options) {
+        if ($scope.privileges[options.target]) {
+            $(options.target).modal(options);
         } else {
-            $timeout(function() {
-                $scope.messagePosition = {};
-            });
+            $message.Warning('该用户无此权限。');
         }
-    }); */
+    };
 
     /* Code 4 SideBar Start */
     $scope.tabList = [];
     var idList = [];
-    $scope.$on('$routeChangeStart', function(evt, next, current) {
+    $scope.$on('$routeChangeSuccess', function(evt, next, current) {
         if (next.params.hasOwnProperty('sysid')) {
             if ($scope.listName === undefined) {
                 var watch_onece = $scope.$watch('listName', function() {
@@ -239,7 +229,11 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
 
     /* Code 4 User Start */
     $scope.ModifyPassword = function(usr_id) {
-        $('#modifyPassword').modal({
+        $scope.dialogTitle = '修改密码';
+        // $scope.dialogID = 'modifyPassword';
+        $scope.dialogClass = 'am-modal-confirm';
+        $scope.dialogURI = 'UI/dialogs/modifyPassword';
+        $('#modalDialog').modal({
             relatedTarget: this,
             onConfirm: function() {
                 /* $http.put('api/user/id/' + usr_id, data = {
