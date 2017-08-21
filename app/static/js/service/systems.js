@@ -58,9 +58,9 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                if (response.hasOwnProperty('message')) {
+                /* if (response.hasOwnProperty('message')) {
                     $message.Alert(response.message);
-                }
+                } */
             });
         return true;
     };
@@ -81,7 +81,9 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                $message.Alert(response.message);
+                /* if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                } */
             });
     };
 
@@ -144,7 +146,9 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                $message.Alert(response.message);
+                /* if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                } */
             });
         return true;
     };
@@ -165,7 +169,9 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                $message.Alert(response.message);
+                /* if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                } */
             });
     };
 
@@ -230,7 +236,9 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                $message.Alert(response.message);
+                /* if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                } */
             });
         return true;
     };
@@ -258,9 +266,9 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                if (response.hasOwnProperty('message')) {
+                /* if (response.hasOwnProperty('message')) {
                     $message.Alert(response.message);
-                }
+                } */
             });
     };
 
@@ -305,9 +313,9 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                if (response.hasOwnProperty('message')) {
+                /* if (response.hasOwnProperty('message')) {
                     $message.Alert(response.message);
-                }
+                } */
             });
     };
 
@@ -327,9 +335,9 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                if (response.hasOwnProperty('message')) {
+                /* if (response.hasOwnProperty('message')) {
                     $message.Alert(response.message);
-                }
+                } */
             });
     };
 });

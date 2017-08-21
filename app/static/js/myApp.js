@@ -181,6 +181,7 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
                         if (!reconnect) {
                             console.log('[Client] Websocket connection lost.');
                             $message.Warning('Websocket connection lost, reconnect in 30s.', 30);
+                            $rootScope.$broadcast('heartbeat-lost');
                         } else {
                             console.log('[Client] Websocket re-connect failed, retry...');
                             $message.Warning('Websocket re-connect failed, retry in 30s.', 30);

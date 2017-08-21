@@ -1,4 +1,4 @@
-app.directive('digitalClock', function($interval) {
+app.directive('digitalClock', function($interval, $timeout) {
     return {
         restrict: 'AE',
         scope: {
@@ -13,7 +13,7 @@ app.directive('digitalClock', function($interval) {
             '<div class="ampm"></div>' +
             '<div class="alarm"></div>' + */
             '<div class="digits"></div>' +
-            '<div class="bold am-text-right am-text-success">' +
+            '<div class="bold am-text-right" ng-class="{true: \'am-text-success\', false: \'am-text-danger\'}[heartbeat]">' +
             '<i class="am-icon-heartbeat" style="margin-right: 3px;"></i>' +
             '{{title}}' +
             '</div>' +
@@ -22,6 +22,7 @@ app.directive('digitalClock', function($interval) {
         link: function($scope, $element, $attr) {
             var now;
             var second_interval;
+            var heartbeat;
             // Cache some selectors
             var clock = $element,
                 alarm = clock.find('.alarm'),
@@ -144,6 +145,9 @@ app.directive('digitalClock', function($interval) {
             }
 
             $scope.$on('heartbeat', function(event, data) {
+                $timeout(function() {
+                    $scope.heartbeat = true;
+                }, 0);
                 var serverTime = data.split(' ')[1].replace(/:/g, '');
                 now = serverTime.split('');
                 if (second_interval === undefined) {
@@ -153,6 +157,13 @@ app.directive('digitalClock', function($interval) {
                     update_time();
                     second_interval = $interval(update_time, 1000);
                 }
+            });
+
+            $scope.$on('heartbeat-lost', function() {
+                $timeout(function() {
+                    $scope.heartbeat = false;
+                }, 0);
+                $interval.cancel(second_interval);
             });
         }
     };
