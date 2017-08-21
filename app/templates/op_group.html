@@ -128,25 +128,25 @@
                                     <ul>
                                         <li ng-repeat="disk in data.disks">
                                             <span>
-												<div class="am-dropdown" style="cursor: pointer" ng-mouseover="showMountDetail[$index] = true"
+                                                <div class="am-dropdown" style="cursor: pointer" ng-mouseover="showMountDetail[$index] = true"
                                                 ng-mouseleave="showMountDetail[$index] = false">
-													{{disk.percent}}
-													<div class="am-dropdown-content_l" ng-show="showMountDetail[$index]" style="display: block;margin-top: 0;">
-														<table class="am-table am-text-nowrap am-table-compact" style="margin-bottom: 0px">
-															<thead>
-																<th>TOTAL</th>
-																<th>AVAILABLE</th>
-															</thead>
-															<tbody>
-																<tr>
-																	<td>{{disk.total | KB2}}</td>
-																	<td>{{disk.available | KB2}}</td>
-																</tr>
-															</tbody>
-														</table>
-													</div>
-												</div>
-											</span>
+                                                    {{disk.percent}}
+                                                    <div class="am-dropdown-content_l" ng-show="showMountDetail[$index]" style="display: block;margin-top: 0;">
+                                                        <table class="am-table am-text-nowrap am-table-compact" style="margin-bottom: 0px">
+                                                            <thead>
+                                                                <th>TOTAL</th>
+                                                                <th>AVAILABLE</th>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td>{{disk.total | KB2}}</td>
+                                                                    <td>{{disk.available | KB2}}</td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </span>
                                         </li>
                                     </ul>
                                 </td>
@@ -167,8 +167,8 @@
                 <p ng-if="opList.create_time">创建时间：{{opList.create_time}}</p>
                 <p ng-if="!opList.create_time">创建时间：未创建</p>
             </div>
-            <button ng-show="!optionGroupEditShow" ng-click="optionGroupEditAdd()" type="button" class="am-btn am-btn-primary am-round am-btn-sm am-fr">添加</button>
-            <button ng-show="optionGroupEditShow" ng-click="optionGroupEdit(opList)" type="button" class="am-btn am-btn-sm am-btn-primary am-round am-fr">编辑</button>
+            <button ng-if="privileges['#editGroup']" ng-show="!optionGroupEditShow" ng-click="optionGroupEditAdd()" type="button" class="am-btn am-btn-primary am-round am-btn-sm am-fr">添加</button>
+            <button ng-if="privileges['#editGroup']" ng-show="optionGroupEditShow" ng-click="optionGroupEdit(opList)" type="button" class="am-btn am-btn-sm am-btn-primary am-round am-fr">编辑</button>
             <div class="am-fr am-margin-right">
                 <div class="am-btn-group am-btn-group-sm">
                     <button ng-click="CheckSystemConfig(true)" class="am-btn am-btn-primary am-round">
@@ -185,7 +185,12 @@
         <div class="tpl-block">
             <div class="am-g">
                 <div class="am-u-sm-12" ng-repeat="system in configFileList">
-                    <span class="caption font-green am-inline-block am-margin-bottom-xs">{{::system.name}} 配置文件：</span>
+                    <div class="fr">
+                        <span class="caption font-green">配置文件更新于：{{configCheckDate|date:"yyyy-MM-dd HH:mm:ss"}}</span>
+                    </div>
+                    <span class="caption font-green am-inline-block am-margin-bottom-xs">
+                        {{::system.name}}：
+                    </span>
                     <ul class="am-avg-sm-4 am-avg-md-7 am-avg-lg-9 am-margin-left-sm am-margin-right-sm">
                         <li ng-repeat="conf in system.detail" class="am-padding-left-xs" style="text-align: center;">
                             <span class="am-badge am-radius" ng-class="{true: 'am-badge-danger pointer',false: 'am-badge-success', null: ''}[conf.hash_changed]" style="line-height: 30px; width: 100%" ng-click="confirmConfig(conf)">
@@ -372,7 +377,7 @@
                 </div>
                 <div class="am-fr" ng-show="optionGroupEditShow">
                     <div class="am-btn-group am-btn-group-sm">
-                        <button ng-click="InitQueue()" type="button" class="am-btn am-btn-primary am-round">初始化队列</button>
+                        <button ng-if="privileges['#initGroup']" ng-click="InitQueue()" type="button" class="am-btn am-btn-primary am-round" id="initGroup">初始化队列</button>
                         <button ng-click="resumeQueue()" type="button" class="am-btn am-btn-primary am-round" ng-disabled="opList.status_code!=14">恢复队列</button>
                         <button class="am-btn am-btn-primary am-round" ng-disabled="opList.status_code==14 || checkingSystemConfig" ng-click="runAll()">全部执行</button>
                     </div>

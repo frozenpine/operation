@@ -377,6 +377,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                     $scope.configFileList = data.records;
                     $scope.checkingSystemConfig = false;
                     $scope.configChecked = !check_failed;
+                    $scope.configCheckDate = data.last_request;
                     // console.log($scope.configChecked);
                 }, 0);
             }

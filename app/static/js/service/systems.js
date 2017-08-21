@@ -283,7 +283,7 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
         if ($sessionStorage.hasOwnProperty('configStatics_' + params.sysID)) {
             if ($sessionStorage['configStatics_' + params.sysID].hasOwnProperty('last_request')) {
                 last_request = parseInt($sessionStorage['configStatics_' + params.sysID].last_request);
-                if (!force && request_timestamp - last_request < 15 * 3600 * 1000) {
+                if (!force && request_timestamp - last_request < 0.5 * 3600 * 1000) {
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess($sessionStorage['configStatics_' + params.sysID]);
                         return;
