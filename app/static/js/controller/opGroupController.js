@@ -170,30 +170,32 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     }
 
     function TaskQueueStatus() {
-        angular.forEach($scope.opList.details, function(value, index) {
-            $timeout(function() {
-                if (index === 0 && value.exec_code === -1) {
-                    $scope.taskQueueInitial = true;
-                } else {
-                    $scope.taskQueueInitial = false;
-                }
-                if (index > 0 && $scope.opList.details[index - 1].checker.isTrue) {
-                    checked = $sessionStorage[$scope.opList.details[index - 1].uuid];
-                    $scope.opList.details[index].enabled = value.enabled && checked === true;
-                }
-                if (index < $scope.opList.details.length - 1) {
-                    $scope.taskQueueRunning = value.exec_code >= 0;
-                    if (value.checker.isTrue && $scope.opList.details[index + 1].exec_code === 0) {
-                        $sessionStorage[value.uuid] = true;
+        if ($scope.opList !== undefined) {
+            angular.forEach($scope.opList.details, function(value, index) {
+                $timeout(function() {
+                    if (index === 0 && value.exec_code === -1) {
+                        $scope.taskQueueInitial = true;
+                    } else {
+                        $scope.taskQueueInitial = false;
                     }
-                } else if (value.exec_code === 0) {
-                    $scope.taskQueueRunning = false;
-                }
-                if (value.checker.isTrue) {
-                    $scope.opList.details[index].checker.checked = $sessionStorage[value.uuid] === true;
-                }
+                    if (index > 0 && $scope.opList.details[index - 1].checker.isTrue) {
+                        checked = $sessionStorage[$scope.opList.details[index - 1].uuid];
+                        $scope.opList.details[index].enabled = value.enabled && checked === true;
+                    }
+                    if (index < $scope.opList.details.length - 1) {
+                        $scope.taskQueueRunning = value.exec_code >= 0;
+                        if (value.checker.isTrue && $scope.opList.details[index + 1].exec_code === 0) {
+                            $sessionStorage[value.uuid] = true;
+                        }
+                    } else if (value.exec_code === 0) {
+                        $scope.taskQueueRunning = false;
+                    }
+                    if (value.checker.isTrue) {
+                        $scope.opList.details[index].checker.checked = $sessionStorage[value.uuid] === true;
+                    }
+                });
             });
-        });
+        }
     }
 
     $scope.execute = function(index, id) {
@@ -328,8 +330,11 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             onSuccess: function(req) {
                 $scope.optionGroupEditPostShow = !$scope.optionGroupEditPostShow;
                 $scope.optionGroupEditShow = true;
-                $message.Success("表单提交成功");
+                $message.Success("队列属性更新成功!");
                 $scope.GetOperationList();
+                if (confirm('队列属性已更新,是否重新初始化队列?')) {
+                    $scope.InitQueue();
+                }
             },
             onError: function(req) {
                 $scope.optionGroupEditPostShow = !$scope.optionGroupEditPostShow;
