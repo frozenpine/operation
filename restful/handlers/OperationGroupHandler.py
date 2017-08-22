@@ -74,7 +74,7 @@ class OperationGroupListApi(Resource):
             db.session.commit()
             return RestProtocol(og)
 
-    ''' def put(self):
+    def put(self):
         try:
             data_list = request.get_json(force=True)
         except BadRequest:
@@ -101,7 +101,7 @@ class OperationGroupListApi(Resource):
             db.session.add_all(self.op_group_list)
             db.session.add_all(self.disabled_list)
             db.session.commit()
-            return RestProtocol(message='Success') '''
+            return RestProtocol(message='Success')
 
 
 class OperationGroupApi(Resource):
