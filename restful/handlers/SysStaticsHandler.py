@@ -8,6 +8,7 @@ import gevent
 from flask_restful import Resource
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
+from sqlalchemy.exc import NoSuchColumnError
 
 from SysManager.Common import AESCrypto
 from SysManager.configs import SSHConfig, WinRmConfig
@@ -474,7 +475,7 @@ class LoginListApi(Resource, SystemList):
                         for idx in xrange(len(src.source['formatter'])):
                             try:
                                 tmp[src.source['formatter'][idx]['key']] = unicode(result[idx])
-                            except IndexError:
+                            except (NoSuchColumnError, IndexError):
                                 tmp[src.source['formatter'][idx]['key']] = \
                                     src.source['formatter'][idx]['default']
                             tmp['updated_time'] = arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss')
