@@ -148,7 +148,7 @@ def init_inventory():
             proc = TradeProcess.find(name=sock.pop('process'))
             if proc:
                 sock['proc_id'] = proc.id
-        sockets[sock['uri']] = Socket(**sock)
+        sockets[sock['name'] + sock['uri']] = Socket(**sock)
     db.session.add_all(sockets.values())
     db.session.commit()
 
@@ -187,7 +187,7 @@ def init_sockets():
             proc = TradeProcess.find(name=sock.pop('process'))
             if proc:
                 sock['proc_id'] = proc.id
-        sockets[sock['uri']] = Socket(**sock)
+        sockets[sock['name'] + sock['uri']] = Socket(**sock)
     db.session.add_all(sockets.values())
     db.session.commit()
 
