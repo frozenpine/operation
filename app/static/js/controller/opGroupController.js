@@ -401,7 +401,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                             });
                             config.updating = false;
                         }, 0);
-                        $scope.CheckSystemConfig();
+                        $scope.CheckSystemConfig(true);
                         $message.Success('配置文件HASH值更新成功。');
                     }
                 });
