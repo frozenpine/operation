@@ -354,37 +354,37 @@
                         <span class="am-icon-cogs"> 设置中心</span>
                     </a>
                     <ul class="am-dropdown-content">
-                        <li>
+                        <!-- <li>
                             <a href="javascript: void(0)">
                                 <i class="am-icon-cog am-icon-fw"></i>
                                 <span>全局配置</span>
                             </a>
-                        </li>
+                        </li> -->
                         <!-- <li>
                             <a href="javascript: void(0)" data-am-modal="{target: '#userOptions', closeViaDimmer: false}">
                                 <i class="am-icon-users am-icon-fw"></i>
                                 <span>用户属性</span>
                             </a>
                         </li> -->
-                        <li ng-if="privileges['#defineOptionBook']">
+                        <li>
                             <a href="" ng-click="showModalDialog({target: '#defineOptionBook', closeViaDimmer: 0, width: 700})">
                                 <i class="am-icon-tasks am-icon-fw"></i>
                                 <span>添加操作节点</span>
                             </a>
                         </li>
-                        <li ng-if="privileges['#addNewGroups']">
+                        <li>
                             <a href="" ng-click="showModalDialog({target: '#addNewGroups', closeViaDimmer: 0, width: 850})">
                                 <i class="am-icon-clone am-icon-fw"></i>
                                 <span>添加操作组</span>
                             </a>
                         </li>
-                        <li ng-if="privileges['#inventory']">
+                        <li>
                             <a href="#inventory">
                                 <i class="am-icon-clone am-icon-fw"></i>
                                 <span>系统服务器配置</span>
                             </a>
                         </li>
-                        <li ng-if="privileges['#inventory']">
+                        <li>
                             <a href="" ng-click="showModalDialog({target: '#sys_ser', closeViaDimmer: 0, width: 600})">
                                 <i class="am-icon-wrench am-icon-fw"></i>
                                 <span>配置文件导入</span>

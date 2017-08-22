@@ -18,7 +18,7 @@
                                     自动刷新：
                                 </span>
                             </span>
-                            <input type="text" class="am-form-field font-green am-text-center" minlength="2" ng-model="GlobalConfigs.svrStaticsInterval.current" style="height: 25px;width: 50px;">
+                            <input type="text" class="am-form-field font-green am-text-center" minlength="2" maxlength="4" ng-model="GlobalConfigs.svrStaticsInterval.current" style="height: 25px;width: 50px;">
                             <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2">s</span>
                         </div>
                     </div>
@@ -182,19 +182,19 @@
                                     自动刷新：
                                 </span>
                             </span>
-                            <input type="text" class="am-form-field font-green am-text-center" ng-model="GlobalConfigs.sysStaticsInterval.current" minlength="2" style="height: 25px;width: 50px;">
+                            <input type="text" class="am-form-field font-green am-text-center" ng-model="GlobalConfigs.sysStaticsInterval.current" minlength="2" maxlength="4" style="height: 25px;width: 50px;">
                             <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2"> s</span>
                         </div>
                     </div>
                 </div>
-                <div class="am-margin-left-sm am-vertical-align-middle">
+                <!-- <div class="am-margin-left-sm am-vertical-align-middle">
                     <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 150px">
                         <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2">
                             <i class="am-icon-search am-icon-fw"></i>
                         </span>
                         <input type="text" class="am-form-field" style="height: 25px" placeholder="关键字过滤系统" ng-model="keyword">
                     </div>
-                </div>
+                </div> -->
             </div>
         </div>
         <div class="tpl-block" ng-show="sysShowDetail">
@@ -336,7 +336,7 @@
                                     自动刷新：
                                 </span>
                             </span>
-                            <input type="text" class="am-form-field font-green am-text-center" ng-model="GlobalConfigs.loginStaticsInterval.current" minlength="2" style="height: 25px;width: 50px;">
+                            <input type="text" class="am-form-field font-green am-text-center" ng-model="GlobalConfigs.loginStaticsInterval.current" minlength="2" maxlength="4" style="height: 25px;width: 50px;">
                             <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2"> s</span>
                         </div>
                     </div>
@@ -410,7 +410,7 @@
                                     自动刷新：
                                 </span>
                             </span>
-                            <input type="text" class="am-form-field font-green am-text-center" ng-model="GlobalConfigs.sessionStaticsInterval.current" minlength="2" style="height: 25px;width: 50px;">
+                            <input type="text" class="am-form-field font-green am-text-center" ng-model="GlobalConfigs.sessionStaticsInterval.current" minlength="2" maxlength="4" style="height: 25px;width: 50px;">
                             <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2"> s</span>
                         </div>
                     </div>

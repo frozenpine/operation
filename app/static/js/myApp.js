@@ -155,7 +155,7 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
                 ws.onopen = function() {
                     unload = false;
                     console.log("[Client] Websocket connected successfully.");
-                    $message.Success('Websocket connected successfully.');
+                    $message.Success('Websocket连接成功.');
                     connected = true;
                     reconnect = false;
                     ws.send(JSON.stringify({
@@ -179,7 +179,7 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
                     connected = false;
                     $interval.cancel(heatbeat_interval);
                     console.log('[Client] Websocket connection error.');
-                    $message.Alert('Websocket connection error.');
+                    // $message.Alert('Websocket连接错误.', 30);
                 };
 
                 ws.onclose = function() {
@@ -188,11 +188,11 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
                     if (!unload) {
                         if (!reconnect) {
                             console.log('[Client] Websocket connection lost.');
-                            $message.Warning('Websocket connection lost, reconnect in 30s.', 30);
+                            $message.Warning('Websocket连接中断, 将在30s后重连.', 30);
                             $rootScope.$broadcast('heartbeat-lost');
                         } else {
                             console.log('[Client] Websocket re-connect failed, retry...');
-                            $message.Warning('Websocket re-connect failed, retry in 30s.', 30);
+                            $message.Warning('Websocket连接失败, 将在30s后重连.', 30);
                         }
                         $timeout(init, 30000);
                         reconnect = true;
@@ -224,7 +224,7 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
                 });
             } else if (msg.hasOwnProperty('message')) {
                 console.log('[Server] Message from server: ' + msg.message);
-                $message.Info(msg.message);
+                // $message.Info(msg.message);
             } else if (msg.hasOwnProperty('error')) {
                 console.log('[Server] Message from server: ' + msg.error);
                 $message.Alert(msg.error);
@@ -235,7 +235,7 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
             } else if (msg.hasOwnProperty('topic')) {
                 switch (msg.topic) {
                     case "public":
-                        $message.Info(msg.data);
+                        // $message.Info(msg.data);
                         $timeout(function() {
                             $sessionStorage.messages.push(msg.data);
                         }, 0);
