@@ -175,6 +175,15 @@ def init_inventory():
     db.session.add_all(datasources)
     db.session.commit()
 
+    config_files = []
+    for conf in inventory['ConfigFiles']:
+        conf['proc_id'] = processes[conf.pop('process')].id
+        typ, cat = conf.pop('config_type').split('.')
+        conf['config_type'] = getattr(globals()[typ], cat).value
+        config_files.append(ConfigFile(**conf))
+    db.session.add_all(config_files)
+    db.session.commit()
+
 
 @manager.command
 def init_sockets():
