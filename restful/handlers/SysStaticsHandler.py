@@ -375,6 +375,71 @@ class ProcStaticApi(Resource, SystemList):
         else:
             return RestProtocol(message='System not found', error_code=-1), 404
 
+class ProcVersionApi(Resource):
+    def __init__(self):
+        super(ProcVersionApi, self).__init__()
+        self.proc_list = {}
+        self.checker = []
+        self.rtn = {}
+
+    def find_processes(self, sys):
+        for proc in sys.processes:
+            key = (proc.server.ip, sys.user, sys.password)
+            if not self.proc_list.has_key(key):
+                self.proc_list[key] = []
+            self.proc_list[key].append(proc)
+
+    def check_proc(self, entry, processes):
+        conf = SSHConfig(
+            entry[0],
+            entry[1],
+            entry[2]
+        )
+        executor = Executor.Create(conf)
+        if not executor:
+            logging.warning(
+                'Executor init failed with ip: {ip}, user: {user}' \
+                    .format(ip=conf.remote_host, user=conf.remote_user)
+            )
+            return
+        for proc in processes:
+            if proc.version_method:
+                mod = {
+                    'name': proc.version_method,
+                    'args': {
+                        'dir': proc.base_dir,
+                        'file': proc.exec_file
+                    }
+                }
+                proc.version = executor.run(mod).lines
+            gevent.sleep(0)
+
+    def get(self, **kwargs):
+        sys = TradeSystem.find(**kwargs)
+        if sys:
+            self.find_processes(sys)
+            for entry, proc_list in self.proc_list.iteritems():
+                self.checker.append(
+                    gevent.spawn(self.check_proc, entry, proc_list)
+                )
+            gevent.joinall(self.checker)
+            rtn = {
+                'name': sys.name,
+                'updated_time': arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss'),
+                'version': sys.version,
+                'detail': [{
+                    'id': proc.id,
+                    'process': proc.name,
+                    'proc_role': "{}".format(proc.type.name),
+                    'version': proc.version,
+                    'server':
+                        proc.server.name + "({})".format(proc.server.ip),
+                } for proc in sys.processes]
+            }
+            return RestProtocol(rtn)
+        else:
+            return RestProtocol(message='System not found', error_code=-1), 404
+
 class LoginListApi(Resource, SystemList):
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)

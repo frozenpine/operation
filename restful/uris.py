@@ -27,8 +27,8 @@ from .handlers.ProcessHandler import ProcessApi, ProcessListApi
 from .handlers.RoleHandler import RoleApi, RoleListApi
 from .handlers.SysStaticsHandler import (ConfigCheckApi, ConfigListApi,
                                          LoginCheckApi, LoginListApi,
-                                         ProcStaticApi, ServerStaticApi,
-                                         ServerStaticListApi,
+                                         ProcStaticApi, ProcVersionApi,
+                                         ServerStaticApi, ServerStaticListApi,
                                          SystemStaticListApi,
                                          UserSessionListApi)
 from .handlers.SystemHandler import (SystemApi, SystemFindOperationBookApi,
@@ -261,6 +261,13 @@ resources.add_resource(
     '/system/id/<int:id>/sys_statics/check/',
     methods=['GET'],
     endpoint='proc_statics'
+)
+
+resources.add_resource(
+    ProcVersionApi,
+    '/system/id/<int:id>/processes/version',
+    methods=['GET'],
+    endpoint='proc_version'
 )
 
 resources.add_resource(

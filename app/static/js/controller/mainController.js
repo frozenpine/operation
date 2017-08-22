@@ -1,4 +1,4 @@
-app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout', '$uidatas', '$operationBooks', '$users', '$message', function($scope, $rootScope, $location, $timeout, $uidatas, $operationBooks, $users, $message) {
+app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout', '$uidatas', '$operationBooks', '$users', '$message', '$systems', function($scope, $rootScope, $location, $timeout, $uidatas, $operationBooks, $users, $message, $systems) {
     $rootScope.staticsShow = true;
     $scope.messagePosition = {};
     $scope.opGroupTriggerTime = {};
@@ -11,6 +11,17 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
         } else {
             $message.Warning('该用户无此权限。');
         }
+    };
+
+    $scope.CheckProcVersion = function(sysid, success_fn) {
+        $systems.QuantdoVersionCheck({
+            sysID: sysid,
+            onSuccess: function(data) {
+                if (success_fn !== undefined) {
+                    success_fn(data);
+                }
+            }
+        });
     };
 
     /* Code 4 SideBar Start */
