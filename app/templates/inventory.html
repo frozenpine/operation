@@ -13,14 +13,14 @@
 
     <div class="am-g">
         <div class="am-u-sm-6" style="padding-left: 0;padding-right: 0;">
-            <div class="tpl-portlet-components" style="height: 280px;overflow-y: auto;overflow-x:hidden;" ng-click="clearSysData()">
+            <div class="tpl-portlet-components" ng-click="clearSysData()">
                 <div class="portlet-title">
                     <div class="caption font-green bold">
                         服务器信息
                     </div>
                     <button ng-click="addSvrOrSystem(true)" type="button" class="am-btn am-btn-sm am-btn-primary am-round am-fr">添加</button>
                 </div>
-                <div class="tpl-block">
+                <div class="tpl-block" style="height: 280px;overflow-y: auto;overflow-x: hidden;">
                     <div class="am-g">
                         <div class="am-u-sm-12">
                             <table class="am-table am-table-hover table-main" style="margin-bottom: .7rem;">
@@ -45,14 +45,14 @@
             </div>
         </div>
         <div class="am-u-sm-6" style="padding-right: 0;padding-left: 10px;">
-            <div class="tpl-portlet-components" style="height: 280px;overflow-y: auto;overflow-x:hidden;" ng-click="clearSysData()">
+            <div class="tpl-portlet-components" ng-click="clearSysData()">
                 <div class="portlet-title">
                     <div class="caption font-green bold">
                         系统信息
                     </div>
                     <button ng-click="addSvrOrSystem(false)" type="button" class="am-btn am-btn-sm am-btn-primary am-round am-fr">添加</button>
                 </div>
-                <div class="tpl-block">
+                <div class="tpl-block" style="height: 280px;overflow-y: auto;">
                     <ul ng-include="'systemTree'" class="am-list admin-sidebar-list am-list-border">
                     </ul>
                     <script id="systemTree" type="text/ng-template">
