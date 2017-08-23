@@ -18,11 +18,17 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
         operations: []
     };
     $scope.optionGroupDataBackup = [];
-    $scope.optionBookInSysId = function(id) {
+    $scope.optionBookInSysId = function() {
+        var id = optionGroupConfirm.operation_group.sys_id;
+        if (id === null || id === undefined) {
+            return;
+        }
         $operationBooks.systemOptionBooksGet({
             sys_id: id,
             onSuccess: function(res) {
+                // $timeout(function() {
                 $scope.optionGroupDataBackup = res.records;
+                // });
             },
             onError: function(res) {
                 console.log(res);
