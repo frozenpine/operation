@@ -53,7 +53,10 @@ class UIDataApi(Resource):
         return rtn
 
     def sideBarCtrl(self):
-        systems = TradeSystem.query.filter(TradeSystem.parent_sys_id == None).all()
+        systems = TradeSystem.query.filter(
+            TradeSystem.parent_sys_id == None,
+            TradeSystem.disabled == False
+        ).all()
         rtn = []
         # privileged = CheckPrivilege(current_user, '/api/emerge_ops', MethodType.Authorize)
         for sys in systems:
