@@ -339,10 +339,10 @@
                             <ul sv-root sv-part="optionGroupEditList.operations">
                                 <li ng-repeat="data in optionGroupEditList.operations" sv-element>
                                     <div class="am-u-sm-2" style="padding: 0;">
-                                        <input type="text" style="padding: 5px 5px 5px 0;border: none;" value="data.operation_name" ng-model="data.operation_name" maxlength="10" />
+                                        <input type="text" style="padding: 5px 5px 5px 0;border: none;" value="data.operation_name" ng-model="data.operation_name" maxlength="20" />
                                     </div>
                                     <div class="am-u-sm-3" style="padding-left: 4px;">
-                                        <input type="text" style="padding: 5px 5px 5px 0;border: none;" value="data.description" ng-model="data.description" maxlength="30" />
+                                        <input type="text" style="padding: 5px 5px 5px 0;border: none;" value="data.description" ng-model="data.description" maxlength="50" />
                                     </div>
                                     <div class="am-u-sm-1" style="padding-left: 6px;">
                                         <input name="startTime{{$index}}" type="time" style="padding: 5px 5px 5px 0;border: none;" ng-model="data.earliest" />

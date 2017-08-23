@@ -46,13 +46,13 @@
                         <label for="doc-ipt-3-b" class="am-u-sm-2 am-form-label font-green">操作组名</label>
                         <div class="am-u-sm-5">
                             <input type="text" name="optionGroup_name" ng-model="optionGroupName" ng-class="{true: 'invalid', false: ''}[optionGroupConfirm.operation_group.sys_id!==null && optionGroupName===undefined]" ng-disabled="optionGroupConfirm.operation_group.sys_id===null"
-                                placeholder="必填项" maxlength="10" required>
+                                placeholder="必填项" maxlength="20" required>
                         </div>
                     </div>
                     <div class="am-form-group am-form-icon font-green am-g">
                         <label for="doc-ipt-3-b" class="am-u-sm-2 am-form-label font-green">操作组描述</label>
                         <div class="am-u-sm-3">
-                            <input type="text" name="optionGroup_des" ng-model="optionGroupDescription" ng-disabled="optionGroupConfirm.operation_group.sys_id===null" maxlength="30" placeholder="选填项">
+                            <input type="text" name="optionGroup_des" ng-model="optionGroupDescription" ng-disabled="optionGroupConfirm.operation_group.sys_id===null" maxlength="50" placeholder="选填项">
                         </div>
                         <label for="doc-ipt-3-b" class="am-u-sm-2 am-form-label font-green">初始化时间</label>
                         <div class="am-u-sm-2">
@@ -189,7 +189,7 @@
                         <label for="doc-ipt-3-b" class="am-u-sm-2 am-form-label">名称</label>
                         <div class="am-u-sm-3">
                             <input type="text" name="optionGroup_name" ng-disabled="optionBookEditData.sys=='' || optionBookEditData.sys==undefined" id="doc-ipt-3-b" value="optionBookEditData.name" ng-model="optionBookEditData.name" placeholder="必填项" ng-class="{true: 'invalid', false: ''}[optionBookEditData.name===undefined]"
-                                maxlength="10" required>
+                                maxlength="20" required>
                         </div>
                         <label for="doc-ipt-3-d" class="am-u-sm-2 am-form-label">分类</label>
                         <div class="am-u-sm-5">
@@ -202,7 +202,7 @@
                     <div class="am-form-group am-form-icon font-green">
                         <label for="doc-ipt-3-c" class="am-u-sm-2 am-form-label">描述</label>
                         <div class="am-u-sm-10">
-                            <input type="text" name="optionGroup_des" id="doc-ipt-3-c" ng-disabled="optionBookEditData.sys=='' || optionBookEditData.sys==undefined" ng-model="optionBookEditData.description" maxlength="30" placeholder="选填项">
+                            <input type="text" name="optionGroup_des" id="doc-ipt-3-c" ng-disabled="optionBookEditData.sys=='' || optionBookEditData.sys==undefined" ng-model="optionBookEditData.description" maxlength="50" placeholder="选填项">
                         </div>
                     </div>
                     <div class="am-form-group am-form-icon font-green" ng-repeat="data in optionBookCommand track by $index">
@@ -447,7 +447,7 @@
                                 <li ng-repeat="children in opGroupEditList[data.id]" ng-show="!children.disabled" sv-element>
                                     <div style="padding: 12px 8px 12px 10px;font-size: 12px">
                                         <span class="am-inline-block">
-                                            <input type="text" ng-model="children.name" style="width: 50px;background-color: transparent;margin-top: -5px;font-size: 12px" ng-class="{true: 'invalid', false: ''}[children.name === undefined]" required> -
+                                            <input type="text" ng-model="children.name" style="width: 50px;background-color: transparent;margin-top: -5px;font-size: 12px" ng-class="{true: 'invalid', false: ''}[children.name === undefined]" maxlength="20" required> -
                                             <input type="time" ng-model="children.trigger_time" style="background-color: transparent;margin-top: -5px;font-size:12px" ng-class="{true: 'invalid', false: ''}[children.trigger_time === undefined]" required>
                                         </span>
                                         <span style="cursor: pointer;" ng-show="grpOrderEdit[data.id]" sv-handle class="am-icon-bars am-inline-block"></span>
@@ -502,7 +502,7 @@
                                 <li ng-repeat="children in opGroupEditList[data.id]" ng-show="!children.disabled" style="vertical-align: center;" sv-element>
                                     <div style="padding: 10px 0 10px 20px; font-size: 14px">
                                         <span class="am-icon-circle am-inline-block">
-                                            <input type="text" ng-model="children.name" style="width: 60px;background-color: transparent;font-size: 14px;" ng-class="{true: 'invalid', false: ''}[children.name === undefined]" required> -
+                                            <input type="text" ng-model="children.name" style="width: 60px;background-color: transparent;font-size: 14px;" ng-class="{true: 'invalid', false: ''}[children.name === undefined]" maxlength="20" required> -
                                             <input type="time" style="background-color: transparent;font-size: 14px" ng-model="children.trigger_time" ng-class="{true: 'invalid', false:''}[children.trigger_time === undefined]" required>
                                         </span>
                                         <span style="cursor: pointer;" sv-handle class="am-icon-bars am-inline-block"></span>
