@@ -84,6 +84,30 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
     };
     // $scope.formComfirm = false;
     $scope.loadingIcon = false;
+
+    $scope.resetDialog = function() {
+        $scope.loadingIcon = !$scope.loadingIcon;
+        $scope.optionGroupConfirm = {
+            operation_group: {
+                sys_id: null,
+                name: null,
+                description: null,
+                trigger_time: null,
+                is_emergency: false
+            },
+            operations: []
+        };
+        $scope.optionGroupName = undefined;
+        $scope.optionGroupDescription = undefined;
+        $scope.optionGroupInittime = undefined;
+        $scope.optionGroupEmerge = false;
+        $scope.optionNowSelect = undefined;
+        $scope.optionShow = false;
+        $scope.detailInfo = "";
+        $scope.optionGroupConfirmIsNull = true;
+        $scope.optionGroupDataBackup = undefined;
+    };
+
     $scope.addNewGroup = function() {
         // $scope.formComfirm = !$scope.formComfirm;
         $scope.loadingIcon = !$scope.loadingIcon;
@@ -95,7 +119,7 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
         $operationBooks.systemOptionGroupPost({
             data: $scope.optionGroupConfirm,
             onSuccess: function(response) {
-                $timeout(function() {
+                /* $timeout(function() {
                     $scope.loadingIcon = !$scope.loadingIcon;
                     $scope.optionGroupConfirm = {
                         operation_group: {
@@ -117,7 +141,9 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
                     $scope.optionGroupConfirmIsNull = true;
                     $scope.optionGroupDataBackup = undefined;
                     // $scope.formComfirm = false;
-                }, 0);
+                }, 0); */
+
+                $scope.resetDialog();
 
                 $rootScope.$broadcast('OperationGroupRenew');
                 $('#addNewGroups').modal('close');

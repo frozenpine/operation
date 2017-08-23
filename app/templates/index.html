@@ -31,7 +31,7 @@
         <div class="am-modal-dialog">
             <form class="am-form am-form-horizontal" name="optionSubmitName" ng-submit="addNewGroup()">
                 <div class="am-modal-hd font-green bold">新增操作组
-                    <a href="javascript: void(0)" class="am-close am-close-spin" data-am-modal-close>&times;</a>
+                    <a href="javascript: void(0)" class="am-close am-close-spin" ng-click="resetDialog()" data-am-modal-close>&times;</a>
                 </div>
                 <div id="modalInfoShowAdd"></div>
                 <div class="am-modal-bd">
@@ -131,7 +131,7 @@
                     </div>
                 </div>
                 <div class="am-modal-footer am-u-sm-12">
-                    <span class="am-modal-btn am-u-sm-6" data-am-modal-cancel>取消</span>
+                    <span class="am-modal-btn am-u-sm-6" ng-click="resetDialog()" data-am-modal-cancel>取消</span>
                     <button type="submit" class="am-btn am-btn-primary am-u-sm-6" style="height: 44px;" ng-disabled="optionGroupName == undefined || optionGroupInittime == undefined || optionGroupConfirmIsNull">
                         确定  
                         <span class="am-icon-refresh am-icon-spin" ng-show="loadingIcon"></span>
@@ -145,7 +145,7 @@
         <div class="am-modal-dialog">
             <form class="am-form am-form-horizontal" name="opBookDefine" ng-submit="">
                 <div class="am-modal-hd font-green bold">定义操作
-                    <a href="javascript: void(0)" class="am-close am-close-spin" data-am-modal-close>&times;</a>
+                    <a href="javascript: void(0)" class="am-close am-close-spin" ng-click="resetDialog()" data-am-modal-close>&times;</a>
                 </div>
                 <div id="modalInfoShowDefine"></div>
                 <div class="am-modal-bd">
@@ -222,7 +222,7 @@
                     </div>
                 </div>
                 <div class="am-modal-footer am-u-sm-12">
-                    <span class="am-modal-btn am-u-sm-6" data-am-modal-cancel>取消</span>
+                    <span class="am-modal-btn am-u-sm-6" ng-click="resetDialog()" data-am-modal-cancel>取消</span>
                     <button ng-disabled="opBookDefine.$invalid || !opBookShellFine" ng-click="optionBookEditPost()" type="submit" class="am-btn am-btn-primary am-u-sm-6" style="height: 44px;">
                         确定  
                     </button>
