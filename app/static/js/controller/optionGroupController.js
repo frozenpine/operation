@@ -19,7 +19,7 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
     };
     $scope.optionGroupDataBackup = [];
     $scope.optionBookInSysId = function() {
-        var id = optionGroupConfirm.operation_group.sys_id;
+        var id = $scope.optionGroupConfirm.operation_group.sys_id;
         if (id === null || id === undefined) {
             return;
         }

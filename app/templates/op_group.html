@@ -374,9 +374,9 @@
                 </div>
                 <div class="am-fr" ng-show="optionGroupEditShow">
                     <div class="am-btn-group am-btn-group-sm">
-                        <button ng-if="privileges['#initGroup']" ng-click="InitQueue()" type="button" class="am-btn am-btn-primary am-round" id="initGroup">初始化队列</button>
+                        <button ng-if="privileges['#initGroup']" ng-click="InitQueue()" type="button" class="am-btn am-btn-danger am-round" id="initGroup">初始化队列</button>
                         <button ng-click="resumeQueue()" type="button" class="am-btn am-btn-primary am-round" ng-disabled="opList.status_code!=14">恢复队列</button>
-                        <button class="am-btn am-btn-primary am-round" ng-disabled="opList.status_code==14 || checkingSystemConfig" ng-click="runAll()">全部执行</button>
+                        <button class="am-btn am-btn-success am-round" ng-disabled="opList.status_code==14 || checkingSystemConfig" ng-click="runAll()">全部执行</button>
                     </div>
                 </div>
                 <div class="am-fr" ng-show="!optionGroupEditShow">

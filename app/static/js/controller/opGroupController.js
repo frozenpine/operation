@@ -332,7 +332,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                 $scope.optionGroupEditShow = true;
                 $message.Success("队列属性更新成功!");
                 $scope.GetOperationList();
-                if (confirm('队列属性已更新,是否重新初始化队列?')) {
+                if (!$scope.taskQueueRunning && !$scope.taskQueueInitial && confirm('队列属性已更新,是否重新初始化队列?')) {
                     $scope.InitQueue();
                 }
             },
@@ -353,6 +353,13 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     $scope.$watch('taskQueueInitial', function(newValue, oldValue) {
         if (newValue !== oldValue && newValue) {
             $scope.CheckSystemConfig();
+        }
+    });
+
+    $scope.$watch('taskQueueRunning', function(newValue, oldValue) {
+        if (newValue) {
+            $scope.checkingSystemConfig = false;
+            $scope.configChecked = true;
         }
     });
 

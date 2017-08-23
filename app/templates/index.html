@@ -38,7 +38,7 @@
                     <div class="am-form-group am-form-icon font-green am-g">
                         <label for="doc-ipt-3-a" class="am-u-sm-2 am-form-label">系统名</label>
                         <div class="am-u-sm-3">
-                            <select id="doc-ipt-3-a" ng-model="optionGroupConfirm.operation_group.sys_id" ng-change="optionBookInSysId(optionGroupConfirm.operation_group.sys_id)" ng-options="x.id as x.name for x in optionGroupSystem">
+                            <select id="doc-ipt-3-a" ng-model="optionGroupConfirm.operation_group.sys_id" ng-change="optionBookInSysId()" ng-options="x.id as x.name for x in optionGroupSystem">
                                 <!-- <option value="{{x.id}}" ng-repeat="x in optionGroupSystem">{{x.name}}</option> -->
                                 <option value="">--请选择--</option>
                             </select>
@@ -384,12 +384,12 @@
                                 <span>系统服务器配置</span>
                             </a>
                         </li>
-                        <li>
+                        <!-- <li>
                             <a href="" ng-click="showModalDialog({target: '#sys_ser', closeViaDimmer: 0, width: 600})">
                                 <i class="am-icon-wrench am-icon-fw"></i>
                                 <span>配置文件导入</span>
                             </a>
-                        </li>
+                        </li> -->
                     </ul>
                 </li>
                 <li class="am-dropdown" data-am-dropdown data-am-dropdown-toggle>
