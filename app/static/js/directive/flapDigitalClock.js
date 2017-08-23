@@ -107,6 +107,8 @@ app.directive('digitalClock', function($interval, $timeout) {
                         hour_2 = 0;
                     }
                 }
+                now[0] = hour_1.toString();
+                now[1] = hour_2.toString();
                 now[2] = minute_1.toString();
                 now[3] = minute_2.toString();
                 now[4] = second_1.toString();
