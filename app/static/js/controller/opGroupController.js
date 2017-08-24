@@ -316,6 +316,16 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     $scope.optionGroupEditAdd = function() {
         $scope.optionGroupEditList.operations.push({});
     };
+    $scope.obChange = function(op_item) {
+        var selected_ob;
+        angular.forEach($scope.optionBooks, function(value, index) {
+            if (value.id == op_item.book_id) {
+                selected_ob = value;
+            }
+        });
+        op_item.operation_name = angular.copy(selected_ob.name);
+        op_item.description = angular.copy(selected_ob.description);
+    };
     $scope.optionGroupEditCancel = function() {
         $scope.optionGroupEditShow = !$scope.optionGroupEditShow;
     };
