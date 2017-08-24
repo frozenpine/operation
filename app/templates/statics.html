@@ -28,7 +28,7 @@
                         <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2">
                             <i class="am-icon-search am-icon-fw"></i>
                         </span>
-                        <input type="text" class="am-form-field" style="height: 25px" placeholder="IP关键字过滤" ng-model="keyword">
+                        <input type="text" class="am-form-field" style="height: 25px" placeholder="IP 过滤" ng-model="keyword">
                     </div>
                 </div>
             </div>
@@ -187,19 +187,19 @@
                         </div>
                     </div>
                 </div>
-                <!-- <div class="am-margin-left-sm am-vertical-align-middle">
+                <div class="am-margin-left-sm am-vertical-align-middle">
                     <div class="am-input-group am-input-group-sm am-input-group-secondary" style="width: 150px">
                         <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2">
                             <i class="am-icon-search am-icon-fw"></i>
                         </span>
-                        <input type="text" class="am-form-field" style="height: 25px" placeholder="关键字过滤系统" ng-model="keyword">
+                        <input type="text" class="am-form-field" style="height: 25px" placeholder="进程名过滤" ng-model="keyword">
                     </div>
-                </div> -->
+                </div>
             </div>
         </div>
         <div class="tpl-block" ng-show="sysShowDetail">
             <div class="am-g">
-                <div class="am-u-sm-12" ng-repeat="data in systemStatics | filter: keyword">
+                <div class="am-u-sm-12" ng-repeat="data in systemStatics | filter: {detail: {process: keyword}}">
                     <span class="am-icon-angle-double-right" style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169); cursor: pointer"> 子系统名称 ： {{::data.name}} - {{::data.version}}</span>
                     <span class="am-fr" style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169);"> 最后更新：{{data.updated_time}}</span>
                     <table class="am-table am-table-hover table-main">
@@ -216,7 +216,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr ng-repeat="child in data.detail" ng-class="{true: 'am-danger', false: ''}[child.status.stat=='stopped']">
+                            <tr ng-repeat="child in data.detail|filter: keyword" ng-class="{true: 'am-danger', false: ''}[child.status.stat=='stopped']">
                                 <td class="table-data">
                                     <span class="am-dropdown" ng-mouseover="showProcVer[$index] = true" ng-mouseleave="showProcVer[$index] = false" style="cursor: pointer">
                                         {{::child.process}}
