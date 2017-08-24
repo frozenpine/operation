@@ -273,9 +273,38 @@ class OperationListRunAllApi(OperationMixin, Resource):
     def __init__(self):
         super(OperationListRunAllApi, self).__init__()
 
+    def check_privileges(self, op_group):
+        need_auth = reduce(
+            lambda x, y: x.need_authorization or y.need_authorization,
+            op_group.operations
+        )
+        if need_auth:
+            if request.headers.has_key('Authorizor'):
+                # username, password = request.headers['Authorizor'].split('\n')
+                author = json.loads(request.headers['Authorizor'])
+            else:
+                raise NoPrivilege(u'请输入授权用户')
+            if author['username'] == current_user.login:
+                raise LoopAuthorization
+            else:
+                authorizor = Operator.find(login=author['username'])
+                if authorizor and authorizor.verify_password(author['password']):
+                    if not CheckPrivilege(authorizor, '/api/operation/id/', MethodType.Authorize):
+                        raise NoPrivilege
+                    else:
+                        return authorizor
+                else:
+                    raise InvalidUsernameOrPassword
+        else:
+            return None
+
     def get(self, **kwargs):
         op_group = OperationGroup.find(**kwargs)
         if op_group:
+            try:
+                author = self.check_privileges(op_group)
+            except AuthError as err:
+                return RestProtocol(error_code=err.status_code, message=err.message)
             if current_user.is_authenticated:
                 operator = current_user
             else:
@@ -284,6 +313,11 @@ class OperationListRunAllApi(OperationMixin, Resource):
                 'operator_id': operator.id,
                 'operated_at': unicode(arrow.utcnow())
             }
+            if author:
+                session.update({
+                    'authorizor_id': author.id,
+                    'authorized_at': unicode(arrow.utcnow())
+                })
             ret_code, data = taskManager.run_all(
                 op_group.uuid,
                 json.dumps(session)
@@ -311,14 +345,15 @@ class OperationApi(OperationMixin, Resource):
                 raise ExecuteTimeOutOfRange(op.time_range)
         if op.need_authorization:
             if request.headers.has_key('Authorizor'):
-                username, password = request.headers['Authorizor'].split('\n')
+                # username, password = request.headers['Authorizor'].split('\n')
+                author = json.loads(request.headers['Authorizor'])
             else:
-                raise NoPrivilege('Please specify an authorizor.')
-            if username == current_user.login:
+                raise NoPrivilege(u'请输入授权用户')
+            if author['username'] == current_user.login:
                 raise LoopAuthorization
             else:
-                authorizor = Operator.find(login=username)
-                if authorizor and authorizor.verify_password(password):
+                authorizor = Operator.find(login=author['username'])
+                if authorizor and authorizor.verify_password(author['password']):
                     if not CheckPrivilege(authorizor, '/api/operation/id/', MethodType.Authorize):
                         raise NoPrivilege
                     else:
@@ -337,7 +372,7 @@ class OperationApi(OperationMixin, Resource):
                         'operation_id': op.id,
                         'operator_id': current_user.id,
                         'operated_at': unicode(arrow.utcnow()),
-                        'authorizor_id': author and author.uuid or None,
+                        'authorizor_id': author and author.id or None,
                         'authorized_at': author and unicode(arrow.utcnow()) or None
                     }
                     taskManager.run_next(

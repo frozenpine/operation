@@ -125,12 +125,37 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                 terminate = true;
                 value.enabled = false;
             }
+            if (value.need_authorized) {
+                need_authorization = true;
+            }
         });
-        if (!terminate) {
+        if (!terminate && !need_authorization) {
             $operations.RunAll({
                 groupID: $routeParams.grpid,
                 onSuccess: function(data) {
                     $message.Info('批量任务执行开始');
+                }
+            });
+        } else if (need_authorization) {
+            $('#authorizor').bind('authorize.quantdo', function(event, data) {
+                $('#authorizor').unbind('authorize.quantdo');
+                $operations.RunAll({
+                    groupID: $routeParams.grpid,
+                    authorizor: data,
+                    onSuccess: function(data) {
+                        $message.Info('批量任务执行开始');
+                    },
+                    onError: function(response) {
+                        console.log(response);
+                        $message.Warning(response.message);
+                    }
+                });
+            });
+            $('#authorizor').modal({
+                relatedTarget: this,
+                onCancel: function() {
+                    $('#authorizeUser').val('');
+                    $('#authorizePassword').val('');
                 }
             });
         }
@@ -234,6 +259,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         } else {
             if ($scope.opList.details[index].need_authorized) {
                 $('#authorizor').bind('authorize.quantdo', function(event, data) {
+                    $('#authorizor').unbind('authorize.quantdo');
                     $operations.RunNext({
                         operationID: id,
                         groupID: $routeParams.grpid,
@@ -242,6 +268,15 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                             // $scope.opList.details[index] = data;
                             $scope.opList.details[index].enabled = false;
                         } */
+                        onError: function(response) {
+                            console.log(response);
+                            $message.Warning(response.message);
+                            angular.forEach($scope.opList.details, function(value, index) {
+                                if (value.id === id) {
+                                    value.enabled = true;
+                                }
+                            });
+                        }
                     });
                     $scope.opList.details[index].enabled = false;
                 });
@@ -260,6 +295,15 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                         // $scope.opList.details[index] = data;
                         $scope.opList.details[index].enabled = false;
                     } */
+                    onError: function(response) {
+                        console.log(response);
+                        $message.Warning(response.message);
+                        angular.forEach($scope.opList.details, function(value, index) {
+                            if (value.id === id) {
+                                value.enabled = true;
+                            }
+                        });
+                    }
                 });
                 $scope.opList.details[index].enabled = false;
             }
