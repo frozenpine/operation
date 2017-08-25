@@ -75,6 +75,28 @@ app.controller('optionBookController', ['$scope', '$rootScope', '$timeout', '$op
             }
         });
     };
+
+    $scope.resetDialog = function() {
+        $scope.formComfirm = true;
+        $scope.optionBookEditData = {
+            "main_sys": "",
+            "name": "",
+            "description": "",
+            "remote_name": "",
+            "type": "",
+            "catalog": "",
+            "sys": "",
+            "is_emergency": "",
+            "mod": ""
+        };
+        $scope.optionBookCommand = [{
+            "shell": "",
+            "chdir": ""
+        }];
+        $scope.optionBookEditDataPost = {};
+        $scope.opBookShellFine = false;
+    };
+
     $scope.optionBookEditPost = function() {
         $scope.optionBookEditDataPost = {
             "name": $scope.optionBookEditData.name,
@@ -89,7 +111,7 @@ app.controller('optionBookController', ['$scope', '$rootScope', '$timeout', '$op
         $operationBooks.operationbookDefinePost({
             data: $scope.optionBookEditDataPost,
             onSuccess: function(response) {
-                $timeout(function() {
+                /* $timeout(function() {
                     $scope.formComfirm = true;
                     $scope.optionBookEditData = {
                         "main_sys": "",
@@ -108,7 +130,9 @@ app.controller('optionBookController', ['$scope', '$rootScope', '$timeout', '$op
                     }];
                     $scope.optionBookEditDataPost = {};
                     $scope.opBookShellFine = false;
-                }, 0);
+                }, 0); */
+
+                $scope.resetDialog();
 
                 $rootScope.$broadcast('addNewOperateNode');
                 $('#defineOptionBook').modal('close');

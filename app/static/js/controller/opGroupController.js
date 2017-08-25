@@ -11,11 +11,13 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     $scope.batch_run = false;
     $scope.user_uuid = $('#user_uuid').text();
     $scope.taskQueueRunning = false;
-    // $scope.queue_blocked = false;
+    $scope.taskQueueInitial = false;
     $scope.optionGroupEditShow = true;
-    $scope.optionGroupSelect = [];
-    $scope.optionEarliest = [];
-    $scope.optionLatiest = [];
+    $scope.configChecked = false;
+    $scope.optionGroupEditList = {
+        operation_group: {},
+        operations: []
+    };
 
     $scope.$on('TaskStatusChanged', function(event, data) {
         if (data.hasOwnProperty('details')) {
@@ -24,6 +26,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                 angular.forEach($scope.opList.details, function(value, index) {
                     delete $sessionStorage[value.uuid];
                 });
+                delete $sessionStorage['configStatics_' + $routeParams.sysid]; // 删除缓存，强制配置文件检查刷新
                 $scope.taskQueueRunning = false;
                 $scope.batch_run = false;
             }, 0);
@@ -61,13 +64,6 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             groupID: $routeParams.grpid,
             onSuccess: function(data) {
                 $scope.opList = data;
-                $scope.optionGroupSelect = new Array(data.details.length);
-                $scope.optionEarliest = new Array(data.details.length);
-                $scope.optionLatiest = new Array(data.details.length);
-                angular.forEach($scope.opList.details, function(value, index) {
-                    $scope.optionEarliest[index] = formatTime(value.time_range.lower);
-                    $scope.optionLatiest[index] = formatTime(value.time_range.upper);
-                });
                 TaskQueueStatus();
             }
         });
@@ -129,12 +125,37 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                 terminate = true;
                 value.enabled = false;
             }
+            if (value.need_authorized) {
+                need_authorization = true;
+            }
         });
-        if (!terminate) {
+        if (!terminate && !need_authorization) {
             $operations.RunAll({
                 groupID: $routeParams.grpid,
                 onSuccess: function(data) {
                     $message.Info('批量任务执行开始');
+                }
+            });
+        } else if (need_authorization) {
+            $('#authorizor').bind('authorize.quantdo', function(event, data) {
+                $('#authorizor').unbind('authorize.quantdo');
+                $operations.RunAll({
+                    groupID: $routeParams.grpid,
+                    authorizor: data,
+                    onSuccess: function(data) {
+                        $message.Info('批量任务执行开始');
+                    },
+                    onError: function(response) {
+                        console.log(response);
+                        $message.Warning(response.message);
+                    }
+                });
+            });
+            $('#authorizor').modal({
+                relatedTarget: this,
+                onCancel: function() {
+                    $('#authorizeUser').val('');
+                    $('#authorizePassword').val('');
                 }
             });
         }
@@ -143,7 +164,6 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     function TaskStatus(data, index) {
         $timeout(function() {
             $scope.opList.details[index] = data;
-            // $scope.queue_blocked = data.exec_code > 0;
             if (data.exec_code === 1) {
                 $scope.opList.status_code = 14;
             }
@@ -175,33 +195,36 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     }
 
     function TaskQueueStatus() {
-        $timeout(function() {
+        if ($scope.opList !== undefined) {
             angular.forEach($scope.opList.details, function(value, index) {
-                /* if (value.exec_code > 0) {
-                    // $scope.queue_blocked = true;
-                    $scope.opList.status_code = 14;
-                } */
-                if (index > 0 && $scope.opList.details[index - 1].checker.isTrue) {
-                    checked = $sessionStorage[$scope.opList.details[index - 1].uuid];
-                    $scope.opList.details[index].enabled = value.enabled && checked === true;
-                }
-                if (index < $scope.opList.details.length - 1) {
-                    $scope.taskQueueRunning = value.exec_code >= 0;
-                    if (value.checker.isTrue && $scope.opList.details[index + 1].exec_code === 0) {
-                        $sessionStorage[value.uuid] = true;
+                $timeout(function() {
+                    if (index === 0 && value.exec_code === -1) {
+                        $scope.taskQueueInitial = true;
+                    } else {
+                        $scope.taskQueueInitial = false;
                     }
-                } else if (value.exec_code === 0) {
-                    $scope.taskQueueRunning = false;
-                }
-                if (value.checker.isTrue) {
-                    $scope.opList.details[index].checker.checked = $sessionStorage[value.uuid] === true;
-                }
+                    if (index > 0 && $scope.opList.details[index - 1].checker.isTrue) {
+                        checked = $sessionStorage[$scope.opList.details[index - 1].uuid];
+                        $scope.opList.details[index].enabled = value.enabled && checked === true;
+                    }
+                    if (index < $scope.opList.details.length - 1) {
+                        $scope.taskQueueRunning = value.exec_code >= 0;
+                        if (value.checker.isTrue && $scope.opList.details[index + 1].exec_code === 0) {
+                            $sessionStorage[value.uuid] = true;
+                        }
+                    } else if (value.exec_code === 0) {
+                        $scope.taskQueueRunning = false;
+                    }
+                    if (value.checker.isTrue) {
+                        $scope.opList.details[index].checker.checked = $sessionStorage[value.uuid] === true;
+                    }
+                });
             });
-        });
+        }
     }
 
     $scope.execute = function(index, id) {
-        if ( /* $scope.queue_blocked */ $scope.opList.status_code === 14) {
+        if ($scope.opList.status_code === 14) {
             $message.Warning('队列执行失败已阻塞，请先恢复队列。');
             return;
         }
@@ -214,7 +237,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                         $scope.$apply(function() {
                             if ($routeParams.hasOwnProperty('grpid')) {
                                 $scope.opList.details[index] = data;
-                                TaskStatus(data);
+                                TaskStatus(data, index);
                             }
                         });
                     });
@@ -236,14 +259,26 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         } else {
             if ($scope.opList.details[index].need_authorized) {
                 $('#authorizor').bind('authorize.quantdo', function(event, data) {
+                    $('#authorizor').unbind('authorize.quantdo');
                     $operations.RunNext({
                         operationID: id,
                         groupID: $routeParams.grpid,
                         authorizor: data,
-                        onSuccess: function(data) {
-                            $scope.opList.details[index] = data;
+                        /* onSuccess: function(data) {
+                            // $scope.opList.details[index] = data;
+                            $scope.opList.details[index].enabled = false;
+                        } */
+                        onError: function(response) {
+                            console.log(response);
+                            $message.Warning(response.message);
+                            angular.forEach($scope.opList.details, function(value, index) {
+                                if (value.id === id) {
+                                    value.enabled = true;
+                                }
+                            });
                         }
                     });
+                    $scope.opList.details[index].enabled = false;
                 });
                 $('#authorizor').modal({
                     relatedTarget: this,
@@ -256,25 +291,28 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                 $operations.RunNext({
                     groupID: $routeParams.grpid,
                     operationID: id,
-                    onSuccess: function(data) {
-                        $scope.opList.details[index] = data;
+                    /* onSuccess: function(data) {
+                        // $scope.opList.details[index] = data;
+                        $scope.opList.details[index].enabled = false;
+                    } */
+                    onError: function(response) {
+                        console.log(response);
+                        $message.Warning(response.message);
+                        angular.forEach($scope.opList.details, function(value, index) {
+                            if (value.id === id) {
+                                value.enabled = true;
+                            }
+                        });
                     }
                 });
+                $scope.opList.details[index].enabled = false;
             }
         }
     };
 
-    $scope.optionGroupEdit = function(data) {
-        if ($rootScope.privileges.edit_group === false) {
-            $message.Warning('该用户无编辑权限，无法编辑队列内容');
-            return;
-        }
-        if ($scope.taskQueueRunning) {
-            $message.Warning('任务队列未完成，无法编辑队列内容');
-            return;
-        }
+    $scope.optionGroupEdit = function() {
         $operationBooks.systemOptionBooksGet({
-            sys_id: data.sys_id,
+            sys_id: $routeParams.sysid,
             onSuccess: function(res) {
                 $scope.optionBooks = res.records;
             },
@@ -283,15 +321,32 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             }
         });
 
-        $scope.optionGroupCopy = {
-            "operation_group": {
-                "id": data.grp_id,
-                "name": data.name,
-                "description": null,
-                "is_emergency": null
-            },
-            "operations": []
-        };
+        if ($rootScope.privileges.edit_group === false) {
+            $message.Warning('该用户无编辑权限，无法编辑队列内容');
+            return;
+        }
+        if ($scope.taskQueueRunning) {
+            $message.Warning('任务队列未完成，无法编辑队列内容');
+            return;
+        }
+
+        $scope.optionGroupEditList.operation_group.id = $scope.opList.grp_id;
+        $scope.optionGroupEditList.operation_group.name = $scope.opList.name;
+        $scope.optionGroupEditList.operation_group.description = null;
+        $scope.optionGroupEditList.operation_group.is_emergency = null;
+        $scope.optionGroupEditList.operations = [];
+        angular.forEach($scope.opList.details, function(value, index) {
+            $scope.optionGroupEditList.operations.push({
+                operation_name: value.op_name,
+                description: value.op_desc,
+                earliest: formatTime(value.time_range.lower),
+                latest: formatTime(value.time_range.upper),
+                need_authorized: value.need_authorized,
+                operation_id: value.id,
+                book_id: value.book_id
+            });
+        });
+
         $scope.need_authorization = [{
             "name": "是",
             "value": true
@@ -299,72 +354,41 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             "name": "否",
             "value": false
         }];
-        $scope.optionOldData = angular.copy($scope.opList.details);
-
-        angular.forEach($scope.optionOldData, function(value, index) {
-            var data = {
-                operation_name: value.op_name,
-                description: value.op_desc,
-                earliest: null,
-                latest: null,
-                need_authorized: value.need_authorized,
-                operation_id: value.id,
-                book_id: value.book_id
-            };
-            $scope.optionGroupCopy.operations.push(data);
-        });
-
-        $scope.optionGroupSelectWhich = function(option, data) {
-            angular.forEach($scope.optionBooks, function(value, index) {
-                if (value.id == option.id) {
-                    data.book_id = value.id;
-                    data.description = value.description;
-                    data.operation_name = value.name;
-                }
-            });
-        };
-
-        $scope.$watch('optionBooks', function() {
-            angular.forEach($scope.opList.details, function(value, index) {
-                angular.forEach($scope.optionBooks, function(v, i) {
-                    if (value.book_id === v.id) {
-                        $scope.optionGroupSelect[index] = v;
-                    }
-                });
-            });
-        });
 
         $scope.optionGroupEditShow = !$scope.optionGroupEditShow;
     };
     $scope.optionGroupEditAdd = function() {
-        $scope.optionGroupNew = {};
-        $scope.optionGroupCopy.operations.push($scope.optionGroupNew);
+        $scope.optionGroupEditList.operations.push({});
+    };
+    $scope.obChange = function(op_item) {
+        var selected_ob;
+        angular.forEach($scope.optionBooks, function(value, index) {
+            if (value.id == op_item.book_id) {
+                selected_ob = value;
+            }
+        });
+        op_item.operation_name = angular.copy(selected_ob.name);
+        op_item.description = angular.copy(selected_ob.description);
     };
     $scope.optionGroupEditCancel = function() {
         $scope.optionGroupEditShow = !$scope.optionGroupEditShow;
     };
     $scope.optionGroupEditDelete = function(index_del) {
-        //  	console.log($scope.optionGroupCopy.operations,index_del);
-        $scope.optionGroupCopy.operations.splice(index_del, 1);
+        $scope.optionGroupEditList.operations.splice(index_del, 1);
     };
     $scope.optionGroupEditPostShow = true;
     $scope.optionGroupEditFinish = function() {
-        angular.forEach($scope.optionGroupCopy.operations, function(value, index) {
-            value.earliest = ($scope.optionEarliest[index] !== undefined &&
-                    $scope.optionEarliest[index] !== null && $scope.optionEarliest[index] !== '') ?
-                $scope.optionEarliest[index].getHours() + ':' + $scope.optionEarliest[index].getMinutes() : null;
-            value.latest = ($scope.optionLatiest[index] !== undefined &&
-                    $scope.optionLatiest[index] !== null && $scope.optionLatiest[index] !== '') ?
-                $scope.optionLatiest[index].getHours() + ':' + $scope.optionLatiest[index].getMinutes() : null;
-        });
         $operationBooks.optionGroupEditPut({
-            optionGroup_id: $scope.optionGroupCopy.operation_group.id,
-            data: $scope.optionGroupCopy,
+            optionGroup_id: $scope.optionGroupEditList.operation_group.id,
+            data: $scope.optionGroupEditList,
             onSuccess: function(req) {
                 $scope.optionGroupEditPostShow = !$scope.optionGroupEditPostShow;
                 $scope.optionGroupEditShow = true;
-                $message.Success("表单提交成功");
+                $message.Success("队列属性更新成功!");
                 $scope.GetOperationList();
+                if (!$scope.taskQueueRunning && $scope.taskQueueInitial && confirm('队列属性已更新,是否重新初始化队列?')) {
+                    $scope.InitQueue();
+                }
             },
             onError: function(req) {
                 $scope.optionGroupEditPostShow = !$scope.optionGroupEditPostShow;
@@ -373,16 +397,79 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         });
     };
 
-    $scope.CheckSystemConfig = function() {
+    $systems.QuantdoConfigList({
+        sysID: $routeParams.sysid,
+        onSuccess: function(data) {
+            $scope.configFileList = data.records;
+        }
+    });
+
+    $scope.$watch('taskQueueInitial', function(newValue, oldValue) {
+        if (newValue !== oldValue && newValue) {
+            $scope.CheckSystemConfig();
+        }
+    });
+
+    $scope.$watch('taskQueueRunning', function(newValue, oldValue) {
+        if (newValue) {
+            $scope.checkingSystemConfig = false;
+            $scope.configChecked = true;
+        } else if (!$scope.taskQueueInitial) {
+            $scope.checkingSystemConfig = false;
+            $scope.configChecked = true;
+        }
+    });
+
+    $scope.CheckSystemConfig = function(force) {
         $scope.checkingSystemConfig = true;
+        $scope.configChecked = false;
         $systems.QuantdoConfigCheck({
             sysID: $routeParams.sysid,
             onSuccess: function(data) {
+                var check_failed = false;
+                angular.forEach(data.records, function(value, index) {
+                    angular.forEach(value.detail, function(conf, idx) {
+                        if (conf.hash_changed) {
+                            check_failed = true;
+                        }
+                    });
+                });
+                if (check_failed) {
+                    $message.Warning('配置文件被修改，确认配置前无法进行操作！', 10);
+                }
                 $timeout(function() {
                     $scope.configFileList = data.records;
                     $scope.checkingSystemConfig = false;
+                    $scope.configChecked = !check_failed;
+                    $scope.configCheckDate = data.last_request;
+                    // console.log($scope.configChecked);
                 }, 0);
             }
-        });
+        }, force);
+    };
+
+    $scope.confirmConfig = function(config) {
+        if (config.hash_changed) {
+            if (confirm('确认更新配置文件的HASH值？')) {
+                config.updating = true;
+                $systems.QuantdoConfigRenew({
+                    configID: config.id,
+                    onSuccess: function(data) {
+                        $timeout(function() {
+                            angular.forEach($scope.configFileList, function(value, index) {
+                                angular.forEach(value.detail, function(conf, idx) {
+                                    if (conf.uuid === data.uuid) {
+                                        angular.merge(conf, data);
+                                    }
+                                });
+                            });
+                            config.updating = false;
+                        }, 0);
+                        $scope.CheckSystemConfig(true);
+                        $message.Success('配置文件HASH值更新成功。');
+                    }
+                });
+            }
+        }
     };
 }]);

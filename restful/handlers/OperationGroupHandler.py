@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 import re
 import json
+import arrow
 
 from flask import request
 from flask_restful import Resource
@@ -41,10 +42,6 @@ class OperationGroupListApi(Resource):
             return RestProtocol(e)
         else:
             og = OperationGroup(**data['operation_group'])
-            ''' og.name = data['operation_group'].get('name')
-            og.description = data['operation_group'].get('description')
-            og.sys_id = data['operation_group'].get('sys_id')
-            og.trigger_time = data['operation_group'].get('trigger_time') '''
             last = OperationGroup.query \
                 .filter(OperationGroup.sys_id == data['operation_group']['sys_id']) \
                 .order_by(OperationGroup.order.desc()).limit(1).first()
@@ -110,7 +107,7 @@ class OperationGroupListApi(Resource):
 class OperationGroupApi(Resource):
     def __init__(self):
         super(OperationGroupApi, self).__init__()
-        self.pattern = re.compile('^([0-1]?\d|2[0-3]):[0-5]?\d$')
+        self.pattern = re.compile(ur'^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)?$')
 
     def get(self, **kwargs):
         op_group = OperationGroup.find(**kwargs)
@@ -143,9 +140,9 @@ class OperationGroupApi(Resource):
                 for i, v in enumerate(op_list):
                     try:
                         if op_list[i].get('earliest') and not self.pattern.match(op_list[i].get('earliest')):
-                            raise DataTypeError("Please enter the earliest formatted as 'HH:MM'.")
+                            raise DataTypeError("Earlist time format error.")
                         if op_list[i].get('latest') and not self.pattern.match(op_list[i].get('latest')):
-                            raise DataTypeError("Please enter the latest formatted as 'HH:MM'.")
+                            raise DataTypeError("Latest time format error.")
                     except DataTypeError as e:
                         return RestProtocol(e)
                     else:
@@ -155,10 +152,16 @@ class OperationGroupApi(Resource):
                                     used_id.append(op_e.id)
                                     op_e.name = op_list[i].get('operation_name', op_e.name)
                                     op_e.description = op_list[i].get('description', op_e.description)
-                                    op_e.earliest = op_list[i].get('earliest') != '' \
-                                        and op_list[i].get('earliest') or None
-                                    op_e.latest = op_list[i].get('latest') != '' \
-                                        and op_list[i].get('latest') or None
+                                    if op_list[i].get('earliest') and op_list[i].get('earliest') != '':
+                                        op_e.earliest = arrow.get(op_list[i].get('earliest'))\
+                                        .to('Asia/Shanghai').strftime('%H:%M:%S')
+                                    else:
+                                        op_e.earliest = None
+                                    if op_list[i].get('latest') and op_list[i].get('latest') != '':
+                                        op_e.latest = arrow.get(op_list[i].get('latest'))\
+                                            .to('Asia/Shanghai').strftime('%H:%M:%S')
+                                    else:
+                                        op_e.latest = None
                                     op_e.need_authorization = op_list[i].get('need_authorization',
                                                                              op_e.need_authorization)
                                     op_e.book_id = op_list[i].get('book_id', op_e.book_id)
@@ -176,10 +179,16 @@ class OperationGroupApi(Resource):
                                 index += 1
                                 operations[index].name = op_list[i].get('operation_name')
                                 operations[index].description = op_list[i].get('description')
-                                operations[index].earliest = op_list[i].get('earliest') != '' \
-                                    and op_list[i].get('earliest') or None
-                                operations[index].latest = op_list[i].get('latest') != '' \
-                                    and op_list[i].get('latest') or None
+                                if op_list[i].get('earliest') and op_list[i].get('earliest') != '':
+                                    operations[index].earliest = arrow.get(op_list[i].get('earliest'))\
+                                        .to('Asia/Shanghai').strftime('%H:%M:%S')
+                                else:
+                                    operations[index].earliest = None
+                                if op_list[i].get('latest') and op_list[i].get('latest') != '':
+                                    operations[index].latest = arrow.get(op_list[i].get('latest'))\
+                                        .to('Asia/Shanghai').strftime('%H:%M:%S')
+                                else:
+                                    operations[index].earliest = None
                                 operations[index].need_authorization = op_list[i].get('need_authorization')
                                 operations[index].book_id = op_list[i].get('book_id')
                                 operations[index].order = (i + 1) * 10
@@ -192,64 +201,3 @@ class OperationGroupApi(Resource):
                 return RestProtocol(op_group)
         else:
             return RestProtocol(message='Operation group not found', error_code=-1), 404
-
-    '''def put(self, **kwargs):
-        op_group = OperationGroup.find(**kwargs)
-        if op_group:
-            try:
-                data = request.get_json(force=True)
-            except BadRequest:
-                return RestProtocol(DataNotJsonError())
-            else:
-                # Modify operation group itself
-                op_group.name = data['operation_group'].get('name', op_group.name)
-                op_group.description = data['operation_group'].get('description', op_group.description)
-                op_group.order = data['operation_group'].get('order', op_group.order)
-                db.session.add(op_group)
-                db.session.commit()
-
-                # Modify operations of operation group
-                operations = []
-                used_id = []
-                index = -1
-                op_list = data['operations']
-                op_exist = op_group.operations
-                for i, v in enumerate(op_list):
-                    if 'operation_id' in v and v['operation_id']:
-                        for op_e in op_exist:
-                            if op_e.id == v['operation_id']:
-                                used_id.append(op_e.id)
-                                op_e.name = op_list[i].get('operation_name', op_e.name)
-                                op_e.description = op_list[i].get('description', op_e.description)
-                                op_e.earliest = op_list[i].get('earliest', op_e.earliest)
-                                op_e.latest = op_list[i].get('latest', op_e.latest)
-                                op_e.need_authorization = op_list[i].get('need_authorization', op_e.need_authorization)
-                                op_e.book_id = op_list[i].get('book_id', op_e.book_id)
-                                op_e.order = (i + 1) * 10
-                                op_e.op_group_id = op_group.id
-                    else:
-                        try:
-                            if not op_list[i].get('book_id'):
-                                raise DataNotNullError
-                        except DataNotNullError:
-                            return RestProtocol(DataNotNullError())
-                        else:
-                            op = Operation()
-                            operations.append(op)
-                            index += 1
-                            operations[index].name = op_list[i].get('operation_name')
-                            operations[index].description = op_list[i].get('description')
-                            operations[index].earliest = op_list[i].get('earliest')
-                            operations[index].latest = op_list[i].get('latest')
-                            operations[index].need_authorization = op_list[i].get('need_authorization')
-                            operations[index].book_id = op_list[i].get('book_id')
-                            operations[index].order = (i + 1) * 10
-                            operations[index].op_group_id = op_group.id
-                for op_e2 in op_exist:
-                    if op_e2.id not in used_id:
-                        op_e2.disabled = True
-                db.session.add_all(operations)
-                db.session.commit()
-                return RestProtocol(op_group)
-        else:
-            return {'message': 'Not found'}, 404'''

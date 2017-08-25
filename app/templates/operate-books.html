@@ -139,10 +139,10 @@
                     	                </select>
                                     </div>
                                     <div class="am-u-sm-2" style="padding: 3px;">
-                                        <input type="text" style="width: 100%;border: none;" value="dtl.op_name" ng-model="dtl.op_name" ng-class="{true: 'invalid', false: ''}[dtl.op_name==undefined]" required/>
+                                        <input type="text" style="width: 100%;border: none;" value="dtl.op_name" ng-model="dtl.op_name" ng-class="{true: 'invalid', false: ''}[dtl.op_name==undefined]" maxlength="20" required/>
                                     </div>
                                     <div class="am-u-sm-3" style="padding: 3px;">
-                                        <input type="text" style="border: none;width: 100%;" value="dtl.op_desc" ng-model="dtl.op_desc" />
+                                        <input type="text" style="border: none;width: 100%;" value="dtl.op_desc" ng-model="dtl.op_desc" maxlength="50" />
                                     </div>
                                     <div class="am-u-sm-1" style="padding: 3px;">
                                         <select ng-model="dtl.catalog_id" style="width: 100%;" required>

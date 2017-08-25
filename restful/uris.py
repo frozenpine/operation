@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 from . import resources
+from .handlers.ConfigFileHandler import ConfigFileApi
 from .handlers.DeviceHandler import DeviceApi, DeviceListApi
 from .handlers.EmergeOpHandler import (EmergeOpApi, EmergeOpCaptchaApi,
                                        EmergeOpCSVApi, EmergeOpExecuteApi,
@@ -26,8 +27,8 @@ from .handlers.ProcessHandler import ProcessApi, ProcessListApi
 from .handlers.RoleHandler import RoleApi, RoleListApi
 from .handlers.SysStaticsHandler import (ConfigCheckApi, ConfigListApi,
                                          LoginCheckApi, LoginListApi,
-                                         ProcStaticApi, ServerStaticApi,
-                                         ServerStaticListApi,
+                                         ProcStaticApi, ProcVersionApi,
+                                         ServerStaticApi, ServerStaticListApi,
                                          SystemStaticListApi,
                                          UserSessionListApi)
 from .handlers.SystemHandler import (SystemApi, SystemFindOperationBookApi,
@@ -263,6 +264,13 @@ resources.add_resource(
 )
 
 resources.add_resource(
+    ProcVersionApi,
+    '/system/id/<int:id>/processes/version',
+    methods=['GET'],
+    endpoint='proc_version'
+)
+
+resources.add_resource(
     LoginListApi,
     '/system/id/<int:id>/login_statics',
     '/system/id/<int:id>/login_statics/',
@@ -449,4 +457,11 @@ resources.add_resource(
     '/system/tree-structure',
     methods=['GET'],
     endpoint='sys_tree_structure'
+)
+
+resources.add_resource(
+    ConfigFileApi,
+    '/config/id/<int:id>',
+    methods=['GET', 'POST', 'PUT'],
+    endpoint='config'
 )

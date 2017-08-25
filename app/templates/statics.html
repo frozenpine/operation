@@ -1,5 +1,5 @@
 <div class="row" style="margin-top: -1px">
-    <div class="tpl-portlet-components" ng-controller="svrStaticsControl" id="server_statics">
+    <div class="tpl-portlet-components" ng-controller="svrStaticsControl" id="server_statics" ng-if="staticsShow">
         <div class="portlet-title">
             <div class="caption font-green bold">
                 <span ng-click="svrShowDetail = !svrShowDetail;" style="cursor: pointer">
@@ -18,7 +18,7 @@
                                     自动刷新：
                                 </span>
                             </span>
-                            <input type="text" class="am-form-field font-green am-text-center" minlength="2" ng-model="GlobalConfigs.svrStaticsInterval.current" style="height: 25px">
+                            <input type="text" class="am-form-field font-green am-text-center" minlength="2" maxlength="4" ng-model="GlobalConfigs.svrStaticsInterval.current" style="height: 25px;width: 50px;">
                             <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2">s</span>
                         </div>
                     </div>
@@ -28,7 +28,7 @@
                         <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2">
                             <i class="am-icon-search am-icon-fw"></i>
                         </span>
-                        <input type="text" class="am-form-field" style="height: 25px" placeholder="IP关键字过滤" ng-model="keyword">
+                        <input type="text" class="am-form-field" style="height: 25px" placeholder="IP 过滤" ng-model="keyword">
                     </div>
                 </div>
             </div>
@@ -163,7 +163,7 @@
         </div>
     </div>
 
-    <div class="tpl-portlet-components" ng-controller="sysStaticsControl">
+    <div class="tpl-portlet-components" ng-controller="sysStaticsControl" ng-if="staticsShow">
         <div class="portlet-title">
             <div class="caption font-green bold">
                 <span ng-click="sysShowDetail = !sysShowDetail;" style="cursor: pointer">
@@ -182,7 +182,7 @@
                                     自动刷新：
                                 </span>
                             </span>
-                            <input type="text" class="am-form-field font-green am-text-center" ng-model="GlobalConfigs.sysStaticsInterval.current" minlength="2" style="height: 25px">
+                            <input type="text" class="am-form-field font-green am-text-center" ng-model="GlobalConfigs.sysStaticsInterval.current" minlength="2" maxlength="4" style="height: 25px;width: 50px;">
                             <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2"> s</span>
                         </div>
                     </div>
@@ -192,14 +192,14 @@
                         <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2">
                             <i class="am-icon-search am-icon-fw"></i>
                         </span>
-                        <input type="text" class="am-form-field" style="height: 25px" placeholder="关键字过滤系统" ng-model="keyword">
+                        <input type="text" class="am-form-field" style="height: 25px" placeholder="进程名过滤" ng-model="keyword">
                     </div>
                 </div>
             </div>
         </div>
         <div class="tpl-block" ng-show="sysShowDetail">
             <div class="am-g">
-                <div class="am-u-sm-12" ng-repeat="data in systemStatics | filter: keyword">
+                <div class="am-u-sm-12" ng-repeat="data in systemStatics | filter: {detail: {process: keyword}}">
                     <span class="am-icon-angle-double-right" style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169); cursor: pointer"> 子系统名称 ： {{::data.name}} - {{::data.version}}</span>
                     <span class="am-fr" style="font-size: 12pt; font-weight: bold; color: rgb(147, 162, 169);"> 最后更新：{{data.updated_time}}</span>
                     <table class="am-table am-table-hover table-main">
@@ -216,7 +216,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr ng-repeat="child in data.detail" ng-class="{true: 'am-danger', false: ''}[child.status.stat=='stopped']">
+                            <tr ng-repeat="child in data.detail|filter: keyword" ng-class="{true: 'am-danger', false: ''}[child.status.stat=='stopped']">
                                 <td class="table-data">
                                     <span class="am-dropdown" ng-mouseover="showProcVer[$index] = true" ng-mouseleave="showProcVer[$index] = false" style="cursor: pointer">
                                         {{::child.process}}
@@ -336,7 +336,7 @@
                                     自动刷新：
                                 </span>
                             </span>
-                            <input type="text" class="am-form-field font-green am-text-center" ng-model="GlobalConfigs.loginStaticsInterval.current" minlength="2" style="height: 25px">
+                            <input type="text" class="am-form-field font-green am-text-center" ng-model="GlobalConfigs.loginStaticsInterval.current" minlength="2" maxlength="4" style="height: 25px;width: 50px;">
                             <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2"> s</span>
                         </div>
                     </div>
@@ -410,7 +410,7 @@
                                     自动刷新：
                                 </span>
                             </span>
-                            <input type="text" class="am-form-field font-green am-text-center" ng-model="GlobalConfigs.sessionStaticsInterval.current" minlength="2" style="height: 25px">
+                            <input type="text" class="am-form-field font-green am-text-center" ng-model="GlobalConfigs.sessionStaticsInterval.current" minlength="2" maxlength="4" style="height: 25px;width: 50px;">
                             <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2"> s</span>
                         </div>
                     </div>
@@ -427,7 +427,7 @@
         </div>
         <div class="tpl-block" ng-show="clientShowDetail">
             <div class="am-g">
-                <div class="am-u-sm-12">
+                <div class="am-u-sm-12" style="overflow-x: auto;">
                     <table class="am-table am-table-hover table-main" style="width: 100%">
                         <thead>
                             <tr>

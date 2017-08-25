@@ -68,23 +68,28 @@ app.service('$operations', function($websocket, $http, $message, $sessionStorage
             });
     };
     this.RunNext = function(params) {
-        $http.get(
+        var req = {
+            method: 'get',
+            url: 'api/operation/id/' + params.operationID,
+            headers: {
+                Authorizor: JSON.stringify(params.authorizor)
+            }
+        };
+        /* $http.get(
                 'api/operation/id/' + params.operationID,
                 headers = {
                     Authorizor: JSON.stringify(params.authorizor)
                 }
-            )
+            ) */
+        $http(req)
             .success(function(response) {
                 if (response.error_code === 0) {
                     response.data.exec_code = -4;
-                    params.onSuccess(response.data);
-                } else {
-                    console.log(response);
-                    if (params.hasOwnProperty('onError')) {
-                        params.onError(response.message);
-                    } else {
-                        $message.Warning(response.message);
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(response.data);
                     }
+                } else if (params.hasOwnProperty('onError')) {
+                    params.onError(response);
                 }
             })
             .error(function(response) {
@@ -95,14 +100,20 @@ app.service('$operations', function($websocket, $http, $message, $sessionStorage
             });
     };
     this.RunAll = function(params) {
-        $http.get('api/op_group/id/' + params.groupID + '/all')
+        var req = {
+            method: 'get',
+            url: 'api/op_group/id/' + params.groupID + '/all',
+            headers: {
+                Authorizor: JSON.stringify(params.authorizor)
+            }
+        };
+        /* $http.get('api/op_group/id/' + params.groupID + '/all') */
+        $http(req)
             .success(function(response) {
                 if (response.error_code === 0) {
                     params.onSuccess(response.data);
                 } else if (params.hasOwnProperty('onError')) {
-                    params.onError(response.data);
-                } else {
-                    $message.Warning(response.message);
+                    params.onError(response);
                 }
             })
             .error(function(response) {

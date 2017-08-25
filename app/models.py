@@ -158,9 +158,9 @@ class SQLModelMixin(object):
         else:
             return {
                 'id': obj.id,
-                'name': hasattr(obj, 'name') and obj.name or '',
-                'uuid': hasattr(obj, 'uuid') and obj.uuid or None,
-                'disabled': hasattr(obj, 'disabled') or None and obj.disabled
+                'name': obj.name if hasattr(obj, 'name') else None,
+                'uuid': obj.uuid if hasattr(obj, 'uuid') else None,
+                'disabled': obj.disabled if hasattr(obj, 'disabled') else None
             }
 
     def to_json(self):
@@ -217,12 +217,12 @@ role_privilege = db.Table(
     db.Column('disabled', db.Boolean, default=False)
 )
 
-config_process = db.Table(
+''' config_process = db.Table(
     'config_process',
     db.Column('config_id', db.Integer, db.ForeignKey('config_files.id'), index=True),
     db.Column('process_id', db.Integer, db.ForeignKey('trade_processes.id'), index=True),
     db.Column('disabled', db.Boolean, default=False)
-)
+) '''
 
 operator_system = db.Table(
     'operator_system',
@@ -460,12 +460,9 @@ class TradeProcess(SQLModelMixin, db.Model):
     sockets = db.relationship('Socket', backref='process')
     disabled = db.Column(db.Boolean, default=False)
     config_files = db.relationship(
-        'ConfigFile',
-        secondary=config_process,
-        primaryjoin="and_(TradeProcess.id==config_process.c.process_id,"
-                    "config_process.c.disabled==False)",
-        backref=db.backref('processes', lazy='dynamic'),
-        lazy='dynamic'
+        'ConfigFile', backref='process',
+        primaryjoin="and_(ConfigFile.proc_id==TradeProcess.id,"
+                    "ConfigFile.disabled==False)"
     )
 
 class Socket(SQLModelMixin, db.Model):
@@ -618,11 +615,11 @@ class TradeSystem(SQLModelMixin, db.Model):
         primaryjoin="and_(DataSource.sys_id == TradeSystem.id,"
                     "DataSource.disabled == False)"
     )
-    config_files = db.relationship(
+    ''' config_files = db.relationship(
         'ConfigFile', backref='system',
         primaryjoin="and_(ConfigFile.sys_id == TradeSystem.id,"
                     "ConfigFile.disabled == False)"
-    )
+    ) '''
 
     @property
     def up_systems(self):
@@ -892,7 +889,8 @@ class ConfigFile(SQLModelMixin, db.Model):
         default=lambda: unicode(uuid4()).lower()
     )
     name = db.Column(db.String, index=True)
-    sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
+    # sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
+    proc_id = db.Column(db.Integer, db.ForeignKey('trade_processes.id'), index=True)
     config_type = db.Column(ChoiceType(ConfigType, impl=db.Integer()), default=ConfigType.INIFile)
     dir = db.Column(db.String, nullable=False)
     file = db.Column(db.String, nullable=False)

@@ -11,10 +11,12 @@ from paramiko import (AutoAddPolicy, PasswordRequiredException, RSAKey,
 from paramiko.ssh_exception import (AuthenticationException,
                                     NoValidConnectionsError)
 
-from SysManager import logger as logging
 from configs import HttpConfig, Result, SSHConfig, WinRmConfig
-from excepts import ImportRSAkeyFaild, ModuleNotFound, SSHNoValidConnectionsError, SSHAuthenticationException, \
-    SSHException
+from excepts import (ImportRSAkeyFaild, ModuleNotFound,
+                     SSHAuthenticationException, SSHException,
+                     SSHNoValidConnectionsError)
+from SysManager import logger as logging
+
 
 
 class Executor():
@@ -71,6 +73,7 @@ class Executor():
                 self.parser = None
         else:
             self.result.lines = [line for line in stdout.readlines()]
+            self.result.lines.extend([line for line in stderr.readlines()])
         return self.result
 
 
@@ -160,28 +163,3 @@ class HttpExecutor(Executor):
 
     def run(self, module):
         pass
-
-
-if __name__ == '__main__':
-    conf = SSHConfig('192.168.101.126', 'qdam', 'qdam')
-    exe = Executor.Create(conf)
-    mod = {
-        'name': 'psaux',
-        'args': {
-            'processes': [
-                'qtrade', 'qdata', 'qmdb', 'qquery', 'qicegateway 1',
-                'qicegateway 2'
-            ]
-        }
-    }
-    '''
-    conf = WinRmConfig('192.168.56.2', 'administrator', '022010blue@safe')
-    exe = Executor.Create(conf)
-    mod = {
-        'name': 'windf'
-    }
-    '''
-    result = exe.run(mod)
-    for line in result.lines:
-        print line
-    print result.data

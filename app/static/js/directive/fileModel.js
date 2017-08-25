@@ -1,4 +1,3 @@
-var app = angular.module('myApp');
 app.directive("fileModel", ["$parse", function($parse) {
     return {
         restrict: "A",

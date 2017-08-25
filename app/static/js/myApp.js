@@ -1,4 +1,4 @@
-var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorage'], function($provide) {
+var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorage', 'ngScroll'], function($provide) {
     $provide.factory('$uuid', function() {
         return {
             uuid4: function() {
@@ -126,6 +126,14 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
         };
     });
 
+    $provide.factory('$dialog', function() {
+        return {
+            Confirm: function() {
+
+            }
+        };
+    });
+
     $provide.factory('$websocket', function($rootScope, $location, $interval, $timeout, $message, $sessionStorage, $uuid) {
         if (!$sessionStorage.hasOwnProperty('messages')) {
             $sessionStorage.messages = [];
@@ -147,11 +155,14 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
                 ws.onopen = function() {
                     unload = false;
                     console.log("[Client] Websocket connected successfully.");
-                    $message.Success('Websocket connected successfully.');
+                    $message.Success('Websocket连接成功.');
                     connected = true;
                     reconnect = false;
                     ws.send(JSON.stringify({
                         method: 'topics'
+                    }));
+                    ws.send(JSON.stringify({
+                        method: 'heartbeat'
                     }));
                     heatbeat_interval = $interval(function() {
                         ws.send(JSON.stringify({
@@ -168,7 +179,7 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
                     connected = false;
                     $interval.cancel(heatbeat_interval);
                     console.log('[Client] Websocket connection error.');
-                    $message.Alert('Websocket connection error.');
+                    // $message.Alert('Websocket连接错误.', 30);
                 };
 
                 ws.onclose = function() {
@@ -177,10 +188,11 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
                     if (!unload) {
                         if (!reconnect) {
                             console.log('[Client] Websocket connection lost.');
-                            $message.Warning('Websocket connection lost, reconnect in 30s.', 30);
+                            $message.Warning('Websocket连接中断, 将在30s后重连.', 30);
+                            $rootScope.$broadcast('heartbeat-lost');
                         } else {
                             console.log('[Client] Websocket re-connect failed, retry...');
-                            $message.Warning('Websocket re-connect failed, retry in 30s.', 30);
+                            $message.Warning('Websocket连接失败, 将在30s后重连.', 30);
                         }
                         $timeout(init, 30000);
                         reconnect = true;
@@ -201,6 +213,7 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
         var onMessage = function(msg) {
             if (msg.hasOwnProperty('heartbeat')) {
                 console.log('[Server] Heartbeat: ' + msg.heartbeat);
+                $rootScope.$broadcast('heartbeat', msg.heartbeat);
             } else if (msg.hasOwnProperty('topics')) {
                 msg.topics.forEach(function(topic_name) {
                     console.log('[Client] Subscribing topic: ' + topic_name);
@@ -211,7 +224,7 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
                 });
             } else if (msg.hasOwnProperty('message')) {
                 console.log('[Server] Message from server: ' + msg.message);
-                $message.Info(msg.message);
+                // $message.Info(msg.message);
             } else if (msg.hasOwnProperty('error')) {
                 console.log('[Server] Message from server: ' + msg.error);
                 $message.Alert(msg.error);
@@ -222,7 +235,7 @@ var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorag
             } else if (msg.hasOwnProperty('topic')) {
                 switch (msg.topic) {
                     case "public":
-                        $message.Info(msg.data);
+                        // $message.Info(msg.data);
                         $timeout(function() {
                             $sessionStorage.messages.push(msg.data);
                         }, 0);
@@ -265,8 +278,8 @@ app.config(['$routeProvider', function($routeProvider) {
         .when('/op_records', {
             templateUrl: 'UI/views/op_records'
         })
-        .when('/sys_ser', {
-            templateUrl: 'UI/views/sys_ser_pro'
+        .when('/inventory', {
+            templateUrl: 'UI/views/inventory'
         })
         .when('/statics/:sysid', {
             templateUrl: 'UI/views/statics'
@@ -282,7 +295,7 @@ app.config(['$routeProvider', function($routeProvider) {
         });
 }]);
 
-app.run(function($rootScope, $websocket, $sessionStorage, $localStorage, $operationBooks) {
+app.run(function($rootScope, $websocket, $sessionStorage, $localStorage, $location, $message) {
     $rootScope.tab = 1; //default
     $rootScope.status = "normal";
     $rootScope.currentId = null;
@@ -293,6 +306,19 @@ app.run(function($rootScope, $websocket, $sessionStorage, $localStorage, $operat
         sessionStaticsInterval: { default: 60, current: 60 },
         cpuIdleThreshold: { upper: 100, lower: 50 }
     };
+    $rootScope.$on('$routeChangeStart', function(evt, next, current) {
+        if ($rootScope.privileges === undefined) {
+            $location.url('/dashboard');
+        } else {
+            angular.forEach($rootScope.privileges, function(value, key) {
+                var ui_view = next.$$route.templateUrl.split('/').pop();
+                if ('#' + ui_view === key && !value) {
+                    evt.defaultPrevented = true;
+                    $message.Warning('用户无权限访问该URI!');
+                }
+            });
+        }
+    });
 });
 
 app.filter('paging', function() {

@@ -18,15 +18,16 @@
                     </div>
                     <ul class="am-avg-sm-1">
                         <li ng-repeat="svr in inventory">
-                            <div class="am-panel am-panel-secondary">
+                            <div class="am-panel am-panel-secondary am-radius" style="box-shadow: 3px 5px aliceblue; border-radius: 10px;overflow: hidden;">
                                 <div class="am-panel-hd bold">{{::svr.svr_name}} - {{::svr.svr_ip}}</div>
                                 <div class="am-panel-bd" style="background-color: floralwhite;">
                                     <ul>
                                         <li ng-repeat="sys in svr.systems">
                                             <span class="caption font-green bold am-text-sm">{{::sys.sys_name}}</span>
+                                            <button ng-click="CheckProcVersion(sys.sys_id, CheckProcVersionCallback)" class="am-btn am-btn-xs am-btn-secondary am-round" style="padding: 4px 7px">获取进程版本</button>
                                             <ul class="am-avg-sm-1 am-avg-md-2 am-avg-lg-3">
                                                 <li class="am-padding-xs" style="text-align: center;" ng-repeat="proc in sys.processes" on-bind="bindPopup(proc)" repeat-finish>
-                                                    <span class="am-badge am-round am-text-truncate am-badge-success" style="line-height: 30px; width: 100%; cursor: help;" id="{{proc.proc_uuid}}">{{::proc.proc_name}}</span>
+                                                    <span class="am-badge am-round am-text-truncate am-badge-success" style="line-height: 30px; width: 100%; cursor: help; box-shadow: 3px 3px #ddffcc" id="{{proc.proc_uuid}}">{{::proc.proc_name}}</span>
                                                 </li>
                                             </ul>
                                         </li>
@@ -35,6 +36,16 @@
                             </div>
                         </li>
                     </ul>
+                </div>
+                <div class="am-u-sm-2">
+                    <!-- <div class="am-text-center caption font-green bold am-text-md am-margin-botton-sm">
+                        middle
+                    </div> -->
+                </div>
+                <div class="am-u-sm-5">
+                    <!-- <div class="am-text-center caption font-green bold am-text-md am-margin-botton-sm">
+                        right
+                    </div> -->
                 </div>
             </div>
         </div>

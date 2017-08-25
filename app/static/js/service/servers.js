@@ -59,9 +59,9 @@ app.service('$servers', function($http, $message, $localStorage, $timeout, $root
             })
             .error(function(response) {
                 console.log(response);
-                if (response.hasOwnProperty('message')) {
+                /* if (response.hasOwnProperty('message')) {
                     $message.Alert(response.message);
-                }
+                } */
             });
         return true;
     };
@@ -82,11 +82,11 @@ app.service('$servers', function($http, $message, $localStorage, $timeout, $root
             })
             .error(function(response) {
                 console.log(response);
-                if (params.hasOwnProperty('onError')) {
+                /* if (params.hasOwnProperty('onError')) {
                     params.onError(response);
                 } else {
                     $message.Alert(response.message);
-                }
+                } */
             });
     };
 });

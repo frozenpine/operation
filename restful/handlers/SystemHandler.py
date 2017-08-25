@@ -42,7 +42,7 @@ class SystemApi(Resource):
             else:
                 sys.name = data.get('name', sys.name)
                 sys.user = data.get('user', sys.user)
-                sys.password = data.get('password', sys.password)
+                sys.password = data.get('password') if data.get('password') else sys.password
                 sys.ip = data.get('ip', sys.ip)
                 sys.description = data.get('description', sys.description)
                 sys.version = data.get('version', sys.version)

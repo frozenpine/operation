@@ -50,7 +50,7 @@ class DeviceApi(Resource):
             else:
                 device.name = data.get('name', device.name)
                 device.user = data.get('user', device.user)
-                device.password = data.get('password', device.password)
+                device.password = data.get('password') if data.get('password') else device.password
                 device.ip = data.get('ip', device.ip)
                 device.description = data.get('description', device.description)
                 device.disabled = data.get('disabled', device.disabled)
