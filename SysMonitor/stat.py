@@ -14,7 +14,7 @@ def linux_stat():
     linux_pattern = re.compile("cpu\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)")
     with open("/proc/stat") as f:
         f_stream = f.read()
-    stat_list = f_stream.split("\n")
+    stat_list = f_stream.splitlines()
     stat_stream = stat_list[0]
     m = re.match(linux_pattern, stat_stream)
     key_list = ["user", "nice", "system", "idle", "irq", "iowait", "softirq", "stealstolen", "guest"]
@@ -33,10 +33,10 @@ def cygwin_stat():
                          'Privileged Time" "\Processor(_Total)\% Processor Time" "\Processor(_Total)\% '
                          'DPC Time" -si 1 -sc 1', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     stdout, stderr = p.communicate()
-    stat_list = stdout.split("\r\n")
-    value_list = stat_list[2][1:]
-    key_list = ["idle", "irq", "user", "nice", "system"]
-    result = dict(zip(key_list, value_list[: -1]))
+    stat_list = stdout.splitlines()
+    value_list = map(lambda x: "{:.2f}".format(float(x.replace('"', ''))), stat_list[2].split(",")[1:])
+    key_list = ["idle", "irq", "user", "nice", "system", "dpc"]
+    result = dict(zip(key_list, value_list))
     return result
 
 
@@ -51,7 +51,7 @@ def stat():
         for k in first_record.keys():
             result.update({k: float(second_record[k] - first_record[k])})
         for k in result.keys():
-            result.update({k: result[k] / (second_sum - first_sum)})
+            result.update({k: "{:.2f}".format(result[k] / (second_sum - first_sum) * 100)})
     else:
         result = cygwin_stat()
     return result
