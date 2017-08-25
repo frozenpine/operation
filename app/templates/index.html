@@ -106,10 +106,10 @@
                                         <ul sv-root sv-part="optionGroupConfirm.operations">
                                             <li ng-repeat="data in optionGroupConfirm.operations" sv-element>
                                                 <div class="am-u-sm-3" style="padding: 1px">
-                                                    <input type="text" style="border: none;" ng-model="data.name" maxlength="10" />
+                                                    <input type="text" name="op_name{{$index}}" style="border: none;" ng-model="data.name" maxlength="20" ng-class="{true: 'invalid', false: ''}[data.name===undefined]" required/>
                                                 </div>
                                                 <div class="am-u-sm-4" style="padding: 1px">
-                                                    <input type="text" style="border: none" ng-model="data.description" maxlength="30" />
+                                                    <input type="text" style="border: none" ng-model="data.description" maxlength="50" />
                                                 </div>
                                                 <div class="am-u-sm-2" style="padding: 1px">
                                                     <input name="startTime{{$index}}" type="text" style="border: none;" value="{{data.earliest}}" ng-model="data.earliest" ng-pattern="/^(0\d{1}|1\d{1}|2[0-3]):([0-5]\d{1})$/" />
@@ -132,7 +132,7 @@
                 </div>
                 <div class="am-modal-footer am-u-sm-12">
                     <span class="am-modal-btn am-u-sm-6" ng-click="resetDialog()" data-am-modal-cancel>取消</span>
-                    <button type="submit" class="am-btn am-btn-primary am-u-sm-6" style="height: 44px;" ng-disabled="optionGroupName == undefined || optionGroupInittime == undefined || optionGroupConfirmIsNull">
+                    <button type="submit" class="am-btn am-btn-primary am-u-sm-6" style="height: 44px;" ng-disabled="optionGroupConfirmIsNull||optionSubmitName.$invalid">
                         确定  
                         <span class="am-icon-refresh am-icon-spin" ng-show="loadingIcon"></span>
                     </button>

@@ -86,7 +86,7 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
     $scope.loadingIcon = false;
 
     $scope.resetDialog = function() {
-        $scope.loadingIcon = !$scope.loadingIcon;
+        $scope.loadingIcon = false;
         $scope.optionGroupConfirm = {
             operation_group: {
                 sys_id: null,
@@ -110,7 +110,7 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
 
     $scope.addNewGroup = function() {
         // $scope.formComfirm = !$scope.formComfirm;
-        $scope.loadingIcon = !$scope.loadingIcon;
+        $scope.loadingIcon = true;
         $scope.optionGroupConfirm.operation_group.name = $scope.optionGroupName;
         $scope.optionGroupConfirm.operation_group.description = $scope.optionGroupDescription;
         $scope.optionGroupConfirm.operation_group.trigger_time =
