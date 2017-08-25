@@ -160,8 +160,20 @@ class OperationBookCheckApi(Resource):
                         stdin, stdout, stderr = ssh.exec_command(
                             'cd {0};if [ -f {1} ];then echo 0;else echo 1;fi'.format(chdir, file_name))
                     else:
+                        ''' stdin, stdout, stderr = ssh.exec_command(
+                            'if [ -f {0} ];then echo 0;else echo 1;fi'.format(file_name)) '''
                         stdin, stdout, stderr = ssh.exec_command(
-                            'if [ -f {0} ];then echo 0;else echo 1;fi'.format(file_name))
+                        """which {1} &>/dev/null && {{
+                            echo 0
+                            exit
+                        }} || {{
+                            if [[ -f {1} ]]; then
+                                echo 0
+                            else
+                                echo 1
+                            fi
+                        }}
+                        """.format(chdir, file_name))
                     res = stdout.readlines()[0].strip('\n')
                     ssh.close()
                     if res == '0':

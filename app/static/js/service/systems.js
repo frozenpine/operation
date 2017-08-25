@@ -58,9 +58,9 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                if (response.hasOwnProperty('message')) {
+                /* if (response.hasOwnProperty('message')) {
                     $message.Alert(response.message);
-                }
+                } */
             });
         return true;
     };
@@ -81,7 +81,9 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                $message.Alert(response.message);
+                /* if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                } */
             });
     };
 
@@ -144,7 +146,9 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                $message.Alert(response.message);
+                /* if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                } */
             });
         return true;
     };
@@ -165,7 +169,9 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                $message.Alert(response.message);
+                /* if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                } */
             });
     };
 
@@ -230,7 +236,9 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                $message.Alert(response.message);
+                /* if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                } */
             });
         return true;
     };
@@ -239,14 +247,26 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
         if (params.sysID === undefined) {
             return false;
         }
-        // $http.get()
+        $http.get('api/system/id/' + params.sysID + '/processes/version')
+            .success(function(response) {
+                if (response.error_code === 0) {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(response.data);
+                    }
+                } else if (params.hasOwnProperty('onError')) {
+                    params.onError(response);
+                }
+            })
+            .error(function(response) {
+                console.log(response);
+            });
     };
 
-    this.QuantdoConfigCheck = function(params) {
+    this.QuantdoConfigList = function(params) {
         if (params.sysID === undefined) {
             return false;
         }
-        $http.get('api/system/id/' + params.sysID + '/config_files/check')
+        $http.get('api/system/id/' + params.sysID + '/config_files')
             .success(function(response) {
                 if (response.error_code === 0) {
                     if (params.hasOwnProperty('onSuccess')) {
@@ -258,9 +278,78 @@ app.service('$systems', function($http, $message, $localStorage, $sessionStorage
             })
             .error(function(response) {
                 console.log(response);
-                if (response.hasOwnProperty('message')) {
+                /* if (response.hasOwnProperty('message')) {
                     $message.Alert(response.message);
+                } */
+            });
+    };
+
+    this.QuantdoConfigCheck = function(params, force) {
+        if (params.sysID === undefined) {
+            return false;
+        }
+        if (force === undefined) {
+            force = false;
+        }
+        var request_timestamp = new Date().getTime();
+        if ($sessionStorage.hasOwnProperty('configStatics_' + params.sysID)) {
+            if ($sessionStorage['configStatics_' + params.sysID].hasOwnProperty('last_request')) {
+                last_request = parseInt($sessionStorage['configStatics_' + params.sysID].last_request);
+                if (!force && request_timestamp - last_request < 0.5 * 3600 * 1000) {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess($sessionStorage['configStatics_' + params.sysID]);
+                        return;
+                    }
                 }
+            }
+            $timeout(function() {
+                angular.extend(
+                    $sessionStorage['configStatics_' + params.sysID], { last_request: request_timestamp }
+                );
+            }, 0);
+        }
+        $http.get('api/system/id/' + params.sysID + '/config_files/check')
+            .success(function(response) {
+                if (response.error_code === 0) {
+                    $timeout(function() {
+                        $sessionStorage['configStatics_' + params.sysID] = angular.merge(
+                            response.data, { last_request: request_timestamp }
+                        );
+                    });
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(response.data);
+                    }
+                } else if (params.hasOwnProperty('onError')) {
+                    params.onError(response.data);
+                }
+            })
+            .error(function(response) {
+                console.log(response);
+                /* if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                } */
+            });
+    };
+
+    this.QuantdoConfigRenew = function(params) {
+        if (params.configID === undefined) {
+            return false;
+        }
+        $http.post('api/config/id/' + params.configID)
+            .success(function(response) {
+                if (response.error_code === 0) {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(response.data);
+                    }
+                } else if (params.hasOwnProperty('onError')) {
+                    params.onError(response.data);
+                }
+            })
+            .error(function(response) {
+                console.log(response);
+                /* if (response.hasOwnProperty('message')) {
+                    $message.Alert(response.message);
+                } */
             });
     };
 });

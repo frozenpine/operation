@@ -7,27 +7,27 @@ class AuthError(Exception):
 
 
 class AuthenticationError(AuthError):
-    def __init__(self, msg='authentication error.'):
+    def __init__(self, msg=u'验证错误'):
         super(AuthenticationError, self).__init__(msg)
         self.status_code = 401
 
 
 class InvalidUsernameOrPassword(AuthError):
-    def __init__(self, msg='Invalid username or password.'):
+    def __init__(self, msg=u'错误的用户名或密码'):
         super(InvalidUsernameOrPassword, self).__init__(msg)
 
 
 class AuthorizationError(AuthError):
-    def __init__(self, msg='authorization error.'):
+    def __init__(self, msg=u'授权错误'):
         super(AuthorizationError, self).__init__(msg)
         self.status_code = 403
 
 
 class NoPrivilege(AuthorizationError):
-    def __init__(self, msg='no privilege found.'):
+    def __init__(self, msg=u'用户无此权限'):
         super(NoPrivilege, self).__init__(msg)
 
 
 class LoopAuthorization(AuthorizationError):
-    def __init__(self, msg='can not authorized by yourself.'):
+    def __init__(self, msg=u'不能给自己授权'):
         super(LoopAuthorization, self).__init__(msg)

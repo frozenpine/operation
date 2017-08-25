@@ -8,6 +8,7 @@ import gevent
 from flask_restful import Resource
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
+from sqlalchemy.exc import NoSuchColumnError
 
 from SysManager.Common import AESCrypto
 from SysManager.configs import SSHConfig, WinRmConfig
@@ -83,17 +84,18 @@ class ServerStaticApi(Resource, ServerList):
             self.rtn['sys_id'] = sys.id
             self.find_servers(sys)
             for entry in self.server_list.values():
-                # self.checker.append(gevent.spawn(self.check_svr, entry))
-                self.checker.append(threading.Thread(
+                self.checker.append(gevent.spawn(self.check_svr, entry))
+                ''' self.checker.append(threading.Thread(
                     target=self.check_svr,
                     args=(entry,)
-                ))
-            for tr in self.checker:
+                )) '''
+            ''' for tr in self.checker:
                 tr.setDaemon(True)
                 tr.start()
                 # gevent.sleep(0)
-                tr.join()
-            # gevent.joinall(self.checker)
+                tr.join() '''
+            gevent.sleep(0)
+            gevent.joinall(self.checker)
             self.make_response()
             return RestProtocol(self.rtn)
         else:
@@ -129,16 +131,13 @@ class SystemList(object):
         self.proc_status = {}
 
     def find_systems(self, sys):
-        logging.info('SystemStatic find_systems started: {}'.format(arrow.now()))
         if len(sys.processes) > 0:
             self.system_list.append(sys)
         if len(sys.child_systems) > 0:
             for child_sys in sys.child_systems:
                 self.find_systems(child_sys)
-        logging.info('SystemStatic find_systems finished: {}'.format(arrow.now()))
 
     def make_response(self):
-        logging.info('SystemList make_response started: {}'.format(arrow.now()))
         for each_sys in self.system_list:
             self.rtn.append(
                 {
@@ -211,7 +210,6 @@ class SystemList(object):
                     } for proc in each_sys.processes]
                 }
             )
-        logging.info('SystemList make_response finished: {}'.format(arrow.now()))
 
 class SystemStaticListApi(Resource, SystemList):
     def __init__(self):
@@ -259,9 +257,6 @@ class ProcStaticApi(Resource, SystemList):
                     .format(ip=conf.remote_host, user=conf.remote_user)
             )
             return
-        if not executor:
-            logging.warning('ip: {ip}, user: {user}'.format(ip=conf.remote_host, user=conf.remote_user))
-            return
         for proc in processes:
             process_list.add((proc.exec_file, proc.param or ''))
             port_list |= set([socket.port for socket in proc.sockets])
@@ -274,7 +269,7 @@ class ProcStaticApi(Resource, SystemList):
                     }
                 }
                 proc.version = executor.run(mod).lines '''
-                # gevent.sleep(0)
+        gevent.sleep(0)
         mod = {
             'name': 'psaux',
             'args': {
@@ -282,7 +277,7 @@ class ProcStaticApi(Resource, SystemList):
             }
         }
         results = executor.run(mod).data
-        # gevent.sleep(0)
+        gevent.sleep(0)
         find = lambda x, y: x and x in y
         for proc in processes:
             match = False
@@ -325,7 +320,7 @@ class ProcStaticApi(Resource, SystemList):
             mod['args']['processes'] = list(process_list)
         if mod.has_key('args'):
             socket_result = executor.run(mod)
-            # gevent.sleep(0)
+            gevent.sleep(0)
             if 'LISTEN' in socket_result.data.keys():
                 # 处理Windows Linux平台的不同
                 try:
@@ -362,21 +357,87 @@ class ProcStaticApi(Resource, SystemList):
             self.find_systems(sys)
             self.find_processes()
             for entry, proc_list in self.proc_list.iteritems():
-                '''self.checker.append(
+                self.checker.append(
                     gevent.spawn(self.check_proc, entry, proc_list)
-                )'''
-                self.checker.append(threading.Thread(
+                )
+                ''' self.checker.append(threading.Thread(
                     target=self.check_proc,
                     args=(entry, proc_list,)
-                ))
-            for tr in self.checker:
+                )) '''
+            ''' for tr in self.checker:
                 tr.setDaemon(True)
                 tr.start()
                 # gevent.sleep(0)
-                tr.join()
-            # gevent.joinall(self.checker)
+                tr.join() '''
+            gevent.sleep(0)
+            gevent.joinall(self.checker)
             self.make_response()
             return RestProtocol(self.rtn)
+        else:
+            return RestProtocol(message='System not found', error_code=-1), 404
+
+class ProcVersionApi(Resource):
+    def __init__(self):
+        super(ProcVersionApi, self).__init__()
+        self.proc_list = {}
+        self.checker = []
+        self.rtn = {}
+
+    def find_processes(self, sys):
+        for proc in sys.processes:
+            key = (proc.server.ip, sys.user, sys.password)
+            if not self.proc_list.has_key(key):
+                self.proc_list[key] = []
+            self.proc_list[key].append(proc)
+
+    def check_proc(self, entry, processes):
+        conf = SSHConfig(
+            entry[0],
+            entry[1],
+            entry[2]
+        )
+        executor = Executor.Create(conf)
+        if not executor:
+            logging.warning(
+                'Executor init failed with ip: {ip}, user: {user}' \
+                    .format(ip=conf.remote_host, user=conf.remote_user)
+            )
+            return
+        for proc in processes:
+            if proc.version_method:
+                mod = {
+                    'name': proc.version_method,
+                    'args': {
+                        'dir': proc.base_dir,
+                        'file': proc.exec_file
+                    }
+                }
+                proc.version = executor.run(mod).lines
+            gevent.sleep(0)
+
+    def get(self, **kwargs):
+        sys = TradeSystem.find(**kwargs)
+        if sys:
+            self.find_processes(sys)
+            for entry, proc_list in self.proc_list.iteritems():
+                self.checker.append(
+                    gevent.spawn(self.check_proc, entry, proc_list)
+                )
+            gevent.joinall(self.checker)
+            rtn = {
+                'name': sys.name,
+                'updated_time': arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss'),
+                'version': sys.version,
+                'detail': [{
+                    'id': proc.id,
+                    'process': proc.name,
+                    'proc_role': "{}".format(proc.type.name),
+                    'version': proc.version,
+                    'server':
+                        proc.server.name + "({})".format(proc.server.ip),
+                } for proc in sys.processes]
+            }
+            return RestProtocol(rtn)
         else:
             return RestProtocol(message='System not found', error_code=-1), 404
 
@@ -414,7 +475,7 @@ class LoginListApi(Resource, SystemList):
                         for idx in xrange(len(src.source['formatter'])):
                             try:
                                 tmp[src.source['formatter'][idx]['key']] = unicode(result[idx])
-                            except IndexError:
+                            except (NoSuchColumnError, IndexError):
                                 tmp[src.source['formatter'][idx]['key']] = \
                                     src.source['formatter'][idx]['default']
                             tmp['updated_time'] = arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss')
@@ -499,10 +560,11 @@ class LoginCheckApi(Resource):
                 data['seat_id'] = k
                 data['updated_time'] = arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss')
                 for each in v:
-                    try:
+                    ''' try:
                         message = each.get('message').decode('utf-8')
                     except UnicodeDecodeError:
-                        message = each.get('mesage').decode('gbk')
+                        message = each.get('mesage').decode('gbk') '''
+                    message = each.get('message')
                     if datas['key_words']['conn'] in message:
                         data['seat_status'] = u'连接成功'
                         data['conn_count'] += 1
@@ -536,6 +598,7 @@ class LoginCheckApi(Resource):
             self.find_syslog(sys)
             for (k, v) in self.syslog_list.items():
                 self.checker.append(gevent.spawn(self.check_log, k, v))
+            gevent.sleep(0)
             gevent.joinall(self.checker)
             return RestProtocol(self.rtn)
         else:
@@ -593,35 +656,37 @@ class ConfigList(object):
     def __init__(self):
         self.system_list = []
         self.rtn = []
+        self.check_result = {}
 
     def find_systems(self, sys):
-        if len(sys.config_files) > 0:
-            self.system_list.append(sys)
+        for proc in sys.processes:
+            if len(proc.config_files) > 0:
+                self.system_list.append(sys)
+                break
         if len(sys.child_systems) > 0:
             for child_sys in sys.child_systems:
                 self.find_systems(child_sys)
 
     def make_response(self):
         for each_sys in self.system_list:
+            sys_configs = []
+            for proc in each_sys.processes:
+                sys_configs.extend(proc.config_files)
             self.rtn.append({
                 'name': each_sys.name,
                 'sys_id': each_sys.id,
                 'detail': [{
+                    'id': conf.id,
+                    'uuid': conf.uuid,
                     'name': conf.name,
-                    'processes': [x.name for x in conf.processes],
                     'type': conf.config_type.name,
                     'dir': conf.dir,
                     'file': conf.file,
-                    'pre_hash': conf.pre_hash_code,
-                    'pre_timestamp':
-                        conf.pre_timestamp and \
-                        conf.pre_timestamp.to('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss'),
                     'hash': conf.hash_code,
-                    'hash_changed': conf.pre_hash_code and \
-                                    conf.pre_hash_code != conf.hash_code or False,
                     'timestamp': conf.timestamp and \
-                                 conf.timestamp.to('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss')
-                } for conf in each_sys.config_files]
+                                 conf.timestamp.to('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss'),
+                    'hash_changed': self.check_result.get(conf)
+                } for conf in sys_configs]
             })
 
 class ConfigListApi(Resource, ConfigList):
@@ -645,11 +710,11 @@ class ConfigCheckApi(Resource, ConfigList):
 
     def find_configs(self):
         for each_sys in self.system_list:
-            for conf_file in each_sys.config_files:
-                key = (each_sys.ip, each_sys.user, each_sys.password)
+            for proc in each_sys.processes:
+                key = (proc.server.ip, each_sys.user, each_sys.password)
                 if not self.config_file_list.has_key(key):
                     self.config_file_list[key] = []
-                self.config_file_list[key].append(conf_file)
+                self.config_file_list[key].extend(proc.config_files)
 
     def checkConfig(self, entry, config_files):
         remote_config = SSHConfig(entry[0], entry[1], entry[2])
@@ -666,8 +731,9 @@ class ConfigCheckApi(Resource, ConfigList):
             if result.return_code == 0:
                 ''' conf_file.pre_hash_code = conf_file.hash_code
                 conf_file.pre_timestamp = conf_file.timestamp '''
-                conf_file.hash_code = result.lines[0]
-                conf_file.timestamp = arrow.utcnow()
+                # conf_file.hash_code = result.lines[0]
+                # conf_file.timestamp = arrow.utcnow()
+                self.check_result[conf_file] = conf_file.hash_code != result.lines[0]
 
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
@@ -675,19 +741,20 @@ class ConfigCheckApi(Resource, ConfigList):
             self.find_systems(sys)
             self.find_configs()
             for remote, configs in self.config_file_list.iteritems():
-                '''self.checker.append(
+                self.checker.append(
                     gevent.spawn(self.checkConfig, remote, configs)
-                )'''
-                self.checker.append(threading.Thread(
+                )
+                ''' self.checker.append(threading.Thread(
                     target=self.checkConfig,
                     args=(remote, configs,)
-                ))
-            for tr in self.checker:
+                )) '''
+            ''' for tr in self.checker:
                 tr.setDaemon(True)
                 tr.start()
                 # gevent.sleep(0)
-                tr.join()
-            # gevent.joinall(self.checker)
+                tr.join() '''
+            gevent.sleep(0)
+            gevent.joinall(self.checker)
             self.make_response()
             return RestProtocol(self.rtn)
         else:

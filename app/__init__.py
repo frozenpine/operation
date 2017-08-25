@@ -62,8 +62,14 @@ main = Blueprint('main', __name__)
 
 def create_app(config_name):
     app = Flask(__name__)
-    app.config.from_object(config[config_name])
-    config[config_name].init_app(app)
+    app_config = None
+    import_str = 'from settings import {} as app_config'.format(config[config_name])
+    try:
+        exec import_str
+    except ImportError:
+        raise
+    app.config.from_object(app_config)
+    app_config.init_app(app)
     if app.config['GLOBAL_ENCRYPT']:
         globalEncryptkey = app.config['SECRET_KEY']
 

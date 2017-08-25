@@ -1,22 +1,14 @@
 # -*- coding: UTF-8 -*-
 
-import logging
-
-from requests.exceptions import ConnectionError
-from winrm.exceptions import InvalidCredentialsError
-
-from ..excepts import WinRmNoValidConnectionsError, WinRmAuthenticationException
-
-
 def run(client, module):
     # ps_script = module.get('ps')
     args = module.get('args')
     if args and args.has_key('chdir'):
         base_dir = args['chdir']
-        ps_script = 'cd {base_dir}; {ps}'.format(base_dir=base_dir, ps=module.get('ps'))
+        cmd_script = 'cd {base_dir}&&{cmd}'.format(base_dir=base_dir, cmd=module.get('cmd'))
     else:
-        ps_script = module.get('ps')
-    channel = client.run_ps(ps_script, codepage=936)
+        cmd_script = module.get('cmd')
+    channel = client.run_cmd(cmd_script, codepage=936)
     stdout, stderr = _stdout(), _stderr()
     stdout.channel.recv_exit_status = lambda: channel.status_code
     stdout.read = change_read_encoding(channel.std_out)
@@ -62,7 +54,6 @@ def change_read_encoding(cache):
         else:
             ret = reduce(lambda x, y: len(y) == 79 and x + u'\n' + y or x + y, window_lines)
         return ret.lstrip('\n')
-
     return _read
 
 

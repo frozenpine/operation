@@ -917,6 +917,10 @@ ul.tpl-dropdown-content li>a.tpl-dropdown-content-message:last-child {
     line-height: 18px;
 }
 
+.pointer {
+    cursor: pointer;
+}
+
 .font-green {
     color: #32c5d2!important;
 }

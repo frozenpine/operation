@@ -1,4 +1,3 @@
-var app = angular.module('myApp');
 app.service("$operationBooks", ["$http", '$message', function($http, $message) {
     this.operationBookSystemsGet = function(params) {
         $http.get('api/systems')
@@ -9,7 +8,7 @@ app.service("$operationBooks", ["$http", '$message', function($http, $message) {
             })
             .error(function(response) {
                 console.log(response);
-                $message.Alert(response.message);
+                // $message.Alert(response.message);
             });
     };
 
@@ -20,7 +19,7 @@ app.service("$operationBooks", ["$http", '$message', function($http, $message) {
                     params.onSuccess(response.data);
             }).error(function(response) {
                 console.log(response);
-                $message.Alert(response.message);
+                // $message.Alert(response.message);
             });
     };
 
@@ -34,7 +33,7 @@ app.service("$operationBooks", ["$http", '$message', function($http, $message) {
                 }
             }).error(function(response) {
                 console.log(response);
-                $message.Alert(response.message);
+                // $message.Alert(response.message);
             });
     };
 
@@ -48,7 +47,7 @@ app.service("$operationBooks", ["$http", '$message', function($http, $message) {
                 }
             }).error(function(response) {
                 console.log(response);
-                $message.Alert(response.message);
+                // $message.Alert(response.message);
             });
     };
 
@@ -62,7 +61,7 @@ app.service("$operationBooks", ["$http", '$message', function($http, $message) {
                 }
             }).error(function(response) {
                 console.log(response);
-                $message.Alert(response.message);
+                // $message.Alert(response.message);
             });
     };
 
@@ -76,7 +75,7 @@ app.service("$operationBooks", ["$http", '$message', function($http, $message) {
                 }
             }).error(function(response) {
                 console.log(response);
-                $message.Alert(response.message);
+                // $message.Alert(response.message);
             });
     };
 
@@ -90,7 +89,7 @@ app.service("$operationBooks", ["$http", '$message', function($http, $message) {
                 }
             }).error(function(response) {
                 console.log(response);
-                $message.Alert(response.message);
+                // $message.Alert(response.message);
             });
     };
     this.systemOptionBooksGet = function(params) {
@@ -103,7 +102,7 @@ app.service("$operationBooks", ["$http", '$message', function($http, $message) {
                 }
             }).error(function(response) {
                 console.log(response);
-                $message.Alert(response.message);
+                // $message.Alert(response.message);
             });
     };
     this.systemOptionGroupPost = function(params) {
@@ -129,7 +128,7 @@ app.service("$operationBooks", ["$http", '$message', function($http, $message) {
                 }
             }).error(function(response) {
                 console.log(response);
-                $message.Alert(response.message);
+                // $message.Alert(response.message);
             });
     };
     this.operationRecordsPost = function(params) {

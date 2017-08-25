@@ -1,40 +1,31 @@
 # -*- coding: UTF-8 -*-
+from flask import current_app, request
+from flask_login import current_user
 from flask_restful import Resource
-from app import db
-from app.models import Operator, MethodType
-from flask import request
 from werkzeug.exceptions import BadRequest
 from werkzeug.security import check_password_hash
-from restful.errors import (DataNotJsonError,
-                            DataUniqueError,
-                            DataNotNullError,
-                            DataNotMatchError,
-                            ApiError)
-from restful.protocol import RestProtocol
-from flask_login import current_user
+
+from app import db
 from app.auth.privileged import CheckPrivilege
+from app.models import MethodType, Operator
+from restful.errors import (ApiError, DataNotJsonError, DataNotMatchError,
+                            DataNotNullError, DataUniqueError)
+from restful.protocol import RestProtocol
 
 
 class UserApi(Resource):
     def __init__(self):
         super(UserApi, self).__init__()
-        self.uri_to_action = {"/api/operation-groups": "add_group",
-                              "/api/operation-group/id/*": "edit_group",
-                              "/api/operation-books": "add_edit_ob",
-                              "/api/systems": "add_sys"}
-        self.uri_to_method = {"/api/operation-groups": "Authorize",
-                              "/api/operation-group/id/*": "Authorize",
-                              "/api/operation-books": "Authorize",
-                              "/api/systems": "Authorize"}
+        self.protection = current_app.config['UI_PROTECTION']
 
     def get(self, **kwargs):
         user = Operator.find(**kwargs)
         if user:
             if user.id == current_user.id or (
                             user.id != current_user.id and 'authorizors' in [role.name for role in current_user.roles]):
-                privilege_dict = dict()
-                for uri, method in self.uri_to_method.iteritems():
-                    privilege_dict[self.uri_to_action[uri]] = CheckPrivilege(user, uri, MethodType[method])
+                privilege_dict = dict(zip(self.protection['ui_element'], self.protection['ui_uri']))
+                for key, uri in privilege_dict.iteritems():
+                    privilege_dict[key] = CheckPrivilege(user, uri, MethodType.Authorize)
                 user_data = RestProtocol(user)
                 user_data.get('data')['privileges'] = privilege_dict
                 return user_data
@@ -116,8 +107,7 @@ class UserListApi(Resource):
                     result_list.append(RestProtocol(user[j]))
                 return result_list
 
-
-class UserPrivilegeHandler(Resource):
+''' class UserPrivilegeHandler(Resource):
     def __init__(self):
         super(UserPrivilegeHandler, self).__init__()
 
@@ -135,4 +125,4 @@ class UserPrivilegeHandler(Resource):
         cur_user = Operator.find(login=current_user.login)
         add_info = RestProtocol(cur_user)
         add_info.get('data')['privileges'] = privilege_dict
-        return add_info
+        return add_info '''

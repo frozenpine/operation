@@ -14,6 +14,10 @@ app.controller('dashBoardController', ['$scope', '$rootScope', '$uidatas', '$tim
     };
     $scope.getInventory();
 
+    $scope.CheckProcVersionCallback = function(data) {
+        $scope.getInventory();
+    };
+
     $scope.bindPopup = function(proc) {
         $('#' + proc.proc_uuid).popover({
             content: proc.proc_name + '<br/>' + proc.proc_ver,

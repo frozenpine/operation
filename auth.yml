@@ -30,21 +30,26 @@ Privileges:
     roles:
       - *second
   - uri: /api/emerge_ops
-    bit: MethodType.Execute
+    bit: MethodType.Authorize
     roles:
       - *second
   - uri: /api/operation-groups
     bit: MethodType.Authorize
     roles:
-      - *admin
       - *second
   - uri: /api/operation-group/id/*
     bit: MethodType.Authorize
     roles:
-      - *admin
       - *second
   - uri: /api/operation-books
     bit: MethodType.Authorize
     roles:
-      - *admin
       - *second
+  - uri: /api/op_group
+    bit: MethodType.Authorize
+    roles:
+      - *second
+  - uri: /api/systems
+    bit: MethodType.Authorize
+    roles:
+      - *admin
