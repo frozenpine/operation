@@ -150,7 +150,7 @@ app.controller('optionGroupController', ['$scope', '$q', '$operationBooks', '$ro
                 $message.Success("表单提交成功");
             },
             onError: function(response) {
-                $scope.loadingIcon = !$scope.loadingIcon;
+                $scope.loadingIcon = false;
                 $message.ModelAlert("表单提交失败，错误代码" + response, 'modalInfoShowAdd');
                 // $scope.formComfirm = true;
             }

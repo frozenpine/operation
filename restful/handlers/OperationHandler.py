@@ -275,8 +275,8 @@ class OperationListRunAllApi(OperationMixin, Resource):
 
     def check_privileges(self, op_group):
         need_auth = reduce(
-            lambda x, y: x.need_authorization or y.need_authorization,
-            op_group.operations
+            lambda x, y: x.need_authorization if not isinstance(x, bool) else x or y.need_authorization,
+            op_group.operations, False
         )
         if need_auth:
             if request.headers.has_key('Authorizor'):

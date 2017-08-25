@@ -29,7 +29,7 @@
 
     <div class="am-modal am-modal-confirm" tabindex="-1" id="addNewGroups" ng-controller="optionGroupController">
         <div class="am-modal-dialog">
-            <form class="am-form am-form-horizontal" name="optionSubmitName" ng-submit="addNewGroup()">
+            <form class="am-form am-form-horizontal" name="optionSubmitName">
                 <div class="am-modal-hd font-green bold">新增操作组
                     <a href="javascript: void(0)" class="am-close am-close-spin" ng-click="resetDialog()" data-am-modal-close>&times;</a>
                 </div>
@@ -132,8 +132,8 @@
                 </div>
                 <div class="am-modal-footer am-u-sm-12">
                     <span class="am-modal-btn am-u-sm-6" ng-click="resetDialog()" data-am-modal-cancel>取消</span>
-                    <button type="submit" class="am-btn am-btn-primary am-u-sm-6" style="height: 44px;" ng-disabled="optionGroupConfirmIsNull||optionSubmitName.$invalid">
-                        确定  
+                    <button type="submit" class="am-btn am-btn-primary am-u-sm-6" style="height: 44px;" ng-disabled="optionGroupConfirmIsNull||optionSubmitName.$invalid" ng-click="addNewGroup()">
+                        确定
                         <span class="am-icon-refresh am-icon-spin" ng-show="loadingIcon"></span>
                     </button>
                 </div>
