@@ -308,6 +308,7 @@ shift $((OPTIND-1))
                                     continue
                                 }
                             done
+                            break
                         }
                     done
                     su - ${USER} -c "${BASE_DIR}/`basename $0` $*"
