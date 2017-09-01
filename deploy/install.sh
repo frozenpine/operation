@@ -41,6 +41,27 @@ _pause() {
     }
 }
 
+_confirm() {
+    local MESSAGE
+    local ANS
+    while true; do
+        [[ $# -gt 0 ]] && MESSAGE="$* (y|n)" || MESSAGE="Confirmed? (y|n)"
+        read -n1 -p "${MESSAGE}" ANS
+        case ${ANS} in
+            Y|y)
+                return 0
+            ;;
+            N|n)
+                return 1
+            ;;
+            *)
+                echo; echo "Invalid input."
+                continue
+            ;;
+        esac
+    done
+}
+
 _error() {
     [[ $# > 0 ]] && {
         echo "`date` [ERROR] $*" | tee -a "${INSTALL_LOG}" 1>&2
@@ -217,6 +238,19 @@ EOF
     }
 }
 
+_deploy() {
+    read -p "Please input deploy base dir(default: ${DEPLOY_DIR}): " ANS
+    [[ -n ${ANS} ]] && DEPLOY_DIR=${ANS}
+    [[ ! -d "${DEPLOY_DIR}" ]] && {
+        _warning "${DEPLOY_DIR} not exists, creating..."
+        mkdir -p "${DEPLOY_DIR}"
+    }
+    read -p "Please input python virtualenv name(default: ${PY_VIRTUALENV_NAME}): " ANS
+    [[ -n ${ANS} ]] && PY_VIRTUALENV_NAME=${ANS}
+    _makeVirtualEnv
+    _pause 5 "Application deployed in \"${DEPLOY_DIR}/${PY_VIRTUALENV_NAME}\""
+}
+
 
 while getopts :h FLAG; do
     case $FLAG in
@@ -241,27 +275,8 @@ shift $((OPTIND-1))
             }
             _checkPlatform && _pause || exit 1
             _checkPythonVersion && _pause || {
-                while true; do
-                    read -t 10 -n1 -p "Did you want to install Python automaticlly?(Y or n)" ANS || {
-                        _error "Read timeout(10s), automatically answner yes."
-                        ${ANS}=y
-                    }
-                    case ${ANS} in
-                        Y|y)
-                            echo
-                            break
-                        ;;
-                        N|n)
-                            echo
-                            exit 1
-                        ;;
-                        *)
-                            _error "Invalid input, retry."
-                            continue
-                        ;;
-                    esac
-                done
-                _installPython
+                _confirm "Did you want to install Python automaticlly?" && \
+                    _installPython || exit 1
             }
             _checkPip && {
                 _pause
@@ -270,34 +285,34 @@ shift $((OPTIND-1))
             _pause 5 "Python installation finished."
         ;;
         "deploy")
-            local ANS
             [[ ${EUID} -eq 0 ]] && {
-                while true; do
-                    read -n1 -p "Did you want to deploy under user root? (y/n)" ANS
-                    case ${ANS} in
-                        Y|y)
-                            echo; break
-                        ;;
-                        N|n)
-                            echo; exit 1
-                        ;;
-                        *)
-                            _warning "Invalid input."
-                            continue
-                        ;;
-                    esac
-                done
-            }
-            read -p "Please input deploy base dir(default: ${DEPLOY_DIR}): " ANS
-            [[ -n ${ANS} ]] && DEPLOY_DIR=${ANS}
-            [[ ! -d "${DEPLOY_DIR}" ]] && {
-                _warning "${DEPLOY_DIR} not exists, creating..."
-                mkdir -p "${DEPLOY_DIR}"
-            }
-            read -p "Please input python virtualenv name(default: ${PY_VIRTUALENV_NAME}): " ANS
-            [[ -n ${ANS} ]] && PY_VIRTUALENV_NAME=${ANS}
-            _makeVirtualEnv
-            _pause 5 "Application deployed in \"${DEPLOY_DIR}/${PY_VIRTUALENV_NAME}\""
+                _confirm "Did you want to deploy under user root?" && {
+                    _deploy
+                } || {
+                    local USER
+                    local PASSWORD
+                    while true; do
+                        read -p "Please input username: " USER
+                        grep ${USER} /etc/passwd && {
+                            _confirm "User exist, did you mean deploy under exist user \"${USER}\"" && \
+                                break || continue
+                        } || {
+                            useradd ${USER}
+                            while true; do
+                                read -p "Please input password: " PASSWORD
+                                [[ -n ${PASSWORD} ]] && {
+                                    echo -n "${PASSWORD}" | passwd ${USER} --stdin
+                                    break
+                                } || {
+                                    _warning "Password can not be empty."
+                                    continue
+                                }
+                            done
+                        }
+                    done
+                    su - ${USER} -c "${BASE_DIR}/`basename $0` $*"
+                }
+            } || _deploy
         ;;
         *)
             echo "$(basename $0) illegal option -- $1" >&2
