@@ -448,7 +448,7 @@ class TradeProcess(SQLModelMixin, db.Model):
         default=lambda: unicode(uuid4()).lower()
     )
     name = db.Column(db.String(20), nullable=False, index=True)
-    description = db.Column(db.String(50))
+    description = db.Column(db.String(100))
     type = db.Column(ChoiceType(HaType, impl=db.Integer()), default=HaType.Master)
     version = db.Column(JSONType, default=[])
     version_method = db.Column(db.String(100))
@@ -473,7 +473,7 @@ class Socket(SQLModelMixin, db.Model):
         default=lambda: unicode(uuid4()).lower()
     )
     name = db.Column(db.String(20), index=True)
-    description = db.Column(db.String(50))
+    description = db.Column(db.String(100))
     type = db.Column(
         ChoiceType(SocketType, impl=db.Integer()),
         default=SocketType.TCP
@@ -533,7 +533,7 @@ class TradeSystem(SQLModelMixin, db.Model):
         default=lambda: unicode(uuid4()).lower()
     )
     name = db.Column(db.String(20), unique=True, index=True)
-    description = db.Column(db.String(50))
+    description = db.Column(db.String(100))
     type_id = db.Column(db.Integer, db.ForeignKey('system_types.id'), index=True)
     version = db.Column(db.String(100))
     manage_ip = db.Column(IPAddressType, index=True)
@@ -656,7 +656,7 @@ class DataSource(SQLModelMixin, db.Model):
     __tablename__ = "data_sources"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(20), unique=True, index=True)
-    description = db.Column(db.String(50))
+    description = db.Column(db.String(100))
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     src_type = db.Column(
         ChoiceType(DataSourceType, impl=db.Integer()),
@@ -671,7 +671,7 @@ class SystemVendor(SQLModelMixin, db.Model):
     __tablename__ = "vendors"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(20), unique=True, index=True)
-    description = db.Column(db.String(50))
+    description = db.Column(db.String(100))
     contactors = db.Column(JSONType, default={})
     systems = db.relationship('TradeSystem', backref='vendor', lazy='dynamic')
 
@@ -684,7 +684,7 @@ class Server(SQLModelMixin, db.Model):
     )
     name = db.Column(db.String(20), unique=True, index=True)
     survey = db.Column(JSONType, default={})
-    description = db.Column(db.String(50))
+    description = db.Column(db.String(100))
     platform = db.Column(ChoiceType(PlatformType, impl=db.Integer()), default=PlatformType.Linux)
     manage_ip = db.Column(IPAddressType, index=True)
     disabled = db.Column(db.Boolean, default=False)
@@ -737,7 +737,7 @@ class Operation(SQLModelMixin, db.Model):
         default=lambda: unicode(uuid4()).lower()
     )
     name = db.Column(db.String(20), index=True)
-    description = db.Column(db.String(50))
+    description = db.Column(db.String(100))
     earliest = db.Column(db.String(8))
     latest = db.Column(db.String(8))
     book_id = db.Column(db.Integer, db.ForeignKey('operation_book.id'), index=True)
@@ -793,7 +793,7 @@ class OperationCatalog(SQLModelMixin, db.Model):
     __tablename__ = 'operation_catalogs'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(20), index=True)
-    description = db.Column(db.String(50))
+    description = db.Column(db.String(100))
     order = db.Column(db.Integer)
     operations = db.relationship('OperationBook', backref='catalog')
 
@@ -805,7 +805,7 @@ class OperationBook(SQLModelMixin, db.Model):
         default=lambda: unicode(uuid4()).lower()
     )
     name = db.Column(db.String(20), index=True)
-    description = db.Column(db.String(50))
+    description = db.Column(db.String(100))
     type = db.Column(ChoiceType(ScriptType, impl=db.Integer()))
     catalog_id = db.Column(db.Integer, db.ForeignKey('operation_catalogs.id'), index=True)
     detail = db.Column(JSONType, nullable=False, default={})
@@ -846,7 +846,7 @@ class OperationGroup(SQLModelMixin, db.Model):
     )
     name = db.Column(db.String(20), index=True)
     trigger_time = db.Column(db.String(8))
-    description = db.Column(db.String(50))
+    description = db.Column(db.String(100))
     is_emergency = db.Column(db.Boolean, default=False)
     order = db.Column(db.Integer)
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
