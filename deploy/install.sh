@@ -291,8 +291,6 @@ shift $((OPTIND-1))
                 _confirm "Did you want to deploy under user root?" && {
                     _deploy
                 } || {
-                    local USER
-                    local PASSWORD
                     while true; do
                         read -p "Please input username: " USER
                         grep ${USER} /etc/passwd && {
