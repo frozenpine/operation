@@ -139,20 +139,20 @@ EOF
 _checkPip() {
     which pip &>/dev/null
     if [[ $? -ne 0 ]]; then
-        pushd "/tmp"
-        pushd "${BASE_DIR}/requirements"
+        pushd "/tmp" &>/dev/null
+        pushd "${BASE_DIR}/requirements" &>/dev/null
         SETUPTOOL_FILE=`ls setuptools-*.zip`
-        popd
+        popd &>/dev/null
         unzip "${BASE_DIR}/requirements/${SETUPTOOL_FILE}"
         cd setuptools-*
         python setup.py install
-        pushd "${BASE_DIR}/requirements"
+        pushd "${BASE_DIR}/requirements" &>/dev/null
         PIP_FILE=`ls pip-*.tar.gz`
-        popd
+        popd &>/dev/null
         tar -xzvf "${BASE_DIR}/requirements/${PIP_FILE}"
         cd pip-*
         python setup.py install
-        popd
+        popd &>/dev/null
         _info "Pip installed successfully."
     else
         _info "Pip module check successfully"
@@ -164,14 +164,14 @@ _installVirtualenv() {
     which virtualenv && {
         _info "Virtualenv already installed."
     } || {
-        pushd "${BASE_DIR}/requirements/"
+        pushd "${BASE_DIR}/requirements/" &>/dev/null
         pip install virtualenv*.tar.gz
-        popd
+        popd &>/dev/null
     }
 }
 
 _makeVirtualEnv() {
-    pushd "${DEPLOY_DIR}"
+    pushd "${DEPLOY_DIR}" &>/dev/null
     virtualenv ${PY_VIRTUALENV_NAME}
     source ${PY_VIRTUALENV_NAME}/bin/activate
     if [[ ${RELEASE} == "el6" ]]; then
@@ -180,14 +180,14 @@ _makeVirtualEnv() {
         pip install --no-index --find-links="${BASE_DIR}/requirements" -r "${BASE_DIR}/requirements.txt"
     fi
     deactivate
-    popd
+    popd &>/dev/null
 }
 
 _rpmInstall() {
     if [[ -d "${BASE_DIR}/packages" ]]; then
-        pushd "${BASE_DIR}/packages"
-        rpm -ivh *.`uname -r|cut -d'.' -f4-5`.rpm && _info "Pre-install packages finished." || _error "Pre-install packages failed."
-        popd
+        pushd "${BASE_DIR}/packages" &>/dev/null
+        rpm -ivh *.`uname -r|cut -d'.' -f4-5`.rpm && _info "Pre-install packages finished."
+        popd &>/dev/null
     else
         _error "RPM packages directory missing."
     fi
@@ -198,16 +198,14 @@ _debInstall() {
 }
 
 _installPython() {
-    pushd "/tmp"
+    pushd "/tmp" &>/dev/null
     tar -xzvf "${PY_INSTALL_FILE}"
     cd Python-*
     ./configure
     make -j4; make install
-    popd
     rm -f /usr/bin/python
     ln -s /usr/bin/python /usr/local/bin/python2.7
-    popd
-    _checkPip
+    popd &>/dev/null
 }
 
 
