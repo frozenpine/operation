@@ -26,63 +26,50 @@ EOF
 }
 
 _pause() {
-    if [[ $1 =~ [0-9] ]]; then
+    [[ $1 =~ [0-9] ]] && {
         local TIMEOUT=$1
         shift 1
-    fi
-    if [[ ! ${TIMEOUT} ]]; then
+    }
+    [[ ! ${TIMEOUT} ]] && {
         echo "$*"
         read -n1 -p "Press any key to continue..."
         echo
-    else
+    } || {
         echo "$*"
         read -n1 -t ${TIMEOUT} -p "Press any key or wait for ${TIMEOUT} seconds to continue..."
         echo
-    fi
+    }
 }
 
 _error() {
-    if [[ $# > 0 ]]; then
+    [[ $# > 0 ]] && {
         echo "`date` [ERROR] $*" | tee -a "${INSTALL_LOG}" 1>&2
-    else
+    } || {
         cat | sed -e 's/\(.*\)/    \1/g' -e '1 i\'"`date`"' [ERROR]' | tee -a "${INSTALL_LOG}" 1>&2
-    fi
+    }
 }
 
 _warning() {
-    if [[ $# > 0 ]]; then
+    [[ $# > 0 ]] && {
         echo "`date` [WARNING] $*" | tee -a "${INSTALL_LOG}" 1>&2
-    else
+    } || {
         cat | sed -e 's/\(.*\)/    \1/g' -e '1 i\'"`date`"' [WARNING]' | tee -a "${INSTALL_LOG}" 1>&2
-    fi
+    }
 }
 
 _info() {
-    if [[ $# > 0 ]]; then
+    [[ $# -gt 0 ]] && {
         echo "`date` [INFO] $*" | tee -a "${INSTALL_LOG}"
-    else
+    } || {
         cat | sed -e 's/\(.*\)/    \1/g' -e '1 i\'"`date`"' [INFO]' | tee -a "${INSTALL_LOG}"
-    fi
+    }
 }
 
 _checkPlatform() {
     _info "Checking system platform..."
     if [[ -f /etc/redhat-release ]]; then
         RELEASE=`uname -r|awk -F'.' '{print $(NF-1)}'`
-
         _info "Current system platform is redhat ${RELEASE}."
-        if [[ ${RELEASE} == "el6" ]]; then
-            _warning <<EOF
-This platform in Redhat el6, yum command not compatible with python 2.7.*
-Trying to fix this problem by specify yum command with python2.6 forcelly.
-Current config: `head -1 /usr/bin/yum`
-EOF
-            sed -i 's/python.*$/python2\.6/' /usr/bin/yum
-            _warning <<EOF
-Problem fixed.
-New config: `head -1 /usr/bin/yum`
-EOF
-        fi
     elif [[ -f /etc/lsb-release ]]; then
         RELEASE=`grep DISTRIB_ID /etc/lsb-release|cut -d'=' -f2`
         _info "Current system platform is ${RELEASE}."
@@ -110,35 +97,33 @@ _checkPythonVersion() {
     PY_VER_MIN=$(echo ${PY_VER}|cut -d'.' -f2)
     PY_VER_REL=$(echo ${PY_VER}|cut -d'.' -f3|sed 's/[^0-9]$//g')
     _info "Current python version: ${PY_VER}"
-    if [[ ${PY_VER_MAJ} -gt 2 ]]; then
+    [[ ${PY_VER_MAJ} -gt 2 ]] && {
         _error <<EOF
 Python major version(${PY_VER_MAJ}) check faild.
 Version 2.7.* is required, version ${PY_VER_RECOMM} is recommanded.
 EOF
         return 1
-    else
-        if [[ ${PY_VER_MIN} -lt 7 ]]; then
+    } || {
+        [[ ${PY_VER_MIN} -lt 7 ]] && {
             _error <<EOF
 Python minor version(${PY_VER_MIN}) check faild.
 Version 2.7.* is required, version ${PY_VER_RECOMM} is recommanded.
 EOF
             return 1
-        else
-            if [[ ${PY_VER_REL} -ne 13 ]]; then
+        } || {
+            [[ ${PY_VER_REL} -ne 13 ]] && {
                 _warning <<EOF
 Python version(${PY_VER}) meet requirement, but not fully tested.
 Version 2.7.* is required, version ${PY_VER_RECOMM} is recommanded.
 EOF
-            else
-                _info "Python version fully meet requirement."
-            fi
-        fi
-    fi
+            } || _info "Python version fully meet requirement."
+        }
+    }
 }
 
 _checkPip() {
     which pip &>/dev/null
-    if [[ $? -ne 0 ]]; then
+    [[ $? -ne 0 ]] && {
         pushd "/tmp" &>/dev/null
         pushd "${BASE_DIR}/requirements" &>/dev/null
         SETUPTOOL_FILE=`ls setuptools-*.zip`
@@ -154,9 +139,7 @@ _checkPip() {
         python setup.py install
         popd &>/dev/null
         _info "Pip installed successfully."
-    else
-        _info "Pip module check successfully"
-    fi
+    } || _info "Pip module check successfully"
 }
 
 _installVirtualenv() {
@@ -184,22 +167,27 @@ _makeVirtualEnv() {
 }
 
 _rpmInstall() {
-    if [[ -d "${BASE_DIR}/packages" ]]; then
+    [[ -d "${BASE_DIR}/packages" ]] && {
         pushd "${BASE_DIR}/packages" &>/dev/null
         pushd "/etc/yum.repos.d" &>/dev/null
         mkdir qt_repoback; mv *.repo qt_repoback/
         yum clean all &>/dev/null
         popd &>/dev/null
-        cd ${RELEASE}
-        yum localinstall -y *.rpm
-        pushd "/etc/yum.repos.d" &>/dev/null
-        mv qt_repoback/*.repo ./; rm -rf qt_repoback
-        popd &>/dev/null
+        cd ${RELEASE} && {
+            yum localinstall -y *.rpm
+            pushd "/etc/yum.repos.d" &>/dev/null
+            mv qt_repoback/*.repo ./; rm -rf qt_repoback
+            popd &>/dev/null
+        } || {
+            _error "No packages dir for ${RELEASE}."
+            exit 1
+        }
         _info "Pre-install packages finished."
         popd &>/dev/null
-    else
+    } || {
         _error "RPM packages directory missing."
-    fi
+        exit 1
+    }
 }
 
 _debInstall() {
@@ -215,6 +203,18 @@ _installPython() {
     rm -f /usr/bin/python
     ln -s /usr/bin/python /usr/local/bin/python2.7
     popd &>/dev/null
+    [[ ${RELEASE} == "el6" ]] && {
+        _warning <<EOF
+This platform in Redhat el6, yum command not compatible with python 2.7.*
+Trying to fix this problem by specify yum command with python2.6 forcelly.
+Current config: `head -1 /usr/bin/yum`
+EOF
+        sed -i 's/python.*$/python2\.6/' /usr/bin/yum
+        _warning <<EOF
+Problem fixed.
+New config: `head -1 /usr/bin/yum`
+EOF
+    }
 }
 
 
@@ -234,6 +234,7 @@ shift $((OPTIND-1))
 [ $# -eq 1 ] && {
     case $1 in
         "python")
+            local ANS
             [[ ${EUID} -ne 0 ]] && {
                 _error "Python installation must run in privilege mode."
                 exit 1
@@ -269,6 +270,32 @@ shift $((OPTIND-1))
             _pause 5 "Python installation finished."
         ;;
         "deploy")
+            local ANS
+            [[ ${EUID} -eq 0 ]] && {
+                while true; do
+                    read -n1 -p "Did you want to deploy under user root? (y/n)" ANS
+                    case ${ANS} in
+                        Y|y)
+                            echo; break
+                        ;;
+                        N|n)
+                            echo; exit 1
+                        ;;
+                        *)
+                            _warning "Invalid input."
+                            continue
+                        ;;
+                    esac
+                done
+            }
+            read -p "Please input deploy base dir(default: ${DEPLOY_DIR}): " ANS
+            [[ -n ${ANS} ]] && DEPLOY_DIR=${ANS}
+            [[ ! -d "${DEPLOY_DIR}" ]] && {
+                _warning "${DEPLOY_DIR} not exists, creating..."
+                mkdir -p "${DEPLOY_DIR}"
+            }
+            read -p "Please input python virtualenv name(default: ${PY_VIRTUALENV_NAME}): " ANS
+            [[ -n ${ANS} ]] && PY_VIRTUALENV_NAME=${ANS}
             _makeVirtualEnv
             _pause 5 "Application deployed in \"${DEPLOY_DIR}/${PY_VIRTUALENV_NAME}\""
         ;;
