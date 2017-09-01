@@ -52,7 +52,7 @@ app.controller('sysStaticsControl', ['$scope', '$systems', '$interval', '$routeP
     $scope.autoRefresh = function() {
         if ($scope.auto) {
             $scope.sysStaticInterval = $interval(
-                function() { $scope.checkProc(); },
+                $scope.checkProc,
                 $rootScope.GlobalConfigs.sysStaticsInterval.current * 1000
             );
             $scope.checkProc();

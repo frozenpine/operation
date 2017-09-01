@@ -40,9 +40,8 @@ app.controller('clientStaticsControl', ['$scope', '$systems', '$routeParams', '$
     $scope.autoRefresh = function() {
         if ($scope.auto) {
             $scope.clientSessionInterval = $interval(
-                function() {
-                    $scope.CheckClientSessions();
-                }, parseInt($rootScope.sessionStaticsInterval) * 1000
+                $scope.CheckClientSessions,
+                $rootScope.GlobalConfigs.sessionStaticsInterval.current * 1000
             );
             $scope.CheckClientSessions();
         } else {

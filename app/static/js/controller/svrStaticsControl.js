@@ -61,7 +61,7 @@ app.controller('svrStaticsControl', ['$scope', '$servers', '$interval', '$routeP
     $scope.autoRefresh = function() {
         if ($scope.auto) {
             $scope.svrStaticInterval = $interval(
-                function() { $scope.checkSvrStatics(); },
+                $scope.checkSvrStatics,
                 $rootScope.GlobalConfigs.svrStaticsInterval.current * 1000
             );
             $scope.checkSvrStatics();

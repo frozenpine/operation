@@ -47,7 +47,7 @@ app.controller('loginStaticsControl', ['$scope', '$systems', '$interval', '$time
             $scope.checking = true;
         }
     };
-    
+
     $scope.checkRefreshInterval = function() {
         var interval = $scope.GlobalConfigs.loginStaticsInterval.current;
         if (isNaN(interval) || interval < 30) {
@@ -62,7 +62,7 @@ app.controller('loginStaticsControl', ['$scope', '$systems', '$interval', '$time
     $scope.autoRefresh = function() {
         if ($scope.auto) {
             $scope.loginStaticInterval = $interval(
-                function() { $scope.CheckLoginLog(); },
+                $scope.CheckLoginLog,
                 $rootScope.GlobalConfigs.loginStaticsInterval.current * 1000
             );
             $scope.CheckLoginLog();
