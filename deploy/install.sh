@@ -186,8 +186,15 @@ _makeVirtualEnv() {
 _rpmInstall() {
     if [[ -d "${BASE_DIR}/packages" ]]; then
         pushd "${BASE_DIR}/packages" &>/dev/null
+        pushd "/etc/yum.repos.d" &>/dev/null
+        mkdir qt_repoback; mv *.repo qt_repoback/
+        yum clean all &>/dev/null
+        popd &>/dev/null
         cd ${RELEASE}
-        rpm -ivh *.rpm
+        yum localinstall -y *.rpm
+        pushd "/etc/yum.repos.d" &>/dev/null
+        mv qt_repoback/*.repo ./; rm -rf qt_repoback
+        popd &>/dev/null
         _info "Pre-install packages finished."
         popd &>/dev/null
     else
