@@ -161,7 +161,7 @@ _checkPip() {
 
 _installVirtualenv() {
     _checkPip
-    which virtualenv && {
+    which virtualenv &>/dev/null && {
         _info "Virtualenv already installed."
     } || {
         pushd "${BASE_DIR}/requirements/" &>/dev/null
@@ -186,7 +186,7 @@ _makeVirtualEnv() {
 _rpmInstall() {
     if [[ -d "${BASE_DIR}/packages" ]]; then
         pushd "${BASE_DIR}/packages" &>/dev/null
-        rpm -ivh *.`uname -r|cut -d'.' -f4-5`.rpm
+        rpm -ivh libffi*.${RELEASE}*.rpm openssl*.${RELEASE}*.rpm python*.${RELEASE}*.rpm sqlite*.${RELEASE}*.rpm
         _info "Pre-install packages finished."
         popd &>/dev/null
     else
