@@ -370,7 +370,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr ng-class="{'未连接': 'am-warning', '登录成功': 'am-success', '连接成功': 'am-primary', '登录失败': 'am-danger', '连接断开': 'am-danger'}[loginStatics[$index].seat_status]" ng-repeat="data in loginStatics | filter: keyword">
+                            <tr ng-class="{'未连接': 'am-warning', '登录成功': 'am-success', '连接成功': 'am-primary', '登录失败': 'am-danger', '连接断开': 'am-danger'}[data.seat_status]" ng-repeat="data in loginStatics | filter: keyword">
                                 <td>{{::data.seat_name}}</td>
                                 <td>{{data.trading_day}}</td>
                                 <td>{{data.login_time}}</td>
