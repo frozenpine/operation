@@ -49,8 +49,10 @@ class Config(object):
 class DevelopmentConfig(Config):
     DEBUG = True
     # NEO4J_HOST = '192.168.101.152'
+    ''' SQLALCHEMY_DATABASE_URI = os.environ.get('FLASK_SQLALCHEMY_DATABASE_URI') or \
+                                'sqlite:///' + os.path.join(base_dir, 'database/flask.db') '''
     SQLALCHEMY_DATABASE_URI = os.environ.get('FLASK_SQLALCHEMY_DATABASE_URI') or \
-                                'sqlite:///' + os.path.join(base_dir, 'database/flask.db')
+                              'mysql+pymysql://devops:devops@192.168.100.151/devops?charset=utf8'
     NEED_UI_PROTECTION = False
 
 class ProductionConfig(Config):

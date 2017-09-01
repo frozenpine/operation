@@ -15,7 +15,7 @@
                                     自动刷新：
                                 </span>
                             </span>
-                            <input type="text" class="am-form-field font-green am-text-center" minlength="2" maxlength="4" ng-model="GlobalConfigs.svrStaticsInterval.current" style="height: 25px;width: 50px;">
+                            <input type="text" class="am-form-field font-green am-text-center" minlength="2" maxlength="4" ng-model="GlobalConfigs.svrStaticsInterval.current" style="height: 25px;width: 50px;" ng-blur="checkRefreshInterval()">
                             <span class="am-input-group-label" style="padding: 0 5px; line-height: normal; height: 25px;border-color: #32c5d2; background: #32c5d2">s</span>
                         </div>
                     </div>

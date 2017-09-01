@@ -25,6 +25,18 @@ app.controller('clientStaticsControl', ['$scope', '$systems', '$routeParams', '$
             $scope.checking = true;
         }
     };
+
+    $scope.checkRefreshInterval = function() {
+        var interval = $scope.GlobalConfigs.sessionStaticsInterval.current;
+        if (isNaN(interval) || interval < 30) {
+            $scope.GlobalConfigs.sessionStaticsInterval.current =
+                $scope.GlobalConfigs.sessionStaticsInterval.default;
+            return;
+        } else {
+            $interval.cancel($scope.clientSessionInterval);
+            $scope.autoRefresh();
+        }
+    };
     $scope.autoRefresh = function() {
         if ($scope.auto) {
             $scope.clientSessionInterval = $interval(

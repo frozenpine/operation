@@ -47,18 +47,18 @@ app.controller('loginStaticsControl', ['$scope', '$systems', '$interval', '$time
             $scope.checking = true;
         }
     };
-    $rootScope.$watch('GlobalConfig.loginStaticsInterval.current', function(newValue, oldValue) {
-        if (newValue != oldValue) {
-            if (isNaN(newValue) || newValue < 30) {
-                $scope.GlobalConfigs.loginStaticsInterval.current =
-                    $scope.GlobalConfigs.loginStaticsInterval.default;
-                return;
-            } else {
-                $interval.cancel($scope.loginStaticInterval);
-                $scope.autoRefresh();
-            }
+    
+    $scope.checkRefreshInterval = function() {
+        var interval = $scope.GlobalConfigs.loginStaticsInterval.current;
+        if (isNaN(interval) || interval < 30) {
+            $scope.GlobalConfigs.loginStaticsInterval.current =
+                $scope.GlobalConfigs.loginStaticsInterval.default;
+            return;
+        } else {
+            $interval.cancel($scope.loginStaticInterval);
+            $scope.autoRefresh();
         }
-    }, true);
+    };
     $scope.autoRefresh = function() {
         if ($scope.auto) {
             $scope.loginStaticInterval = $interval(
