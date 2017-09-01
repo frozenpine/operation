@@ -10,17 +10,17 @@ PY_VER_RECOMM="2.7.13"
 PY_INSTALL_FILE="${BASE_DIR}/Python-${PY_VER_RECOMM}.tgz"
 PY_VIRTUALENV_NAME="devops"
 
+RELEASE=
+
 _help() {
-    MESSAGE="Usage : install.sh [-h] {check|python|virtualenv|deploy}"
+    MESSAGE="Usage : install.sh [-h] {python|deploy}"
     printf -v HEAD "%*s" $((${#MESSAGE}+4))
     printf "%s\n# %${#MESSAGE}s #\n" ${HEAD// /#}
     printf "# %s #\n" "${MESSAGE}"
     printf "# %${#MESSAGE}s #\n%s\n" "" ${HEAD// /#}
     printf "Option Descriptions :\n"
     cat <<EOF | column -t -c 2 | sed 's/#/ /g'
-CHECK       Check#system#environment
 PYTHON      Install#python-2.7.*#environment
-VIRTUALENV  Make#python#virtual#environment
 DEPLOY      Deploy#application
 EOF
 }
@@ -66,10 +66,9 @@ _info() {
 }
 
 _checkPlatform() {
-    local RELEASE
     if [[ -f /etc/redhat-release ]]; then
-        RELEASE='Redhat'
-        uname -r | grep el6 && {
+        RELEASE=`uname -r|awk -F'.' '{print $(NF-1)}'`
+        if [[ ${RELEASE} == "el6" ]]; then
             _warning <<EOF
 This platform in Redhat el6, yum command not compatible with python 2.7.*
 Trying to fix this problem by specify yum command with python2.6 forcelly.
@@ -80,17 +79,16 @@ EOF
 Problem fixed.
 New config: `head -1 /usr/bin/yum`
 EOF
-        }
+        fi
     elif [[ -f /etc/lsb-release ]]; then
-        source /etc/lsb-release
-        RELEASE=${DISTRIB_ID}
+        RELEASE=`grep DISTRIB_ID /etc/lsb-release|cut -d'=' -f2`
     fi
     _pause 3 "Going to install platform specfied packages."
     case ${RELEASE} in
-        "Redhat")
+        el6|el7)
             _rpmInstall
         ;;
-        "Ubuntu")
+        Ubuntu)
             _debInstall
         ;;
         *)
@@ -179,7 +177,11 @@ _makeVirtualEnv() {
     pushd "${DEPLOY_DIR}"
     virtualenv ${PY_VIRTUALENV_NAME}
     source ${PY_VIRTUALENV_NAME}/bin/activate
-    pip install --find-links="${BASE_DIR}/requirements" -r "${BASE_DIR}/requirements.txt"
+    if [[ ${RELEASE} == "el6"]]; then
+        pip install --find-links="${BASE_DIR}/requirements" -r "${BASE_DIR}/requirements.txt"
+    else
+        pip install --no-index --find-links="${BASE_DIR}/requirements" -r "${BASE_DIR}/requirements.txt"
+    fi
     deactivate
     popd
 }
@@ -211,14 +213,6 @@ _installPython() {
     _checkPip
 }
 
-_checkAll() {
-    _checkPlatform || return 1
-    _pause 3
-    _checkPythonVersion || return 1
-    _pause 3
-    _checkPip || return 1
-}
-
 
 while getopts :h FLAG; do
     case $FLAG in
@@ -235,10 +229,11 @@ done
 shift $((OPTIND-1))
 [ $# -eq 1 ] && {
     case $1 in
-        "check")
-            _checkAll || exit 1
-        ;;
         "python")
+            [[ ${EUID} -ne 0 ]] && {
+                _error "Python installation must run in privilege mode."
+                exit 1
+            }
             _checkPlatform || exit 1
             _checkPythonVersion
             if [[ $? -ne 0 ]]; then
@@ -264,20 +259,11 @@ shift $((OPTIND-1))
                 done
                 _installPython
             fi
-            _checkPip
-        ;;
-        "virtualenv")
-            _checkPythonVersion && {
-                _installVirtualenv
-            } || {
-                _warning <<EOF
-Please satisfy python version requirement.
-You can easily execute "install.sh python" with root privilege.
-EOF
-            }
+            _checkPip && _installVirtualenv
         ;;
         "deploy")
             _error "Not implemented."
+            exit 1
         ;;
         *)
             echo "$(basename $0) illegal option -- $1" >&2
