@@ -186,7 +186,9 @@ _makeVirtualEnv() {
 _rpmInstall() {
     if [[ -d "${BASE_DIR}/packages" ]]; then
         pushd "${BASE_DIR}/packages" &>/dev/null
-        rpm -ivh *.${RELEASE}*.rpm
+        for pkg in `ls *.${RELEASE}*.rpm`; do
+            rpm -ivh ${pkg}
+        done
         _info "Pre-install packages finished."
         popd &>/dev/null
     else
