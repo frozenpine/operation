@@ -162,18 +162,11 @@ _checkPip() {
 _installVirtualenv() {
     _checkPip
     which virtualenv && {
-        pushd "${DEPLOY_DIR}/${PY_VIRTUALENV_NAME}"
-        source bin/activate
-        pip freeze > /tmp/pip.txt
-        diff /tmp/pip.txt "${BASE_DIR}/requirements.txt" &>/dev/null || {
-            _makeVirtualEnv
-        }
-        popd
+        _info "Virtualenv already installed."
     } || {
         pushd "${BASE_DIR}/requirements/"
         pip install virtualenv*.tar.gz
         popd
-        _makeVirtualEnv
     }
 }
 
@@ -238,9 +231,8 @@ shift $((OPTIND-1))
                 _error "Python installation must run in privilege mode."
                 exit 1
             }
-            _checkPlatform || exit 1
-            _checkPythonVersion
-            if [[ $? -ne 0 ]]; then
+            _checkPlatform && _pause || exit 1
+            _checkPythonVersion && _pause || {
                 while true; do
                     read -t 10 -n1 -p "Did you want to install Python automaticlly?(Y or n)" ANS || {
                         _error "Read timeout(10s), automatically answner yes."
@@ -262,12 +254,16 @@ shift $((OPTIND-1))
                     esac
                 done
                 _installPython
-            fi
-            _checkPip && _installVirtualenv
+            }
+            _checkPip && {
+                _pause
+                _installVirtualenv
+            }
+            _pause 5 "Python installation finished."
         ;;
         "deploy")
-            _error "Not implemented."
-            exit 1
+            _makeVirtualEnv
+            _pause 5 "Application deployed in \"${DEPLOY_DIR}/${PY_VIRTUALENV_NAME}\""
         ;;
         *)
             echo "$(basename $0) illegal option -- $1" >&2
