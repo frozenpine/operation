@@ -20,7 +20,7 @@ _help() {
     printf "# %${#MESSAGE}s #\n%s\n" "" ${HEAD// /#}
     printf "Option Descriptions :\n"
     cat <<EOF | column -t -c 2 | sed 's/#/ /g'
-PYTHON      Install#python-2.7.*#environment
+PYTHON      Install#python-2.7.*#environment,#must#be#run#under#privileged#user.
 DEPLOY      Deploy#application
 EOF
 }
