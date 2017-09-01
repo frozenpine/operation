@@ -49,9 +49,11 @@ _confirm() {
         read -n1 -p "${MESSAGE}" ANS
         case ${ANS} in
             Y|y)
+                echo
                 return 0
             ;;
             N|n)
+                echo
                 return 1
             ;;
             *)
