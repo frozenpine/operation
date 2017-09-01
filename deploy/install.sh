@@ -66,8 +66,11 @@ _info() {
 }
 
 _checkPlatform() {
+    _info "Checking system platform..."
     if [[ -f /etc/redhat-release ]]; then
         RELEASE=`uname -r|awk -F'.' '{print $(NF-1)}'`
+
+        _info "Current system platform is redhat ${RELEASE}."
         if [[ ${RELEASE} == "el6" ]]; then
             _warning <<EOF
 This platform in Redhat el6, yum command not compatible with python 2.7.*
@@ -82,6 +85,7 @@ EOF
         fi
     elif [[ -f /etc/lsb-release ]]; then
         RELEASE=`grep DISTRIB_ID /etc/lsb-release|cut -d'=' -f2`
+        _info "Current system platform is ${RELEASE}."
     fi
     _pause 3 "Going to install platform specfied packages."
     case ${RELEASE} in
@@ -189,7 +193,7 @@ _makeVirtualEnv() {
 _rpmInstall() {
     if [[ -d "${BASE_DIR}/packages" ]]; then
         pushd "${BASE_DIR}/packages"
-        yum localinstall -y *.`uname -r|cut -d'.' -f4-5`.rpm && _info "Pre-install packages finished." || _error "Pre-install packages failed."
+        rpm -ivh *.`uname -r|cut -d'.' -f4-5`.rpm && _info "Pre-install packages finished." || _error "Pre-install packages failed."
         popd
     else
         _error "RPM packages directory missing."
