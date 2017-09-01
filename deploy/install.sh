@@ -177,7 +177,7 @@ _makeVirtualEnv() {
     pushd "${DEPLOY_DIR}"
     virtualenv ${PY_VIRTUALENV_NAME}
     source ${PY_VIRTUALENV_NAME}/bin/activate
-    if [[ ${RELEASE} == "el6"]]; then
+    if [[ ${RELEASE} == "el6" ]]; then
         pip install --find-links="${BASE_DIR}/requirements" -r "${BASE_DIR}/requirements.txt"
     else
         pip install --no-index --find-links="${BASE_DIR}/requirements" -r "${BASE_DIR}/requirements.txt"
