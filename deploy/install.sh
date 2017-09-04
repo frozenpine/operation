@@ -1,14 +1,19 @@
 #! /bin/bash
 
-cd `dirname $0`
+pushd `dirname $0`
 BASE_DIR=`pwd`
+popd
 INSTALL_LOG="${BASE_DIR}/install.log"
+pushd "${BASE_DIR}/../"
+APP_DIR=`pwd`
+popd
 
 DEPLOY_DIR="${HOME}"
 
 PY_VER_RECOMM="2.7.13"
 PY_INSTALL_FILE="${BASE_DIR}/Python-${PY_VER_RECOMM}.tgz"
 PY_VIRTUALENV_NAME="devops"
+PY_VIRTUALENV_BASE=
 
 RELEASE=
 
@@ -241,16 +246,48 @@ EOF
 }
 
 _deploy() {
-    read -p "Please input deploy base dir(default: ${DEPLOY_DIR}): " ANS
+    read -p "Please input deploy base dir[default: ${DEPLOY_DIR}]: " ANS
     [[ -n ${ANS} ]] && DEPLOY_DIR=${ANS}
     [[ ! -d "${DEPLOY_DIR}" ]] && {
         _warning "${DEPLOY_DIR} not exists, creating..."
         mkdir -p "${DEPLOY_DIR}"
     }
-    read -p "Please input python virtualenv name(default: ${PY_VIRTUALENV_NAME}): " ANS
+    read -p "Please input python virtualenv name[default: ${PY_VIRTUALENV_NAME}]: " ANS
     [[ -n ${ANS} ]] && PY_VIRTUALENV_NAME=${ANS}
+    PY_VIRTUALENV_BASE="${DEPLOY_DIR}/${PY_VIRTUALENV_NAME}"
     _makeVirtualEnv
-    _pause 5 "Application deployed in \"${DEPLOY_DIR}/${PY_VIRTUALENV_NAME}\""
+    _info "Start to copy application files to virtual environment."
+    for file_dir in `ls "${APP_DIR}" -I deploy`; do
+        _info "Copying ${file_dir} to ${PY_VIRTUALENV_BASE}"
+        cp -rf "${APP_DIR}/${file_dir}" "${PY_VIRTUALENV_BASE}/"
+    done
+    _info "Granting privileges to starter scripts."
+    chmod a+x "${PY_VIRTUALENV_BASE}/*.sh"
+    _info "Verifying directories..."
+    [[ -d "${PY_VIRTUALENV_BASE}/Logs" ]] && {
+        _info "Logs dir exist, cleanning..."
+        rm -rf "${PY_VIRTUALENV_BASE}/Logs/*"
+    } || {
+        _warning "Logs dir not exist, creating..."
+        mkdir -p "${PY_VIRTUALENV_BASE}/Logs"
+    }
+    [[ -d "${PY_VIRTUALENV_BASE}/dump" ]] && {
+        _info "dump dir exist, cleaning..."
+        rm -rf "${PY_VIRTUALENV_BASE}/dump/*"
+    } || {
+        _warning "dump dir not exist, creating..."
+        mkdir -p "${PY_VIRTUALENV_BASE}/dump"
+    }
+    [[ -d "${PY_VIRTUALENV_BASE}/run" ]] || {
+        _warning "run dir not exist, creating..."
+        mkdir -p "${PY_VIRTUALENV_BASE}/run"
+    }
+    [[ -d "${PY_VIRTUALENV_BASE}/uploads" ]] || {
+        _warning "uploads dir not exist, creating..."
+        mkdir -p "${PY_VIRTUALENV_BASE}/uploads/csv"
+        mkdir -p "${PY_VIRTUALENV_BASE}/uploads/yaml"
+    }
+    _pause 5 "Application deployed in \"$PY_VIRTUALENV_BASE}\""
 }
 
 

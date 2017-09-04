@@ -25,11 +25,12 @@ project.lock.json
 build/target/
 
 *.py[cod]
-Logs/*.log
-dump/**
-Flows/**
-uploads/*.*
-run/**
+*.log
+*.dump
+*.out
+uploads/*.csv
+uploads/*.yml
+run/*.*
 .idea
 
 # Byte-compiled / optimized / DLL files
