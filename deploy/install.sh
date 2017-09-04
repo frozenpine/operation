@@ -357,6 +357,7 @@ shift $((OPTIND-1))
                 _pause
                 _installVirtualenv
             }
+            chmod a+w "${INSTALL_LOG}"
             _pause 5 "Python installation finished."
         ;;
         "deploy")
@@ -385,6 +386,7 @@ shift $((OPTIND-1))
                         }
                     done
                     su - ${USER} -c "${BASE_DIR}/`basename $0` $*"
+                    exit
                 }
             } || _deploy
         ;;
