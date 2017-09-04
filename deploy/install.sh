@@ -385,7 +385,7 @@ shift $((OPTIND-1))
                             break
                         }
                     done
-                    su - ${USER} -c "${BASE_DIR}/`basename $0` $*"
+                    su - ${USER} -c "${BASE_DIR}/`basename $0` $*;exit"
                     exit
                 }
             } || _deploy
