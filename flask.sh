@@ -6,9 +6,10 @@ cd  ${BASE_DIR}
 
 FLASK_APP="${BASE_DIR}/run.py"
 FLASK_PID="${BASE_DIR}/run/flask.pid"
-FLASK_USER="devops"
-FLASK_SQLALCHEMY_DATABASE_URI="mysql+pymysql://devops:devops@192.168.100.151/devops?charset=utf8"
+FLASK_USER="${UID}"
 _PID=
+
+export FLASK_SQLALCHEMY_DATABASE_URI="mysql+pymysql://devops:devops@192.168.100.151/devops?charset=utf8"
 
 if [[ ! -d "${BASE_DIR}/run" ]]; then
     mkdir -p "${BASE_DIR}/run"

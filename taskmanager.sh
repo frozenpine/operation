@@ -6,7 +6,7 @@ cd  ${BASE_DIR}
 
 TM_APP="${BASE_DIR}/TaskManager/main.py"
 TM_PID="${BASE_DIR}/run/taskmanager.pid"
-TM_USER="devops"
+TM_USER="${UID}"
 _PID=
 
 if [[ ! -d "${BASE_DIR}/run" ]]; then
