@@ -223,6 +223,7 @@ _debInstall() {
 }
 
 _installPython() {
+    _pause 3 "Start to build python"
     pushd "/tmp" &>/dev/null
     tar -xzvf "${PY_INSTALL_FILE}"
     cd Python-*
@@ -233,6 +234,8 @@ _installPython() {
     rm -f /usr/bin/python
     ln -s /usr/local/bin/python2.7 /usr/bin/python 
     popd &>/dev/null
+    _pause 3 "Python build finished."
+
     [[ ${RELEASE} == "el6" ]] && {
         _warning <<EOF
 This platform in Redhat el6, yum command not compatible with python 2.7.*
