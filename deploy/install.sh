@@ -227,6 +227,7 @@ _installPython() {
     tar -xzvf "${PY_INSTALL_FILE}"
     cd Python-*
     make clean
+    [[ -f "/usr/local/bin/python2.7" ]] && rm -f "/usr/local/bin/python2.7"
     ./configure
     make -j4; make install -k
     rm -f /usr/bin/python
