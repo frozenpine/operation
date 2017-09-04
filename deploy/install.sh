@@ -227,11 +227,11 @@ _installPython() {
     tar -xzvf "${PY_INSTALL_FILE}"
     cd Python-*
     make clean
-    [[ -f "/usr/local/bin/python2.7" ]] && rm -f "/usr/local/bin/python2.7"
-    ./configure
-    make -j4; make install -k
+    ./configure | tee -a "${INSTALL_LOG}"
+    make -j4 | tee -a "${INSTALL_LOG}"
+    make install | tee -a "${INSTALL_LOG}"
     rm -f /usr/bin/python
-    ln -s /usr/bin/python /usr/local/bin/python2.7
+    ln -s /usr/local/bin/python2.7 /usr/bin/python 
     popd &>/dev/null
     [[ ${RELEASE} == "el6" ]] && {
         _warning <<EOF
