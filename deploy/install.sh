@@ -330,7 +330,7 @@ while getopts :hf FLAG; do
         f)
             _confirm "Do you want to install python 2.7.13 forcelly?" && {
                 PY_FORCE_INSTALL=1
-                _checkPlatform && _installPython
+                _checkPlatform && _installPython && exit
             } || exit 1
         ;;
         *)
