@@ -14,18 +14,21 @@ PY_VER_RECOMM="2.7.13"
 PY_INSTALL_FILE="${BASE_DIR}/Python-${PY_VER_RECOMM}.tgz"
 PY_VIRTUALENV_NAME="devops"
 PY_VIRTUALENV_BASE=
+PY_FORCE_INSTALL=
 
 RELEASE=
 
 _help() {
-    MESSAGE="Usage : install.sh [-h] {python|deploy}"
+    MESSAGE="Usage : install.sh [-h|-f] {python|deploy}"
     printf -v HEAD "%*s" $((${#MESSAGE}+4))
     printf "%s\n# %${#MESSAGE}s #\n" ${HEAD// /#}
     printf "# %s #\n" "${MESSAGE}"
     printf "# %${#MESSAGE}s #\n%s\n" "" ${HEAD// /#}
     printf "Option Descriptions :\n"
     cat <<EOF | column -t -c 2 | sed 's/#/ /g'
-PYTHON      Install#python-2.7.*#environment,#must#be#run#under#privileged#user.
+-h          Print#this#help#message
+-f          Install#python-2.7.13#forcelly
+PYTHON      Install#python-2.7.*#environment,#must#be#run#under#privileged#user
 DEPLOY      Deploy#application
 EOF
 }
@@ -230,9 +233,11 @@ _installPython() {
     make clean
     ./configure | tee -a "${INSTALL_LOG}"
     make -j4 | tee -a "${INSTALL_LOG}"
-    make install | tee -a "${INSTALL_LOG}"
-    rm -f /usr/bin/python
-    ln -s /usr/local/bin/python2.7 /usr/bin/python 
+    [[ ${PY_FORCE_INSTALL} -eq 1 ]] && {
+        make altinstall | tee -a "${INSTALL_LOG}"
+    } || {
+        make install | tee -a "${INSTALL_LOG}"
+    }
     popd &>/dev/null
     _pause 3 "Python build finished."
 
@@ -242,10 +247,30 @@ This platform in Redhat el6, yum command not compatible with python 2.7.*
 Trying to fix this problem by specify yum command with python2.6 forcelly.
 Current config: `head -1 /usr/bin/yum`
 EOF
+        [[ -f /usr/bin/python ]] && {
+            rm -f /usr/bin/python
+            ln -s /usr/local/bin/python2.7 /usr/bin/python
+        }
         sed -i 's/python.*$/python2\.6/' /usr/bin/yum
         _warning <<EOF
 Problem fixed.
 New config: `head -1 /usr/bin/yum`
+EOF
+    }
+
+    [[ ${PY_FORCE_INSTALL} -eq 1 && ${RELEASE} == "el7" ]] && {
+        _warning <<EOF
+This platform in Redhat el7, yum command not compatible with python 2.7.13
+Trying to fix this problem by specify yum command with python2.7.5 forcelly.
+EOF
+        [[ -f /usr/bin/python ]] && {
+            mv /usr/bin/python /usr/bin/python2.7.5
+            ln -s /usr/local/bin/python2.7 /usr/bin/python
+        }
+        sed -i 's/python.*$/python2\.7\.5/' /usr/bin/yum
+        sed -i 's/python.*$/python2\.7\.5/' /usr/libexec/urlgrabber-ext-down
+        _warning <<EOF
+Problem fixed.
 EOF
     }
 }
@@ -304,6 +329,7 @@ while getopts :hf FLAG; do
         ;;
         f)
             _confirm "Do you want to install python 2.7.13 forcelly?" && {
+                PY_FORCE_INSTALL=1
                 _installPython
             } || exit 1
         ;;
