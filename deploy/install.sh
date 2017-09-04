@@ -291,12 +291,11 @@ _deploy() {
         _info "Copying ${file_dir} to ${PY_VIRTUALENV_BASE}"
         cp -rf "${APP_DIR}/${file_dir}" "${PY_VIRTUALENV_BASE}/"
     done
-    _info "Granting privileges to starter scripts."
-    chmod a+x "${PY_VIRTUALENV_BASE}/*.sh"
     _info "Verifying directories..."
     [[ -d "${PY_VIRTUALENV_BASE}/Logs" ]] && {
         _info "Logs dir exist, cleanning..."
         rm -rf "${PY_VIRTUALENV_BASE}/Logs/*"
+        rm -rf "${PY_VIRTUALENV_BASE}/Logs/.gitkeep"
     } || {
         _warning "Logs dir not exist, creating..."
         mkdir -p "${PY_VIRTUALENV_BASE}/Logs"
@@ -304,20 +303,28 @@ _deploy() {
     [[ -d "${PY_VIRTUALENV_BASE}/dump" ]] && {
         _info "dump dir exist, cleaning..."
         rm -rf "${PY_VIRTUALENV_BASE}/dump/*"
+        rm -rf "${PY_VIRTUALENV_BASE}/dump/.gitkeep"
     } || {
         _warning "dump dir not exist, creating..."
         mkdir -p "${PY_VIRTUALENV_BASE}/dump"
     }
-    [[ -d "${PY_VIRTUALENV_BASE}/run" ]] || {
+    [[ -d "${PY_VIRTUALENV_BASE}/run" ]] && {
+        _info "run dir exist, cleaning..."
+        rm -rf "${PY_VIRTUALENV_BASE}/run/*"
+        rm -rf "${PY_VIRTUALENV_BASE}/run/.gitkeep"
+    } || {
         _warning "run dir not exist, creating..."
         mkdir -p "${PY_VIRTUALENV_BASE}/run"
     }
-    [[ -d "${PY_VIRTUALENV_BASE}/uploads" ]] || {
+    [[ -d "${PY_VIRTUALENV_BASE}/uploads" ]] && {
+        _info "run dir exist, cleaning..."
+        rm -rf "${PY_VIRTUALENV_BASE}/run/.gitkeep"
+    } || {
         _warning "uploads dir not exist, creating..."
         mkdir -p "${PY_VIRTUALENV_BASE}/uploads/csv"
         mkdir -p "${PY_VIRTUALENV_BASE}/uploads/yaml"
     }
-    _pause 5 "Application deployed in \"$PY_VIRTUALENV_BASE}\""
+    _pause 5 "Application deployed in \"${PY_VIRTUALENV_BASE}\""
 }
 
 
