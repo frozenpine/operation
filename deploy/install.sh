@@ -291,11 +291,16 @@ _deploy() {
 }
 
 
-while getopts :h FLAG; do
+while getopts :hf FLAG; do
     case $FLAG in
         h)
             _help
             exit
+        ;;
+        f)
+            _confirm "Do you want to install python 2.7.13 forcelly?" && {
+                _installPython
+            } || exit 1
         ;;
         *)
             _help >&2
