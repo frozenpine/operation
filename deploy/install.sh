@@ -104,6 +104,8 @@ _checkPlatform() {
     elif [[ -f /etc/lsb-release ]]; then
         RELEASE=`grep DISTRIB_ID /etc/lsb-release|cut -d'=' -f2`
         _info "Current system platform is ${RELEASE}."
+    else
+        echo `uname -a` | grep -i cygwin && RELEASE="CYG_WIN"
     fi
     _pause 3 "Going to install platform specfied packages."
     case ${RELEASE} in
@@ -112,6 +114,12 @@ _checkPlatform() {
         ;;
         Ubuntu)
             _debInstall
+        ;;
+        CYG_WIN)
+            _warning <<EOF
+This script run under cyg_win.
+Please make sure all packages(Python, pip, virtualenv, etc...) required is installed.
+EOF
         ;;
         *)
             _error "This linux release not supported by `basename $0`, please deploy manually."
@@ -186,7 +194,11 @@ _installVirtualenv() {
 
 _makeVirtualEnv() {
     pushd "${DEPLOY_DIR}" &>/dev/null
-    virtualenv ${PY_VIRTUALENV_NAME}
+    if [[ ${RELEASE} == "CYG_WIN" ]]; then
+        virtualenv ${PY_VIRTUALENV_NAME} --system-site-packages
+    else
+        virtualenv ${PY_VIRTUALENV_NAME}
+    fi
     source ${PY_VIRTUALENV_NAME}/bin/activate
     if [[ ${RELEASE} == "el6" ]]; then
         pip install --find-links="${BASE_DIR}/requirements" -r "${BASE_DIR}/requirements.txt"
@@ -350,15 +362,19 @@ shift $((OPTIND-1))
 [ $# -eq 1 ] && {
     case $1 in
         "python")
-            local ANS
-            [[ ${EUID} -ne 0 ]] && {
+            [[ ${EUID} -ne 0 && `whoami` != "Administrator" ]] && {
                 _error "Python installation must run in privilege mode."
                 exit 1
             }
             _checkPlatform && _pause || exit 1
             _checkPythonVersion && _pause || {
-                _confirm "Did you want to install Python automaticlly?" && \
-                    _installPython || exit 1
+                if [[ $RELEASE != "CYG_WIN" ]]; then
+                    _confirm "Did you want to install Python automaticlly?" && \
+                        _installPython || exit 1
+                else
+                    _error "Python version check fail."
+                    exit 1
+                fi
             }
             _checkPip && {
                 _pause
@@ -368,10 +384,19 @@ shift $((OPTIND-1))
             _pause 5 "Python installation finished."
         ;;
         "deploy")
-            [[ ${EUID} -eq 0 ]] && {
+            [[ ${EUID} -eq 0 || `whoami` == "Administrator" ]] && {
                 _confirm "Did you want to deploy under user root?" && {
                     _deploy
                 } || {
+                    [[ ${RELEASE} == "CYG_WIN" ]] && {
+                        _error<<EOF
+Script run under cyg_win, and user auto creation will be failed.
+If you want to deploy application without privileged user, 
+please create normal user and switch to it manually.
+Then run this script width deploy command again.
+EOF
+                        exit 1
+                    }
                     while true; do
                         read -p "Please input username: " USER
                         grep ${USER} /etc/passwd && {
