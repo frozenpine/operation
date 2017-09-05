@@ -107,6 +107,10 @@ _checkPlatform() {
     else
         echo `uname -a` | grep -i cygwin && RELEASE="CYG_WIN"
     fi
+}
+
+_installPackages() {
+    _checkPlatform
     _pause 3 "Going to install platform specfied packages."
     case ${RELEASE} in
         el6|el7)
@@ -366,7 +370,7 @@ shift $((OPTIND-1))
                 _error "Python installation must run in privilege mode."
                 exit 1
             }
-            _checkPlatform && _pause || exit 1
+            _installPackages && _pause || exit 1
             _checkPythonVersion && _pause || {
                 if [[ $RELEASE != "CYG_WIN" ]]; then
                     _confirm "Did you want to install Python automaticlly?" && \
@@ -384,6 +388,7 @@ shift $((OPTIND-1))
             _pause 5 "Python installation finished."
         ;;
         "deploy")
+            _checkPlatform
             [[ ${EUID} -eq 0 || `whoami` == "Administrator" ]] && {
                 _confirm "Did you want to deploy under user root?" && {
                     _deploy
