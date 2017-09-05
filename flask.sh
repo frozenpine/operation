@@ -9,7 +9,7 @@ FLASK_PID="${BASE_DIR}/run/flask.pid"
 FLASK_USER="${UID}"
 _PID=
 
-export FLASK_SQLALCHEMY_DATABASE_URI="mysql+pymysql://devops:devops@192.168.100.151/devops?charset=utf8"
+source "${BASE_DIR}/settings.conf"
 
 if [[ ! -d "${BASE_DIR}/run" ]]; then
     mkdir -p "${BASE_DIR}/run"
@@ -17,6 +17,11 @@ fi
 
 # switch to python virtual env
 source "${BASE_DIR}/bin/activate"
+# export FLASK_SQLALCHEMY_DATABASE_URI
+# export FLASK_HOST
+# export FLASK_PORT
+# export TM_HOST
+# export TM_PORT
 
 _ERR(){
     if [[ $# > 0 ]]; then

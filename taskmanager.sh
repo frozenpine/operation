@@ -9,12 +9,18 @@ TM_PID="${BASE_DIR}/run/taskmanager.pid"
 TM_USER="${UID}"
 _PID=
 
+source "${BASE_DIR}/settings.conf"
+
 if [[ ! -d "${BASE_DIR}/run" ]]; then
     mkdir -p "${BASE_DIR}/run"
 fi
 
 # switch to python virtual env
 source "${BASE_DIR}/bin/activate"
+# export FLASK_HOST
+# export FLASK_PORT
+# export TM_HOST
+# export TM_PORT
 
 _ERR(){
     if [[ $# > 0 ]]; then
