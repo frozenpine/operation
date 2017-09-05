@@ -16,14 +16,22 @@ def run(client, module):
         ps_script = 'cd {base_dir}; {ps}'.format(base_dir=base_dir, ps=module.get('ps'))
     else:
         ps_script = module.get('ps')
-    channel = client.run_ps(ps_script, codepage=936)
-    stdout, stderr = _stdout(), _stderr()
-    stdout.channel.recv_exit_status = lambda: channel.status_code
-    stdout.read = change_read_encoding(channel.std_out)
-    stdout.readlines = change_readlines_encoding(stdout.read)
-    stderr.read = change_read_encoding(channel.std_err)
-    stderr.readlines = change_readlines_encoding(stderr.read)
-    return stdout, stderr
+    try:
+        channel = client.run_ps(ps_script, codepage=936)
+    except ConnectionError, err:
+        logging.error(err)
+        raise WinRmNoValidConnectionsError
+    except InvalidCredentialsError, err:
+        logging.error(err)
+        raise WinRmAuthenticationException
+    else:
+        stdout, stderr = _stdout(), _stderr()
+        stdout.channel.recv_exit_status = lambda: channel.status_code
+        stdout.read = change_read_encoding(channel.std_out)
+        stdout.readlines = change_readlines_encoding(stdout.read)
+        stderr.read = change_read_encoding(channel.std_err)
+        stderr.readlines = change_readlines_encoding(stderr.read)
+        return stdout, stderr
 
 
 class _output(object):

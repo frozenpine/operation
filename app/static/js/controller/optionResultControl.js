@@ -5,7 +5,7 @@ app.controller('optionResultControl', ['$scope', '$operationBooks', function($sc
     $scope.filter_keywords = {};
     $scope.currentPage = 0;
     $scope.listsPerPage = 10;
-    $scope.listCounts = [10, 20, 30, 50, 100]
+    $scope.listCounts = [10, 20, 30, 50, 100];
     $operationBooks.operationRecordsPost({
         onSuccess: function(res) {
             $scope.operationRecordsData = res.records;

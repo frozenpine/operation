@@ -111,7 +111,7 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
             if (value !== undefined && (value.name === undefined || value.trigger_time === undefined)) {
                 flag = true;
             }
-            return;
+
         });
         return flag;
     };
@@ -122,7 +122,7 @@ app.controller('mainController', ['$scope', '$rootScope', '$location', '$timeout
             if (value !== undefined && (value.name === undefined || value.trigger_time === undefined)) {
                 flag = true;
             }
-            return;
+
         });
         if (flag) { $message.Warning('操作组数据不完整'); return; }
         var tempListData = angular.copy($scope.opGroupEditList[id]);
