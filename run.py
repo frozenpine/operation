@@ -31,5 +31,5 @@ if __name__ == '__main__':
     proc.start()  '''
     monkey.patch_all()
     app = create_app(sys.argv[1])
-    http_server = WSGIServer((app_host, app_port), app, handler_class=WebSocketHandler)
+    http_server = WSGIServer((app_host, int(app_port)), app, handler_class=WebSocketHandler)
     http_server.serve_forever()
