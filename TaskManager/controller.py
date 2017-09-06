@@ -13,7 +13,8 @@ from msg_queue import msg_queue
 app_host = os.environ.get("FLASK_HOST") or "127.0.0.1"
 app_port = os.environ.get("FLASK_PORT") or 6001
 
-logging.basicConfig(level="INFO")
+fmt, datefmt = '%(asctime)-15s %(levelname)s %(filename)s %(funcName)s %(lineno)d %(message)s', '%Y-%m-%d %H:%M:%S'
+logging.basicConfig(format=fmt, datefmt=datefmt, level=logging.INFO)
 
 
 class Controller(object):
@@ -294,7 +295,7 @@ class Controller(object):
         )
         # 非阻塞队列开始执行后
         if result.run_all and not self.__get_group_block(result.controller_queue_uuid):
-            self.get_task_from_controller_queue(result.controller_queue_uuid, True)
+            self.get_task_from_controller_queue(result.controller_queue_uuid, None, True)
 
     def worker_end_callback(self, result):
         """

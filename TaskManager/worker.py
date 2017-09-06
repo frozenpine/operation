@@ -224,7 +224,7 @@ class Worker(object):
         end_callback = self.callback_dict["end_callback"]
         pipe_parent, pipe_child = Pipe(duplex=False)
         ParentPipe(pipe_parent, init_callback, start_callback, end_callback).start()
-        max_process = 2
+        max_process = 8
         while 1:
             ret = msg_queue.todo_task_queue.get()
             controller_queue_uuid = ret["controller_queue_uuid"]

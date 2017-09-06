@@ -1,14 +1,11 @@
 # coding=utf-8
 
-import logging
 
 from enum import Enum
 from gevent.queue import JoinableQueue
 
 import get_time
 from controller_msg import msg_dict
-
-logging.basicConfig(level="INFO")
 
 
 class DispatchResult(Enum):

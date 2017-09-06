@@ -47,10 +47,21 @@ app.controller('svrStaticsControl', ['$scope', '$servers', '$interval', '$routeP
         }
     };
 
+    $scope.checkRefreshInterval = function() {
+        var interval = $scope.GlobalConfigs.svrStaticsInterval.current;
+        if (isNaN(interval) || interval < 30) {
+            $scope.GlobalConfigs.svrStaticsInterval.current =
+                $scope.GlobalConfigs.svrStaticsInterval.default;
+
+        } else {
+            $interval.cancel($scope.svrStaticInterval);
+            $scope.autoRefresh();
+        }
+    };
     $scope.autoRefresh = function() {
         if ($scope.auto) {
             $scope.svrStaticInterval = $interval(
-                function() { $scope.checkSvrStatics(); },
+                $scope.checkSvrStatics,
                 $rootScope.GlobalConfigs.svrStaticsInterval.current * 1000
             );
             $scope.checkSvrStatics();

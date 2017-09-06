@@ -60,7 +60,8 @@ class SystemApi(Resource):
                     op.detail = details
                     db.session.add(op)
                 for ds in DataSource.query.filter(
-                                DataSource.src_type == DataSourceType.FILE
+                    DataSource.src_type == DataSourceType.FILE,
+                    DataSource.sys_id == sys.id
                 ):
                     source = json.loads(json.dumps(ds.source))
                     source['uri'] = re.sub(

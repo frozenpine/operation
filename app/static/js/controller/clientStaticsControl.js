@@ -25,12 +25,23 @@ app.controller('clientStaticsControl', ['$scope', '$systems', '$routeParams', '$
             $scope.checking = true;
         }
     };
+
+    $scope.checkRefreshInterval = function() {
+        var interval = $scope.GlobalConfigs.sessionStaticsInterval.current;
+        if (isNaN(interval) || interval < 30) {
+            $scope.GlobalConfigs.sessionStaticsInterval.current =
+                $scope.GlobalConfigs.sessionStaticsInterval.default;
+
+        } else {
+            $interval.cancel($scope.clientSessionInterval);
+            $scope.autoRefresh();
+        }
+    };
     $scope.autoRefresh = function() {
         if ($scope.auto) {
             $scope.clientSessionInterval = $interval(
-                function() {
-                    $scope.CheckClientSessions();
-                }, parseInt($rootScope.sessionStaticsInterval) * 1000
+                $scope.CheckClientSessions,
+                $rootScope.GlobalConfigs.sessionStaticsInterval.current * 1000
             );
             $scope.CheckClientSessions();
         } else {

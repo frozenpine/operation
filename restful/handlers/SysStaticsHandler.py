@@ -84,18 +84,18 @@ class ServerStaticApi(Resource, ServerList):
             self.rtn['sys_id'] = sys.id
             self.find_servers(sys)
             for entry in self.server_list.values():
-                self.checker.append(gevent.spawn(self.check_svr, entry))
-                ''' self.checker.append(threading.Thread(
+                # self.checker.append(gevent.spawn(self.check_svr, entry))
+                self.checker.append(threading.Thread(
                     target=self.check_svr,
                     args=(entry,)
-                )) '''
-            ''' for tr in self.checker:
+                ))
+            for tr in self.checker:
                 tr.setDaemon(True)
                 tr.start()
-                # gevent.sleep(0)
-                tr.join() '''
-            gevent.sleep(0)
-            gevent.joinall(self.checker)
+                gevent.sleep(0)
+                tr.join()
+            # gevent.sleep(0)
+            # gevent.joinall(self.checker)
             self.make_response()
             return RestProtocol(self.rtn)
         else:
@@ -237,7 +237,7 @@ class ProcStaticApi(Resource, SystemList):
     def find_processes(self):
         for child_sys in self.system_list:
             for proc in child_sys.processes:
-                key = (proc.server.ip, proc.system.user, proc.system.password)
+                key = (proc.server.ip, proc.server.user, proc.server.password)
                 if not self.proc_list.has_key(key):
                     self.proc_list[key] = []
                 self.proc_list[key].append(proc)
@@ -357,20 +357,20 @@ class ProcStaticApi(Resource, SystemList):
             self.find_systems(sys)
             self.find_processes()
             for entry, proc_list in self.proc_list.iteritems():
-                self.checker.append(
+                ''' self.checker.append(
                     gevent.spawn(self.check_proc, entry, proc_list)
-                )
-                ''' self.checker.append(threading.Thread(
+                ) '''
+                self.checker.append(threading.Thread(
                     target=self.check_proc,
                     args=(entry, proc_list,)
-                )) '''
-            ''' for tr in self.checker:
+                ))
+            for tr in self.checker:
                 tr.setDaemon(True)
                 tr.start()
-                # gevent.sleep(0)
-                tr.join() '''
-            gevent.sleep(0)
-            gevent.joinall(self.checker)
+                gevent.sleep(0)
+                tr.join()
+            # gevent.sleep(0)
+            # gevent.joinall(self.checker)
             self.make_response()
             return RestProtocol(self.rtn)
         else:
@@ -598,7 +598,7 @@ class LoginCheckApi(Resource):
             self.find_syslog(sys)
             for (k, v) in self.syslog_list.items():
                 self.checker.append(gevent.spawn(self.check_log, k, v))
-            gevent.sleep(0)
+            # gevent.sleep(0)
             gevent.joinall(self.checker)
             return RestProtocol(self.rtn)
         else:
@@ -741,20 +741,20 @@ class ConfigCheckApi(Resource, ConfigList):
             self.find_systems(sys)
             self.find_configs()
             for remote, configs in self.config_file_list.iteritems():
-                self.checker.append(
+                ''' self.checker.append(
                     gevent.spawn(self.checkConfig, remote, configs)
-                )
-                ''' self.checker.append(threading.Thread(
+                ) '''
+                self.checker.append(threading.Thread(
                     target=self.checkConfig,
                     args=(remote, configs,)
-                )) '''
-            ''' for tr in self.checker:
+                ))
+            for tr in self.checker:
                 tr.setDaemon(True)
                 tr.start()
-                # gevent.sleep(0)
-                tr.join() '''
-            gevent.sleep(0)
-            gevent.joinall(self.checker)
+                gevent.sleep(0)
+                tr.join()
+            # gevent.sleep(0)
+            # gevent.joinall(self.checker)
             self.make_response()
             return RestProtocol(self.rtn)
         else:

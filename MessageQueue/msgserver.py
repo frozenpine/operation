@@ -99,6 +99,7 @@ class MessageServer(object):
             try:
                 ws.send(json.dumps({
                     'topic': self.topic,
+                    'message': msg,
                     'data': msg
                 }))
             except WebSocketError:

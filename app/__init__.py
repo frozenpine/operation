@@ -10,6 +10,7 @@ from flask import Flask, Blueprint
 from flask_sqlalchemy import SQLAlchemy
 
 from MessageQueue.msgserver import MessageQueues
+from ZeroTest.client import Client
 from settings import config
 
 sys.modules['zmq'] = zmq
@@ -49,6 +50,8 @@ tm_host = environ.get('TM_HOST') or '127.0.0.1'
 tm_port = environ.get('TM_PORT') or 6000
 
 msgQueues = MessageQueues
+zeroClient = Client(msgQueues)
+zeroClient.start()
 globalEncryptKey = None
 taskManager = zerorpc.Client()
 taskManager.connect("tcp://{ip}:{port}".format(ip=tm_host, port=tm_port))

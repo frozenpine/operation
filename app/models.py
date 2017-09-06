@@ -349,12 +349,12 @@ class Operator(UserMixin, SQLModelMixin, db.Model):
     __tablename__ = 'operators'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     uuid = db.Column(
-        db.String, index=True,
+        db.String(36), index=True,
         default=lambda: unicode(uuid4()).lower()
     )
-    login = db.Column(db.String, unique=True, index=True)
-    name = db.Column(db.String, index=True)
-    password_hash = db.Column(db.String, nullable=False)
+    login = db.Column(db.String(20), unique=True, index=True)
+    name = db.Column(db.String(20), index=True)
+    password_hash = db.Column(db.String(66), nullable=False)
     disabled = db.Column(db.Boolean, default=False)
     roles = db.relationship(
         'OpRole',
@@ -410,7 +410,7 @@ class Operator(UserMixin, SQLModelMixin, db.Model):
 class OpRole(SQLModelMixin, db.Model):
     __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String, unique=True, index=True)
+    name = db.Column(db.String(20), unique=True, index=True)
     privileges = db.relationship(
         'OpPrivilege',
         secondary=role_privilege,
@@ -427,7 +427,7 @@ class OpPrivilege(SQLModelMixin, db.Model):
     @property
     def name(self):
         return '{}.{}'.format(self.uri, self.bit.name)
-    uri = db.Column(db.String, nullable=False, index=True)
+    uri = db.Column(db.String(100), nullable=False, index=True)
     bit = db.Column(ChoiceType(MethodType, impl=db.Integer()))
 
     def HasMethod(self, method):
@@ -444,17 +444,17 @@ class TradeProcess(SQLModelMixin, db.Model):
     __tablename__ = 'trade_processes'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     uuid = db.Column(
-        db.String, index=True,
+        db.String(36), index=True,
         default=lambda: unicode(uuid4()).lower()
     )
-    name = db.Column(db.String, nullable=False, index=True)
-    description = db.Column(db.String)
+    name = db.Column(db.String(20), nullable=False, index=True)
+    description = db.Column(db.String(100))
     type = db.Column(ChoiceType(HaType, impl=db.Integer()), default=HaType.Master)
     version = db.Column(JSONType, default=[])
-    version_method = db.Column(db.String)
-    base_dir = db.Column(db.String)
-    exec_file = db.Column(db.String, nullable=False)
-    param = db.Column(db.String)
+    version_method = db.Column(db.String(100))
+    base_dir = db.Column(db.String(100))
+    exec_file = db.Column(db.String(50), nullable=False)
+    param = db.Column(db.String(50))
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     svr_id = db.Column(db.Integer, db.ForeignKey('servers.id'), index=True)
     sockets = db.relationship('Socket', backref='process')
@@ -469,11 +469,11 @@ class Socket(SQLModelMixin, db.Model):
     __tablename__ = 'sockets'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     uuid = db.Column(
-        db.String, index=True,
+        db.String(36), index=True,
         default=lambda: unicode(uuid4()).lower()
     )
-    name = db.Column(db.String, index=True)
-    description = db.Column(db.String)
+    name = db.Column(db.String(20), index=True)
+    description = db.Column(db.String(100))
     type = db.Column(
         ChoiceType(SocketType, impl=db.Integer()),
         default=SocketType.TCP
@@ -482,7 +482,7 @@ class Socket(SQLModelMixin, db.Model):
         ChoiceType(SocketDirection, impl=db.Integer()),
         default=SocketDirection.Listen
     )
-    uri = db.Column(db.String)
+    uri = db.Column(db.String(100))
     address = db.Column(IPAddressType, nullable=False)
     port = db.Column(db.Integer, nullable=False)
     proc_id = db.Column(db.Integer, db.ForeignKey('trade_processes.id'), index=True)
@@ -521,21 +521,21 @@ class Socket(SQLModelMixin, db.Model):
 class SystemType(SQLModelMixin, db.Model):
     __tablename__ = 'system_types'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String, unique=True, index=True)
-    description = db.Column(db.String)
+    name = db.Column((db.String(20)), unique=True, index=True)
+    description = db.Column(db.String(100))
     systems = db.relationship('TradeSystem', backref='type', lazy='dynamic')
 
 class TradeSystem(SQLModelMixin, db.Model):
     __tablename__ = 'trade_systems'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     uuid = db.Column(
-        db.String, index=True,
+        db.String(36), index=True,
         default=lambda: unicode(uuid4()).lower()
     )
-    name = db.Column(db.String, unique=True, index=True)
-    description = db.Column(db.String)
+    name = db.Column(db.String(20), unique=True, index=True)
+    description = db.Column(db.String(100))
     type_id = db.Column(db.Integer, db.ForeignKey('system_types.id'), index=True)
-    version = db.Column(db.String)
+    version = db.Column(db.String(100))
     manage_ip = db.Column(IPAddressType, index=True)
     disabled = db.Column(db.Boolean, default=False)
     @property
@@ -545,7 +545,7 @@ class TradeSystem(SQLModelMixin, db.Model):
     def ip(self, addr):
         self.manage_ip = ip_address(unicode(addr))
 
-    login_user = db.Column(db.String, index=True)
+    login_user = db.Column(db.String(20), index=True)
     @property
     def user(self):
         return self.login_user
@@ -553,7 +553,7 @@ class TradeSystem(SQLModelMixin, db.Model):
     def user(self, username):
         self.login_user = username
 
-    login_pwd = db.Column(db.String)
+    login_pwd = db.Column(db.String(32))
     @property
     def password(self):
         if globalEncryptKey:
@@ -573,7 +573,7 @@ class TradeSystem(SQLModelMixin, db.Model):
         else:
             self.login_pwd = password
 
-    base_dir = db.Column(db.String)
+    base_dir = db.Column(db.String(100))
     processes = db.relationship(
         'TradeProcess', backref='system',
         primaryjoin="and_(TradeProcess.sys_id == TradeSystem.id,"
@@ -655,8 +655,8 @@ class TradeSystem(SQLModelMixin, db.Model):
 class DataSource(SQLModelMixin, db.Model):
     __tablename__ = "data_sources"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String, unique=True, index=True)
-    description = db.Column(db.String)
+    name = db.Column(db.String(20), unique=True, index=True)
+    description = db.Column(db.String(100))
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     src_type = db.Column(
         ChoiceType(DataSourceType, impl=db.Integer()),
@@ -670,8 +670,8 @@ class DataSource(SQLModelMixin, db.Model):
 class SystemVendor(SQLModelMixin, db.Model):
     __tablename__ = "vendors"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String, unique=True, index=True)
-    description = db.Column(db.String)
+    name = db.Column(db.String(20), unique=True, index=True)
+    description = db.Column(db.String(100))
     contactors = db.Column(JSONType, default={})
     systems = db.relationship('TradeSystem', backref='vendor', lazy='dynamic')
 
@@ -679,12 +679,12 @@ class Server(SQLModelMixin, db.Model):
     __tablename__ = 'servers'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     uuid = db.Column(
-        db.String, index=True,
+        db.String(36), index=True,
         default=lambda: unicode(uuid4()).lower()
     )
-    name = db.Column(db.String, unique=True, index=True)
+    name = db.Column(db.String(20), unique=True, index=True)
     survey = db.Column(JSONType, default={})
-    description = db.Column(db.String)
+    description = db.Column(db.String(100))
     platform = db.Column(ChoiceType(PlatformType, impl=db.Integer()), default=PlatformType.Linux)
     manage_ip = db.Column(IPAddressType, index=True)
     disabled = db.Column(db.Boolean, default=False)
@@ -695,7 +695,7 @@ class Server(SQLModelMixin, db.Model):
     def ip(self, addr):
         self.manage_ip = ip_address(unicode(addr))
 
-    admin_user = db.Column(db.String, index=True)
+    admin_user = db.Column(db.String(20), index=True)
     @property
     def user(self):
         return self.admin_user
@@ -703,7 +703,7 @@ class Server(SQLModelMixin, db.Model):
     def user(self, username):
         self.admin_user = username
 
-    admin_pwd = db.Column(db.String)
+    admin_pwd = db.Column(db.String(32))
     @property
     def password(self):
         if globalEncryptKey:
@@ -733,13 +733,13 @@ class Operation(SQLModelMixin, db.Model):
     __tablename__ = 'operations'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     uuid = db.Column(
-        db.String, index=True,
+        db.String(36), index=True,
         default=lambda: unicode(uuid4()).lower()
     )
-    name = db.Column(db.String, index=True)
-    description = db.Column(db.String)
-    earliest = db.Column(db.String)
-    latest = db.Column(db.String)
+    name = db.Column(db.String(20), index=True)
+    description = db.Column(db.String(100))
+    earliest = db.Column(db.String(8))
+    latest = db.Column(db.String(8))
     book_id = db.Column(db.Integer, db.ForeignKey('operation_book.id'), index=True)
     need_authorization = db.Column(db.Boolean, default=False)
     order = db.Column(db.Integer)
@@ -792,8 +792,8 @@ class Operation(SQLModelMixin, db.Model):
 class OperationCatalog(SQLModelMixin, db.Model):
     __tablename__ = 'operation_catalogs'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String, index=True)
-    description = db.Column(db.String)
+    name = db.Column(db.String(20), index=True)
+    description = db.Column(db.String(100))
     order = db.Column(db.Integer)
     operations = db.relationship('OperationBook', backref='catalog')
 
@@ -801,11 +801,11 @@ class OperationBook(SQLModelMixin, db.Model):
     __tablename = 'operation_book'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     uuid = db.Column(
-        db.String, index=True,
+        db.String(36), index=True,
         default=lambda: unicode(uuid4()).lower()
     )
-    name = db.Column(db.String, index=True)
-    description = db.Column(db.String)
+    name = db.Column(db.String(20), index=True)
+    description = db.Column(db.String(100))
     type = db.Column(ChoiceType(ScriptType, impl=db.Integer()))
     catalog_id = db.Column(db.Integer, db.ForeignKey('operation_catalogs.id'), index=True)
     detail = db.Column(JSONType, nullable=False, default={})
@@ -841,12 +841,12 @@ class OperationGroup(SQLModelMixin, db.Model):
     __tablename__ = 'operation_groups'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     uuid = db.Column(
-        db.String, index=True,
+        db.String(36), index=True,
         default=lambda: unicode(uuid4()).lower()
     )
-    name = db.Column(db.String, index=True)
-    trigger_time = db.Column(db.String)
-    description = db.Column(db.String)
+    name = db.Column(db.String(20), index=True)
+    trigger_time = db.Column(db.String(8))
+    description = db.Column(db.String(100))
     is_emergency = db.Column(db.Boolean, default=False)
     order = db.Column(db.Integer)
     sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
@@ -874,9 +874,9 @@ class EmergeOpResult(SQLModelMixin, db.Model):
 class CommandHistory(SQLModelMixin, db.Model):
     __tablename__ = 'command_histories'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    command_line = db.Column(db.String, nullable=False)
-    host = db.Column(db.String, nullable=False)
-    username = db.Column(db.String, nullable=False)
+    command_line = db.Column(db.String(120), nullable=False)
+    host = db.Column(db.String(20), nullable=False)
+    username = db.Column(db.String(20), nullable=False)
     operator_id = db.Column(db.Integer, db.ForeignKey('operators.id'), index=True)
     operated_at = db.Column(ArrowType, index=True)
     skip = db.Column(db.Boolean, nullable=False)
@@ -885,18 +885,18 @@ class ConfigFile(SQLModelMixin, db.Model):
     __tablename__ = 'config_files'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     uuid = db.Column(
-        db.String, index=True,
+        db.String(36), index=True,
         default=lambda: unicode(uuid4()).lower()
     )
-    name = db.Column(db.String, index=True)
+    name = db.Column(db.String(20), index=True)
     # sys_id = db.Column(db.Integer, db.ForeignKey('trade_systems.id'), index=True)
     proc_id = db.Column(db.Integer, db.ForeignKey('trade_processes.id'), index=True)
     config_type = db.Column(ChoiceType(ConfigType, impl=db.Integer()), default=ConfigType.INIFile)
-    dir = db.Column(db.String, nullable=False)
-    file = db.Column(db.String, nullable=False)
-    pre_hash_code = db.Column(db.String)
+    dir = db.Column(db.String(100), nullable=False)
+    file = db.Column(db.String(50), nullable=False)
+    pre_hash_code = db.Column(db.String(32))
     pre_timestamp = db.Column(ArrowType, index=True)
-    hash_code = db.Column(db.String)
+    hash_code = db.Column(db.String(32))
     timestamp = db.Column(ArrowType, index=True)
-    storage = db.Column(db.String)
+    storage = db.Column(db.String(120))
     disabled = db.Column(db.Boolean, default=False)

@@ -9,7 +9,7 @@ class quantdoLoginParser(OutputParser):
             self,
             output_lines=output_lines,
             re_str=
-            ur'^.*(?:OnFrontConnected|OnRspUserLogin|OnFrontDisConnected) \d (.*席位\[(\d+)\].*)$',
+            ur'^.*(?:OnFrontConnected|OnRspUserLogin|OnFrontDisConnected) \d (.*(?:席位|用户)\[(\d+)\].*)$',
             key_list=[
                 'message', 'seatid'
             ],

@@ -37,10 +37,22 @@ app.controller('sysStaticsControl', ['$scope', '$systems', '$interval', '$routeP
             });
         }
     };
+
+    $scope.checkRefreshInterval = function() {
+        var interval = $scope.GlobalConfigs.sysStaticsInterval.current;
+        if (isNaN(interval) || interval < 30) {
+            $scope.GlobalConfigs.sysStaticsInterval.current =
+                $scope.GlobalConfigs.sysStaticsInterval.default;
+
+        } else {
+            $interval.cancel($scope.sysStaticInterval);
+            $scope.autoRefresh();
+        }
+    };
     $scope.autoRefresh = function() {
         if ($scope.auto) {
             $scope.sysStaticInterval = $interval(
-                function() { $scope.checkProc(); },
+                $scope.checkProc,
                 $rootScope.GlobalConfigs.sysStaticsInterval.current * 1000
             );
             $scope.checkProc();
