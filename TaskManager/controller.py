@@ -333,6 +333,8 @@ class Controller(object):
         dump_file_list = os.listdir("dump")
         logging.info("TaskQueue deserializing started")
         for each in dump_file_list:
+            if not "dump" in each:
+                continue
             with open("dump/{0}".format(each)) as f:
                 f_stream = f.read()
             try:
