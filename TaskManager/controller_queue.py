@@ -53,15 +53,23 @@ class ControllerQueue(object):
         task_uuid = task["task_uuid"]
         task_earliest = task["earliest"]
         task_latest = task["latest"]
+        if "session" in task:
+            session = task["session"]
         if not deserialize:
             self.controller_task_list.append(task)
             self.controller_task_status_list.append({task_uuid: None})
             self.controller_task_result_list.append({task_uuid: None})
         task = task["detail"]
-        self.controller_todo_task_queue.put(
-            {"controller_queue_uuid": self.controller_queue_uuid, "controller_queue_create_time": self.create_time,
-             "controller_queue_trigger_time": self.trigger_time, "task_uuid": task_uuid, "task_earliest": task_earliest,
-             "task_latest": task_latest, "task": task})
+        if "session" not in locals():
+            self.controller_todo_task_queue.put(
+                {"controller_queue_uuid": self.controller_queue_uuid, "controller_queue_create_time": self.create_time,
+                 "controller_queue_trigger_time": self.trigger_time, "task_uuid": task_uuid,
+                 "task_earliest": task_earliest, "task_latest": task_latest, "task": task})
+        else:
+            self.controller_todo_task_queue.put(
+                {"controller_queue_uuid": self.controller_queue_uuid, "controller_queue_create_time": self.create_time,
+                 "controller_queue_trigger_time": self.trigger_time, "task_uuid": task_uuid, "session": session,
+                 "task_earliest": task_earliest, "task_latest": task_latest, "task": task})
 
     def peek_controller_todo_task_queue(self, task_uuid):
         """
@@ -111,13 +119,22 @@ class ControllerQueue(object):
             temp_queue = JoinableQueue()
             for each in self.controller_task_list:
                 if each["task_uuid"] in fail_task_uuid_list:
-                    temp_queue.put(
-                        {"controller_queue_uuid": self.controller_queue_uuid,
-                         "controller_queue_create_time": self.create_time,
-                         "controller_queue_trigger_time": self.trigger_time,
-                         "task_uuid": each["task_uuid"], "task_earliest": each["earliest"],
-                         "task_latest": each["latest"], "task": each["detail"]}
-                    )
+                    if "session" in each:
+                        temp_queue.put(
+                            {"controller_queue_uuid": self.controller_queue_uuid,
+                             "controller_queue_create_time": self.create_time,
+                             "controller_queue_trigger_time": self.trigger_time,
+                             "task_uuid": each["task_uuid"], "task_earliest": each["earliest"],
+                             "session": each["session"], "task_latest": each["latest"], "task": each["detail"]}
+                        )
+                    else:
+                        temp_queue.put(
+                            {"controller_queue_uuid": self.controller_queue_uuid,
+                             "controller_queue_create_time": self.create_time,
+                             "controller_queue_trigger_time": self.trigger_time,
+                             "task_uuid": each["task_uuid"], "task_earliest": each["earliest"],
+                             "task_latest": each["latest"], "task": each["detail"]}
+                        )
             # 更改task_status_list和task_result_list
             for each1 in fail_task_uuid_list:
                 for each2 in self.controller_task_status_list:
@@ -208,7 +225,7 @@ class ControllerQueue(object):
             for each in self.controller_task_list:
                 if task_uuid == each.get("task_uuid"):
                     self.controller_task_list[self.controller_task_list.index(each)] = task_info
-            # 获取todo_task_list
+                # 获取todo_task_list
                 todo_task_list = filter(lambda x: not x.values()[0], self.controller_task_status_list)
                 todo_task_list = map(lambda x: x.keys()[0], todo_task_list)
             # 重新压队列
@@ -216,11 +233,19 @@ class ControllerQueue(object):
             for task_uuid in todo_task_list:
                 for each in self.controller_task_list:
                     if each.get("task_uuid") == task_uuid:
-                        self.controller_todo_task_queue.put(
-                            {"controller_queue_uuid": self.controller_queue_uuid,
-                             "controller_queue_create_time": self.create_time,
-                             "controller_queue_trigger_time": self.trigger_time, "task_uuid": task_uuid,
-                             "task_earliest": each.get("task_earliest"), "task_latest": each.get("task_latest"),
-                             "task": each.get("detail")})
+                        if "session" in each:
+                            self.controller_todo_task_queue.put(
+                                {"controller_queue_uuid": self.controller_queue_uuid,
+                                 "controller_queue_create_time": self.create_time,
+                                 "controller_queue_trigger_time": self.trigger_time, "task_uuid": task_uuid,
+                                 "task_earliest": each.get("task_earliest"), "task_latest": each.get("task_latest"),
+                                 "task": each.get("detail"), "session": each.get("session")})
+                        else:
+                            self.controller_todo_task_queue.put(
+                                {"controller_queue_uuid": self.controller_queue_uuid,
+                                 "controller_queue_create_time": self.create_time,
+                                 "controller_queue_trigger_time": self.trigger_time, "task_uuid": task_uuid,
+                                 "task_earliest": each.get("task_earliest"), "task_latest": each.get("task_latest"),
+                                 "task": each.get("detail")})
             self.controller_queue_status = 0
             return 0, u"更新成功"

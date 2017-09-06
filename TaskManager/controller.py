@@ -192,6 +192,8 @@ class Controller(object):
             task_earliest = msg["task_earliest"]
             task_latest = msg["task_latest"]
             task = msg["task"]
+            if "session" in msg:
+                session = msg["session"]
             controller_queue_create_time = msg["controller_queue_create_time"]
             controller_queue_trigger_time = msg["controller_queue_trigger_time"]
             msg_queue.todo_task_queue.put(
@@ -226,6 +228,25 @@ class Controller(object):
             with open("dump/{0}.dump".format(controller_queue_uuid), "wb") as f:
                 f.write(pickle.dumps(self.controller_queue_dict[controller_queue_uuid].to_dict()))
             return ret, msg
+
+    def run_asynchronous_task(self, task_info):
+        """
+        执行异步任务
+        :param task_info: 任务信息
+        :return:
+        """
+        if not self.__controller_queue_exists("asynchronous"):
+            self.controller_queue_dict["asynchronous"] = ControllerQueue("asynchronous", False, "00:00")
+        if isinstance(task_info, dict):
+            # 如果是字典, 则有一个任务
+            if "task_info" in task_info:
+                for each in task_info["task_info"]:
+                    each.update({"earliest": "", "latest": "", "session": task_info.get("session", None)})
+                    self.controller_queue_dict["asynchronous"].put_controller_todo_task_queue(each, False)
+            else:
+                task_info.update({"earliest": "", "latest": ""})
+                self.controller_queue_dict["asynchronous"].put_controller_todo_task_queue(task_info, False)
+        self.get_tasks_from_controller_queue("asynchronous", None)
 
     def pop_task_from_controller_queue(self, controller_queue_uuid, task_uuid=None):
         """
@@ -295,7 +316,7 @@ class Controller(object):
         )
         # 非阻塞队列开始执行后
         if result.run_all and not self.__get_group_block(result.controller_queue_uuid):
-            self.get_task_from_controller_queue(result.controller_queue_uuid, None, True)
+            self.get_task_from_controller_queue(result.controller_queue_uuid, result.session, True)
 
     def worker_end_callback(self, result):
         """
@@ -377,6 +398,9 @@ class Controller(object):
 
     def run_next(self, controller_queue_uuid, session=None):
         return self.get_task_from_controller_queue(controller_queue_uuid, session, False)
+
+    def run_immediate(self, task_info):
+        return self.run_asynchronous_task(task_info)
 
     def skip_next(self, controller_queue_uuid, task_uuid=None):
         return self.pop_task_from_controller_queue(controller_queue_uuid, task_uuid)

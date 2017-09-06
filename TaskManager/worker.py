@@ -71,7 +71,10 @@ class RunTask(Process):
         self.task_earliest = task_earliest
         self.task_latest = task_latest
         self.pipe_child = pipe_child
-        self.session = session
+        if session in self.task:
+            self.session = task["session"]
+        else:
+            self.session = session
         self.run_all = run_all
         # 计算是否需要睡眠等待以及当前进程池是否已满
         if idle_process_count < 0:
