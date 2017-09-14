@@ -1,8 +1,9 @@
 # -*- coding: UTF-8 -*-
+# from SysManager import logger as logging
+import logging
 import sys
+import arrow
 from os import path
-
-sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
 
 import requests
 import winrm
@@ -15,7 +16,8 @@ from configs import HttpConfig, Result, SSHConfig, WinRmConfig
 from excepts import (ImportRSAkeyFaild, ModuleNotFound,
                      SSHAuthenticationException, SSHException,
                      SSHNoValidConnectionsError)
-from SysManager import logger as logging
+
+sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
 
 
 
@@ -73,7 +75,7 @@ class Executor():
                 self.parser = None
         else:
             self.result.lines = [line for line in stdout.readlines()]
-            self.result.lines.extend([line for line in stderr.readlines()])
+            self.result.lines += [line for line in stderr.readlines()]
         return self.result
 
 

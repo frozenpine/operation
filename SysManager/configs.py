@@ -1,11 +1,11 @@
 # -*- coding: UTF-8 -*-
 import ConfigParser
+import logging
 import re
 import sys
 from os import environ, path
 
 from Common import AESCrypto
-from SysManager import logger as logging
 from excepts import ConfigInvalid
 
 sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))

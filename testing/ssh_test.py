@@ -9,11 +9,14 @@ from SysManager.executor import Executor
 
 
 if __name__ == '__main__':
-    conf = SSHConfig('192.168.101.163', 'Administrator', 'Quantdo123456')
+    conf = SSHConfig('192.168.56.2', 'Administrator', '022010blue@safe')
+    # conf = SSHConfig('192.168.92.26', 'root', 'quantdo123456')
     exe = Executor.Create(conf)
+    ''' mod = {
+        'name': 'netstat'
+    } '''
     mod = {
-        'name': 'shell',
-        'shell': 'which pwd'
+        'name': 'free'
     }
     ''' mod = {
         'name': 'windf',
