@@ -27,13 +27,13 @@ def run(client, module):
             proclist = ""
         mod = {
             'shell': (
-                """ps -ef | """
-                """awk 'FNR==1{{print;next}}"""
-                """$1 ~/{0}/ && $6 !~/bash|awk|sed|vim?|nano/ && $0 ~/{1}/{{print}}'"""
+                r"""ps -ef | sed '1s/^/STAT &/; 2,$s/^/R &/' | """
+                r"""awk 'FNR==1{{print;next}}"""
+                r"""$2 ~/{0}/ && $7 !~/bash|awk|sed|vim?|nano/ && $0 ~/{1}/{{print}}'"""
             ).format(userlist, proclist)
         }
     else:
         mod = {
-            'shell': "ps -ef"
+            'shell': r"""ps -ef | sed '1s/^/STAT &/; 2,$s/^/R &/'"""
         }
     return shell.run(client, mod)

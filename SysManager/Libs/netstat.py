@@ -12,13 +12,20 @@ def run(client, module):
                 process_list += '|{}'.format(proc) '''
             process_list = reduce(lambda x, y: x[0] + '|' + y[0],
                                   args['processes'])
+            if isinstance(process_list, tuple):
+                process_list = process_list[0]
         else:
             process_list = ''
         if args.has_key('ports'):
             ''' port_list = ':{}'.format(args['ports'][0])
             for port in args['ports'][1:]:
                 port_list += '|:{}'.format(port) '''
-            port_list = reduce(lambda x, y: unicode(x) + u'|' + unicode(y), args['ports'])
+            port_list = reduce(
+                lambda x, y: u':{}' + unicode(x) + u'|' + u':{}' + unicode(y),
+                args['ports']
+            )
+            if isinstance(port_list, int):
+                port_list = unicode(port_list)
         else:
             port_list = ''
         mod = {

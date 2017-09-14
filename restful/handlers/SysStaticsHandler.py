@@ -106,9 +106,9 @@ class ServerStaticApi(Resource, ServerList):
         conf = SSHConfig(entry[0].ip, entry[0].user, entry[0].password)
         modlist = [
             {'name': 'uptime'},
-            {'name': 'mpstat'},
-            {'name': 'df'},
-            {'name': 'free'}
+            {'name': 'mpstat' if entry[0].platform.value == 1 else 'cyg_mpstat'},
+            {'name': 'df' if entry[0].platform.value == 1 else 'cyg_df'},
+            {'name': 'free' if entry[0].platform.value == 1 else 'cyg_free'}
         ]
         resultlist = []
         executor = Executor.Create(conf)
@@ -237,7 +237,7 @@ class ProcStaticApi(Resource, SystemList):
     def find_processes(self):
         for child_sys in self.system_list:
             for proc in child_sys.processes:
-                key = (proc.server.ip, proc.server.user, proc.server.password)
+                key = (proc.server.ip, proc.server.user, proc.server.password, proc.server.platform)
                 if not self.proc_list.has_key(key):
                     self.proc_list[key] = []
                 self.proc_list[key].append(proc)
@@ -271,7 +271,7 @@ class ProcStaticApi(Resource, SystemList):
                 proc.version = executor.run(mod).lines '''
         gevent.sleep(0)
         mod = {
-            'name': 'psaux',
+            'name': 'psaux' if entry[3].value == 1 else 'cyg_psaux',
             'args': {
                 'processes': list(process_list),
             }
@@ -309,7 +309,7 @@ class ProcStaticApi(Resource, SystemList):
                     'command': None
                 }
             match = False
-        mod = {'name': 'netstat'}
+        mod = {'name': 'netstat' if entry[3].value == 1 else 'cyg_netstat'}
         if len(port_list) > 0:
             if not mod.has_key('args'):
                 mod['args'] = {}
@@ -321,7 +321,7 @@ class ProcStaticApi(Resource, SystemList):
         if mod.has_key('args'):
             socket_result = executor.run(mod)
             gevent.sleep(0)
-            if 'LISTEN' in socket_result.data.keys():
+            if 'LISTEN' in socket_result.data.keys() or 'LISTENING' in socket_result.data.keys():
                 # 处理Windows Linux平台的不同
                 try:
                     sockets = socket_result.data['LISTEN']
@@ -329,11 +329,11 @@ class ProcStaticApi(Resource, SystemList):
                     sockets = socket_result.data['LISTENING']
                 for socket in sockets:
                     self.socket_status['{}://{}:{}'.format(
-                        socket['proto'],
+                        socket['proto'].lower(),
                         socket['local_ip'],
                         socket['local_port']
                     )] = {
-                        'proto': socket['proto'],
+                        'proto': socket['proto'].lower(),
                         'ip': socket['local_ip'],
                         'port': socket['local_port'],
                         'stat': u'侦听中'
@@ -341,11 +341,11 @@ class ProcStaticApi(Resource, SystemList):
             if socket_result.data.has_key('ESTABLISHED'):
                 for socket in socket_result.data['ESTABLISHED']:
                     self.connection_status['{}://{}:{}'.format(
-                        socket['proto'],
+                        socket['proto'].lower(),
                         socket['remote_ip'],
                         socket['remote_port']
                     )] = {
-                        'proto': socket['proto'],
+                        'proto': socket['proto'].lower(),
                         'ip': socket['remote_ip'],
                         'port': socket['remote_port'],
                         'stat': u'已连接'

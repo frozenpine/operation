@@ -9,8 +9,8 @@ class cyg_psauxParser(OutputParser):
             self,
             output_lines=output_lines,
             re_str=
-            r'\s*(.+?)\s+(.+?)\s+(.+?)\s+(.+?)\s+(.+?)\s+(.+)$',
+            r'\s*(.+?)\s+(.+?)\s+(.+?)\s+(.+?)\s+(.+?)\s+(.+?)\s+(.+)$',
             key_list=[
-                'user', 'pid', 'ppid', 'tty', 'start', 'command'
+                'stat', 'user', 'pid', 'ppid', 'tty', 'start', 'command'
             ]
         )

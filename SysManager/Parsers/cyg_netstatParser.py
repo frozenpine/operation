@@ -9,10 +9,10 @@ class cyg_netstatParser(OutputParser):
             self,
             output_lines=output_lines,
             re_str=
-            r'(.+?)\s+([^:]+|.*:.*:.*):(.+?)\s+([^:]+|.*:.*:.*):(.+?)\s+(.+?)\s+([^/]+)/[^[]*\[(.+?)\]\s*$',
+            r'(.+?)\s+([^:]+|.*:.*:.*):(.+?)\s+([^:]+|.*:.*:.*):(.+?)\s+(.+?)\s+(.+)$',
             key_list=[
                 'proto', 'local_ip', 'local_port',
-                'remote_ip', 'remote_port', 'state', 'pid', 'proc'
+                'remote_ip', 'remote_port', 'state', 'pid'
             ],
             primary_key='state',
             skip_headline=False

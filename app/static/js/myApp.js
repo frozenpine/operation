@@ -495,7 +495,7 @@ app.filter('status', function() {
                 case 'Z':
                     return '僵尸进程';
                 default:
-                    return '未知';
+                    return '运行中';
             }
         } else {
             return '未启动';
