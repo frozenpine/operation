@@ -26,8 +26,11 @@ def run(client, module):
         else:
             proclist = ""
         mod = {
-            'shell': "ps -ef | awk 'FNR==1{{print;next}}$1 ~/{0}/ && $6 !~/bash|awk|sed|vim?|nano/ && $0 ~/{1}/{{print}}'" \
-                .format(userlist, proclist)
+            'shell': (
+                """ps -ef | """
+                """awk 'FNR==1{{print;next}}"""
+                """$1 ~/{0}/ && $6 !~/bash|awk|sed|vim?|nano/ && $0 ~/{1}/{{print}}'"""
+            ).format(userlist, proclist)
         }
     else:
         mod = {

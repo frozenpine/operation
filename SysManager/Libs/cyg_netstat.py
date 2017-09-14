@@ -23,9 +23,9 @@ def run(client, module):
             port_list = ''
         mod = {
             'shell': (
-                r"netstat -anobp {proto} | grep -iv time_wait | " +
-                r"sed -n '5,${{:read;{{/\[.*\]/!{{/information/!{{N;b read}}}}}};s#\r\n *#/#g;s/^ *//g;p}}' | " +
-                r"grep -iv 'ownership information' | " +
+                r"netstat -anobp {proto} | grep -iv time_wait | "
+                r"sed -n '5,${{:read;{{/\[.*\]/!{{/information/!{{N;b read}}}}}};s#\r\n *#/#g;s/^ *//g;p}}' | "
+                r"grep -iv 'ownership information' | "
                 r"awk '$0 ~/{ports}/ && $NF ~/{procs}/ {{print}}'"
             ).format(
                 proto=protocol,
@@ -36,8 +36,8 @@ def run(client, module):
     else:
         mod = {
             'shell': (
-                r"netstat -anobp {proto} | grep -iv time_wait | " +
-                r"sed -n '5,${{:read;{{/\[.*\]/!{{/information/!{{N;b read}}}}}};s#\r\n *#/#g;s/^ *//g;p}}' | " +
+                r"netstat -anobp {proto} | grep -iv time_wait | "
+                r"sed -n '5,${{:read;{{/\[.*\]/!{{/information/!{{N;b read}}}}}};s#\r\n *#/#g;s/^ *//g;p}}' | "
                 r"grep -iv 'ownership information'"
             ).format(proto=protocol)
         }
