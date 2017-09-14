@@ -16,7 +16,7 @@ if __name__ == '__main__':
         'name': 'netstat'
     } '''
     mod = {
-        'name': 'cyg_free'
+        'name': 'uptime'
     }
     ''' mod = {
         'name': 'windf',
