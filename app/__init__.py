@@ -75,6 +75,7 @@ def create_app(config_name):
 
     login_manager.init_app(app)
     db.init_app(app)
+    db.create_all()
 
     app.register_blueprint(main)
     app.register_blueprint(auth_blueprint, url_prefix='/auth')

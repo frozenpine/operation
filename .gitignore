@@ -28,6 +28,7 @@ build/target/
 *.log
 *.dump
 *.out
+*.db
 uploads/*.csv
 uploads/*.yml
 run/*.*
