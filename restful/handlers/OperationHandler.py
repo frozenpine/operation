@@ -398,6 +398,41 @@ class OperationApi(OperationMixin, Resource):
         else:
             return RestProtocol(error_code=-1, message="Operation not found"), 404
 
+class OperationSkipApi(OperationApi):
+    def __init__(self):
+        super(OperationApi, self).__init__()
+
+    def get(self, **kwargs):
+        op = Operation.find(**kwargs)
+        if op:
+            try:
+                author = self.check_privileges(op)
+                ret, data = taskManager.peek(op.group.uuid, op.uuid)
+                if ret == 0:
+                    session = {
+                        'operation_id': op.id,
+                        'operator_id': current_user.id,
+                        'operated_at': unicode(arrow.utcnow()),
+                        'authorizor_id': author and author.id or None,
+                        'authorized_at': author and unicode(arrow.utcnow()) or None
+                    }
+                    ret, msg = taskManager.skip_next(
+                        op.group.uuid,
+                        op.uuid
+                    )
+                    if ret != 0:
+                        return RestProtocol(error_code=ret, message=msg)
+                    ret, self.snapshot = taskManager.snapshot(op.group.uuid)
+                    return RestProtocol(self.make_operation_detail(op, session))
+                else:
+                    raise ApiError(data)
+            except AuthError as err:
+                return RestProtocol(error_code=err.status_code, message=err.message)
+            except ApiError as err:
+                return RestProtocol(error_code=err.error_code, message=err.message)
+        else:
+            return RestProtocol(error_code=-1, message="Operation not found"), 404
+
 
 class OperationCallbackApi(OperationMixin, Resource):
     def __init__(self):
