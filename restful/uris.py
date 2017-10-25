@@ -140,7 +140,7 @@ resources.add_resource(
     endpoint='operation'
 )
 
-resource.add_resource(
+resources.add_resource(
     OperationSkipApi,
     '/operation/id/<int:id>/skip',
     method=['GET'],
