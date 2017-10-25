@@ -21,7 +21,7 @@ from .handlers.OperationHandler import (OperationApi, OperationCallbackApi,
                                         OperationListResumeApi,
                                         OperationListRunAllApi,
                                         OperationListRunApi,
-                                        OperationListSnapshotApi,
+                                        OperationListSnapshotApi, OperationSkipApi,
                                         OperationLoginApi, OperationUIApi)
 from .handlers.ProcessHandler import ProcessApi, ProcessListApi
 from .handlers.RoleHandler import RoleApi, RoleListApi
@@ -138,6 +138,13 @@ resources.add_resource(
     '/operation/id/<int:id>',
     methods=['GET', 'DELETE'],
     endpoint='operation'
+)
+
+resource.add_resource(
+    OperationSkipApi,
+    '/operation/id/<int:id>/skip',
+    method=['GET'],
+    endpoint='operation_skip'
 )
 
 resources.add_resource(
