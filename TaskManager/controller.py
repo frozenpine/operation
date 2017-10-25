@@ -238,16 +238,10 @@ class Controller(object):
         """
         if not self.__controller_queue_exists(controller_queue_uuid):
             return -1, msg_dict[-12]
-        if task_uuid:
-            ret, msg = self.peek_task_from_controller_queue(controller_queue_uuid, task_uuid)
-            if ret != 0:
-                return ret, msg
-            else:
-                ret, msg = self.controller_queue_dict[controller_queue_uuid].pop_controller_todo_task_queue()
-                return ret, msg
-        else:
-            ret, msg = self.controller_queue_dict[controller_queue_uuid].pop_controller_todo_task_queue()
-            return ret, msg
+        ret, msg = self.controller_queue_dict[controller_queue_uuid].skip_fail_task(task_uuid)
+        with open("dump/{0}.dump".format(controller_queue_uuid), "wb") as f:
+            f.write(pickle.dumps(self.controller_queue_dict[controller_queue_uuid].to_dict()))
+        return ret, msg
 
     def worker_init_callback(self, result):
         """
@@ -263,14 +257,14 @@ class Controller(object):
                 self.controller_queue_dict[result.controller_queue_uuid].to_dict()
             ))
         logging.info(result.to_str())
-        requests.post(
-            "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
-                ip=app_host,
-                port=app_port,
-                id=result.task_uuid
-            ),
-            json=result.to_dict()
-        )
+        # requests.post(
+        #     "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
+        #         ip=app_host,
+        #         port=app_port,
+        #         id=result.task_uuid
+        #     ),
+        #     json=result.to_dict()
+        # )
 
     def worker_start_callback(self, result):
         """
@@ -286,14 +280,14 @@ class Controller(object):
                 self.controller_queue_dict[result.controller_queue_uuid].to_dict()
             ))
         logging.info(result.to_str())
-        requests.post(
-            "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
-                ip=app_host,
-                port=app_port,
-                id=result.task_uuid
-            ),
-            json=result.to_dict()
-        )
+        # requests.post(
+        #     "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
+        #         ip=app_host,
+        #         port=app_port,
+        #         id=result.task_uuid
+        #     ),
+        #     json=result.to_dict()
+        # )
         # 非阻塞队列开始执行后
         if result.run_all and not self.__get_group_block(result.controller_queue_uuid):
             self.get_task_from_controller_queue(result.controller_queue_uuid, True)
@@ -312,14 +306,14 @@ class Controller(object):
                 self.controller_queue_dict[result.controller_queue_uuid].to_dict()
             ))
         logging.info(result.to_str())
-        requests.post(
-            "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
-                ip=app_host,
-                port=app_port,
-                id=result.task_uuid
-            ),
-            json=result.to_dict()
-        )
+        # requests.post(
+        #     "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
+        #         ip=app_host,
+        #         port=app_port,
+        #         id=result.task_uuid
+        #     ),
+        #     json=result.to_dict()
+        # )
         # 阻塞队列执行完成后
         if result.run_all and self.__get_group_block(result.controller_queue_uuid) and result.task_status[0] == 0:
             self.get_task_from_controller_queue(result.controller_queue_uuid, result.session, True)

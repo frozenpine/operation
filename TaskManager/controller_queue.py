@@ -92,6 +92,26 @@ class ControllerQueue(object):
             self.controller_queue_status = 11
             return 0, task
 
+    # 20171025 新增跳过一个失败任务
+    def skip_fail_task(self, task_uuid):
+        if self.controller_queue_status != 14:
+            # 队列不可恢复
+            # return -1, msg_dict[self.controller_queue_status]
+            return -1, u'队列状态不可恢复,当前状态: {}'.format(msg_dict[self.controller_queue_status])
+        fail_task_uuid_list = list()
+        for each in self.controller_task_status_list:
+            if each.values()[0] and each.values()[0][0] in (1, 2, 3):
+                # 比对task_uuid
+                if task_uuid and task_uuid != each.keys()[0]:
+                    return -1, u"队列中失败任务"
+                # 如果出现执行失败或者执行超时
+                each.update({each.keys()[0]: 4})
+                fail_task_uuid_list.append(each.keys()[0])
+        if not fail_task_uuid_list:
+            return -1, u"队列无失败任务"
+        self.controller_queue_status = 0
+        return 0, u"任务跳过成功"
+
     def put_left_controller_todo_task_queue(self):
         """
         将失败任务压入待做队列
