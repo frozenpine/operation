@@ -22,9 +22,9 @@ class TaskStatus(Enum):
 class ControllerQueue(object):
     def __init__(self, controller_queue_uuid, group_block, trigger_time):
         self.create_time = get_time.current_ymd_hms()
-        # self.create_time = "2017-01-01 12:00:00"
         self.group_block = group_block
         self.trigger_time = trigger_time
+        self.expire_time = get_time.calc_expire_time(self.create_time, self.trigger_time)
         self.controller_queue_status = 0
         self.controller_queue_uuid = controller_queue_uuid
         self.controller_todo_task_queue = JoinableQueue()
@@ -39,6 +39,7 @@ class ControllerQueue(object):
         return {
             "create_time": self.create_time,
             "trigger_time": self.trigger_time,
+            "expire_time": self.expire_time,
             "group_block": self.group_block,
             "controller_queue_status": self.controller_queue_status,
             "controller_queue_uuid": self.controller_queue_uuid,

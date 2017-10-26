@@ -3,9 +3,11 @@
 import json as pickle
 import logging
 import os
+from datetime import datetime
 
 import requests
 
+import get_time
 from controller_msg import msg_dict
 from controller_queue import ControllerQueue
 from msg_queue import msg_queue
@@ -14,6 +16,19 @@ app_host = os.environ.get("FLASK_HOST") or "127.0.0.1"
 app_port = os.environ.get("FLASK_PORT") or 6001
 
 logging.basicConfig(level="INFO")
+
+
+def timeout(func):
+    def wrapper(self, controller_queue_uuid, *args, **kw):
+        curr_time = datetime.now()
+        expire_time = self.controller_queue_dict[controller_queue_uuid].expire_time
+        if curr_time > expire_time:
+            self.controller_queue_dict.pop(controller_queue_uuid)
+            os.remove('dump/{0}.dump'.format(controller_queue_uuid))
+            return 1, msg_dict[12]
+        return func(self, controller_queue_uuid, *args, **kw)
+
+    return wrapper
 
 
 class Controller(object):
@@ -257,14 +272,14 @@ class Controller(object):
                 self.controller_queue_dict[result.controller_queue_uuid].to_dict()
             ))
         logging.info(result.to_str())
-        # requests.post(
-        #     "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
-        #         ip=app_host,
-        #         port=app_port,
-        #         id=result.task_uuid
-        #     ),
-        #     json=result.to_dict()
-        # )
+        requests.post(
+            "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
+                ip=app_host,
+                port=app_port,
+                id=result.task_uuid
+            ),
+            json=result.to_dict()
+        )
 
     def worker_start_callback(self, result):
         """
@@ -280,14 +295,14 @@ class Controller(object):
                 self.controller_queue_dict[result.controller_queue_uuid].to_dict()
             ))
         logging.info(result.to_str())
-        # requests.post(
-        #     "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
-        #         ip=app_host,
-        #         port=app_port,
-        #         id=result.task_uuid
-        #     ),
-        #     json=result.to_dict()
-        # )
+        requests.post(
+            "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
+                ip=app_host,
+                port=app_port,
+                id=result.task_uuid
+            ),
+            json=result.to_dict()
+        )
         # 非阻塞队列开始执行后
         if result.run_all and not self.__get_group_block(result.controller_queue_uuid):
             self.get_task_from_controller_queue(result.controller_queue_uuid, True)
@@ -306,14 +321,14 @@ class Controller(object):
                 self.controller_queue_dict[result.controller_queue_uuid].to_dict()
             ))
         logging.info(result.to_str())
-        # requests.post(
-        #     "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
-        #         ip=app_host,
-        #         port=app_port,
-        #         id=result.task_uuid
-        #     ),
-        #     json=result.to_dict()
-        # )
+        requests.post(
+            "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
+                ip=app_host,
+                port=app_port,
+                id=result.task_uuid
+            ),
+            json=result.to_dict()
+        )
         # 阻塞队列执行完成后
         if result.run_all and self.__get_group_block(result.controller_queue_uuid) and result.task_status[0] == 0:
             self.get_task_from_controller_queue(result.controller_queue_uuid, result.session, True)
@@ -341,6 +356,7 @@ class Controller(object):
                 controller_queue_status = queue_status["controller_queue_status"]
                 create_time = queue_status["create_time"]
                 trigger_time = queue_status["trigger_time"]
+                expire_time = queue_status.get("expire_time", get_time.calc_expire_time(create_time, trigger_time))
                 group_block = queue_status["group_block"]
                 queue_id = queue_status["controller_queue_uuid"]
                 task_list = queue_status["task_list"]
@@ -350,6 +366,7 @@ class Controller(object):
                 self.controller_queue_dict[queue_id].controller_queue_status = controller_queue_status
                 self.controller_queue_dict[queue_id].create_time = create_time
                 self.controller_queue_dict[queue_id].trigger_time = trigger_time
+                self.controller_queue_dict[queue_id].expire_time = expire_time
                 self.controller_queue_dict[queue_id].controller_task_list = task_list
                 self.controller_queue_dict[queue_id].controller_task_result_list = task_result_list
                 self.controller_queue_dict[queue_id].controller_task_status_list = task_status_list
@@ -366,21 +383,27 @@ class Controller(object):
     def init(self, task_dict, force=False):
         return self.init_controller_queue(task_dict, force)
 
+    @timeout
     def run_all(self, controller_queue_uuid, session=None):
         return self.get_tasks_from_controller_queue(controller_queue_uuid, session)
 
+    @timeout
     def run_next(self, controller_queue_uuid, session=None):
         return self.get_task_from_controller_queue(controller_queue_uuid, session, False)
 
+    @timeout
     def skip_next(self, controller_queue_uuid, task_uuid=None):
         return self.pop_task_from_controller_queue(controller_queue_uuid, task_uuid)
 
+    @timeout
     def peek(self, controller_queue_uuid, task_uuid):
         return self.peek_task_from_controller_queue(controller_queue_uuid, task_uuid)
 
+    @timeout
     def snapshot(self, controller_queue_uuid):
         return self.get_snapshot(controller_queue_uuid)
 
+    @timeout
     def resume(self, controller_queue_uuid):
         return self.put_left_to_controller_queue(controller_queue_uuid)
 

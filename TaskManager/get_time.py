@@ -22,6 +22,17 @@ def current_ymd_hms():
     return time.strftime("%Y-%m-%d %H:%M:%S")
 
 
+def calc_expire_time(create_time, trigger_time):
+    current_datetime = parse(current_ymd_hms())
+    if trigger_time:
+        expire_time = parse(
+            "{0}-{1}-{2} {3}".format(current_datetime.year, current_datetime.month, current_datetime.day,
+                                     trigger_time)) + relativedelta(days=1)
+    else:
+        expire_time = create_time + relativedelta(days=1)
+    return expire_time
+
+
 def format_datetime(trigger_time, earliest, latest):
     pattern = re.compile(ur'([01]?\d|2[0-3]):[0-5]?\d(:[0-5]?\d)?')
     current_datetime = parse(current_ymd_hms())
