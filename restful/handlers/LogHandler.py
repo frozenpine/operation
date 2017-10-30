@@ -24,7 +24,7 @@ def _decrypt(match):
 class LogApi(Resource):
     def __init__(self):
         self.log_list = {}
-        self.rtn = {}
+        self.rtn = []
         self.checker = []
 
     def post(self):
@@ -73,7 +73,7 @@ class LogApi(Resource):
             r'^(?P<method>[^:]+)://(?P<user>[^:]+):(?P<pass>[^@]+)@(?P<ip>[^:]+):(?P<port>\d+)$'
         )
         pars = reg.match(uri).groupdict()
-        self.rtn[pars['ip']] = {}
+        res = {'svr': pars['ip'], 'logs': []}
         if pars['method'] == 'ssh':
             conf = SSHConfig(
                 ip=pars['ip'],
@@ -104,8 +104,10 @@ class LogApi(Resource):
                                 sub_match, '<code>{}</code>'.format(sub_match))
                     return match.group(0)
                 result.lines = map(lambda x: re.sub(data['msg_pattern'], repl, x), result.lines)
-            self.rtn[pars['ip']][logfile.rstrip('/')] = {'results': result.lines}
-            self.rtn[pars['ip']][logfile.rstrip('/')].update(data)
+            data_res = {'results': result.lines, 'log_file': logfile.rstrip('/')}
+            data_res.update(data)
+            res['logs'].append(data_res)
+        self.rtn.append(res)
 
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)

@@ -37,15 +37,32 @@
                         </li>
                     </ul>
                 </div>
-                <div class="am-u-sm-2">
-                    <!-- <div class="am-text-center caption font-green bold am-text-md am-margin-botton-sm">
+                <!--<div class="am-u-sm-1">
+                    <div class="am-text-center caption font-green bold am-text-md am-margin-botton-sm">
                         middle
-                    </div> -->
-                </div>
-                <div class="am-u-sm-5">
+                    </div>
+                </div>-->
+                <div class="am-u-sm-7" ng-controller="customLogController">
                     <!-- <div class="am-text-center caption font-green bold am-text-md am-margin-botton-sm">
                         right
                     </div> -->
+                    <ul>
+                        <li ng-repeat="svr in servers">
+                            <div>
+                                <span class="font-green bold">{{svr.svr}}</span>
+                                <ul>
+                                    <li ng-repeat="log in svr.logs">
+                                        <div>
+                                            <span class="bold">{{log.log_file}}</span>
+                                            <ul class="am-text-sm am-list am-list-striped" style="height: 300px; overflow-y: auto;">
+                                                <li ng-repeat="line in log.results" ng-bind-html="line|html_trust"></li>
+                                            </ul>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
