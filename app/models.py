@@ -271,6 +271,7 @@ class DataSourceType(Enum):
     FILE = 2
 
 class DataSourceModel(Enum):
+    Custom = 0
     Seat = 1
     Session = 2
 

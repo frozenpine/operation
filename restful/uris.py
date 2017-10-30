@@ -313,6 +313,12 @@ resources.add_resource(
 resources.add_resource(WebshellUIApi, '/webshell/system/id/<int:id>', methods=['GET'])
 
 resources.add_resource(LogApi, '/logs', methods=['POST'])
+resources.add_resource(
+    LogApi,
+    '/system/id/<int:id>/customlogs',
+    methods=['GET'],
+    endpoint='sys_customlogs'
+)
 
 resources.add_resource(UIDataApi, '/UI/<string:name>', methods=['GET'], endpoint='UIdata')
 
