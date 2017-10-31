@@ -37,6 +37,12 @@ class Config(object):
         ]
     }
 
+    TIME_ZONE = os.environ.get('TIME_ZONE') or 'Asia/Shanghai'
+
+    SQL_DRIVER = {
+        'mysql': 'pymysql'
+    }
+
 
     @classmethod
     def init_app(cls, app):
