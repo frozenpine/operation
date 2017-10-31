@@ -490,8 +490,9 @@ class LoginListApi(Resource, SystemList):
         else:
             return RestProtocol(message='system not found', error_code=-1), 404
 
-class LoginCheckApi(Resource):
+class LoginCheckApi(Resource, SystemList):
     def __init__(self):
+        super(self, LoginCheckApi).__init__()
         self.syslog_list = {}
         self.rtn = []
         self.checker = []
@@ -501,7 +502,7 @@ class LoginCheckApi(Resource):
         log_srcs = DataSource.query.filter(
             DataSource.src_type == DataSourceType.FILE,
             DataSource.src_model == DataSourceModel.Seat,
-            DataSource.sys_id == sys.id,
+            DataSource.sys_id.in_([x.id for x in self.system_list]),
             DataSource.disabled == False
         ).all()
         for src in log_srcs:
@@ -594,6 +595,7 @@ class LoginCheckApi(Resource):
 
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
+        self.find_systems(sys)
         if sys:
             self.find_syslog(sys)
             for (k, v) in self.syslog_list.items():
