@@ -102,7 +102,7 @@ class LogApi(Resource):
                         if sub_match:
                             return match.group(0).replace(
                                 sub_match, '<code>{}</code>'.format(sub_match))
-                    return match.group(0)
+                    return '<code>{}</code>'.format(match.group(0))
                 result.lines = map(lambda x: re.sub(data['msg_pattern'], repl, x), result.lines)
             data_res = {'results': result.lines, 'log_file': logfile.rstrip('/')}
             data_res.update(data)
