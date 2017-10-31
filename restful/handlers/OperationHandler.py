@@ -415,7 +415,7 @@ class OperationCallbackApi(OperationMixin, Resource):
         op = Operation.find(**kwargs)
         if op:
             try:
-                result = request.json
+                result = request.get_json(force=True)
             except ValueError, err:
                 logging.warning(err)
                 return RestProtocol(

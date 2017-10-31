@@ -265,10 +265,7 @@ class Controller(object):
         logging.info(result.to_str())
         requests.post(
             "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
-                ip=app_host,
-                port=app_port,
-                id=result.task_uuid
-            ),
+                ip=app_host, port=app_port, id=result.task_uuid),
             json=result.to_dict()
         )
 
@@ -288,10 +285,7 @@ class Controller(object):
         logging.info(result.to_str())
         requests.post(
             "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
-                ip=app_host,
-                port=app_port,
-                id=result.task_uuid
-            ),
+                ip=app_host, port=app_port, id=result.task_uuid),
             json=result.to_dict()
         )
         # 非阻塞队列开始执行后
@@ -314,10 +308,7 @@ class Controller(object):
         logging.info(result.to_str())
         requests.post(
             "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
-                ip=app_host,
-                port=app_port,
-                id=result.task_uuid
-            ),
+                ip=app_host, port=app_port, id=result.task_uuid),
             json=result.to_dict()
         )
         # 阻塞队列执行完成后
