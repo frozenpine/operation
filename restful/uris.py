@@ -8,6 +8,7 @@ from .handlers.EmergeOpHandler import (EmergeOpApi, EmergeOpCaptchaApi,
                                        EmergeOpUIApi)
 from .handlers.FilePostHandler import FilePostApi
 from .handlers.LogHandler import LogApi
+from .handlers.SqlDtHandler import SqlApi
 from .handlers.OperateRecordHandler import OperateRecordListApi
 from .handlers.OperationBookHandler import (OperationBookApi,
                                             OperationBookCheckApi,
@@ -318,6 +319,13 @@ resources.add_resource(
     '/system/id/<int:id>/customlogs',
     methods=['GET'],
     endpoint='sys_customlogs'
+)
+
+resources.add_resource(
+    SqlApi,
+    '/system/id/<int:id>/customsqls',
+    methods=['GET'],
+    endpoint='sys_customsqls'
 )
 
 resources.add_resource(UIDataApi, '/UI/<string:name>', methods=['GET'], endpoint='UIdata')

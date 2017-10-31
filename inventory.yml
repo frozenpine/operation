@@ -165,40 +165,51 @@ DataSources:
     src_model: DataSourceModel.Seat #数据源模型，可配置项：Seat，Session
     source:
       uri: mysql+pymysql://qdam:qdam@192.168.100.151:3306/qdam?charset=utf8 #db+driver://user:pass@host:port/database?charset=utf8
-      sql: SELECT seat.seat_name, sync.tradingday, sync.frontaddr, sync.seatid 
-           FROM t_seat seat, t_sync_seat sync, t_capital_account 
-           WHERE seat.seat_id = t_capital_account.seat_id 
-           AND sync.seatid=t_capital_account.account_id 
-           AND sync.isactive = TRUE
+      sql: |
+        SELECT seat.seat_name, sync.tradingday, sync.frontaddr, sync.seatid 
+        FROM t_seat seat, t_sync_seat sync, t_capital_account 
+        WHERE seat.seat_id = t_capital_account.seat_id 
+        AND sync.seatid=t_capital_account.account_id 
+        AND sync.isactive = TRUE
       formatter:
         - key: seat_name
           default: ''
+          name: 席位名
         - key: trading_day
           default: ''
+          name: 交易日
         - key: front_addr
           default: ''
+          name: 前置地址
         - key: seat_id
           default: ''
+          name: 席位号
         - key: seat_status
           default: 未连接
+          name: 席位状态
         - key: conn_count
           default: !!int 0
+          name: 连接次数
         - key: login_success
           default: !!int 0
+          name: 登录成功次数
         - key: login_fail
           default: !!int 0
+          name: 登录失败次数
         - key: disconn_count
           default: !!int 0
+          name: 断连次数
   - name: 用户Session表
     system: *parent1
     src_type: DataSourceType.SQL
     src_model: DataSourceModel.Session
     source:
       uri: mysql+pymysql://qdam:qdam@192.168.100.151:3306/qdam?charset=utf8
-      sql: SELECT a.brokerid, a.userid, a.usertype, a.sessionid, a.frontid, a.logintime, a.ipaddress, 
-                  a.macaddress, a.userproductinfo, a.interfaceproductinfo, COUNT(a.id) AS total
-           FROM (SELECT * FROM t_oper_usersession ORDER BY id DESC) a
-           GROUP BY userid
+      sql: |
+        SELECT a.brokerid, a.userid, a.usertype, a.sessionid, a.frontid, a.logintime, a.ipaddress, 
+               a.macaddress, a.userproductinfo, a.interfaceproductinfo, COUNT(a.id) AS total
+        FROM (SELECT * FROM t_oper_usersession ORDER BY id DESC) a
+        GROUP BY userid
       formatter:
         - key: broker_id
           default: ''

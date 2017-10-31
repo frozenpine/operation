@@ -1,11 +1,5 @@
 <div class="row" ng-controller="dashBoardController">
     <div class="am-g">
-        <!-- <div class="am-u-lg-7 am-u-md-12 am-u-sm-12 am-padding-top-sm">
-            <div style="min-height: 400px; border-radius: 10px" relamap></div>
-        </div>
-        <div class="am-u-lg-5 am-u-md-12 am-u-sm-12 am-padding-top-sm">
-            <div style="min-height: 400px; border-radius: 10px" idcmap></div>
-        </div> -->
         <div class="tpl-portlet-components">
             <div class="portlet-title">
                 <span class="caption font-green bold">系统架构</span>
@@ -37,32 +31,54 @@
                         </li>
                     </ul>
                 </div>
-                <!--<div class="am-u-sm-1">
-                    <div class="am-text-center caption font-green bold am-text-md am-margin-botton-sm">
-                        middle
+                <div class="am-u-sm-7">
+                    <div ng-controller="customLogController">
+                        <div class="am-text-center caption font-green bold am-text-md am-margin-bottom-sm">自定义日志查询</div>
+                        <p class="am-text-xs" ng-if="servers.length <= 0">无自定义日志查询</p>
+                        <ul ng-if="servers.length > 0">
+                            <li ng-repeat="svr in servers">
+                                <div>
+                                    <span class="font-green bold">{{svr.svr}}</span>
+                                    <ul>
+                                        <li ng-repeat="log in svr.logs">
+                                            <div>
+                                                <span class="bold">{{log.log_file}}</span>
+                                                <ul class="am-text-sm am-list am-list-striped" style="height: 300px; overflow-y: auto;">
+                                                    <li ng-repeat="line in log.results" ng-bind-html="line|html_trust"></li>
+                                                </ul>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
                     </div>
-                </div>-->
-                <div class="am-u-sm-7" ng-controller="customLogController">
-                    <!-- <div class="am-text-center caption font-green bold am-text-md am-margin-botton-sm">
-                        right
-                    </div> -->
-                    <ul>
-                        <li ng-repeat="svr in servers">
-                            <div>
-                                <span class="font-green bold">{{svr.svr}}</span>
-                                <ul>
-                                    <li ng-repeat="log in svr.logs">
-                                        <div>
-                                            <span class="bold">{{log.log_file}}</span>
-                                            <ul class="am-text-sm am-list am-list-striped" style="height: 300px; overflow-y: auto;">
-                                                <li ng-repeat="line in log.results" ng-bind-html="line|html_trust"></li>
-                                            </ul>
-                                        </div>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                    </ul>
+                    <div ng-controller="customSqlController" style="overflow-x: auto;">
+                        <div class="am-text-center caption font-green bold am-text-md am-margin-bottom-sm">自定义数据表查询</div>
+                        <p class="am-text-xs" ng-if="dbs.length <= 0">无自定义数据表查询</p>
+                        <ul ng-if="dbs.length > 0">
+                            <li ng-repeat="db in dbs">
+                                <div>
+                                    <span class="font-green bold">{{::db.db_host}}_{{::db.db_name}}</span>
+                                    <ul>
+                                        <li ng-repeat="dt in db.data_tables">
+                                            <table class="am-table am-text-xs am-table-striped am-table-hover" style="height: 300px; overflow-y: auto;">
+                                                <thead>
+                                                    <th ng-repeat="col in dt.formatter">{{::col.name}}</th>
+                                                    <th>更新时间</th>
+                                                </thead>
+                                                <tbody>
+                                                    <tr ng-repeat="row in dt.rows">
+                                                        <td ng-repeat="col_value in (row|formatterSorter: dt.formatter) track by $index">{{col_value}}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>

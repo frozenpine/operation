@@ -133,3 +133,4 @@ ENV/
 
 # mypy
 .mypy_cache/
+database/flask.db

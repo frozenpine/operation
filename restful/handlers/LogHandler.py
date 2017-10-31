@@ -3,6 +3,7 @@ import re
 
 import arrow
 import gevent
+from flask import current_app
 from flask_restful import Resource, request
 
 from app import globalEncryptKey, msgQueues
@@ -104,7 +105,11 @@ class LogApi(Resource):
                                 sub_match, '<code>{}</code>'.format(sub_match))
                     return '<code>{}</code>'.format(match.group(0))
                 result.lines = map(lambda x: re.sub(data['msg_pattern'], repl, x), result.lines)
-            data_res = {'results': result.lines, 'log_file': logfile.rstrip('/')}
+            data_res = {
+                'results': result.lines,
+                'log_file': logfile.rstrip('/'),
+                'update_time': arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss')
+            }
             data_res.update(data)
             res['logs'].append(data_res)
         self.rtn.append(res)
