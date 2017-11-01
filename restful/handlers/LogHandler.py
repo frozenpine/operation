@@ -27,6 +27,7 @@ class LogApi(Resource):
         self.log_list = {}
         self.rtn = []
         self.checker = []
+        self.app_context = current_app.app_context()
 
     def post(self):
         msg = request.json['msg']
@@ -91,30 +92,31 @@ class LogApi(Resource):
                 port=int(pars['port'])
             )
         executor = Executor.Create(conf)
-        for data in datas:
-            logfile, module = data.pop('log_define').split('?')
-            mod = {}
-            mod['name'] = module
-            mod[module] = logfile.rstrip('/')
-            mod['key_words'] = data.pop('key_words')
-            result = executor.run(mod)
-            if data['msg_pattern']:
-                def repl(match):
-                    for sub_match in match.groups():
-                        if sub_match:
-                            return match.group(0).replace(
-                                sub_match, '<code>{}</code>'.format(sub_match))
-                    return '<code>{}</code>'.format(match.group(0))
-                result.lines = map(lambda x: re.sub(data['msg_pattern'], repl, x), result.lines)
-            data_res = {
-                'name': data['name'],
-                'results': result.lines,
-                'log_file': logfile.rstrip('/'),
-                'update_time': arrow.utcnow()\
-                    .to(current_app.config['TIME_ZONE']).format('HH:mm:ss')
-            }
-            data_res.update(data)
-            res['logs'].append(data_res)
+        with self.app_context:
+            for data in datas:
+                logfile, module = data.pop('log_define').split('?')
+                mod = {}
+                mod['name'] = module
+                mod[module] = logfile.rstrip('/')
+                mod['key_words'] = data.pop('key_words')
+                result = executor.run(mod)
+                if data['msg_pattern']:
+                    def repl(match):
+                        for sub_match in match.groups():
+                            if sub_match:
+                                return match.group(0).replace(
+                                    sub_match, '<code>{}</code>'.format(sub_match))
+                        return '<code>{}</code>'.format(match.group(0))
+                    result.lines = map(lambda x: re.sub(data['msg_pattern'], repl, x), result.lines)
+                data_res = {
+                    'name': data['name'],
+                    'results': result.lines,
+                    'log_file': logfile.rstrip('/'),
+                    'update_time': arrow.utcnow()\
+                        .to(current_app.config['TIME_ZONE']).format('HH:mm:ss')
+                }
+                data_res.update(data)
+                res['logs'].append(data_res)
         self.rtn.append(res)
 
     def get(self, **kwargs):

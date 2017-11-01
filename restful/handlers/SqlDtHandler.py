@@ -30,6 +30,7 @@ class SqlApi(Resource):
         self.rtn = []
         self.checker = []
         self.system_list = []
+        self.app_context = current_app.app_context()
 
     def find_systems(self, sys):
         if len(sys.processes) > 0:
@@ -90,8 +91,9 @@ class SqlApi(Resource):
                             tmp[dt.source['formatter'][idx]['key']] = \
                                 dt.source['formatter'][idx]['default']
                     data_table['rows'].append(tmp)
+                with self.app_context:
                     data_table['update_time'] = arrow.utcnow()\
-                        .to(current_app.config['TIME_ZONE']).format('HH:mm:ss')
+                            .to(current_app.config['TIME_ZONE']).format('HH:mm:ss')
                 rtn['data_tables'].append(data_table)
             self.rtn.append(rtn)
 
@@ -100,10 +102,10 @@ class SqlApi(Resource):
         if sys:
             self.find_tables(sys)
             for (k, v) in self.dt_list.items():
-                # self.checker.append(gevent.spawn(self.get_datetable, k, v))
-                self.get_datetable(k, v)
+                self.checker.append(gevent.spawn(self.get_datetable, k, v))
+                # self.get_datetable(k, v)
             # gevent.sleep(0)
-            # gevent.joinall(self.checker)
+            gevent.joinall(self.checker)
             return RestProtocol(self.rtn)
         else:
             return RestProtocol(message='System not found', error_code=-1), 404
