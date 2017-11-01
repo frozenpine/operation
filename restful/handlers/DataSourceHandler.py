@@ -87,35 +87,52 @@ class DataSourceListApi(Resource):
             datasource.src_model = data.get('src_model')
             datasource.source = data.get('source')
             datasource.disabled = data.get('disabled')
+            # 获取connector中的配置
             connector = data.get('connector')
+            # 如果是SQL配置
             if datasource.src_type == DataSourceType.SQL.value:
+                # 从SQLDRIVER中根据protocol找到对应的driver
                 connector.update({'driver': current_app.config['SQL_DRIVER'][connector['protocol']]})
-                connector.pop('logfile')
-                connector.pop('module')
+                # 去除字典中无用的key
+                if 'logfile' in connector:
+                    connector.pop('logfile')
+                if 'module' in connector:
+                    connector.pop('module')
+                # 拼接uri
                 try:
                     uri = '{protocol}+{driver}://{login_user}:{login_pwd}@{ip}:{port}/#{database}?charset={charset}'. \
                         format(**connector)
                 except KeyError, e:
                     raise DataNotNullError(e)
-                if datasource.src_model == DataSourceModel.Custom:
+                # 如果是Custom 需定制化SQL
+                if datasource.src_model == DataSourceModel.Custom.value:
                     try:
                         sql = data['sql']
                     except KeyError:
                         raise DataNotNullError('Please input {}'.format('sql'))
-                elif datasource.src_model == DataSourceModel.Session:
+                # 不是Custom的情况下，写死SQL
+                elif datasource.src_model == DataSourceModel.Session.value:
                     sql = 'SELECT a.brokerid, a.userid, a.usertype, a.sessionid, a.frontid, a.logintime, a.ipaddress,' \
                           ' a.macaddress, a.userproductinfo, a.interfaceproductinfo, COUNT(a.id) AS total ' \
                           'FROM (SELECT * FROM t_oper_usersession ORDER BY id DESC) a GROUP BY userid'
-                elif datasource.src_model == DataSourceModel.Seat:
+                elif datasource.src_model == DataSourceModel.Seat.value:
                     sql = 'SELECT seat.seat_name, sync.tradingday, sync.frontaddr, sync.seatid ' \
                           'FROM t_seat seat, t_sync_seat sync, t_capital_account ' \
                           'WHERE seat.seat_id = t_capital_account.seat_id AND sync.seatid=t_capital_account.account_id ' \
                           'AND sync.isactive = TRUE'
                 datasource.source.update({'uri': uri, 'sql': sql})
+            # 如果是FILE配置
             elif datasource.src_type == DataSourceType.FILE.value:
-                connector.pop('database')
-                connector.pop('charset')
+                # 去除字典中无用的key
+                if 'database' in connector:
+                    connector.pop('database')
+                if 'charset' in connector:
+                    connector.pop('charset')
+                if 'port' in connector:
+                    connector.pop('port')
+                # 通过sysid找到对应的tradesystem
                 trade_system = TradeSystem.find(**{'id': datasource.sys_id})
+                # 将tradesystem中的系统信息更新到connector中
                 connector.update(
                     {'login_user': trade_system.login_user, 'login_pwd': trade_system.login_pwd, 'ip': trade_system.ip})
                 if trade_system:
