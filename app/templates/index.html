@@ -276,6 +276,32 @@
             </form>
         </div>
     </div>
+
+    <div class="am-modal am-modal-confirm" tabindex="-1" id="defineDatasource" ng-controller="dsController">
+        <div class="am-modal-dialog">
+            <form  class="am-form am-form-horizontal" name="dataSourceDefine">
+                <div class="am-modal-hd font-green bold">定义数据源
+                    <a href="javascript: void(0)" class="am-close am-close-spin" ng-click="" data-am-modal-close>&times;</a>
+                </div>
+                <div class="am-modal-bd">
+                    <div class="am-form-group am-form-icon font-green">
+                        <label for="dtDefineSysSelector" class="am-u-sm-2 am-form-label">系统</label>
+                        <div>
+                            <select id="dtDefineSysSelector" ng-model="dataSourceDefine.sys_id" value="opt.id" ng-options="opt.name for opt in systemList">
+                                <option value="">--请选择--</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-modal-footer am-u-sm-12">
+                    <span class="am-modal-btn am-u-sm-6" ng-click="" data-am-modal-cancel>取消</span>
+                    <button ng-disabled="" ng-click="" type="submit" class="am-btn am-btn-primary am-u-sm-6" style="height: 44px;">
+                        确定  
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
     <!-- Modal Dialog End -->
 
     <header class="am-topbar am-topbar-inverse" style="margin-bottom: 10px">
@@ -544,10 +570,7 @@
     </div>
 
     <script src="[[ url_for('static', filename='js/jquery.min.js', _external=True) ]]"></script>
-    <!--<script src="[[ url_for('static', filename='js/datatables.min.js', _external=True) ]]"></script>-->
-    <!-- <script src="[[ url_for('static', filename='js/jquery.ba-resize.min.js', _external=True) ]]"></script> -->
     <script src="[[ url_for('static', filename='js/angular.min.js', _external=True) ]]"></script>
-    <!--<script src="[[ url_for('static', filename='js/angular-datatables.min.js', _external=True) ]]"></script>-->
     <script src="[[ url_for('static', filename='js/angular-route.min.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/angular-sortable-view.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/ngStorage.min.js', _external=True) ]]"></script>
@@ -570,11 +593,9 @@
     <script src="[[ url_for('static', filename='js/filter/processFilter.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/filter/formatterSorter.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/directive/fileModel.js', _external=True) ]]"></script>
-    <!-- <script src="[[ url_for('static', filename='js/directive/idcmap.js', _external=True) ]]"></script> -->
     <script src="[[ url_for('static', filename='js/directive/repeatFinish.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/directive/fixTop.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/directive/flapDigitalClock.js', _external=True) ]]"></script>
-    <!-- <script src="[[ url_for('static', filename='js/directive/relamap.js', _external=True) ]]"></script> -->
     <script src="[[ url_for('static', filename='js/directive/modalDialog.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/controller/mainController.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/controller/dashBoardController.js', _external=True) ]]"></script>
@@ -583,7 +604,6 @@
     <script src="[[ url_for('static', filename='js/controller/emergeOpsController.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/controller/loginStaticsControl.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/controller/opGroupController.js', _external=True) ]]"></script>
-    <script src="[[ url_for('static', filename='js/controller/dashBoardController.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/controller/optionBookController.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/controller/optionGroupController.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/controller/optionResultController.js', _external=True) ]]"></script>
@@ -591,6 +611,7 @@
     <script src="[[ url_for('static', filename='js/controller/sysStaticsController.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/controller/customLogController.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/controller/customSqlController.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/controller/dsController.js', _external=True) ]]"></script>
 </body>
 
 </html>
