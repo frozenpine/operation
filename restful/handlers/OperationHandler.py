@@ -181,10 +181,10 @@ class OperationListApi(OperationMixin, Resource):
                 # 当前日期与队列创建日期比较超过1天且当前时间晚于队列触发时间
                 if op_group.is_emergency \
                     or ((now_time.day > create_time.day \
-                        or (now_time.day < create_time.day \
-                            and now_time.month > create_time.month)) \
-                    and (isinstance(trigger_time, datetime.time) \
-                        and now_time.time() > trigger_time)):
+                            or (now_time.day < create_time.day \
+                                and now_time.month > create_time.month)) \
+                        and (isinstance(trigger_time, datetime.time) \
+                            and now_time.time() > trigger_time)):
                     taskManager.init(task_queue, True)
                     ret, self.snapshot = taskManager.snapshot(op_group.uuid)
                     rtn = self.make_operation_list(op_group)
