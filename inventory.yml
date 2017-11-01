@@ -202,6 +202,7 @@ DataSources:
       formatter:
         - key: broker_id
           default: ''
+          name:
         - key: user_id
           default: ''
         - key: user_type

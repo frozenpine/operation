@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 from . import resources
 from .handlers.ConfigFileHandler import ConfigFileApi
+from .handlers.DataSourceHandler import DataSourceApi, DataSourceListApi
 from .handlers.DeviceHandler import DeviceApi, DeviceListApi
 from .handlers.EmergeOpHandler import (EmergeOpApi, EmergeOpCaptchaApi,
                                        EmergeOpCSVApi, EmergeOpExecuteApi,
@@ -41,7 +42,6 @@ from .handlers.UIDataHandler import UIDataApi
 from .handlers.UserHandler import UserApi, UserListApi
 from .handlers.VendorHandler import VendorApi, VendorListApi
 from .handlers.WebshellHandler import WebshellUIApi
-from .handlers.DataSourceHandler import DataSourceApi, DataSourceListApi
 
 resources.add_resource(
     UserApi,

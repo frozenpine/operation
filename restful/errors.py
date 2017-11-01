@@ -89,9 +89,3 @@ class DataNotMatchError(ApiError):
     def __init__(self, message='Data must match'):
         super(DataNotMatchError, self).__init__(message)
         self.error_code = 1106
-
-
-class DataNotFoundError(ApiError):
-    def __init__(self, message='Data not found'):
-        super(DataNotFoundError, self).__init__(message)
-        self.error_code = 1107
