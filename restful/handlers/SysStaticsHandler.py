@@ -5,6 +5,7 @@ import threading
 
 import arrow
 import gevent
+from flask import current_app
 from flask_restful import Resource
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
@@ -48,7 +49,8 @@ class ServerList(object):
             self.rtn['details'].append({
                 'id': data[0].id,
                 'server': data[0].ip,
-                'updated_time': arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss'),
+                'updated_time': arrow.utcnow()\
+                    .to(current_app.config['TIME_ZONE']).format('HH:mm:ss'),
                 'uptime': data[1]['status'].get('uptime'),
                 'cpu': data[1]['status'].get('cpu'),
                 'disks': data[1]['status'].get('disks'),
@@ -142,7 +144,8 @@ class SystemList(object):
             self.rtn.append(
                 {
                     'name': each_sys.name,
-                    'updated_time': arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss'),
+                    'updated_time': arrow.utcnow()\
+                        .to(current_app.config['TIME_ZONE']).format('HH:mm:ss'),
                     'version': each_sys.version,
                     'detail': [{
                         'id': proc.id,
@@ -286,11 +289,9 @@ class ProcStaticApi(Resource, SystemList):
                     in result['command']: '''
                 exec_list = result['command'].split(' ')
                 if proc.exec_file in exec_list[0] and \
-                        reduce(
-                            lambda x, y: x or y,
-                            [find(proc.param, param) for param in exec_list[1:]],
-                                    len(exec_list) <= 1
-                        ):
+                    reduce(lambda x, y: x or y,
+                           [find(proc.param, param) for param in exec_list[1:]],
+                           len(exec_list) <= 1):
                     self.proc_status[proc] = result
                     match = True
                     break
@@ -426,7 +427,8 @@ class ProcVersionApi(Resource):
             gevent.joinall(self.checker)
             rtn = {
                 'name': sys.name,
-                'updated_time': arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss'),
+                'updated_time': arrow.utcnow()\
+                    .to(current_app.config['TIME_ZONE']).format('HH:mm:ss'),
                 'version': sys.version,
                 'detail': [{
                     'id': proc.id,
@@ -478,7 +480,8 @@ class LoginListApi(Resource, SystemList):
                             except (NoSuchColumnError, IndexError):
                                 tmp[src.source['formatter'][idx]['key']] = \
                                     src.source['formatter'][idx]['default']
-                            tmp['updated_time'] = arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss')
+                            tmp['updated_time'] = arrow.utcnow()\
+                                .to(current_app.config['TIME_ZONE']).format('HH:mm:ss')
                         rtn.append(tmp)
                     sys_db.close()
                     return RestProtocol(rtn)
@@ -490,8 +493,9 @@ class LoginListApi(Resource, SystemList):
         else:
             return RestProtocol(message='system not found', error_code=-1), 404
 
-class LoginCheckApi(Resource):
+class LoginCheckApi(Resource, SystemList):
     def __init__(self):
+        super(self, LoginCheckApi).__init__()
         self.syslog_list = {}
         self.rtn = []
         self.checker = []
@@ -501,7 +505,7 @@ class LoginCheckApi(Resource):
         log_srcs = DataSource.query.filter(
             DataSource.src_type == DataSourceType.FILE,
             DataSource.src_model == DataSourceModel.Seat,
-            DataSource.sys_id == sys.id,
+            DataSource.sys_id.in_([x.id for x in self.system_list]),
             DataSource.disabled == False
         ).all()
         for src in log_srcs:
@@ -558,7 +562,8 @@ class LoginCheckApi(Resource):
                     data[datas['formatter'][idx]['key']] = \
                         datas['formatter'][idx]['default']
                 data['seat_id'] = k
-                data['updated_time'] = arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss')
+                data['updated_time'] = arrow.utcnow()\
+                    .to(current_app.config['TIME_ZONE']).format('HH:mm:ss')
                 for each in v:
                     ''' try:
                         message = each.get('message').decode('utf-8')
@@ -594,6 +599,7 @@ class LoginCheckApi(Resource):
 
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
+        self.find_systems(sys)
         if sys:
             self.find_syslog(sys)
             for (k, v) in self.syslog_list.items():
@@ -640,7 +646,8 @@ class UserSessionListApi(Resource, SystemList):
                                 tmp[src.source['formatter'][idx]['key']] = \
                                     src.source['formatter'][idx]['default']
                             finally:
-                                tmp['updated_time'] = arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss')
+                                tmp['updated_time'] = arrow.utcnow()\
+                                    .to(current_app.config['TIME_ZONE']).format('HH:mm:ss')
                         rtn.append(tmp)
                     sys_db.close()
                     return RestProtocol(rtn)

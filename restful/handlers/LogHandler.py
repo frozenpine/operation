@@ -3,6 +3,7 @@ import re
 
 import arrow
 import gevent
+from flask import current_app
 from flask_restful import Resource, request
 
 from app import globalEncryptKey, msgQueues
@@ -24,8 +25,9 @@ def _decrypt(match):
 class LogApi(Resource):
     def __init__(self):
         self.log_list = {}
-        self.rtn = {}
+        self.rtn = []
         self.checker = []
+        self.app_context = current_app.app_context()
 
     def post(self):
         msg = request.json['msg']
@@ -62,6 +64,7 @@ class LogApi(Resource):
             if not self.log_list.has_key(svr):
                 self.log_list[svr] = []
             self.log_list[svr].append({
+                'name': src.name,
                 'formatter': src.source.get('formatter'),
                 'msg_pattern': src.source.get('msg_pattern'),
                 'key_words': src.source['key_words'],
@@ -73,7 +76,7 @@ class LogApi(Resource):
             r'^(?P<method>[^:]+)://(?P<user>[^:]+):(?P<pass>[^@]+)@(?P<ip>[^:]+):(?P<port>\d+)$'
         )
         pars = reg.match(uri).groupdict()
-        self.rtn[pars['ip']] = {}
+        res = {'svr': pars['ip'], 'logs': []}
         if pars['method'] == 'ssh':
             conf = SSHConfig(
                 ip=pars['ip'],
@@ -89,23 +92,32 @@ class LogApi(Resource):
                 port=int(pars['port'])
             )
         executor = Executor.Create(conf)
-        for data in datas:
-            logfile, module = data.pop('log_define').split('?')
-            mod = {}
-            mod['name'] = module
-            mod[module] = logfile.rstrip('/')
-            mod['key_words'] = data.pop('key_words')
-            result = executor.run(mod)
-            if data['msg_pattern']:
-                def repl(match):
-                    for sub_match in match.groups():
-                        if sub_match:
-                            return match.group(0).replace(
-                                sub_match, '<code>{}</code>'.format(sub_match))
-                    return match.group(0)
-                result.lines = map(lambda x: re.sub(data['msg_pattern'], repl, x), result.lines)
-            self.rtn[pars['ip']][logfile.rstrip('/')] = {'results': result.lines}
-            self.rtn[pars['ip']][logfile.rstrip('/')].update(data)
+        with self.app_context:
+            for data in datas:
+                logfile, module = data.pop('log_define').split('?')
+                mod = {}
+                mod['name'] = module
+                mod[module] = logfile.rstrip('/')
+                mod['key_words'] = data.pop('key_words')
+                result = executor.run(mod)
+                if data['msg_pattern']:
+                    def repl(match):
+                        for sub_match in match.groups():
+                            if sub_match:
+                                return match.group(0).replace(
+                                    sub_match, '<code>{}</code>'.format(sub_match))
+                        return '<code>{}</code>'.format(match.group(0))
+                    result.lines = map(lambda x: re.sub(data['msg_pattern'], repl, x), result.lines)
+                data_res = {
+                    'name': data['name'],
+                    'results': result.lines,
+                    'log_file': logfile.rstrip('/'),
+                    'update_time': arrow.utcnow()\
+                        .to(current_app.config['TIME_ZONE']).format('HH:mm:ss')
+                }
+                data_res.update(data)
+                res['logs'].append(data_res)
+        self.rtn.append(res)
 
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
