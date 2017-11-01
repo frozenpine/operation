@@ -63,6 +63,7 @@ class LogApi(Resource):
             if not self.log_list.has_key(svr):
                 self.log_list[svr] = []
             self.log_list[svr].append({
+                'name': src.name,
                 'formatter': src.source.get('formatter'),
                 'msg_pattern': src.source.get('msg_pattern'),
                 'key_words': src.source['key_words'],
@@ -106,9 +107,11 @@ class LogApi(Resource):
                     return '<code>{}</code>'.format(match.group(0))
                 result.lines = map(lambda x: re.sub(data['msg_pattern'], repl, x), result.lines)
             data_res = {
+                'name': data['name'],
                 'results': result.lines,
                 'log_file': logfile.rstrip('/'),
-                'update_time': arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss')
+                'update_time': arrow.utcnow()\
+                    .to(current_app.config['TIME_ZONE']).format('HH:mm:ss')
             }
             data_res.update(data)
             res['logs'].append(data_res)

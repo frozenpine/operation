@@ -76,6 +76,7 @@ class SqlApi(Resource):
             }
             for dt in dts:
                 data_table = {
+                    'name': dt.name,
                     'formatter': dt.source['formatter'],
                     'rows': []
                 }
@@ -88,9 +89,9 @@ class SqlApi(Resource):
                         except (NoSuchColumnError, IndexError):
                             tmp[dt.source['formatter'][idx]['key']] = \
                                 dt.source['formatter'][idx]['default']
-                    tmp['updated_time'] = arrow.utcnow()\
-                        .to(current_app.config['TIME_ZONE']).format('HH:mm:ss')
                     data_table['rows'].append(tmp)
+                    data_table['update_time'] = arrow.utcnow()\
+                        .to(current_app.config['TIME_ZONE']).format('HH:mm:ss')
                 rtn['data_tables'].append(data_table)
             self.rtn.append(rtn)
 

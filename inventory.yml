@@ -213,26 +213,37 @@ DataSources:
       formatter:
         - key: broker_id
           default: ''
+          name: 接入商
         - key: user_id
           default: ''
+          name: 投资者账号
         - key: user_type
           default: ''
+          name: 投资者类型
         - key: session_id
           default: ''
+          name: Session
         - key: front_id
           default: ''
-        - key: login_tim
+          name: 前置ID
+        - key: login_time
           default: ''
+          name: 登录时间
         - key: ip_address
           default: ''
+          name: IP地址
         - key: mac_address
           default: ''
+          name: MAC地址
         - key: prod_info
           default: ''
+          name: 产品信息
         - key: inter_info
           default: ''
+          name: 接口信息
         - key: total_login
           default: !!int 0
+          name: 登录次数
   - name: 交易系统Syslog
     system: *parent1
     src_type: DataSourceType.FILE
