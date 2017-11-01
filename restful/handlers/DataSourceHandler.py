@@ -89,7 +89,7 @@ class DataSourceListApi(Resource):
             datasource.disabled = data.get('disabled')
             connector = data.get('connector')
             if datasource.src_type == DataSourceType.SQL.value:
-                connector.update({'driver', current_app.})
+                connector.update({'driver': current_app.config['SQL_DRIVER'][connector['protocol']]})
                 connector.pop('logfile')
                 connector.pop('module')
                 try:

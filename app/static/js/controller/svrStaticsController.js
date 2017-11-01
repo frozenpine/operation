@@ -52,7 +52,7 @@ app.controller('svrStaticsControl', ['$scope', '$servers', '$interval', '$routeP
         if (isNaN(interval) || interval < 30) {
             $scope.GlobalConfigs.svrStaticsInterval.current =
                 $scope.GlobalConfigs.svrStaticsInterval.default;
-            return;
+
         } else {
             $interval.cancel($scope.svrStaticInterval);
             $scope.autoRefresh();

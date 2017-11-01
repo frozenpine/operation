@@ -43,7 +43,7 @@ app.controller('sysStaticsControl', ['$scope', '$systems', '$interval', '$routeP
         if (isNaN(interval) || interval < 30) {
             $scope.GlobalConfigs.sysStaticsInterval.current =
                 $scope.GlobalConfigs.sysStaticsInterval.default;
-            return;
+
         } else {
             $interval.cancel($scope.sysStaticInterval);
             $scope.autoRefresh();
