@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 from . import resources
 from .handlers.ConfigFileHandler import ConfigFileApi
+from .handlers.DataSourceHandler import DataSourceApi, DataSourceListApi
 from .handlers.DeviceHandler import DeviceApi, DeviceListApi
 from .handlers.EmergeOpHandler import (EmergeOpApi, EmergeOpCaptchaApi,
                                        EmergeOpCSVApi, EmergeOpExecuteApi,
@@ -320,7 +321,6 @@ resources.add_resource(
     methods=['GET'],
     endpoint='sys_customlogs'
 )
-
 resources.add_resource(
     SqlApi,
     '/system/id/<int:id>/customsqls',
@@ -433,6 +433,21 @@ resources.add_resource(
     '/vendor/name/<string:name>',
     methods=['GET', 'PUT'],
     endpoint='vendor'
+)
+
+resources.add_resource(
+    DataSourceListApi,
+    '/datasources',
+    '/datasources/',
+    methods=['GET', 'POST'],
+    endpoint='datasources'
+)
+
+resources.add_resource(
+    DataSourceApi,
+    '/datasource/id/<int:id>',
+    methods=['GET', 'PUT'],
+    endpoint='datasource'
 )
 
 resources.add_resource(
