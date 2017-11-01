@@ -40,12 +40,14 @@
                                     <ul>
                                         <li ng-repeat="log in svr.logs">
                                             <div>
-                                                <span class="font-green bold">{{::log.name}} </span>
-                                                <span class="font-green bold am-text-sm"> 日志文件: </span>
-                                                <span class="font-green am-text-sm">{{log.log_file}} </span>
-                                                <span class="font-green bold am-text-sm"> 日志计数: </span>
-                                                <span class="font-green am-text-sm"> {{log.results.length}} 条</span>
-                                                <span class="am-text-sm am-fr">最后更新: {{log.update_time}}</span>
+                                                <div class="am-cf">
+                                                    <span class="font-green bold">{{::log.name}} </span>
+                                                    <span class="font-green bold am-text-sm"> 日志文件: </span>
+                                                    <span class="font-green am-text-sm">{{log.log_file}} </span>
+                                                    <span class="font-green bold am-text-sm"> 日志计数: </span>
+                                                    <span class="font-green am-text-sm"> {{log.results.length}} 条</span>
+                                                    <span class="am-text-sm am-fr">最后更新: {{log.update_time}}</span>
+                                                </div>
                                                 <ul class="am-text-sm am-list am-list-striped" style="max-height: 300px; overflow-y: auto;">
                                                     <li ng-repeat="line in log.results" ng-bind-html="line|html_trust"></li>
                                                 </ul>
@@ -69,8 +71,10 @@
                                     <ul>
                                         <li ng-repeat="dt in db.data_tables" style="overflow-x: auto">
                                             <div>
-                                                <span class="font-green bold">{{dt.name}}</span>
-                                                <span class="font-green am-text-sm am-fr">最后更新: {{dt.update_time}}</span>
+                                                <div class="am-cf">
+                                                    <span class="font-green bold">{{dt.name}}</span>
+                                                    <span class="am-text-sm am-fr">最后更新: {{dt.update_time}}</span>
+                                                </div>
                                                 <table class="am-table am-text-xs am-table-striped am-table-hover" style="max-height: 300px; overflow-y: auto;">
                                                     <thead>
                                                         <th ng-repeat="col in dt.formatter">{{::col.name}}</th>
