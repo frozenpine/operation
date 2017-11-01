@@ -41,6 +41,7 @@ from .handlers.UIDataHandler import UIDataApi
 from .handlers.UserHandler import UserApi, UserListApi
 from .handlers.VendorHandler import VendorApi, VendorListApi
 from .handlers.WebshellHandler import WebshellUIApi
+from .handlers.DataSourceHandler import DataSourceApi, DataSourceListApi
 
 resources.add_resource(
     UserApi,
@@ -300,7 +301,7 @@ resources.add_resource(
     '/system/id/<int:id>/config_files/',
     methods=['GET', 'POST'],
     endpoint='config_files_list'
-) 
+)
 
 resources.add_resource(
     ConfigCheckApi,
@@ -425,6 +426,21 @@ resources.add_resource(
     '/vendor/name/<string:name>',
     methods=['GET', 'PUT'],
     endpoint='vendor'
+)
+
+resources.add_resource(
+    DataSourceListApi,
+    '/datasources',
+    '/datasources/',
+    methods=['GET', 'POST'],
+    endpoint='datasources'
+)
+
+resources.add_resource(
+    DataSourceApi,
+    '/datasource/id/<int:id>',
+    methods=['GET', 'PUT'],
+    endpoint='datasource'
 )
 
 resources.add_resource(
