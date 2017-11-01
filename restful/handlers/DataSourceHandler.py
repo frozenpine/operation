@@ -116,13 +116,13 @@ class DataSourceListApi(Resource):
                 connector.pop('database')
                 connector.pop('charset')
                 trade_system = TradeSystem.find(**{'id': datasource.sys_id})
+                connector.update(
+                    {'login_user': trade_system.login_user, 'login_pwd': trade_system.login_pwd, 'ip': trade_system.ip})
                 if trade_system:
                     uri = '{protocol}://{login_user}:{login_pwd}@{ip}:22/#{logfile}?{module}'.format(**connector)
                 else:
                     raise DataNotFoundError('tradesystem not found')
                 datasource.source.update({'uri': uri})
-
-
         db.session.add(datasource)
         db.session.commit()
         return RestProtocol(datasource)
