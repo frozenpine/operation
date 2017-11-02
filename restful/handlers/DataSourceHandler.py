@@ -71,7 +71,7 @@ class DataSourceListApi(Resource):
                 # 拼接uri
                 try:
                     uri = '{protocol}+{driver}://{login_user}:{login_pwd}@{ip}:{port}/#{database}?charset={charset}'. \
-                        format(protocol=data['protocol'], driver=data['driver'], login_user=data['login_user'],
+                        format(protocol=data['protocol'], driver=driver, login_user=data['login_user'],
                                login_pwd=data['login_pwd'], ip=data['ip'], port=data['port'], database=data['database'],
                                charset=data['charset'])
                 except KeyError, e:
