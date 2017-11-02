@@ -9,6 +9,7 @@ from restful.errors import (DataNotJsonError,
                             DataUniqueError,
                             DataNotNullError,
                             DataNotFoundError,
+                            DataEnumValueError,
                             ApiError)
 from restful.protocol import RestProtocol
 
@@ -21,32 +22,6 @@ class DataSourceApi(Resource):
         data_source = DataSource.find(**kwargs)
         if data_source is not None:
             return RestProtocol(data_source)
-        else:
-            return {'message': 'System vendor not found'}, 404
-
-    def put(self, **kwargs):
-        datasource = DataSource.find(**kwargs)
-        if datasource:
-            try:
-                data = request.get_json(force=True)
-                if data.get('name'):
-                    if datasource.name != data.get('name') and DataSource.find(name=data.get('name')):
-                        raise DataUniqueError
-            except BadRequest:
-                return RestProtocol(DataNotJsonError())
-            except DataUniqueError as e:
-                return RestProtocol(e)
-            else:
-                datasource.name = data.get('name')
-                datasource.description = data.get('description')
-                datasource.sys_id = data.get('sys_id')
-                datasource.src_type = data.get('src_type')
-                datasource.src_model = data.get('src_model')
-                datasource.source = data.get('source')
-                datasource.disabled = data.get('disabled')
-                db.session.add(datasource)
-                db.session.commit()
-                return RestProtocol(datasource)
         else:
             return {'message': 'System vendor not found'}, 404
 
@@ -87,21 +62,18 @@ class DataSourceListApi(Resource):
             datasource.src_model = data.get('src_model')
             datasource.source = data.get('source')
             datasource.disabled = data.get('disabled')
-            # 获取connector中的配置
-            connector = data.get('connector')
             # 如果是SQL配置
             if datasource.src_type == DataSourceType.SQL.value:
                 # 从SQLDRIVER中根据protocol找到对应的driver
-                connector.update({'driver': current_app.config['SQL_DRIVER'][connector['protocol']]})
-                # 去除字典中无用的key
-                if 'logfile' in connector:
-                    connector.pop('logfile')
-                if 'module' in connector:
-                    connector.pop('module')
+                driver = current_app.config.get('SQL_DRIVER').get(data.get('protocol'))
+                if not driver:
+                    raise DataNotNullError('Please input protocol and driver')
                 # 拼接uri
                 try:
                     uri = '{protocol}+{driver}://{login_user}:{login_pwd}@{ip}:{port}/#{database}?charset={charset}'. \
-                        format(**connector)
+                        format(protocol=data['protocol'], driver=data['driver'], login_user=data['login_user'],
+                               login_pwd=data['login_pwd'], ip=data['ip'], port=data['port'], database=data['database'],
+                               charset=data['charset'])
                 except KeyError, e:
                     raise DataNotNullError(e)
                 # 如果是Custom 需定制化SQL
@@ -120,23 +92,18 @@ class DataSourceListApi(Resource):
                           'FROM t_seat seat, t_sync_seat sync, t_capital_account ' \
                           'WHERE seat.seat_id = t_capital_account.seat_id AND sync.seatid=t_capital_account.account_id ' \
                           'AND sync.isactive = TRUE'
+                else:
+                    raise DataEnumValueError('Unknown src model')
                 datasource.source.update({'uri': uri, 'sql': sql})
             # 如果是FILE配置
             elif datasource.src_type == DataSourceType.FILE.value:
-                # 去除字典中无用的key
-                if 'database' in connector:
-                    connector.pop('database')
-                if 'charset' in connector:
-                    connector.pop('charset')
-                if 'port' in connector:
-                    connector.pop('port')
                 # 通过sysid找到对应的tradesystem
                 trade_system = TradeSystem.find(**{'id': datasource.sys_id})
-                # 将tradesystem中的系统信息更新到connector中
-                connector.update(
-                    {'login_user': trade_system.login_user, 'login_pwd': trade_system.login_pwd, 'ip': trade_system.ip})
+                # 拼接uri
                 if trade_system:
-                    uri = '{protocol}://{login_user}:{login_pwd}@{ip}:22/#{logfile}?{module}'.format(**connector)
+                    uri = '{protocol}://{login_user}:{login_pwd}@{ip}:22/#{logfile}?{module}'.format(
+                        protocol=data['protocol'], login_user=trade_system.login_user, login_pwd=trade_system.login_pwd,
+                        ip=trade_system.ip, logfile=data['logfile'], module=data['module'])
                 else:
                     raise DataNotFoundError('tradesystem not found')
                 datasource.source.update({'uri': uri})

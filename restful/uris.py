@@ -446,7 +446,7 @@ resources.add_resource(
 resources.add_resource(
     DataSourceApi,
     '/datasource/id/<int:id>',
-    methods=['GET', 'PUT'],
+    methods=['GET'],
     endpoint='datasource'
 )
 
