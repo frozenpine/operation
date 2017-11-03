@@ -71,7 +71,7 @@ class DataSourceListApi(Resource):
                         raise DataNotNullError('Please input protocol and driver')
                     # 拼接uri
                     try:
-                        uri = '{protocol}+{driver}://{login_user}:{login_pwd}@{ip}:{port}/#{database}?charset={charset}'. \
+                        uri = '{protocol}+{driver}://{login_user}:{login_pwd}@{ip}:{port}/{database}?charset={charset}'. \
                             format(protocol=data['protocol'], driver=driver, login_user=data['login_user'],
                                    login_pwd=data['login_pwd'], ip=data['ip'], port=data['port'],
                                    database=data['database'],
