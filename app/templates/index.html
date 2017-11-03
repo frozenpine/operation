@@ -377,7 +377,7 @@
                         <div ng-if="dataSourceDefine.src_type == sourceType.SQL.id" class="am-text-sm">
                             <div class="am-form-group am-form-icon font-green am-form-group-sm">
                                 <label class="am-u-sm-2 am-form-label am-padding-sm" for="dsDefineSqlHost">主机</label>
-                                <div class="am-u-sm-6">
+                                <div class="am-u-sm-5">
                                     <input type="text" id="dsDefineSqlHost" name="dsDefineSqlHost" 
                                            class="am-form-field" ng-model="dataSourceDefine.ip" 
                                            ng-pattern="/((?:(?:25[0-5]|2[0-4]\d|(?:1\d{2}|[1-9]?\d))\.){3}(?:25[0-5]|2[0-4]\d|(?:1\d{2}|[1-9]?\d)))/" 
@@ -385,7 +385,7 @@
                                            required/>
                                 </div>
                                 <label class="am-u-sm-2 am-form-label am-padding-sm" for="dsDefineSqlPort">端口</label>
-                                <div class="am-u-sm-2">
+                                <div class="am-u-sm-3">
                                     <input type="text" id="dsDefineSqlPort" name="dsDefineSqlPort" 
                                            class="am-form-field" 
                                            ng-class="{true: 'invalid', false: ''}[dataSourceDefineForm.dsDefineSqlPort.$dirty && dataSourceDefineForm.dsDefineSqlPort.$invalid]"
@@ -394,13 +394,19 @@
                                 </div>
                             </div>
                             <div class="am-form-group am-form-icon font-green am-form-group-sm">
+                                <label class="am-u-sm-2 am-form-label am-padding-sm" for="dsDefineSqlProto">类型</label>
+                                <div class="am-u-sm-2">
+                                    <select id="dsDefineSqlProto" name="dsDefineSqlProto" class="am-form-field"
+                                            ng-model="dataSourceDefine.protocol"
+                                            ng-options="x for x in sqlProtocol" required></select>
+                                </div>
                                 <label class="am-u-sm-2 am-form-label am-padding-sm" for="dsDefineSqlDb">数据库</label>
-                                <div class="am-u-sm-4">
+                                <div class="am-u-sm-2">
                                     <input type="text" id="dsDefineSqlDb" name="dsDefineSqlDb" 
                                            class="am-form-field" ng-model="dataSourceDefine.database" required/>
                                 </div>
                                 <label class="am-u-sm-2 am-form-label am-padding-sm" for="dsDefineSqlCharset">字符集</label>
-                                <div class="am-u-sm-4">
+                                <div class="am-u-sm-2">
                                     <select id="dsDefineSqlCharset" name="dsDefineSqlCharset" class="am-form-field" 
                                             ng-model="dataSourceDefine.charset" 
                                             ng-options="x for x in charset" required></select>
@@ -511,8 +517,14 @@
                         </div>
                         <div ng-if="dataSourceDefine.src_type == sourceType.FILE.id">
                             <div class="am-form-group am-form-icon font-green am-form-group-sm">
-                                <label class="am-u-sm-3 am-form-label am-padding-sm" for="dsDefineFilePath">路径</label>
-                                <div class="am-u-sm-9">
+                                <label class="am-u-sm-3 am-form-label am-padding-sm" for="dsDefineFileProto">类型</label>
+                                <div class="am-u-sm-2">
+                                    <select id="dsDefineFileProto" name="dsDefineFileProto" class="am-form-field"
+                                            ng-model="dataSourceDefine.protocol"
+                                            ng-options="x for x in fileProtocol" required></select>
+                                </div>
+                                <label class="am-u-sm-2 am-form-label am-padding-sm" for="dsDefineFilePath">路径</label>
+                                <div class="am-u-sm-5">
                                     <input type="text" id="dsDefineFilePath" name="dsDefineFilePath" class="am-form-field" ng-model="dataSourceDefine.log_file" required />
                                 </div>
                             </div>

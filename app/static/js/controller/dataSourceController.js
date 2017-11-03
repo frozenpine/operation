@@ -35,22 +35,31 @@ app.controller('dataSourceController', ['$scope', '$timeout', '$datasources', '$
     $scope.charset = [
         'utf8',
         'gbk',
-        'gb2312',
-        'ansi'
+        'gb2312'
     ];
+
+    $scope.sqlProtocol = ['mysql'];
+    $scope.fileProtocol = ['ssh'];
 
     $scope.$watch('dataSourceDefine.src_type', function(newValue, oldValue){
         if (newValue !== undefined && newValue !== oldValue) {
-            if ($scope.dataSourceDefine.src_type === sourceType.SQL.id 
-                && !$scope.dataSourceDefine.hasOwnProperty('charset')) {
+            if ($scope.dataSourceDefine.src_type === $scope.sourceType.SQL.id) {
+                $scope.dataSourceDefine.protocol = 'mysql';
+                if (!$scope.dataSourceDefine.hasOwnProperty('charset')) {
                     $scope.dataSourceDefine.charset = 'utf8';
+                    $scope.dataSourceDefine.port = 3306;
+                }
+            } else {
+                $scope.dataSourceDefine.protocol = 'ssh';
             }
             $scope.sourceModel = $datasources.getDsModel(newValue);
             $scope.dataSourceDefine = {
-                sys_id: $scope.dataSourceDefine.sys_id,
-                name: $scope.dataSourceDefine.name,
-                description: $scope.dataSourceDefine.description,
-                src_type: $scope.dataSourceDefine.src_type
+                sys_id: $scope.dataSourceDefine.hasOwnProperty('sys_id')? $scope.dataSourceDefine.sys_id : undefined,
+                name: $scope.dataSourceDefine.hasOwnProperty('name')? $scope.dataSourceDefine.name : undefined,
+                description: $scope.dataSourceDefine.hasOwnProperty('description')? 
+                    $scope.dataSourceDefine.description : undefined,
+                src_type: $scope.dataSourceDefine.hasOwnProperty('src_type')? 
+                    $scope.dataSourceDefine.src_type: undefined
             }
         }
     });
@@ -84,7 +93,8 @@ app.controller('dataSourceController', ['$scope', '$timeout', '$datasources', '$
     $scope.dataSourceDefine = {};
 
     $scope.clearForm = function() {
-        $scope.dataSourceDefine = {}
+        $scope.dataSourceDefine = {};
+        $scope.systemTreeSelected = null;
         delete $scope.dataSourceDefineForm;
     };
 

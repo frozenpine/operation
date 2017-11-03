@@ -25,11 +25,11 @@ function treeDropdown($compile){
             ctrl.$dirty = false;
 
             ctrl.openTree = function(){
-                ctrl.isOpen = ctrl.isOpen? false:true;
-                ctrl.$dirty = true;
+                ctrl.isOpen = ctrl.isOpen? false : true;
             }
 
-            ctrl.childClick = function(obj){
+            ctrl.childClick = function(obj) {
+                ctrl.$dirty = true;
                 setSelected(ctrl, obj);
                 ctrl.isOpen = false;
                 ctrl.$apply();
@@ -41,7 +41,10 @@ function treeDropdown($compile){
             scope.$watchGroup(['data', 'selected'], function(newValues, oldValues, scope) {
                 list.html('');
     
-                if(!scope.selected){
+                if (!scope.selected){
+                    if (scope.selected === null) {
+                        scope.$dirty = false;
+                    }
                     setSelected (scope, null);
                 }
                 var options = getOptions(scope, scope.data, 0);
@@ -53,7 +56,7 @@ function treeDropdown($compile){
                 if (element !== event.target && !element[0].contains(event.target)) {
                     scope.$apply(function(){
                         scope.isOpen = false;
-                        if(scope.$dirty && scope.selected===undefined){
+                        if(scope.$dirty && scope.selected === undefined){
                             $('div.select').toggleClass('invalid', true);
                         } else {
                             $('div.select').toggleClass('invalid', false);
