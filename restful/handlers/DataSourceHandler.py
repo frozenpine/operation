@@ -45,7 +45,7 @@ class DataSourceListApi(Resource):
         try:
             data = request.get_json(force=True)
             for param in self.not_null_list:
-                if not data.get(param):
+                if not data.has_key(param):
                     raise DataNotNullError('Please input {}'.format(param))
             if DataSource.find(name=data.get('name')):
                 raise DataUniqueError
@@ -60,10 +60,13 @@ class DataSourceListApi(Resource):
             datasource.sys_id = data.get('sys_id')
             datasource.src_type = data.get('src_type')
             datasource.src_model = data.get('src_model')
-            datasource.source = data.get('source')
+            datasource.source = {}
             datasource.disabled = data.get('disabled')
             # 如果是SQL配置
             if datasource.src_type == DataSourceType.SQL.value:
+                datasource.source.update({
+                    "formatter": data['formatter']
+                })
                 # 从SQLDRIVER中根据protocol找到对应的driver
                 driver = current_app.config.get('SQL_DRIVER').get(data.get('protocol'))
                 if not driver:
