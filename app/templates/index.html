@@ -13,7 +13,9 @@
     <link rel="stylesheet" href="[[ url_for('static', filename='css/amazeui.min.css', _external=True) ]]" />
     <link rel="stylesheet" href="[[ url_for('static', filename='css/admin.css', _external=True) ]]">
     <link rel="stylesheet" href="[[ url_for('static', filename='css/app.css', _external=True) ]]">
-    <link rel="stylesheet" href="[[ url_for('static', filename='css/clock.css', _external=True) ]]"> {% if title %}
+    <link rel="stylesheet" href="[[ url_for('static', filename='css/clock.css', _external=True) ]]">
+    <link rel="stylesheet" href="[[ url_for('static', filename='css/tree-dropdown.css', _external=True) ]]">
+    {% if title %}
     <title>[[title]] - Quantdo</title>
     {% else %}
     <title>Welcome to Quantdo - QOPS</title>
@@ -277,25 +279,150 @@
         </div>
     </div>
 
-    <div class="am-modal am-modal-confirm" tabindex="-1" id="defineDatasource" ng-controller="dsController">
+    <div class="am-modal am-modal-confirm" tabindex="-1" id="defineDatasource" ng-controller="dataSourceController">
         <div class="am-modal-dialog">
-            <form  class="am-form am-form-horizontal" name="dataSourceDefine">
-                <div class="am-modal-hd font-green bold">定义数据源
-                    <a href="javascript: void(0)" class="am-close am-close-spin" ng-click="" data-am-modal-close>&times;</a>
+            <form  class="am-form am-form-horizontal" name="dataSourceDefineForm">
+                <div class="am-modal-hd font-green bold">数据源定义
+                    <a href="javascript: void(0)" class="am-close am-close-spin" ng-click="clearForm()" data-am-modal-close>&times;</a>
                 </div>
                 <div class="am-modal-bd">
                     <div class="am-form-group am-form-icon font-green">
-                        <label for="dtDefineSysSelector" class="am-u-sm-2 am-form-label">系统</label>
-                        <div>
-                            <select id="dtDefineSysSelector" ng-model="dataSourceDefine.sys_id" value="opt.id" ng-options="opt.name for opt in systemList">
+                        <label for="dsDefineSysSelector" class="am-u-sm-2 am-form-label">系统</label>
+                        <div class="am-u-sm-4">
+                            <tree-dropdown class="tree-dropdown" data="systemTree" selected="systemTreeSelected" label="--请选择--" style="width: 100%; text-align: left;"></tree-dropdown>
+                        </div>
+                        <label for="dsDefineName" class="am-u-sm-2 am-form-label">名称</label>
+                        <div class="am-u-sm-4">
+                            <input id="dsDefineName" name="dsDefineName" type="text" class="am-form-field" ng-model="dataSourceDefine.name" ng-class="{true: 'invalid', false: ''}[dataSourceDefineForm.dsDefineName.$dirty && dataSourceDefine.name == undefined]" required />
+                        </div>
+                    </div>
+                    <div class="am-form-group am-form-icon font-green">
+                        <label for="dsDefineDesc" class="am-u-sm-2 am-form-label">描述</label>
+                        <div class="am-u-sm-10">
+                            <input id="dsDefineDesc" type="text" class="am-form-field" ng-model="dataSourceDefine.description" />
+                        </div>
+                    </div>
+                    <div class="am-form-group am-form-icon font-green">
+                        <label for="dsDefineSrcTyp" class="am-u-sm-2 am-form-label">类型</label>
+                        <div class="am-u-sm-4">
+                            <select id="dsDefineSrcTyp" name="dsDefineSrcTyp" class="am-form-field" ng-model="dataSourceDefine.src_type" ng-options="v.id as v.name for (k, v) in sourceType" ng-class="{true: 'invalid', false: ''}[dataSourceDefineForm.dsDefineSrcTyp.$dirty && dataSourceDefine.src_type == undefined]" required>
+                                <option value="">--请选择--</option>
+                            </select>
+                        </div>
+                        <label for="dsDefineSrcMod" class="am-u-sm-2 am-form-label">模型</label>
+                        <div class="am-u-sm-4">
+                            <select id="dsDefineSrcMod" name="dsDefineSrcMod" class="am-form-field" ng-model="dataSourceDefine.src_model" ng-options="v.id as v.name for (k, v) in sourceModel" ng-class="{true: 'invalid', false: ''}[dataSourceDefineForm.dsDefineSrcMod.$dirty && dataSourceDefine.src_model == undefined]" required>
                                 <option value="">--请选择--</option>
                             </select>
                         </div>
                     </div>
+                    {{dataSourceDefine}}
+                    <fieldset ng-if="dataSourceDefine.src_model !== undefined && dataSourceDefine.src_type !== undefined" style="margin-bottom: 0">
+                        <legend class="font-green" style="text-align: left; font-size: inherit; padding-left: 22px; font-style: italic">高级设置</legend>
+                        <div ng-if="dataSourceDefine.src_type == sourceType.SQL.id" class="am-text-sm">
+                            <div class="am-form-group am-form-icon font-green am-form-group-sm">
+                                <label class="am-u-sm-2 am-form-label am-padding-sm" for="dsDefineSqlHost">主机</label>
+                                <div class="am-u-sm-6">
+                                    <input type="text" id="dsDefineSqlHost" name="dsDefineSqlHost" class="am-form-field" ng-model="dataSourceDefine.ip" required/>
+                                </div>
+                                <label class="am-u-sm-2 am-form-label am-padding-sm" for="dsDefineSqlPort">端口</label>
+                                <div class="am-u-sm-2">
+                                    <input type="text" id="dsDefineSqlPort" name="dsDefineSqlPort" class="am-form-field" ng-model="dataSourceDefine.port" required/>
+                                </div>
+                            </div>
+                            <div class="am-form-group am-form-icon font-green am-form-group-sm">
+                                <label class="am-u-sm-2 am-form-label am-padding-sm" for="dsDefineSqlDb">数据库</label>
+                                <div class="am-u-sm-4">
+                                    <input type="text" id="dsDefineSqlDb" name="dsDefineSqlDb" class="am-form-field" ng-model="dataSourceDefine.database" required/>
+                                </div>
+                                <label class="am-u-sm-2 am-form-label am-padding-sm" for="dsDefineSqlCharset">字符集</label>
+                                <div class="am-u-sm-4">
+                                    <select id="dsDefineSqlCharset" name="dsDefineSqlCharset" class="am-form-field" ng-model="dataSourceDefine.charset" ng-options="x for x in charset" required></select>
+                                </div>
+                            </div>
+                            <div class="am-form-group am-form-icon font-green am-form-group-sm">
+                                <label class="am-u-sm-2 am-form-label am-padding-sm" for="dsDefineSqlUser">用户名</label>
+                                <div class="am-u-sm-4">
+                                    <input type="text" id="dsDefineSqlUser" name="dsDefineSqlUser" class="am-form-field" ng-model="dataSourceDefine.login_user" required/>
+                                </div>
+                                <label class="am-u-sm-2 am-form-label am-padding-sm" for="dsDefineSqlPass">密码</label>
+                                <div class="am-u-sm-4">
+                                    <input type="password" id="dsDefineSqlPass" name="dsDefineSqlPass" class="am-form-field" ng-model="dataSourceDefine.login_pwd" required/>
+                                </div>
+                            </div>
+                            <div ng-if="dataSourceDefine.src_model == sourceModel.Custom.id">
+                                <div class="am-form-group am-form-icon font-green am-form-group-sm">
+                                    <label class="am-u-sm-2 am-form-label am-padding-sm" for="dsDefineSqlText">SQL</label>
+                                    <div class="am-u-sm-10">
+                                        <textarea id="dsDefineSqlText" name="dsDefineSqlText" class="am-form-field" ng-model="dataSourceDefine.sql" style="height: 100px;" required></textarea>
+                                    </div>
+                                </div>
+                                <div class="am-form-group am-form-icon font-green am-form-group-sm">
+                                    <label class="am-u-sm-2 am-form-label am-padding-xs" for="dsDefineSqlText">
+                                        表头定义
+                                        <span ng-click="addDataSourceDefineFormatter()" style="border: none; background: none">
+                                            <i class="am-icon-plus-circle"></i>
+                                        </span>
+                                    </label>
+                                    <div class="am-u-sm-10">
+                                        <div class="am-panel am-panel-secondary am-cf" style="height: 200px;">
+                                            <div class="am-panel-hd am-u-sm-12 bold am-text-sm">
+                                                <div class="am-u-sm-2 am-padding-xs">字段名</div>
+                                                <div class="am-u-sm-3 am-padding-xs">别名</div>
+                                                <div class="am-u-sm-3 am-padding-xs">数据类型</div>
+                                                <div class="am-u-sm-3 am-padding-xs">默认值</div>
+                                                <div class="am-u-sm-1 am-padding-xs ">
+                                                    <span class="am-icon-trash am-fr" style="margin-top: 3px"></span>
+                                                </div>
+                                            </div>
+                                            <div class="am-panel-bd" style="padding: 0; overflow-y: auto;">
+                                                <ul sv-root sv-part="dataSourceDefine.formatter">
+                                                    <li class="am-inline-block" ng-repeat="node in dataSourceDefine.formatter" sv-element>
+                                                        <div class="am-u-sm-12">
+                                                            <div class="am-u-sm-2" style="padding: 1px">
+                                                                <input type="text" name="dsDefineFormatterKey" style="width: 100%; border: none" ng-class="{true: 'invalid', false: ''}[dataSourceDefineForm.dsDefineFormatterKey.$dirty && node.key==undefined]" ng-model="node.key"/>
+                                                            </div>
+                                                            <div class="am-u-sm-3" style="padding: 1px">
+                                                                <input type="text" name="dsDefineFormatterName" style="width: 100%; border: none" ng-class="{true: 'invalid', false: ''}[dataSourceDefineForm.dsDefineFormatterName.$dirty && node.name==undefined]" ng-model="node.name"/>
+                                                            </div>
+                                                            <div class="am-u-sm-3" style="padding: 1px">
+                                                                <select style="width: 100%; border: none" ng-model="formatterDataTypeSelection[node.key]" ng-options="k as v for (k, v) in formatterDataType" ng-change="node.default=undefined"></select>
+                                                            </div>
+                                                            <div class="am-u-sm-3" style="padding: 1px">
+                                                                <input type="text" name="dsDefineFormatterDefault" style="width: 100%; border: none" ng-model="node.default" ng-if="formatterDataTypeSelection[node.key] == 'string'" />
+                                                                <input type="number" name="dsDefineFormatterDefault" style="width: 100%; border: none" ng-model="node.default" ng-if="formatterDataTypeSelection[node.key] == 'number'" />
+                                                            </div>
+                                                            <div class="am-u-sm-1" style="padding: 1px">
+                                                                <span style="cursor: pointer;position: relative;left: 2%;margin-top: 10px;" class="am-icon-bars" sv-handle></span>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div ng-if="dataSourceDefine.src_type == sourceType.FILE.id">
+                            <div class="am-form-group am-form-icon font-green am-form-group-sm">
+                                <label class="am-u-sm-3 am-form-label am-padding-sm" for="dsDefineFilePath">路径</label>
+                                <div class="am-u-sm-9">
+                                    <input type="text" id="dsDefineFilePath" name="dsDefineFilePath" class="am-form-field" ng-model="dataSourceDefine.log_file" required />
+                                </div>
+                            </div>
+                            <div class="am-form-group am-form-icon font-green am-form-group-sm" ng-if="dataSourceDefine.src_model == sourceModel.Custom.id">
+                                <label class="am-u-sm-3 am-form-label am-padding-sm" for="dsDefineMsgPattern">高亮表达式</label>
+                                <div class="am-u-sm-9">
+                                    <input type="text" id="dsDefineMsgPattern" name="dsDefineMsgPattern" class="am-form-field" ng-model="dataSourceDefine.msg_pattern" />
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
                 </div>
                 <div class="am-modal-footer am-u-sm-12">
-                    <span class="am-modal-btn am-u-sm-6" ng-click="" data-am-modal-cancel>取消</span>
-                    <button ng-disabled="" ng-click="" type="submit" class="am-btn am-btn-primary am-u-sm-6" style="height: 44px;">
+                    <span class="am-modal-btn am-u-sm-6" ng-click="clearForm()" data-am-modal-cancel>取消</span>
+                    <button ng-disabled="dataSourceDefineForm.$invalid || systemTreeSelected === undefined" ng-click="" type="submit" class="am-btn am-btn-primary am-u-sm-6" style="height: 44px;">
                         确定  
                     </button>
                 </div>
@@ -402,6 +529,12 @@
                             <a href="" ng-click="showModalDialog({target: '#addNewGroups', closeViaDimmer: 0, width: 850})">
                                 <i class="am-icon-clone am-icon-fw"></i>
                                 <span>添加操作组</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="" ng-click="showModalDialog({target: '#defineDatasource', closeViaDimmer: 0, width: 600})">
+                                <i class="am-icon-database am-icon-fw"></i>
+                                <span>添加数据源</span>
                             </a>
                         </li>
                         <li>
@@ -577,6 +710,7 @@
     <script src="[[ url_for('static', filename='js/ngscroll.min.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/amazeui.min.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/echarts.min.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/tree-dropdown.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/app.js', _external=True) ]]" type="text/javascript" charset="utf-8"></script>
     <script src="[[ url_for('static', filename='js/myApp.js', _external=True) ]]" type="text/javascript" charset="utf-8"></script>
     <script src="[[ url_for('static', filename='js/routeConfig.js', _external=True) ]]" type="text/javascript" charset="utf-8"></script>
@@ -588,6 +722,7 @@
     <script src="[[ url_for('static', filename='js/service/servers.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/service/fileUpload.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/service/uidatas.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/service/datasources.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/filter/resultFilter.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/filter/timeFormatter.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/filter/processFilter.js', _external=True) ]]"></script>
@@ -611,7 +746,7 @@
     <script src="[[ url_for('static', filename='js/controller/sysStaticsController.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/controller/customLogController.js', _external=True) ]]"></script>
     <script src="[[ url_for('static', filename='js/controller/customSqlController.js', _external=True) ]]"></script>
-    <script src="[[ url_for('static', filename='js/controller/dsController.js', _external=True) ]]"></script>
+    <script src="[[ url_for('static', filename='js/controller/dataSourceController.js', _external=True) ]]"></script>
 </body>
 
 </html>
