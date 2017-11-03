@@ -112,7 +112,7 @@ class DataSourceListApi(Resource):
                         datasource.source.update({'key_words': key_words})
                         datasource.source.update(
                             {'msg_pattern':
-                                 '.+TradeDate=\\[(?P<trade_date>[^]]+)\\]\\s+TradeTime=\\[(?P<trade_time>[^]]+)\\]'}
+                                '.+TradeDate=\\[(?P<trade_date>[^]]+)\\]\\s+TradeTime=\\[(?P<trade_time>[^]]+)\\]'}
                         )
                     else:
                         raise DataEnumValueError('Unknown src model')
@@ -120,10 +120,10 @@ class DataSourceListApi(Resource):
                     trade_system = TradeSystem.find(**{'id': datasource.sys_id})
                     # 拼接uri
                     if trade_system:
-                        uri = '{protocol}://{login_user}:{login_pwd}@{ip}:22/#{logfile}?{module}'.format(
+                        uri = '{protocol}://{login_user}:{login_pwd}@{ip}:22/#{log_file}?{module}'.format(
                             protocol=data['protocol'], login_user=trade_system.login_user,
                             login_pwd=trade_system.login_pwd,
-                            ip=trade_system.ip, logfile=data['logfile'], module=data['module'])
+                            ip=trade_system.ip, log_file=data['log_file'], module=data.get('module', 'customLog'))
                     else:
                         raise DataNotFoundError('tradesystem not found')
                     datasource.source.update({'uri': uri})
