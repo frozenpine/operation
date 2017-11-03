@@ -29,11 +29,11 @@ class Config(object):
     UI_PROTECTION = {
         'ui_element': [
             '#addNewGroups', '#defineOptionBook', '#inventory', '#operate-books',
-            '#editGroup', '#initGroup'
+            '#editGroup', '#initGroup', '#defineDatasource'
         ],
         'ui_uri': [
             '/api/operation-groups', '/api/operation-books', '/api/systems', '/api/emerge_ops',
-            '/api/operation-groups', '/api/op_group'
+            '/api/operation-groups', '/api/op_group', '/api/datasources'
         ]
     }
 
