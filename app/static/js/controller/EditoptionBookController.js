@@ -29,8 +29,6 @@ app.controller('EditoptionBookController', ['$scope', '$operationBooks', functio
                         $scope.optionBookEditBookData = res.records;
                     }
                 });
-
-
                 $scope.optionBookSystemOptBookData = res;
                 if ($scope.optionBookSystemOptBookData.catalog) {
                     $scope.dataCopy = {
