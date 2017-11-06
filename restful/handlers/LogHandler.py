@@ -27,6 +27,7 @@ class LogApi(Resource):
         self.log_list = {}
         self.rtn = []
         self.checker = []
+        self.system_list = []
         self.app_context = current_app.app_context()
 
     def post(self):
@@ -42,11 +43,19 @@ class LogApi(Resource):
         '''
         msgQueues['public'].send_message(msg.encode('utf-8'))
 
+    def find_systems(self, sys):
+        if len(sys.processes) > 0:
+            self.system_list.append(sys)
+        if len(sys.child_systems) > 0:
+            for child_sys in sys.child_systems:
+                self.find_systems(child_sys)
+
     def find_logs(self, sys):
+        self.find_systems(sys)
         sources = DataSource.query.filter(
             DataSource.src_type == DataSourceType.FILE,
             DataSource.src_model == DataSourceModel.Custom,
-            DataSource.sys_id == sys.id,
+            DataSource.sys_id.in_([x.id for x in self.system_list]),
             DataSource.disabled == False
         ).all()
         for src in sources:
