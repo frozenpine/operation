@@ -1,9 +1,7 @@
-app.service('$datasources', function($http) {
-    /* this.getDsDefault = function() {
-        return angular.copy({
-            charset: 'utf8'
-        });
-    }; */
+app.service('$datasources', function($http, $message) {
+    this.getCustomLogs = function() {
+
+    };
 
     this.getDsType = function() {
         return {
@@ -33,10 +31,17 @@ app.service('$datasources', function($http) {
     this.AddDataSource = function(params) {
         $http.post('api/datasources', data=params.data)
             .success(function(response){
-                console.log(response);
+                if (response.error_code === 0) {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(response.data);
+                    }
+                } else if (params.hasOwnProperty('onError')) {
+                    params.onError(response);
+                }
             })
             .error(function(response){
                 console.log(response);
+                $message.Alert(response.message);
             });
     };
 });
