@@ -74,8 +74,7 @@ class DataSourceListApi(Resource):
                         uri = '{protocol}+{driver}://{login_user}:{login_pwd}@{ip}:{port}/{database}?charset={charset}'. \
                             format(protocol=data['protocol'], driver=driver, login_user=data['login_user'],
                                    login_pwd=data['login_pwd'], ip=data['ip'], port=data['port'],
-                                   database=data['database'],
-                                   charset=data['charset'])
+                                   database=data['database'], charset=data['charset'])
                     except KeyError, e:
                         raise DataNotNullError(e)
                     # 如果是Custom 需定制化SQL
