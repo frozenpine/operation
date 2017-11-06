@@ -60,7 +60,7 @@ class SqlApi(Resource):
                 self.dt_list[uri] = []
             self.dt_list[uri].append(src)
 
-    def get_datetable(self, uri, dts):
+    def get_datatable(self, uri, dts):
         try:
             sys_db = create_engine(uri).connect()
         except Exception:
@@ -102,7 +102,7 @@ class SqlApi(Resource):
         if sys:
             self.find_tables(sys)
             for (k, v) in self.dt_list.items():
-                self.checker.append(gevent.spawn(self.get_datetable, k, v))
+                self.checker.append(gevent.spawn(self.get_datatable, k, v))
                 # self.get_datetable(k, v)
             # gevent.sleep(0)
             gevent.joinall(self.checker)

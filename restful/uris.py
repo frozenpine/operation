@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 from . import resources
 from .handlers.ConfigFileHandler import ConfigFileApi
-from .handlers.DataSourceHandler import DataSourceApi, DataSourceListApi
+from .handlers.DataSourceHandler import DataSourceApi, DataSourceListApi, DataSourceResultApi
 from .handlers.DeviceHandler import DeviceApi, DeviceListApi
 from .handlers.EmergeOpHandler import (EmergeOpApi, EmergeOpCaptchaApi,
                                        EmergeOpCSVApi, EmergeOpExecuteApi,
@@ -9,7 +9,6 @@ from .handlers.EmergeOpHandler import (EmergeOpApi, EmergeOpCaptchaApi,
                                        EmergeOpUIApi)
 from .handlers.FilePostHandler import FilePostApi
 from .handlers.LogHandler import LogApi
-from .handlers.SqlDtHandler import SqlApi
 from .handlers.OperateRecordHandler import OperateRecordListApi
 from .handlers.OperationBookHandler import (OperationBookApi,
                                             OperationBookCheckApi,
@@ -27,6 +26,7 @@ from .handlers.OperationHandler import (OperationApi, OperationCallbackApi,
                                         OperationLoginApi, OperationUIApi)
 from .handlers.ProcessHandler import ProcessApi, ProcessListApi
 from .handlers.RoleHandler import RoleApi, RoleListApi
+from .handlers.SqlDtHandler import SqlApi
 from .handlers.SysStaticsHandler import (ConfigCheckApi, ConfigListApi,
                                          LoginCheckApi, LoginListApi,
                                          ProcStaticApi, ProcVersionApi,
@@ -302,7 +302,7 @@ resources.add_resource(
     '/system/id/<int:id>/config_files/',
     methods=['GET', 'POST'],
     endpoint='config_files_list'
-) 
+)
 
 resources.add_resource(
     ConfigCheckApi,
@@ -315,6 +315,7 @@ resources.add_resource(
 resources.add_resource(WebshellUIApi, '/webshell/system/id/<int:id>', methods=['GET'])
 
 resources.add_resource(LogApi, '/logs', methods=['POST'])
+
 resources.add_resource(
     LogApi,
     '/system/id/<int:id>/customlogs',
@@ -448,6 +449,13 @@ resources.add_resource(
     '/datasource/id/<int:id>',
     methods=['GET'],
     endpoint='datasource'
+)
+
+resources.add_resource(
+    DataSourceResultApi,
+    '/dsresult/id/<int:id>',
+    methods=['GET'],
+    endpoint='dsresult'
 )
 
 resources.add_resource(

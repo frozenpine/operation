@@ -1,11 +1,20 @@
 # -*- coding: UTF-8 -*-
+import re
+
+import arrow
 from flask import request, current_app
 from flask_restful import Resource
+from sqlalchemy import create_engine
+from sqlalchemy.exc import NoSuchColumnError
+from sqlalchemy.sql import text
 from werkzeug.exceptions import BadRequest
 
+from SysManager.configs import SSHConfig, WinRmConfig
+from SysManager.executor import Executor
 from app import db
 from app.models import DataSource, DataSourceType, DataSourceModel, TradeSystem
 from restful.errors import (DataNotJsonError,
+                            DataTypeError,
                             DataUniqueError,
                             DataNotNullError,
                             DataNotFoundError,
@@ -111,7 +120,7 @@ class DataSourceListApi(Resource):
                         datasource.source.update({'key_words': key_words})
                         datasource.source.update(
                             {'msg_pattern':
-                                '.+TradeDate=\\[(?P<trade_date>[^]]+)\\]\\s+TradeTime=\\[(?P<trade_time>[^]]+)\\]'}
+                                 '.+TradeDate=\\[(?P<trade_date>[^]]+)\\]\\s+TradeTime=\\[(?P<trade_time>[^]]+)\\]'}
                         )
                     else:
                         raise DataEnumValueError('Unknown src model')
@@ -131,3 +140,116 @@ class DataSourceListApi(Resource):
             return RestProtocol(datasource)
         except ApiError, e:
             return RestProtocol(e)
+
+
+class DataSourceResultApi(Resource):
+    def __init__(self):
+        super(DataSourceResultApi, self).__init__()
+        self.app_context = current_app.app_context()
+        self.rtn = list()
+
+    def check_log(self, uri, data):
+        reg = re.compile(
+            r'^(?P<method>[^:]+)://(?P<user>[^:]+):(?P<pass>[^@]+)@(?P<ip>[^:]+):(?P<port>\d+)$'
+        )
+        pars = reg.match(uri).groupdict()
+        res = {'svr': pars['ip'], 'logs': []}
+        if pars['method'] == 'ssh':
+            conf = SSHConfig(
+                ip=pars['ip'],
+                user=pars['user'],
+                password=pars['pass'],
+                port=int(pars['port'])
+            )
+        else:
+            conf = WinRmConfig(
+                ip=pars['ip'],
+                user=pars['user'],
+                password=pars['pass'],
+                port=int(pars['port'])
+            )
+        executor = Executor.Create(conf)
+        with self.app_context:
+            logfile, module = data.pop('log_define').split('?')
+            mod = dict()
+            mod['name'] = module
+            mod[module] = logfile.rstrip('/')
+            mod['key_words'] = data.pop('key_words')
+            result = executor.run(mod)
+            if data['msg_pattern']:
+                def repl(match):
+                    for sub_match in match.groups():
+                        if sub_match:
+                            return match.group(0).replace(
+                                sub_match, '<code>{}</code>'.format(sub_match))
+                    return '<code>{}</code>'.format(match.group(0))
+
+                result.lines = map(lambda x: re.sub(data['msg_pattern'], repl, x), result.lines)
+            data_res = {
+                'name': data['name'],
+                'results': result.lines,
+                'log_file': logfile.rstrip('/'),
+                'update_time': arrow.utcnow().to(current_app.config['TIME_ZONE']).format('HH:mm:ss')
+            }
+            data_res.update(data)
+            res['logs'].append(data_res)
+            self.rtn.append(res)
+            return self.rtn
+
+    def get_datatable(self, uri, dt):
+        try:
+            sys_db = create_engine(uri).connect()
+        except Exception:
+            self.rtn.append({
+                'db_host': re.findall(r'[^@]+@([^:/]+).*', uri)[0],
+                'db_name': re.findall(r'[^@]+@[^/]+/([^?]+).*', uri)[0],
+                'dt': None
+            })
+        else:
+            rtn = {
+                'db_host': re.findall(r'[^@]+@([^:/]+).*', uri)[0],
+                'db_name': re.findall(r'[^@]+@[^/]+/([^?]+).*', uri)[0],
+                'data_tables': []
+            }
+            data_table = {
+                'name': dt.name,
+                'formatter': dt.source['formatter'],
+                'rows': []
+            }
+            results = sys_db.execute(text(dt.source['sql'])).fetchall()
+            for row in results:
+                tmp = {}
+                for idx in xrange(len(dt.source['formatter'])):
+                    try:
+                        tmp[dt.source['formatter'][idx]['key']] = unicode(row[idx])
+                    except (NoSuchColumnError, IndexError):
+                        tmp[dt.source['formatter'][idx]['key']] = \
+                            dt.source['formatter'][idx]['default']
+                data_table['rows'].append(tmp)
+            with self.app_context:
+                data_table['update_time'] = arrow.utcnow() \
+                    .to(current_app.config['TIME_ZONE']).format('HH:mm:ss')
+            rtn['data_tables'].append(data_table)
+            self.rtn.append(rtn)
+            return self.rtn
+
+    def get(self, **kwargs):
+        data_source = DataSource.find(**kwargs)
+        src_type = data_source.src_type
+        src_model = data_source.src_model
+        source = data_source.source
+        if src_model.value != DataSourceModel.Custom.value:
+            raise DataTypeError('Please select a custom datasource')
+        if src_type.value == DataSourceType.FILE.value:
+            data = ({
+                'name': data_source.name,
+                'formatter': data_source.source.get('formatter'),
+                'msg_pattern': data_source.source.get('msg_pattern'),
+                'key_words': data_source.source['key_words'],
+                'log_define': source.get('uri').split('#')[1]
+            })
+            data_res = self.check_log(source.get('uri').split('#')[0].rstrip('/'), data)
+            return RestProtocol({'FILE': data_res, 'SQL': list()})
+        if src_type.value == DataSourceType.SQL.value:
+            data_res = self.get_datatable(source.get('uri'), data_source)
+            return RestProtocol({'FILE': list(), 'SQL': data_res})
