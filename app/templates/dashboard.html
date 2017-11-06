@@ -32,11 +32,15 @@
                     <div ng-controller="customLogController">
                         <div class="am-text-center caption font-green bold am-text-md am-margin-bottom-sm">
                             自定义日志查询
-                            <button class="am-fr" style="border: none; background: none;">
+                            <!-- <button class="am-fr" style="border: none; background: none;">
                                 <i class="am-icon-plus-circle am-icon-sm"></i>
-                            </button>
+                            </button> -->
                         </div>
-                        <p class="am-text-xs" ng-if="servers.length <= 0">无自定义日志查询</p>
+                        <div ng-show="checking">
+                            <span class="font-green am-text-sm">检查中...
+                                <i class="am-icon-spinner am-icon-spin"></i></span>
+                        </div>
+                        <p class="am-text-xs" ng-if="servers && servers.length <= 0">无自定义日志查询</p>
                         <ul ng-if="servers.length > 0">
                             <li ng-repeat="svr in servers">
                                 <div>
@@ -66,11 +70,15 @@
                     <div ng-controller="customSqlController">
                         <div class="am-text-center caption font-green bold am-text-md am-margin-bottom-sm">
                             自定义数据表查询
-                            <button class="am-fr" style="border: none; background: none;">
+                            <!-- <button class="am-fr" style="border: none; background: none;">
                                 <i class="am-icon-plus-circle am-icon-sm"></i>
-                            </button>
+                            </button> -->
                         </div>
-                        <p class="am-text-xs" ng-if="dbs.length <= 0">无自定义数据表查询</p>
+                        <div ng-show="checking">
+                            <span class="font-green am-text-sm">检查中...
+                                <i class="am-icon-spinner am-icon-spin"></i></span>
+                        </div>
+                        <p class="am-text-xs" ng-if="dbs && dbs.length <= 0">无自定义数据表查询</p>
                         <ul ng-if="dbs.length > 0">
                             <li ng-repeat="db in dbs">
                                 <div>
@@ -86,7 +94,7 @@
                                                     <span class="am-text-sm am-fr">最后更新: {{dt.update_time}}</span>
                                                 </div>
                                                 <div class="am-scrollable-horizontal"
-                                                     style="max-height: 200px; overflow-y: auto;">
+                                                     style="min-height: 100px; max-height: 300px; overflow-y: auto;">
                                                     <table class="am-table am-text-xs am-table-striped am-table-hover">
                                                         <thead>
                                                             <th ng-repeat="col in dt.formatter">{{::col.name}}</th>
