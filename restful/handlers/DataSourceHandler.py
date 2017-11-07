@@ -73,7 +73,6 @@ class DataSourceListApi(Resource):
                 # 如果是SQL配置
                 if datasource.src_type == DataSourceType.SQL.value:
                     # SQL一定有formatter
-                    datasource.source.update({"formatter": data['formatter']})
                     # 从SQLDRIVER中根据protocol找到对应的driver
                     driver = current_app.config.get('SQL_DRIVER').get(data.get('protocol'))
                     if not driver:
@@ -87,6 +86,7 @@ class DataSourceListApi(Resource):
                     except KeyError, e:
                         raise DataNotNullError(e)
                     # 如果是Custom 需定制化SQL
+                    datasource.source.update({"formatter": data['formatter']})
                     if datasource.src_model == DataSourceModel.Custom.value:
                         try:
                             sql = data['sql']
@@ -94,10 +94,30 @@ class DataSourceListApi(Resource):
                             raise DataNotNullError('Please input {}'.format('sql'))
                     # 不是Custom的情况下 写死SQL
                     elif datasource.src_model == DataSourceModel.Session.value:
+                        datasource.source.update({'formatter': [{"default": "", "name": None, "key": "broker_id"},
+                                                                {"default": "", "key": "user_id"},
+                                                                {"default": "", "key": "user_type"},
+                                                                {"default": "", "key": "session_id"},
+                                                                {"default": "", "key": "front_id"},
+                                                                {"default": "", "key": "login_tim"},
+                                                                {"default": "", "key": "ip_address"},
+                                                                {"default": "", "key": "mac_address"},
+                                                                {"default": "", "key": "prod_info"},
+                                                                {"default": "", "key": "inter_info"},
+                                                                {"default": 0, "key": "total_login"}]})
                         sql = 'SELECT a.brokerid, a.userid, a.usertype, a.sessionid, a.frontid, a.logintime, a.ipaddress,' \
                               ' a.macaddress, a.userproductinfo, a.interfaceproductinfo, COUNT(a.id) AS total ' \
                               'FROM (SELECT * FROM t_oper_usersession ORDER BY id DESC) a GROUP BY userid'
                     elif datasource.src_model == DataSourceModel.Seat.value:
+                        datasource.source.update({'formatter': [{"default": "", "key": "seat_name"},
+                                                                {"default": "", "key": "trading_day"},
+                                                                {"default": "", "key": "front_addr"},
+                                                                {"default": "", "key": "seat_id"},
+                                                                {"default": u"未连接", "key": "seat_status"},
+                                                                {"default": 0, "key": "conn_count"},
+                                                                {"default": 0, "key": "login_success"},
+                                                                {"default": 0, "key": "login_fail"},
+                                                                {"default": 0, "key": "disconn_count"}]})
                         sql = 'SELECT seat.seat_name, sync.tradingday, sync.frontaddr, sync.seatid ' \
                               'FROM t_seat seat, t_sync_seat sync, t_capital_account ' \
                               'WHERE seat.seat_id = t_capital_account.seat_id AND sync.seatid=t_capital_account.account_id ' \
