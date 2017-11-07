@@ -15,6 +15,5 @@ RUN cd /tmp/flask/deploy && \
 	useradd devops && chown -R devops:devops /devops
 USER devops
 WORKDIR /devops
-ENV FLASK_HOST=0.0.0.0 FLASK_PORT=6001
-ENV TM_HOST=0.0.0.0 TM_PORT=6000
+ENV FLASK_HOST=0.0.0.0 FLASK_PORT=6001 TM_HOST=0.0.0.0 TM_PORT=6000
 CMD ["supervisord", "-c", "/etc/supervisor/supervisor.conf"]

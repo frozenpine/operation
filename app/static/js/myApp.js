@@ -1,4 +1,4 @@
-var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorage', 'ngScroll'], function($provide) {
+var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorage', 'ngScroll', 'tree.dropdown'], function($provide) {
     $provide.factory('$uuid', function() {
         return {
             uuid4: function() {

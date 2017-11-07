@@ -31,7 +31,7 @@ app.controller('clientStaticsControl', ['$scope', '$systems', '$routeParams', '$
         if (isNaN(interval) || interval < 30) {
             $scope.GlobalConfigs.sessionStaticsInterval.current =
                 $scope.GlobalConfigs.sessionStaticsInterval.default;
-            return;
+
         } else {
             $interval.cancel($scope.clientSessionInterval);
             $scope.autoRefresh();

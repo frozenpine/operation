@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 from . import resources
 from .handlers.ConfigFileHandler import ConfigFileApi
+from .handlers.DataSourceHandler import DataSourceApi, DataSourceListApi, DataSourceResultApi
 from .handlers.DeviceHandler import DeviceApi, DeviceListApi
 from .handlers.EmergeOpHandler import (EmergeOpApi, EmergeOpCaptchaApi,
                                        EmergeOpCSVApi, EmergeOpExecuteApi,
@@ -21,10 +22,11 @@ from .handlers.OperationHandler import (OperationApi, OperationCallbackApi,
                                         OperationListResumeApi,
                                         OperationListRunAllApi,
                                         OperationListRunApi,
-                                        OperationListSnapshotApi, OperationSkipApi,
+                                        OperationListSnapshotApi,
                                         OperationLoginApi, OperationUIApi)
 from .handlers.ProcessHandler import ProcessApi, ProcessListApi
 from .handlers.RoleHandler import RoleApi, RoleListApi
+from .handlers.SqlDtHandler import SqlApi
 from .handlers.SysStaticsHandler import (ConfigCheckApi, ConfigListApi,
                                          LoginCheckApi, LoginListApi,
                                          ProcStaticApi, ProcVersionApi,
@@ -138,13 +140,6 @@ resources.add_resource(
     '/operation/id/<int:id>',
     methods=['GET', 'DELETE'],
     endpoint='operation'
-)
-
-resources.add_resource(
-    OperationSkipApi,
-    '/operation/id/<int:id>/skip',
-    method=['GET'],
-    endpoint='operation_skip'
 )
 
 resources.add_resource(
@@ -307,7 +302,7 @@ resources.add_resource(
     '/system/id/<int:id>/config_files/',
     methods=['GET', 'POST'],
     endpoint='config_files_list'
-) 
+)
 
 resources.add_resource(
     ConfigCheckApi,
@@ -320,6 +315,22 @@ resources.add_resource(
 resources.add_resource(WebshellUIApi, '/webshell/system/id/<int:id>', methods=['GET'])
 
 resources.add_resource(LogApi, '/logs', methods=['POST'])
+
+resources.add_resource(
+    LogApi,
+    '/system/id/<int:id>/customlogs',
+    '/datasources/customlogs/',
+    methods=['GET'],
+    endpoint='sys_customlogs'
+)
+
+resources.add_resource(
+    SqlApi,
+    '/system/id/<int:id>/customsqls',
+    '/datasources/customsqls/',
+    methods=['GET'],
+    endpoint='sys_customsqls'
+)
 
 resources.add_resource(UIDataApi, '/UI/<string:name>', methods=['GET'], endpoint='UIdata')
 
@@ -426,6 +437,28 @@ resources.add_resource(
     '/vendor/name/<string:name>',
     methods=['GET', 'PUT'],
     endpoint='vendor'
+)
+
+resources.add_resource(
+    DataSourceListApi,
+    '/datasources',
+    '/datasources/',
+    methods=['GET', 'POST'],
+    endpoint='datasources'
+)
+
+resources.add_resource(
+    DataSourceApi,
+    '/datasource/id/<int:id>',
+    methods=['GET'],
+    endpoint='datasource'
+)
+
+resources.add_resource(
+    DataSourceResultApi,
+    '/dsresult/id/<int:id>',
+    methods=['GET'],
+    endpoint='dsresult'
 )
 
 resources.add_resource(

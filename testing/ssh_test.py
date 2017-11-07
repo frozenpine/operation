@@ -9,13 +9,15 @@ from SysManager.executor import Executor
 
 
 if __name__ == '__main__':
-    conf = SSHConfig('192.168.101.163', 'Administrator', 'Quantdo123456')
+    conf = SSHConfig('192.168.92.121', 'root', 'quantdo123456')
     # conf = SSHConfig('192.168.92.26', 'root', 'quantdo123456')
     exe = Executor.Create(conf)
     mod = {
-        'name': 'cyg_netstat',
-        'args': {
-            'ports': [19200]
+        'name': 'customLog',
+        'customLog': '/var/log/messages',
+        'key_words': {
+            'warning': 'level=warning',
+            'error': 'level=error'
         }
     }
 
