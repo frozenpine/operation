@@ -370,7 +370,6 @@
                             </select>
                         </div>
                     </div>
-                    {{dataSourceDefine}}
                     <fieldset style="margin-bottom: 0" 
                               ng-if="dataSourceDefine.src_model !== undefined && dataSourceDefine.src_type !== undefined">
                         <legend class="font-green" 
@@ -462,23 +461,26 @@
                                                 <ul class="am-block" 
                                                     style="max-height: 160px; overflow-y: auto;" 
                                                     sv-root sv-part="dataSourceDefine.formatter">
-                                                    <li class="am-inline-block" 
+                                                    <li class="am-inline-block" style="overflow-x: hidden;" 
                                                         ng-repeat="node in dataSourceDefine.formatter" sv-element>
                                                         <div class="am-g">
                                                             <div class="am-u-sm-2" style="padding: 1px">
                                                                 <input type="text" name="dsDefineFormatterKey" 
                                                                        style="width: 100%; border: none" 
+                                                                       class="am-input-sm"
                                                                        ng-class="{true: 'invalid', false: ''}[dataSourceDefineForm.dsDefineFormatterKey.$dirty && node.key==undefined]" 
                                                                        ng-model="node.key"/>
                                                             </div>
                                                             <div class="am-u-sm-3" style="padding: 1px">
                                                                 <input type="text" name="dsDefineFormatterName" 
                                                                        style="width: 100%; border: none" 
+                                                                       class="am-input-sm"
                                                                        ng-class="{true: 'invalid', false: ''}[dataSourceDefineForm.dsDefineFormatterName.$dirty && node.name==undefined]" 
                                                                        ng-model="node.name"/>
                                                             </div>
                                                             <div class="am-u-sm-3" style="padding: 1px">
-                                                                <select style="width: 100%; border: none" 
+                                                                <select class="am-input-sm" 
+                                                                        style="width: 100%; border: none" 
                                                                         ng-model="node.fmtSelection" 
                                                                         ng-options="k as v for (k, v) 
                                                                                     in formatterDataType" 
@@ -488,16 +490,15 @@
                                                             </div>
                                                             <div class="am-u-sm-3" style="padding: 1px">
                                                                 <input type="text" name="dsDefineFormatterDefault" 
+                                                                       class="am-input-sm" 
                                                                        style="width: 100%; border: none" 
                                                                        ng-model="node.default" 
-                                                                       ng-if="node.fmtSelection 
-                                                                              === 'string'" />
-                                                                <input type="number" 
-                                                                       name="dsDefineFormatterDefault" 
+                                                                       ng-if="node.fmtSelection === 'string'" />
+                                                                <input type="number" name="dsDefineFormatterDefault" 
+                                                                       class="am-input-sm"
                                                                        style="width: 100%; border: none" 
                                                                        ng-model="node.default" 
-                                                                       ng-if="node.fmtSelection 
-                                                                              === 'number'" />
+                                                                       ng-if="node.fmtSelection === 'number'" />
                                                             </div>
                                                             <div class="am-u-sm-1" style="padding: 1px">
                                                                 <span class="am-icon-bars" 
