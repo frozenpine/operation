@@ -18,7 +18,7 @@ app.controller('EditoptionBookController', ['$scope', '$operationBooks', functio
                 $scope.operationBooksData = res.records;
             }
         });
-    }
+    };
 
     $scope.optionBookSelectedGet = function(id) {
         $operationBooks.operationbookGet({
@@ -61,7 +61,7 @@ app.controller('EditoptionBookController', ['$scope', '$operationBooks', functio
             "name": "非紧急操作",
             "value": false
         }];
-    }
+    };
     $scope.EditOptionBookPut = function(id) {
         $operationBooks.operationbooksPut({
             optBook_id: id,
