@@ -1,4 +1,4 @@
-app.controller('dashBoardController', ['$scope', '$rootScope', '$uidatas', '$timeout', function($scope, $rootScope, $uidatas, $timeout) {
+app.controller('dashBoardController', ['$scope', '$rootScope', '$uidatas', '$timeout', '$datasources', function($scope, $rootScope, $uidatas, $timeout, $datasources) {
     $rootScope.isShowSideList = false;
     $scope.checking = false;
     $scope.getInventory = function() {
@@ -24,4 +24,14 @@ app.controller('dashBoardController', ['$scope', '$rootScope', '$uidatas', '$tim
             trigger: "hover focus"
         });
     };
+
+    $scope.getDataSourceList = function() {
+        $datasources.getDataSourceList({
+            onSuccess: function(data) {
+                $scope.dataSources = data;
+            }
+        });
+    };
+
+    // $scope.getDataSourceList();
 }]);
