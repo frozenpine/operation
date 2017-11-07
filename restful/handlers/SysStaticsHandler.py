@@ -495,11 +495,12 @@ class LoginListApi(Resource, SystemList):
 
 class LoginCheckApi(Resource, SystemList):
     def __init__(self):
-        super(self, LoginCheckApi).__init__()
+        super(LoginCheckApi, self).__init__()
         self.syslog_list = {}
         self.rtn = []
         self.checker = []
         # self.mutex = threading.Lock()
+        self.app_context = current_app.app_context()
 
     def find_syslog(self, sys):
         log_srcs = DataSource.query.filter(
@@ -555,46 +556,47 @@ class LoginCheckApi(Resource, SystemList):
             mod['name'] = module
             mod[module] = logfile.rstrip('/')
             result = executor.run(mod)
-            for k, v in result.data.iteritems():
-                pattern = re.compile(datas['msg_pattern'])
-                data = {}
-                for idx in xrange(len(datas['formatter'])):
-                    data[datas['formatter'][idx]['key']] = \
-                        datas['formatter'][idx]['default']
-                data['seat_id'] = k
-                data['updated_time'] = arrow.utcnow()\
-                    .to(current_app.config['TIME_ZONE']).format('HH:mm:ss')
-                for each in v:
-                    ''' try:
-                        message = each.get('message').decode('utf-8')
-                    except UnicodeDecodeError:
-                        message = each.get('mesage').decode('gbk') '''
-                    message = each.get('message')
-                    if datas['key_words']['conn'] in message:
-                        data['seat_status'] = u'连接成功'
-                        data['conn_count'] += 1
-                    elif datas['key_words']['login'] in message:
-                        try:
-                            pars_message = pattern.match(each.get('message'))\
-                                .groupdict()
-                        except AttributeError:
-                            pass
+            with self.app_context:
+                for k, v in result.data.iteritems():
+                    pattern = re.compile(datas['msg_pattern'])
+                    data = {}
+                    for idx in xrange(len(datas['formatter'])):
+                        data[datas['formatter'][idx]['key']] = \
+                            datas['formatter'][idx]['default']
+                    data['seat_id'] = k
+                    data['updated_time'] = arrow.utcnow()\
+                        .to(current_app.config['TIME_ZONE']).format('HH:mm:ss')
+                    for each in v:
+                        ''' try:
+                            message = each.get('message').decode('utf-8')
+                        except UnicodeDecodeError:
+                            message = each.get('mesage').decode('gbk') '''
+                        message = each.get('message')
+                        if datas['key_words']['conn'] in message:
+                            data['seat_status'] = u'连接成功'
+                            data['conn_count'] += 1
+                        elif datas['key_words']['login'] in message:
+                            try:
+                                pars_message = pattern.match(each.get('message'))\
+                                    .groupdict()
+                            except AttributeError:
+                                pass
+                            else:
+                                data['trading_day'] = pars_message.get('trade_date')
+                                data['login_time'] = pars_message.get('trade_time')
+                            data['seat_status'] = u'登录成功'
+                            data['login_success'] += 1
+                        elif datas['key_words']['logfail'] in message:
+                            data['seat_status'] = u'登录失败'
+                            data['login_fail'] += 1
+                        elif datas['key_words']['disconn'] in message:
+                            data['seat_status'] = u'连接断开'
+                            data['disconn_count'] += 1
                         else:
-                            data['trading_day'] = pars_message.get('trade_date')
-                            data['login_time'] = pars_message.get('trade_time')
-                        data['seat_status'] = u'登录成功'
-                        data['login_success'] += 1
-                    elif datas['key_words']['logfail'] in message:
-                        data['seat_status'] = u'登录失败'
-                        data['login_fail'] += 1
-                    elif datas['key_words']['disconn'] in message:
-                        data['seat_status'] = u'连接断开'
-                        data['disconn_count'] += 1
-                    else:
-                        data['seat_status'] = u'未连接'
-                #self.mutex.acquire()
-                self.rtn.append(data)
-                #self.mutex.release()
+                            data['seat_status'] = u'未连接'
+                    #self.mutex.acquire()
+                    self.rtn.append(data)
+                    #self.mutex.release()
         executor.client.close()
 
     def get(self, **kwargs):
