@@ -127,9 +127,9 @@ class DataSourceListApi(Resource):
                     # 通过sysid找到对应的tradesystem
                     trade_system = TradeSystem.find(**{'id': datasource.sys_id})
                     # 拼接uri
-                    if datasource.src_model.value == DataSourceModel.Custom:
+                    if datasource.src_model == DataSourceModel.Custom.value:
                         module = 'customLog'
-                    elif datasource.src_model.value == DataSourceModel.Seat:
+                    elif datasource.src_model == DataSourceModel.Seat.value:
                         module = 'quantdoLogin'
                     else:
                         raise DataEnumValueError('Please input src_model')
