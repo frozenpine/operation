@@ -319,12 +319,15 @@ resources.add_resource(LogApi, '/logs', methods=['POST'])
 resources.add_resource(
     LogApi,
     '/system/id/<int:id>/customlogs',
+    '/datasources/customlogs/',
     methods=['GET'],
     endpoint='sys_customlogs'
 )
+
 resources.add_resource(
     SqlApi,
     '/system/id/<int:id>/customsqls',
+    '/datasources/customsqls/',
     methods=['GET'],
     endpoint='sys_customsqls'
 )
