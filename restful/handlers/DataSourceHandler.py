@@ -127,11 +127,17 @@ class DataSourceListApi(Resource):
                     # 通过sysid找到对应的tradesystem
                     trade_system = TradeSystem.find(**{'id': datasource.sys_id})
                     # 拼接uri
+                    if datasource.src_model.value == DataSourceModel.Custom:
+                        module = 'customLog'
+                    elif datasource.src_model.value == DataSourceModel.Seat:
+                        module = 'quantdoLogin'
+                    else:
+                        raise DataEnumValueError('Please input src_model')
                     if trade_system:
                         uri = '{protocol}://{login_user}:{login_pwd}@{ip}:22/#{log_file}?{module}'.format(
                             protocol=data['protocol'], login_user=trade_system.login_user,
                             login_pwd=trade_system.login_pwd,
-                            ip=trade_system.ip, log_file=data['log_file'], module=data.get('module', 'customLog'))
+                            ip=trade_system.ip, log_file=data['log_file'], module=module)
                     else:
                         raise DataNotFoundError('tradesystem not found')
                     datasource.source.update({'uri': uri})
