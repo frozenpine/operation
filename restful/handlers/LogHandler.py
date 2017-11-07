@@ -6,12 +6,12 @@ import gevent
 from flask import current_app
 from flask_restful import Resource, request
 
-from app import globalEncryptKey, msgQueues
-from app.models import DataSource, DataSourceModel, DataSourceType, TradeSystem
-from restful.protocol import RestProtocol
 from SysManager.Common import AESCrypto
 from SysManager.configs import SSHConfig, WinRmConfig
 from SysManager.executor import Executor
+from app import globalEncryptKey, msgQueues
+from app.models import DataSource, DataSourceModel, DataSourceType, TradeSystem
+from restful.protocol import RestProtocol
 
 
 def _decrypt(match):
@@ -21,6 +21,7 @@ def _decrypt(match):
                globalEncryptKey
            ) + \
            match.group(3)
+
 
 class LogApi(Resource):
     def __init__(self):
@@ -50,14 +51,21 @@ class LogApi(Resource):
             for child_sys in sys.child_systems:
                 self.find_systems(child_sys)
 
-    def find_logs(self, sys):
-        self.find_systems(sys)
-        sources = DataSource.query.filter(
-            DataSource.src_type == DataSourceType.FILE,
-            DataSource.src_model == DataSourceModel.Custom,
-            DataSource.sys_id.in_([x.id for x in self.system_list]),
-            DataSource.disabled == False
-        ).all()
+    def find_logs(self, sys=None):
+        if sys:
+            self.find_systems(sys)
+            sources = DataSource.query.filter(
+                DataSource.src_type == DataSourceType.FILE,
+                DataSource.src_model == DataSourceModel.Custom,
+                DataSource.sys_id.in_([x.id for x in self.system_list]),
+                DataSource.disabled.is_(False)
+            ).all()
+        else:
+            sources = DataSource.query.filter(
+                DataSource.src_type == DataSourceType.FILE,
+                DataSource.src_model == DataSourceModel.Custom,
+                DataSource.disabled.is_(False)
+            ).all()
         for src in sources:
             if globalEncryptKey:
                 uri = re.sub(
@@ -116,13 +124,13 @@ class LogApi(Resource):
                                 return match.group(0).replace(
                                     sub_match, '<code>{}</code>'.format(sub_match))
                         return '<code>{}</code>'.format(match.group(0))
+
                     result.lines = map(lambda x: re.sub(data['msg_pattern'], repl, x), result.lines)
                 data_res = {
                     'name': data['name'],
                     'results': result.lines,
                     'log_file': logfile.rstrip('/'),
-                    'update_time': arrow.utcnow()\
-                        .to(current_app.config['TIME_ZONE']).format('HH:mm:ss')
+                    'update_time': arrow.utcnow().to(current_app.config['TIME_ZONE']).format('HH:mm:ss')
                 }
                 data_res.update(data)
                 res['logs'].append(data_res)
@@ -130,12 +138,20 @@ class LogApi(Resource):
 
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
-        if sys:
-            self.find_logs(sys)
+        if 'id' in kwargs:
+            if sys:
+                self.find_logs(sys)
+                for (k, v) in self.log_list.items():
+                    self.checker.append(gevent.spawn(self.check_log, k, v))
+                # gevent.sleep(0)
+                gevent.joinall(self.checker)
+                return RestProtocol(self.rtn)
+            else:
+                return RestProtocol(message='System not found', error_code=-1), 404
+        else:
+            self.find_logs()
             for (k, v) in self.log_list.items():
                 self.checker.append(gevent.spawn(self.check_log, k, v))
             # gevent.sleep(0)
             gevent.joinall(self.checker)
             return RestProtocol(self.rtn)
-        else:
-            return RestProtocol(message='System not found', error_code=-1), 404

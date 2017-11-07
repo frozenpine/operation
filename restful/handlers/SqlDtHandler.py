@@ -5,15 +5,14 @@ import arrow
 import gevent
 from flask import current_app
 from flask_restful import Resource
-
 from sqlalchemy import create_engine
-from sqlalchemy.sql import text
 from sqlalchemy.exc import NoSuchColumnError
+from sqlalchemy.sql import text
 
+from SysManager.Common import AESCrypto
 from app import globalEncryptKey
 from app.models import DataSource, DataSourceModel, DataSourceType, TradeSystem
 from restful.protocol import RestProtocol
-from SysManager.Common import AESCrypto
 
 
 def _decrypt(match):
@@ -23,6 +22,7 @@ def _decrypt(match):
                globalEncryptKey
            ) + \
            match.group(3)
+
 
 class SqlApi(Resource):
     def __init__(self):
@@ -39,14 +39,21 @@ class SqlApi(Resource):
             for child_sys in sys.child_systems:
                 self.find_systems(child_sys)
 
-    def find_tables(self, sys):
-        self.find_systems(sys)
-        sources = DataSource.query.filter(
-            DataSource.src_type == DataSourceType.SQL,
-            DataSource.src_model == DataSourceModel.Custom,
-            DataSource.sys_id.in_([x.id for x in self.system_list]),
-            DataSource.disabled == False
-        ).all()
+    def find_tables(self, sys=None):
+        if sys:
+            self.find_systems(sys)
+            sources = DataSource.query.filter(
+                DataSource.src_type == DataSourceType.SQL,
+                DataSource.src_model == DataSourceModel.Custom,
+                DataSource.sys_id.in_([x.id for x in self.system_list]),
+                DataSource.disabled.is_(False)
+            ).all()
+        else:
+            sources = DataSource.query.filter(
+                DataSource.src_type == DataSourceType.SQL,
+                DataSource.src_model == DataSourceModel.Custom,
+                DataSource.disabled.is_(False)
+            )
         for src in sources:
             if globalEncryptKey:
                 uri = re.sub(
@@ -92,20 +99,29 @@ class SqlApi(Resource):
                                 dt.source['formatter'][idx]['default']
                     data_table['rows'].append(tmp)
                 with self.app_context:
-                    data_table['update_time'] = arrow.utcnow()\
-                            .to(current_app.config['TIME_ZONE']).format('HH:mm:ss')
+                    data_table['update_time'] = arrow.utcnow() \
+                        .to(current_app.config['TIME_ZONE']).format('HH:mm:ss')
                 rtn['data_tables'].append(data_table)
             self.rtn.append(rtn)
 
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
-        if sys:
-            self.find_tables(sys)
+        if 'id' in kwargs:
+            if sys:
+                self.find_tables(sys)
+                for (k, v) in self.dt_list.items():
+                    self.checker.append(gevent.spawn(self.get_datatable, k, v))
+                    # self.get_datetable(k, v)
+                # gevent.sleep(0)
+                gevent.joinall(self.checker)
+                return RestProtocol(self.rtn)
+            else:
+                return RestProtocol(message='System not found', error_code=-1), 404
+        else:
+            self.find_tables()
             for (k, v) in self.dt_list.items():
                 self.checker.append(gevent.spawn(self.get_datatable, k, v))
                 # self.get_datetable(k, v)
             # gevent.sleep(0)
             gevent.joinall(self.checker)
             return RestProtocol(self.rtn)
-        else:
-            return RestProtocol(message='System not found', error_code=-1), 404
