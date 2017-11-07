@@ -117,7 +117,10 @@ class DataSourceListApi(Resource):
                     # 不是Custom的情况下 写死key_words和msg_pattern
                     elif datasource.src_model == DataSourceModel.Seat.value:
                         key_words = {'disconn': u'断开', 'login': u'登录成功', 'conn': u'连接成功', 'logfail': u'登录失败'}
-                        datasource.source.update({'key_words': key_words})
+                        formatter = [{"default": "", "key": "seat_id"}, {"default": "", "key": "seat_status"},
+                                     {"default": 0, "key": "conn_count"}, {"default": 0, "key": "login_success"},
+                                     {"default": 0, "key": "login_fail"}, {"default": 0, "key": "disconn_count"}]
+                        datasource.source.update({'key_words': key_words, 'formatter': formatter})
                         datasource.source.update(
                             {'msg_pattern':
                                  '.+TradeDate=\\[(?P<trade_date>[^]]+)\\]\\s+TradeTime=\\[(?P<trade_time>[^]]+)\\]'}
