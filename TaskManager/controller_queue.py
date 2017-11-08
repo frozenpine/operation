@@ -107,6 +107,10 @@ class ControllerQueue(object):
                 # 如果出现执行失败或者执行超时
                 each.update({each.keys()[0]: (4, session)})
                 fail_task_uuid_list.append(each.keys()[0])
+        for each in self.controller_task_result_list:
+            if each.get('task_uuid') == task_uuid:
+                task_status = (4, u"任务跳过成功")
+                each.update({'task_status': task_status})
         if not fail_task_uuid_list:
             return -1, u"队列无失败任务"
         self.controller_queue_status = 0
