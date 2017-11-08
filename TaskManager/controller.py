@@ -21,6 +21,8 @@ logging.basicConfig(level="INFO")
 def timeout(func):
     def wrapper(self, controller_queue_uuid, *args, **kw):
         curr_time = datetime.now()
+        if controller_queue_uuid not in self.controller_queue_dict:
+            return -1, msg_dict[-12]
         expire_time = self.controller_queue_dict[controller_queue_uuid].expire_time
         if curr_time > expire_time:
             self.controller_queue_dict.pop(controller_queue_uuid)
