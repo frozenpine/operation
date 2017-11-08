@@ -93,7 +93,7 @@ class ControllerQueue(object):
             return 0, task
 
     # 20171025 新增跳过一个失败任务
-    def skip_fail_task(self, task_uuid):
+    def skip_fail_task(self, task_uuid, session):
         if self.controller_queue_status != 14:
             # 队列不可恢复
             # return -1, msg_dict[self.controller_queue_status]
@@ -105,7 +105,7 @@ class ControllerQueue(object):
                 if task_uuid and task_uuid != each.keys()[0]:
                     return -1, u"队列中失败任务"
                 # 如果出现执行失败或者执行超时
-                each.update({each.keys()[0]: 4})
+                each.update({each.keys()[0]: (4, session)})
                 fail_task_uuid_list.append(each.keys()[0])
         if not fail_task_uuid_list:
             return -1, u"队列无失败任务"
