@@ -103,10 +103,12 @@ class OperationMixin(object):
         else:
             dtl['exec_code'] = -1
         if idx > 0:
-            dtl['enabled'] = self.snapshot['task_status_list'][idx - 1] and \
-                self.snapshot['task_status_list'][idx - 1][0] == TaskStatus.Success.value and \
-                (not self.snapshot['task_status_list'][idx] or
-                 self.snapshot['task_status_list'][idx][0] != TaskStatus.Success.value)
+            dtl['enabled'] = self.snapshot['task_status_list'][idx - 1] \
+                and (self.snapshot['task_status_list'][idx - 1][0] == TaskStatus.Success.value 
+                    or self.snapshot['task_status_list'][idx - 1][0] == TaskStatus.Skipped.value) \
+                and (not self.snapshot['task_status_list'][idx] \
+                    or (self.snapshot['task_status_list'][idx][0] != TaskStatus.Success.value 
+                        and self.snapshot['task_status_list'][idx][0] != TaskStatus.Skipped.value))
             if not dtl['enabled']:
                 dtl['enabled'] = False
         elif idx == 0:
