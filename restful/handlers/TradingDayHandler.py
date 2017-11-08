@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 import arrow
+from flask import current_app
 from flask_restful import Resource
 from sqlalchemy import text
 
@@ -16,7 +17,7 @@ class NextTradingDayApi(Resource):
                 WHERE trade_calendar.full_date>'{}' \
                     AND trade_calendar.is_trade=1 \
                 LIMIT 1\
-                ".format(arrow.utcnow().to('Asia/Shanghai').format('YYYYMMDD'))
+                ".format(arrow.utcnow().to(current_app.config['TIME_ZONE']).format('YYYYMMDD'))
             )
         ).first()[0]
         return next_trading_day

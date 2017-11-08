@@ -53,7 +53,7 @@ app.controller('loginStaticsControl', ['$scope', '$systems', '$interval', '$time
         if (isNaN(interval) || interval < 30) {
             $scope.GlobalConfigs.loginStaticsInterval.current =
                 $scope.GlobalConfigs.loginStaticsInterval.default;
-            return;
+
         } else {
             $interval.cancel($scope.loginStaticInterval);
             $scope.autoRefresh();

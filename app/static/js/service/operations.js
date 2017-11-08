@@ -48,7 +48,23 @@ app.service('$operations', function($websocket, $http, $message, $sessionStorage
                 }
             });
     };
-    this.SkipCurrent = function(params) {};
+
+    this.SkipCurrent = function(params) {
+        $http.get('api/operation/id/'+params.operationID+'/skip')
+            .success(function(response){
+                if (response.err_code === 0) {
+                    if (params.hasOwnProperty('onSuccess')) {
+                        params.onSuccess(response.data);
+                    }
+                } else if (params.hasOwnProperty('onError')) {
+                    params.onError(response);
+                }
+            })
+            .error(function(response){
+                console.log(response);
+            });
+    };
+
     this.Snapshot = function(params) {
         $http.get('api/op_group/id/' + params.groupID + '/snapshot')
             .success(function(response) {
