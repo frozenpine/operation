@@ -3,7 +3,7 @@ import re
 import json
 import arrow
 
-from flask import request
+from flask import request, current_app
 from flask_restful import Resource
 from werkzeug.exceptions import BadRequest
 
@@ -154,12 +154,12 @@ class OperationGroupApi(Resource):
                                     op_e.description = op_list[i].get('description', op_e.description)
                                     if op_list[i].get('earliest') and op_list[i].get('earliest') != '':
                                         op_e.earliest = arrow.get(op_list[i].get('earliest'))\
-                                        .to('Asia/Shanghai').strftime('%H:%M:%S')
+                                        .to(current_app.config['TIME_ZONE']).strftime('%H:%M:%S')
                                     else:
                                         op_e.earliest = None
                                     if op_list[i].get('latest') and op_list[i].get('latest') != '':
                                         op_e.latest = arrow.get(op_list[i].get('latest'))\
-                                            .to('Asia/Shanghai').strftime('%H:%M:%S')
+                                            .to(current_app.config['TIME_ZONE']).strftime('%H:%M:%S')
                                     else:
                                         op_e.latest = None
                                     op_e.need_authorization = op_list[i].get('need_authorization',
@@ -181,12 +181,12 @@ class OperationGroupApi(Resource):
                                 operations[index].description = op_list[i].get('description')
                                 if op_list[i].get('earliest') and op_list[i].get('earliest') != '':
                                     operations[index].earliest = arrow.get(op_list[i].get('earliest'))\
-                                        .to('Asia/Shanghai').strftime('%H:%M:%S')
+                                        .to(current_app.config['TIME_ZONE']).strftime('%H:%M:%S')
                                 else:
                                     operations[index].earliest = None
                                 if op_list[i].get('latest') and op_list[i].get('latest') != '':
                                     operations[index].latest = arrow.get(op_list[i].get('latest'))\
-                                        .to('Asia/Shanghai').strftime('%H:%M:%S')
+                                        .to(current_app.config['TIME_ZONE']).strftime('%H:%M:%S')
                                 else:
                                     operations[index].earliest = None
                                 operations[index].need_authorization = op_list[i].get('need_authorization')

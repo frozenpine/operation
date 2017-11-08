@@ -1,7 +1,8 @@
 # -*- coding: UTF-8 -*-
 from . import resources
 from .handlers.ConfigFileHandler import ConfigFileApi
-from .handlers.DataSourceHandler import DataSourceApi, DataSourceListApi, DataSourceResultApi
+from .handlers.DataSourceHandler import (DataSourceApi, DataSourceListApi,
+                                         DataSourceResultApi)
 from .handlers.DeviceHandler import DeviceApi, DeviceListApi
 from .handlers.EmergeOpHandler import (EmergeOpApi, EmergeOpCaptchaApi,
                                        EmergeOpCSVApi, EmergeOpExecuteApi,
@@ -23,7 +24,8 @@ from .handlers.OperationHandler import (OperationApi, OperationCallbackApi,
                                         OperationListRunAllApi,
                                         OperationListRunApi,
                                         OperationListSnapshotApi,
-                                        OperationLoginApi, OperationUIApi)
+                                        OperationLoginApi, OperationSkipApi,
+                                        OperationUIApi)
 from .handlers.ProcessHandler import ProcessApi, ProcessListApi
 from .handlers.RoleHandler import RoleApi, RoleListApi
 from .handlers.SqlDtHandler import SqlApi
@@ -140,6 +142,13 @@ resources.add_resource(
     '/operation/id/<int:id>',
     methods=['GET', 'DELETE'],
     endpoint='operation'
+)
+
+resources.add_resource(
+    OperationSkipApi,
+    '/operation/id/<int:id>/skip',
+    methods=['GET'],
+    endpoint='operation_skip'
 )
 
 resources.add_resource(

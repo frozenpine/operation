@@ -693,7 +693,7 @@ class ConfigList(object):
                     'file': conf.file,
                     'hash': conf.hash_code,
                     'timestamp': conf.timestamp and \
-                                 conf.timestamp.to('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss'),
+                                 conf.timestamp.to(current_app.config['TIME_ZONE']).format('YYYY-MM-DD HH:mm:ss'),
                     'hash_changed': self.check_result.get(conf)
                 } for conf in sys_configs]
             })

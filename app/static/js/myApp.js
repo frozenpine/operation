@@ -384,7 +384,7 @@ app.filter('paging', function() {
     return function(listsData, start) {
         if (listsData)
             return listsData.slice(start);
-    }
+    };
 });
 
 app.filter('KB2', function() {

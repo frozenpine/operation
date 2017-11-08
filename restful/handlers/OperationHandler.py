@@ -89,12 +89,12 @@ class OperationMixin(object):
             elif status == TaskStatus.Running:
                 dtl['exec_code'] = -2
                 dtl['operated_at'] = arrow.get(op_session['operated_at']) \
-                    .to('Asia/Shanghai').strftime('%Y-%m-%d %H:%M:%S')
+                    .to(current_app.config['TIME_ZONE']).strftime('%Y-%m-%d %H:%M:%S')
             elif status == TaskStatus.Success or status == TaskStatus.Failed:
                 dtl['exec_code'] = self.snapshot['task_result_list'][idx]['task_result']['return_code']
                 dtl['output_lines'] = self.snapshot['task_result_list'][idx]['task_result']['lines']
                 dtl['operated_at'] = arrow.get(op_session['operated_at']) \
-                    .to('Asia/Shanghai').strftime('%Y-%m-%d %H:%M:%S')
+                    .to(current_app.config['TIME_ZONE']).strftime('%Y-%m-%d %H:%M:%S')
             elif status and status.IsTimeout:
                 dtl['exec_code'] = -6
             elif status == TaskStatus.Skipped:
@@ -415,21 +415,29 @@ class OperationSkipApi(OperationApi):
         if op:
             try:
                 author = self.check_privileges(op)
-                ret, data = taskManager.peek(op.group.uuid, op.uuid)
+                # ret, data = taskManager.peek(op.group.uuid, op.uuid)
+                session = {
+                    'operation_id': op.id,
+                    'operator_id': current_user.id,
+                    'operated_at': unicode(arrow.utcnow()),
+                    'authorizor_id': author and author.id or None,
+                    'authorized_at': author and unicode(arrow.utcnow()) or None
+                }
+                ret, msg = taskManager.skip_next(
+                    op.group.uuid,
+                    op.uuid,
+                    session=session
+                )
                 if ret == 0:
-                    session = {
+                    ''' session = {
                         'operation_id': op.id,
                         'operator_id': current_user.id,
                         'operated_at': unicode(arrow.utcnow()),
                         'authorizor_id': author and author.id or None,
                         'authorized_at': author and unicode(arrow.utcnow()) or None
                     }
-                    ret, msg = taskManager.skip_next(
-                        op.group.uuid,
-                        op.uuid
-                    )
                     if ret != 0:
-                        return RestProtocol(error_code=ret, message=msg)
+                        return RestProtocol(error_code=ret, message=msg) '''
                     ret, self.snapshot = taskManager.snapshot(op.group.uuid)
                     return RestProtocol(self.make_operation_detail(op, session))
                 else:
