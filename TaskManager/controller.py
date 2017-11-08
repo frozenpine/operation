@@ -4,7 +4,7 @@ import json as pickle
 import logging
 import os
 from datetime import datetime
-
+from dateutil.parser import parse
 import requests
 
 import get_time
@@ -23,7 +23,7 @@ def timeout(func):
         curr_time = datetime.now()
         if controller_queue_uuid not in self.controller_queue_dict:
             return -1, msg_dict[-12]
-        expire_time = self.controller_queue_dict[controller_queue_uuid].expire_time
+        expire_time = parse(self.controller_queue_dict[controller_queue_uuid].expire_time)
         if curr_time > expire_time:
             self.controller_queue_dict.pop(controller_queue_uuid)
             os.remove('dump/{0}.dump'.format(controller_queue_uuid))

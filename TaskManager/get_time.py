@@ -30,7 +30,7 @@ def calc_expire_time(create_time, trigger_time):
                                      trigger_time)) + relativedelta(days=1)
     else:
         expire_time = create_time + relativedelta(days=1)
-    return expire_time
+    return time.strftime(expire_time)
 
 
 def format_datetime(trigger_time, earliest, latest):
