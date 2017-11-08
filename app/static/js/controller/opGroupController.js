@@ -208,7 +208,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                         $scope.opList.details[index].enabled = value.enabled && checked === true;
                     }
                     if (index < $scope.opList.details.length - 1) {
-                        $scope.taskQueueRunning = value.exec_code >= 0;
+                        $scope.taskQueueRunning = value.exec_code >= 0 || value.exec_code === -3;
                         if (value.checker.isTrue && $scope.opList.details[index + 1].exec_code === 0) {
                             $sessionStorage[value.uuid] = true;
                         }
