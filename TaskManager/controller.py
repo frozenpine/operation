@@ -392,7 +392,6 @@ class Controller(object):
     def peek(self, controller_queue_uuid, task_uuid):
         return self.peek_task_from_controller_queue(controller_queue_uuid, task_uuid)
 
-    @timeout
     def snapshot(self, controller_queue_uuid):
         return self.get_snapshot(controller_queue_uuid)
 
