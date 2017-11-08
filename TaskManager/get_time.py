@@ -23,14 +23,19 @@ def current_ymd_hms():
 
 
 def calc_expire_time(create_time, trigger_time):
+    expire_time = create_time + relativedelta(hours=6)
+    return expire_time.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def calc_destroy_time(create_time, trigger_time):
     current_datetime = parse(current_ymd_hms())
     if trigger_time:
-        expire_time = parse(
+        destroy_time = parse(
             "{0}-{1}-{2} {3}".format(current_datetime.year, current_datetime.month, current_datetime.day,
-                                     trigger_time)) + relativedelta(hours=6)
+                                     trigger_time)) + relativedelta(hours=24)
     else:
-        expire_time = create_time + relativedelta(hours=6)
-    return expire_time.strftime("%Y-%m-%d %H:%M:%S")
+        destroy_time = create_time + relativedelta(hours=24)
+    return destroy_time.strftime("%Y-%m-%d %H:%M:%S")
 
 
 def format_datetime(trigger_time, earliest, latest):

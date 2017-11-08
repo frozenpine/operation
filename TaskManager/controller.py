@@ -4,8 +4,9 @@ import json as pickle
 import logging
 import os
 from datetime import datetime
-from dateutil.parser import parse
+
 import requests
+from dateutil.parser import parse
 
 import get_time
 from controller_msg import msg_dict
@@ -24,10 +25,16 @@ def timeout(func):
         if controller_queue_uuid not in self.controller_queue_dict:
             return -1, msg_dict[-12]
         expire_time = parse(self.controller_queue_dict[controller_queue_uuid].expire_time)
-        if curr_time > expire_time:
+        destroy_time = parse(self.controller_queue_dict[controller_queue_uuid].destroy_time)
+        if curr_time > destroy_time:
             self.controller_queue_dict.pop(controller_queue_uuid)
             os.remove('dump/{0}.dump'.format(controller_queue_uuid))
-            return 1, msg_dict[12]
+            return -1, msg_dict[-12]
+        elif destroy_time > curr_time > expire_time:
+            self.controller_queue_dict[controller_queue_uuid].controller_queue_status = -14
+            with open("dump/{0}.dump".format(controller_queue_uuid), "wb") as f:
+                f.write(pickle.dumps(self.controller_queue_dict[controller_queue_uuid].to_dict()))
+            return -1, msg_dict[-14]
         return func(self, controller_queue_uuid, *args, **kw)
 
     return wrapper
@@ -351,6 +358,7 @@ class Controller(object):
                 create_time = queue_status["create_time"]
                 trigger_time = queue_status["trigger_time"]
                 expire_time = queue_status.get("expire_time", get_time.calc_expire_time(create_time, trigger_time))
+                destroy_time = queue_status.get("destroy_time", get_time.calc_destroy_time(create_time, trigger_time))
                 group_block = queue_status["group_block"]
                 queue_id = queue_status["controller_queue_uuid"]
                 task_list = queue_status["task_list"]
@@ -361,6 +369,7 @@ class Controller(object):
                 self.controller_queue_dict[queue_id].create_time = create_time
                 self.controller_queue_dict[queue_id].trigger_time = trigger_time
                 self.controller_queue_dict[queue_id].expire_time = expire_time
+                self.controller_queue_dict[queue_id].destroy_time = destroy_time
                 self.controller_queue_dict[queue_id].controller_task_list = task_list
                 self.controller_queue_dict[queue_id].controller_task_result_list = task_result_list
                 self.controller_queue_dict[queue_id].controller_task_status_list = task_status_list

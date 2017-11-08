@@ -25,6 +25,7 @@ class ControllerQueue(object):
         self.group_block = group_block
         self.trigger_time = trigger_time
         self.expire_time = get_time.calc_expire_time(self.create_time, self.trigger_time)
+        self.destroy_time = get_time.calc_destroy_time(self.create_time, self.trigger_time)
         self.controller_queue_status = 0
         self.controller_queue_uuid = controller_queue_uuid
         self.controller_todo_task_queue = JoinableQueue()
@@ -40,6 +41,7 @@ class ControllerQueue(object):
             "create_time": self.create_time,
             "trigger_time": self.trigger_time,
             "expire_time": self.expire_time,
+            "destroy_time": self.destroy_time,
             "group_block": self.group_block,
             "controller_queue_status": self.controller_queue_status,
             "controller_queue_uuid": self.controller_queue_uuid,
