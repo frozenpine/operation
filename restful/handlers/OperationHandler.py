@@ -92,7 +92,7 @@ class OperationMixin(object):
                     .to(current_app.config['TIME_ZONE']).strftime('%Y-%m-%d %H:%M:%S')
             elif status == TaskStatus.Success or status == TaskStatus.Failed or status == TaskStatus.Skipped:
                 dtl['exec_code'] = self.snapshot['task_result_list'][idx]['task_result']['return_code'] if \
-                    self.snapshot['task_result_list'][idx]['task_result']['return_code'] == 0 else -3
+                    status != TaskStatus.Skipped else -3
                 dtl['output_lines'] = self.snapshot['task_result_list'][idx]['task_result']['lines']
                 dtl['operated_at'] = arrow.get(op_session['operated_at']) \
                     .to(current_app.config['TIME_ZONE']).strftime('%Y-%m-%d %H:%M:%S')
