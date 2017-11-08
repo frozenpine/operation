@@ -228,11 +228,12 @@ class Controller(object):
                 f.write(pickle.dumps(self.controller_queue_dict[controller_queue_uuid].to_dict()))
             return ret, msg
 
-    def pop_task_from_controller_queue(self, controller_queue_uuid, task_uuid=None):
+    def pop_task_from_controller_queue(self, controller_queue_uuid, task_uuid=None, session=None):
         """
         从指定的controller_queue中移除第一个任务
         :param controller_queue_uuid: controller_queue的controller_queue_uuid
         :param task_uuid: task的task_uuid
+        :param session: 用户的session
         :return 0正常并返回队列第一项移除成功
                 -1异常并返回错误信息
         """
@@ -243,10 +244,10 @@ class Controller(object):
             if ret != 0:
                 return ret, msg
             else:
-                ret, msg = self.controller_queue_dict[controller_queue_uuid].pop_controller_todo_task_queue()
+                ret, msg = self.controller_queue_dict[controller_queue_uuid].pop_controller_todo_task_queue(session)
                 return ret, msg
         else:
-            ret, msg = self.controller_queue_dict[controller_queue_uuid].pop_controller_todo_task_queue()
+            ret, msg = self.controller_queue_dict[controller_queue_uuid].pop_controller_todo_task_queue(session)
             return ret, msg
 
     def worker_init_callback(self, result):
@@ -378,8 +379,8 @@ class Controller(object):
     def run_next(self, controller_queue_uuid, session=None):
         return self.get_task_from_controller_queue(controller_queue_uuid, session, False)
 
-    def skip_next(self, controller_queue_uuid, task_uuid=None):
-        return self.pop_task_from_controller_queue(controller_queue_uuid, task_uuid)
+    def skip_next(self, controller_queue_uuid, task_uuid=None, session=None):
+        return self.pop_task_from_controller_queue(controller_queue_uuid, task_uuid, session)
 
     def peek(self, controller_queue_uuid, task_uuid):
         return self.peek_task_from_controller_queue(controller_queue_uuid, task_uuid)

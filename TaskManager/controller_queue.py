@@ -136,7 +136,7 @@ class ControllerQueue(object):
             self.controller_queue_status = 0
             return 0, u"队列失败任务恢复成功"
 
-    def pop_controller_todo_task_queue(self):
+    def pop_controller_todo_task_queue(self, session=None):
         """
         移除待做队列中的第一项
         """
@@ -148,7 +148,7 @@ class ControllerQueue(object):
         for each in self.controller_task_status_list:
             for (k, v) in each.iteritems():
                 if k == task_uuid:
-                    each[k] = 4
+                    each[k] = (4, session)
         return 0, u"队列第一项移除成功"
 
     def change_task_info(self, task_uuid, task_status, session, task_result):
