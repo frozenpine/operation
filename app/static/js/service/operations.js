@@ -52,7 +52,7 @@ app.service('$operations', function($websocket, $http, $message, $sessionStorage
     this.SkipCurrent = function(params) {
         $http.get('api/operation/id/'+params.operationID+'/skip')
             .success(function(response){
-                if (response.err_code === 0) {
+                if (response.error_code === 0) {
                     if (params.hasOwnProperty('onSuccess')) {
                         params.onSuccess(response.data);
                     }

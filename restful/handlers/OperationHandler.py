@@ -90,15 +90,16 @@ class OperationMixin(object):
                 dtl['exec_code'] = -2
                 dtl['operated_at'] = arrow.get(op_session['operated_at']) \
                     .to(current_app.config['TIME_ZONE']).strftime('%Y-%m-%d %H:%M:%S')
-            elif status == TaskStatus.Success or status == TaskStatus.Failed:
-                dtl['exec_code'] = self.snapshot['task_result_list'][idx]['task_result']['return_code']
+            elif status == TaskStatus.Success or status == TaskStatus.Failed or status == TaskStatus.Skipped:
+                dtl['exec_code'] = self.snapshot['task_result_list'][idx]['task_result']['return_code'] if \
+                    self.snapshot['task_result_list'][idx]['task_result']['return_code'] == 0 else -3
                 dtl['output_lines'] = self.snapshot['task_result_list'][idx]['task_result']['lines']
                 dtl['operated_at'] = arrow.get(op_session['operated_at']) \
                     .to(current_app.config['TIME_ZONE']).strftime('%Y-%m-%d %H:%M:%S')
             elif status and status.IsTimeout:
                 dtl['exec_code'] = -6
-            elif status == TaskStatus.Skipped:
-                dtl['exec_code'] = -3
+            ''' elif status == TaskStatus.Skipped:
+                dtl['exec_code'] = -3 '''
         else:
             dtl['exec_code'] = -1
         if idx > 0:
@@ -426,7 +427,7 @@ class OperationSkipApi(OperationApi):
                 ret, msg = taskManager.skip_next(
                     op.group.uuid,
                     op.uuid,
-                    session=session
+                    json.dumps(session)
                 )
                 if ret == 0:
                     ''' session = {
