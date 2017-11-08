@@ -27,9 +27,9 @@ def calc_expire_time(create_time, trigger_time):
     if trigger_time:
         expire_time = parse(
             "{0}-{1}-{2} {3}".format(current_datetime.year, current_datetime.month, current_datetime.day,
-                                     trigger_time)) + relativedelta(days=1)
+                                     trigger_time)) + relativedelta(hours=6)
     else:
-        expire_time = create_time + relativedelta(days=1)
+        expire_time = create_time + relativedelta(hours=6)
     return expire_time.strftime("%Y-%m-%d %H:%M:%S")
 
 
