@@ -9,7 +9,7 @@ from app import db
 from app.auth.privileged import CheckPrivilege
 from app.models import MethodType, Operator
 from restful.errors import (ApiError, DataNotJsonError, DataNotMatchError,
-                            DataNotNullError, DataUniqueError)
+                            DataNotNullError, DataUniqueError, DataTypeError)
 from restful.protocol import RestProtocol
 
 

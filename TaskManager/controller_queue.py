@@ -94,7 +94,7 @@ class ControllerQueue(object):
             return 0, task
 
     # 20171025 新增跳过一个失败任务
-    def skip_fail_task(self, task_uuid):
+    def skip_fail_task(self, task_uuid, session):
         if self.controller_queue_status != 14:
             # 队列不可恢复
             # return -1, msg_dict[self.controller_queue_status]
@@ -106,8 +106,12 @@ class ControllerQueue(object):
                 if task_uuid and task_uuid != each.keys()[0]:
                     return -1, u"队列中失败任务"
                 # 如果出现执行失败或者执行超时
-                each.update({each.keys()[0]: 4})
+                each.update({each.keys()[0]: (4, session)})
                 fail_task_uuid_list.append(each.keys()[0])
+        for each in self.controller_task_result_list:
+            if each.keys()[0] == task_uuid:
+                task_status = (4, u"任务跳过成功")
+                each.get(task_uuid).update({'task_status': task_status})
         if not fail_task_uuid_list:
             return -1, u"队列无失败任务"
         self.controller_queue_status = 0
@@ -157,7 +161,7 @@ class ControllerQueue(object):
             self.controller_queue_status = 0
             return 0, u"队列失败任务恢复成功"
 
-    def pop_controller_todo_task_queue(self):
+    def pop_controller_todo_task_queue(self, session=None):
         """
         移除待做队列中的第一项
         """
@@ -169,7 +173,7 @@ class ControllerQueue(object):
         for each in self.controller_task_status_list:
             for (k, v) in each.iteritems():
                 if k == task_uuid:
-                    each[k] = 4
+                    each[k] = (4, session)
         return 0, u"队列第一项移除成功"
 
     def change_task_info(self, task_uuid, task_status, session, task_result):

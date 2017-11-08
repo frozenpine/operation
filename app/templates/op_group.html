@@ -283,7 +283,11 @@
                                     </td>
                                     <td>
                                         <div class="am-btn-group am-btn-group-xs">
-                                            <button class="am-btn am-btn-default am-btn-xs am-text-secondary am-margin-right-xs" ng-click="check_result($index)" ng-show="data.exec_code>=0" ng-switch="data.checker.isTrue && !data.checker.checked && !batch_run">
+                                            <button class="am-btn am-btn-default am-btn-xs 
+                                                           am-text-secondary am-margin-right-xs" 
+                                                    ng-click="check_result($index)" 
+                                                    ng-show="data.exec_code >= 0 || data.exec_code === -3" 
+                                                    ng-switch="data.checker.isTrue && !data.checker.checked && !batch_run">
                                                 <div ng-switch-when="false">
                                                     <i class="am-icon-pencil-square-o"></i>
                                                     <span> 查看结果</span>
@@ -293,8 +297,10 @@
                                                     <span> 确认结果</span>
                                                 </div>
                                             </button>
-                                            <button class="am-btn am-btn-default am-btn-xs am-text-secondary" ng-show="data.skip" ng-click="skip($index)">
-                                                <span class="am-icon-pencil-square-o"></span> 跳过执行
+                                            <button class="am-btn am-btn-default am-btn-xs am-text-secondary" 
+                                                    ng-if="data.exec_code > 0" 
+                                                    ng-click="skip($index, data.id)">
+                                                <i class="am-icon-pencil-square-o"></i> 跳过执行
                                             </button>
                                         </div>
                                         <div class="am-modal" ng-class="{true: 'am-modal-confirm', false: 'am-modal-alert'}[data.checker.isTrue]" tabindex="-1" id="{{'result' + $index}}">

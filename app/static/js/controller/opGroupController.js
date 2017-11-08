@@ -208,7 +208,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                         $scope.opList.details[index].enabled = value.enabled && checked === true;
                     }
                     if (index < $scope.opList.details.length - 1) {
-                        $scope.taskQueueRunning = value.exec_code >= 0;
+                        $scope.taskQueueRunning = value.exec_code >= 0 || value.exec_code === -3;
                         if (value.checker.isTrue && $scope.opList.details[index + 1].exec_code === 0) {
                             $sessionStorage[value.uuid] = true;
                         }
@@ -308,6 +308,27 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                 $scope.opList.details[index].enabled = false;
             }
         }
+    };
+
+    $scope.skip = function(index, id) {
+        /* if ($scope.opList.status_code === 14) {
+            $message.Warning('队列执行失败已阻塞，请先恢复队列。');
+            return;
+        } */
+        $operations.SkipCurrent({
+            operationID: id,
+            onSuccess: function(data) {
+                $scope.opList.status_code = 0;
+                $scope.opList.details[index] = data;
+                if (index + 1 <= $scope.opList.details.length -1) {
+                    $scope.opList.details[index + 1].enabled = true;
+                }
+                $message.Warning('任务已跳过执行。');
+            },
+            onError: function(data) {
+                $message.Error('任务跳过失败：' + data.message);
+            }
+        });
     };
 
     $scope.optionGroupEdit = function() {

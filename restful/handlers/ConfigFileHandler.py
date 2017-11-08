@@ -138,7 +138,7 @@ class ConfigFileApi(Resource):
                 'file': config_file.file,
                 'hash': config_file.hash_code,
                 'timestamp': config_file.timestamp and \
-                    config_file.timestamp.to('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss'),
+                    config_file.timestamp.to(current_app.config['TIME_ZONE']).format('YYYY-MM-DD HH:mm:ss'),
                 'hash_changed': False
             })
         else:

@@ -354,7 +354,7 @@ app.controller('addServerControl', ['$scope', '$systemServer', '$message', '$ope
                 $message.Alert(res);
             }
         });
-    }
+    };
     $scope.systemDataDelete = function() {
         $('#systemServerDelete').modal({
             relatedTarget: this,

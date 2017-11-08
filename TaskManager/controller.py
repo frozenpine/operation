@@ -243,17 +243,18 @@ class Controller(object):
                 f.write(pickle.dumps(self.controller_queue_dict[controller_queue_uuid].to_dict()))
             return ret, msg
 
-    def pop_task_from_controller_queue(self, controller_queue_uuid, task_uuid=None):
+    def pop_task_from_controller_queue(self, controller_queue_uuid, task_uuid=None, session=None):
         """
         从指定的controller_queue中移除第一个任务
         :param controller_queue_uuid: controller_queue的controller_queue_uuid
         :param task_uuid: task的task_uuid
+        :param session: user的session
         :return 0正常并返回队列第一项移除成功
                 -1异常并返回错误信息
         """
         if not self.__controller_queue_exists(controller_queue_uuid):
             return -1, msg_dict[-12]
-        ret, msg = self.controller_queue_dict[controller_queue_uuid].skip_fail_task(task_uuid)
+        ret, msg = self.controller_queue_dict[controller_queue_uuid].skip_fail_task(task_uuid, session)
         with open("dump/{0}.dump".format(controller_queue_uuid), "wb") as f:
             f.write(pickle.dumps(self.controller_queue_dict[controller_queue_uuid].to_dict()))
         return ret, msg
@@ -274,10 +275,7 @@ class Controller(object):
         logging.info(result.to_str())
         requests.post(
             "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
-                ip=app_host,
-                port=app_port,
-                id=result.task_uuid
-            ),
+                ip=app_host, port=app_port, id=result.task_uuid),
             json=result.to_dict()
         )
 
@@ -297,10 +295,7 @@ class Controller(object):
         logging.info(result.to_str())
         requests.post(
             "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
-                ip=app_host,
-                port=app_port,
-                id=result.task_uuid
-            ),
+                ip=app_host, port=app_port, id=result.task_uuid),
             json=result.to_dict()
         )
         # 非阻塞队列开始执行后
@@ -323,10 +318,7 @@ class Controller(object):
         logging.info(result.to_str())
         requests.post(
             "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
-                ip=app_host,
-                port=app_port,
-                id=result.task_uuid
-            ),
+                ip=app_host, port=app_port, id=result.task_uuid),
             json=result.to_dict()
         )
         # 阻塞队列执行完成后
@@ -391,9 +383,8 @@ class Controller(object):
     def run_next(self, controller_queue_uuid, session=None):
         return self.get_task_from_controller_queue(controller_queue_uuid, session, False)
 
-    @timeout
-    def skip_next(self, controller_queue_uuid, task_uuid=None):
-        return self.pop_task_from_controller_queue(controller_queue_uuid, task_uuid)
+    def skip_next(self, controller_queue_uuid, task_uuid=None, session=None):
+        return self.pop_task_from_controller_queue(controller_queue_uuid, task_uuid, session)
 
     @timeout
     def peek(self, controller_queue_uuid, task_uuid):

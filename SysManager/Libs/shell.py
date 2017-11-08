@@ -11,6 +11,7 @@ def run(client, module):
             PATH=$PATH:/usr/bin:/usr/sbin;
             PATH=$PATH:~/bin
             export PATH
+            export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
             cd "{}";{}
         """.format(base_dir, command)
     else:
@@ -20,6 +21,7 @@ def run(client, module):
             PATH=$PATH:/usr/bin:/usr/sbin;
             PATH=$PATH:~/bin
             export PATH
+            export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
             {}
         """.format(command)
     stdin, stdout, stderr = client.exec_command(command)

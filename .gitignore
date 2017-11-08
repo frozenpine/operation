@@ -26,6 +26,7 @@ build/target/
 
 *.py[cod]
 *.log
+*.log.*
 *.dump
 *.out
 *.db
@@ -36,7 +37,6 @@ run/*.*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[cod]
 *$py.class
 
 # C extensions
@@ -133,3 +133,4 @@ ENV/
 
 # mypy
 .mypy_cache/
+database/flask.db

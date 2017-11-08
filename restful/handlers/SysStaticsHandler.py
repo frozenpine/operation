@@ -5,6 +5,7 @@ import threading
 
 import arrow
 import gevent
+from flask import current_app
 from flask_restful import Resource
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
@@ -48,7 +49,8 @@ class ServerList(object):
             self.rtn['details'].append({
                 'id': data[0].id,
                 'server': data[0].ip,
-                'updated_time': arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss'),
+                'updated_time': arrow.utcnow()\
+                    .to(current_app.config['TIME_ZONE']).format('HH:mm:ss'),
                 'uptime': data[1]['status'].get('uptime'),
                 'cpu': data[1]['status'].get('cpu'),
                 'disks': data[1]['status'].get('disks'),
@@ -142,7 +144,8 @@ class SystemList(object):
             self.rtn.append(
                 {
                     'name': each_sys.name,
-                    'updated_time': arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss'),
+                    'updated_time': arrow.utcnow()\
+                        .to(current_app.config['TIME_ZONE']).format('HH:mm:ss'),
                     'version': each_sys.version,
                     'detail': [{
                         'id': proc.id,
@@ -286,11 +289,9 @@ class ProcStaticApi(Resource, SystemList):
                     in result['command']: '''
                 exec_list = result['command'].split(' ')
                 if proc.exec_file in exec_list[0] and \
-                        reduce(
-                            lambda x, y: x or y,
-                            [find(proc.param, param) for param in exec_list[1:]],
-                                    len(exec_list) <= 1
-                        ):
+                    reduce(lambda x, y: x or y,
+                           [find(proc.param, param) for param in exec_list[1:]],
+                           len(exec_list) <= 1):
                     self.proc_status[proc] = result
                     match = True
                     break
@@ -426,7 +427,8 @@ class ProcVersionApi(Resource):
             gevent.joinall(self.checker)
             rtn = {
                 'name': sys.name,
-                'updated_time': arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss'),
+                'updated_time': arrow.utcnow()\
+                    .to(current_app.config['TIME_ZONE']).format('HH:mm:ss'),
                 'version': sys.version,
                 'detail': [{
                     'id': proc.id,
@@ -478,7 +480,8 @@ class LoginListApi(Resource, SystemList):
                             except (NoSuchColumnError, IndexError):
                                 tmp[src.source['formatter'][idx]['key']] = \
                                     src.source['formatter'][idx]['default']
-                            tmp['updated_time'] = arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss')
+                            tmp['updated_time'] = arrow.utcnow()\
+                                .to(current_app.config['TIME_ZONE']).format('HH:mm:ss')
                         rtn.append(tmp)
                     sys_db.close()
                     return RestProtocol(rtn)
@@ -490,18 +493,20 @@ class LoginListApi(Resource, SystemList):
         else:
             return RestProtocol(message='system not found', error_code=-1), 404
 
-class LoginCheckApi(Resource):
+class LoginCheckApi(Resource, SystemList):
     def __init__(self):
+        super(LoginCheckApi, self).__init__()
         self.syslog_list = {}
         self.rtn = []
         self.checker = []
         # self.mutex = threading.Lock()
+        self.app_context = current_app.app_context()
 
     def find_syslog(self, sys):
         log_srcs = DataSource.query.filter(
             DataSource.src_type == DataSourceType.FILE,
             DataSource.src_model == DataSourceModel.Seat,
-            DataSource.sys_id == sys.id,
+            DataSource.sys_id.in_([x.id for x in self.system_list]),
             DataSource.disabled == False
         ).all()
         for src in log_srcs:
@@ -551,49 +556,52 @@ class LoginCheckApi(Resource):
             mod['name'] = module
             mod[module] = logfile.rstrip('/')
             result = executor.run(mod)
-            for k, v in result.data.iteritems():
-                pattern = re.compile(datas['msg_pattern'])
-                data = {}
-                for idx in xrange(len(datas['formatter'])):
-                    data[datas['formatter'][idx]['key']] = \
-                        datas['formatter'][idx]['default']
-                data['seat_id'] = k
-                data['updated_time'] = arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss')
-                for each in v:
-                    ''' try:
-                        message = each.get('message').decode('utf-8')
-                    except UnicodeDecodeError:
-                        message = each.get('mesage').decode('gbk') '''
-                    message = each.get('message')
-                    if datas['key_words']['conn'] in message:
-                        data['seat_status'] = u'连接成功'
-                        data['conn_count'] += 1
-                    elif datas['key_words']['login'] in message:
-                        try:
-                            pars_message = pattern.match(each.get('message'))\
-                                .groupdict()
-                        except AttributeError:
-                            pass
+            with self.app_context:
+                for k, v in result.data.iteritems():
+                    pattern = re.compile(datas['msg_pattern'])
+                    data = {}
+                    for idx in xrange(len(datas['formatter'])):
+                        data[datas['formatter'][idx]['key']] = \
+                            datas['formatter'][idx]['default']
+                    data['seat_id'] = k
+                    data['updated_time'] = arrow.utcnow()\
+                        .to(current_app.config['TIME_ZONE']).format('HH:mm:ss')
+                    for each in v:
+                        ''' try:
+                            message = each.get('message').decode('utf-8')
+                        except UnicodeDecodeError:
+                            message = each.get('mesage').decode('gbk') '''
+                        message = each.get('message')
+                        if datas['key_words']['conn'] in message:
+                            data['seat_status'] = u'连接成功'
+                            data['conn_count'] += 1
+                        elif datas['key_words']['login'] in message:
+                            try:
+                                pars_message = pattern.match(each.get('message'))\
+                                    .groupdict()
+                            except AttributeError:
+                                pass
+                            else:
+                                data['trading_day'] = pars_message.get('trade_date')
+                                data['login_time'] = pars_message.get('trade_time')
+                            data['seat_status'] = u'登录成功'
+                            data['login_success'] += 1
+                        elif datas['key_words']['logfail'] in message:
+                            data['seat_status'] = u'登录失败'
+                            data['login_fail'] += 1
+                        elif datas['key_words']['disconn'] in message:
+                            data['seat_status'] = u'连接断开'
+                            data['disconn_count'] += 1
                         else:
-                            data['trading_day'] = pars_message.get('trade_date')
-                            data['login_time'] = pars_message.get('trade_time')
-                        data['seat_status'] = u'登录成功'
-                        data['login_success'] += 1
-                    elif datas['key_words']['logfail'] in message:
-                        data['seat_status'] = u'登录失败'
-                        data['login_fail'] += 1
-                    elif datas['key_words']['disconn'] in message:
-                        data['seat_status'] = u'连接断开'
-                        data['disconn_count'] += 1
-                    else:
-                        data['seat_status'] = u'未连接'
-                #self.mutex.acquire()
-                self.rtn.append(data)
-                #self.mutex.release()
+                            data['seat_status'] = u'未连接'
+                    #self.mutex.acquire()
+                    self.rtn.append(data)
+                    #self.mutex.release()
         executor.client.close()
 
     def get(self, **kwargs):
         sys = TradeSystem.find(**kwargs)
+        self.find_systems(sys)
         if sys:
             self.find_syslog(sys)
             for (k, v) in self.syslog_list.items():
@@ -640,7 +648,8 @@ class UserSessionListApi(Resource, SystemList):
                                 tmp[src.source['formatter'][idx]['key']] = \
                                     src.source['formatter'][idx]['default']
                             finally:
-                                tmp['updated_time'] = arrow.utcnow().to('Asia/Shanghai').format('HH:mm:ss')
+                                tmp['updated_time'] = arrow.utcnow()\
+                                    .to(current_app.config['TIME_ZONE']).format('HH:mm:ss')
                         rtn.append(tmp)
                     sys_db.close()
                     return RestProtocol(rtn)
@@ -684,7 +693,7 @@ class ConfigList(object):
                     'file': conf.file,
                     'hash': conf.hash_code,
                     'timestamp': conf.timestamp and \
-                                 conf.timestamp.to('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss'),
+                                 conf.timestamp.to(current_app.config['TIME_ZONE']).format('YYYY-MM-DD HH:mm:ss'),
                     'hash_changed': self.check_result.get(conf)
                 } for conf in sys_configs]
             })
