@@ -318,7 +318,8 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         $operations.SkipCurrent({
             operationID: id,
             onSuccess: function(data) {
-                $scope.opList.status_code = 14;
+                $scope.opList.status_code = 0;
+                $scope.opList.details[index] = data;
                 if (index + 1 <= $scope.opList.details.length -1) {
                     $scope.opList.details[index + 1].enabled = true;
                 }
