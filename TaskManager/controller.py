@@ -23,18 +23,19 @@ def timeout(func):
     def wrapper(self, controller_queue_uuid, *args, **kw):
         curr_time = datetime.now()
         if controller_queue_uuid not in self.controller_queue_dict:
-            return -1, msg_dict[-12]
+            return -12, msg_dict[-12]
         expire_time = parse(self.controller_queue_dict[controller_queue_uuid].expire_time)
         destroy_time = parse(self.controller_queue_dict[controller_queue_uuid].destroy_time)
         if curr_time > destroy_time:
             self.controller_queue_dict.pop(controller_queue_uuid)
             os.remove('dump/{0}.dump'.format(controller_queue_uuid))
-            return -1, msg_dict[-12]
+            return -12, msg_dict[-12]
         elif destroy_time > curr_time > expire_time:
             self.controller_queue_dict[controller_queue_uuid].controller_queue_status = -14
             with open("dump/{0}.dump".format(controller_queue_uuid), "wb") as f:
                 f.write(pickle.dumps(self.controller_queue_dict[controller_queue_uuid].to_dict()))
-            return -1, msg_dict[-14]
+            if func.func_name != 'snapshot':
+                return -14, msg_dict[-14]
         return func(self, controller_queue_uuid, *args, **kw)
 
     return wrapper
@@ -121,12 +122,12 @@ class Controller(object):
                 -1异常并返回错误信息
         """
         if not self.__controller_queue_exists(controller_queue_uuid):
-            return -1, msg_dict[-12]
+            return -12, msg_dict[-12]
         else:
             snap = self.controller_queue_dict[controller_queue_uuid].to_dict()
             snap["task_result_list"] = map(lambda x: x.values()[0], snap["task_result_list"])
             snap["task_status_list"] = map(lambda x: x.values()[0], snap["task_status_list"])
-            return 0, snap
+            return snap['controller_queue_status'], snap
 
     def init_controller_queue(self, task_dict, force=False):
         """
@@ -401,6 +402,7 @@ class Controller(object):
     def peek(self, controller_queue_uuid, task_uuid):
         return self.peek_task_from_controller_queue(controller_queue_uuid, task_uuid)
 
+    @timeout
     def snapshot(self, controller_queue_uuid):
         return self.get_snapshot(controller_queue_uuid)
 

@@ -14,6 +14,7 @@ from flask_restful import Resource
 from SysManager.Common import AESCrypto
 # from TaskManager.controller_msg import msg_dict
 from TaskManager import QueueStatus, TaskStatus
+from TaskManager.controller_msg import msg_dict
 from app import db, globalEncryptKey, msgQueues, taskManager, taskRequests
 from app import flask_logger as logging
 from app.auth.errors import (AuthError, InvalidUsernameOrPassword,
@@ -192,7 +193,7 @@ class OperationListApi(OperationMixin, Resource):
                     ret, self.snapshot = taskManager.snapshot(op_group.uuid)
                     rtn = self.make_operation_list(op_group)
                     msgQueues['tasks'].send_object(rtn)
-            else:
+            elif ret == QueueStatus.Missing.value:
                 if isinstance(trigger_time, datetime.time) and (now_time.time() > trigger_time):
                     taskManager.init(task_queue, True)
                     ret, self.snapshot = taskManager.snapshot(op_group.uuid)

@@ -8,6 +8,7 @@ class QueueStatus(Enum):
     Empty = -11
     Missing = -12
     NotRecoverable = -13
+    Expired = -14
     Dispatchable = 0
     DispatchedBlock = 11
     RunningBlock = 12
