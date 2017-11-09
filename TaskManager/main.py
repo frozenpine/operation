@@ -1,6 +1,5 @@
 # coding=utf-8
 
-import logging
 import sys
 from os import environ, path
 
@@ -8,8 +7,6 @@ import gevent
 import zerorpc
 from gevent import monkey
 
-fmt, datefmt = '%(asctime)-15s %(levelname)s %(filename)s %(funcName)s %(lineno)d %(message)s', '%Y-%m-%d %H:%M:%S'
-logging.basicConfig(format=fmt, datefmt=datefmt, level=logging.INFO)
 try:
     from TaskManager.controller import Controller
     from TaskManager.worker import Worker

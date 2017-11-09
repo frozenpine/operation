@@ -7,6 +7,19 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         }
     }); */
 
+    var QueueStatus = {
+        InitFail: -1,
+        Empty: -11,
+        NotExist: -12,
+        FailNotRecoverable: -13,
+        Expired: -14,
+        Normal: 0,
+        TaskDispatched: 11,
+        TaskRunning: 12,
+        TaskWaiting: 13,
+        TaskFail: 14
+    };
+
     $scope.triggered_ouside = false;
     $scope.batch_run = false;
     $scope.user_uuid = $('#user_uuid').text();
@@ -30,7 +43,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                 $scope.taskQueueRunning = false;
                 $scope.batch_run = false;
             }, 0);
-            TaskQueueStatus();
+            RefreshTaskQueueStatus();
             $message.Warning('任务队列被重新初始化');
         } else {
             angular.forEach($scope.opList.details, function(value, index) {
@@ -43,7 +56,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                     } else {
                         $scope.triggered_ouside = false;
                     }
-                    TaskStatus(data, index);
+                    RefreshTaskStatus(data, index);
                 }
             });
         }
@@ -64,7 +77,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             groupID: $routeParams.grpid,
             onSuccess: function(data) {
                 $scope.opList = data;
-                TaskQueueStatus();
+                RefreshTaskQueueStatus();
             }
         });
     };
@@ -99,7 +112,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
             onSuccess: function() {
                 $timeout(function() {
                     // $scope.queue_blocked = false;
-                    $scope.opList.status_code = 0;
+                    $scope.opList.status_code = QueueStatus.Normal;
                 }, 0);
                 $message.Success('队列已恢复');
                 $scope.GetOperationList();
@@ -111,7 +124,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
     };
 
     $scope.runAll = function() {
-        if ( /* $scope.queue_blocked */ $scope.opList.status_code === 14) {
+        if ( /* $scope.queue_blocked */ $scope.opList.status_code === QueueStatus.TaskFail) {
             $message.Warning('队列执行失败已阻塞，请先恢复队列。');
             return;
         }
@@ -134,6 +147,10 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                 groupID: $routeParams.grpid,
                 onSuccess: function(data) {
                     $message.Info('批量任务执行开始');
+                },
+                onError: function(response) {
+                    console.log(response);
+                    $message.Warning(response.message);
                 }
             });
         } else if (need_authorization) {
@@ -161,11 +178,11 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         }
     };
 
-    function TaskStatus(data, index) {
+    function RefreshTaskStatus(data, index) {
         $timeout(function() {
             $scope.opList.details[index] = data;
-            if (data.exec_code === 1) {
-                $scope.opList.status_code = 14;
+            if (data.exec_code > 0) {
+                $scope.opList.status_code = QueueStatus.TaskFail;
             }
         }, 0);
         if (!$scope.batch_run) {
@@ -194,7 +211,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
         }
     }
 
-    function TaskQueueStatus() {
+    function RefreshTaskQueueStatus() {
         if ($scope.opList !== undefined) {
             angular.forEach($scope.opList.details, function(value, index) {
                 $timeout(function() {
@@ -208,7 +225,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                         $scope.opList.details[index].enabled = value.enabled && checked === true;
                     }
                     if (index < $scope.opList.details.length - 1) {
-                        $scope.taskQueueRunning = value.exec_code >= 0;
+                        $scope.taskQueueRunning = value.exec_code >= 0 || value.exec_code === -3;
                         if (value.checker.isTrue && $scope.opList.details[index + 1].exec_code === 0) {
                             $sessionStorage[value.uuid] = true;
                         }
@@ -220,11 +237,14 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                     }
                 });
             });
+            if ($scope.opList.status_code == QueueStatus.Expired) {
+                $message.Warning('任务队列已过期！');
+            }
         }
     }
 
     $scope.execute = function(index, id) {
-        if ($scope.opList.status_code === 14) {
+        if ($scope.opList.status_code === QueueStatus.TaskFail) {
             $message.Warning('队列执行失败已阻塞，请先恢复队列。');
             return;
         }
@@ -237,7 +257,7 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                         $scope.$apply(function() {
                             if ($routeParams.hasOwnProperty('grpid')) {
                                 $scope.opList.details[index] = data;
-                                TaskStatus(data, index);
+                                RefreshTaskStatus(data, index);
                             }
                         });
                     });
@@ -308,6 +328,23 @@ app.controller('opGroupController', ['$scope', '$operationBooks', '$operations',
                 $scope.opList.details[index].enabled = false;
             }
         }
+    };
+
+    $scope.skip = function(index, id) {
+        $operations.SkipCurrent({
+            operationID: id,
+            onSuccess: function(data) {
+                $scope.opList.status_code = QueueStatus.Normal;
+                $scope.opList.details[index] = data;
+                if (index + 1 <= $scope.opList.details.length -1) {
+                    $scope.opList.details[index + 1].enabled = true;
+                }
+                $message.Warning('任务已跳过执行。');
+            },
+            onError: function(data) {
+                $message.Error('任务跳过失败：' + data.message);
+            }
+        });
     };
 
     $scope.optionGroupEdit = function() {

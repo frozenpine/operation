@@ -1,4 +1,4 @@
-var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorage', 'ngScroll'], function($provide) {
+var app = angular.module('myApp', ['ngRoute', 'angular-sortable-view', 'ngStorage', 'ngScroll', 'tree.dropdown'], function($provide) {
     $provide.factory('$uuid', function() {
         return {
             uuid4: function() {
@@ -384,7 +384,7 @@ app.filter('paging', function() {
     return function(listsData, start) {
         if (listsData)
             return listsData.slice(start);
-    }
+    };
 });
 
 app.filter('KB2', function() {
@@ -495,7 +495,7 @@ app.filter('status', function() {
                 case 'Z':
                     return '僵尸进程';
                 default:
-                    return '未知';
+                    return '运行中';
             }
         } else {
             return '未启动';

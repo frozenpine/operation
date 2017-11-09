@@ -3,9 +3,12 @@
 import json as pickle
 import logging
 import os
+from datetime import datetime
 
 import requests
+from dateutil.parser import parse
 
+import get_time
 from controller_msg import msg_dict
 from controller_queue import ControllerQueue
 from msg_queue import msg_queue
@@ -13,8 +16,29 @@ from msg_queue import msg_queue
 app_host = os.environ.get("FLASK_HOST") or "127.0.0.1"
 app_port = os.environ.get("FLASK_PORT") or 6001
 
-fmt, datefmt = '%(asctime)-15s %(levelname)s %(filename)s %(funcName)s %(lineno)d %(message)s', '%Y-%m-%d %H:%M:%S'
-logging.basicConfig(format=fmt, datefmt=datefmt, level=logging.INFO)
+logging.basicConfig(level="INFO")
+
+
+def timeout(func):
+    def wrapper(self, controller_queue_uuid, *args, **kw):
+        curr_time = datetime.now()
+        if controller_queue_uuid not in self.controller_queue_dict:
+            return -12, msg_dict[-12]
+        expire_time = parse(self.controller_queue_dict[controller_queue_uuid].expire_time)
+        destroy_time = parse(self.controller_queue_dict[controller_queue_uuid].destroy_time)
+        if curr_time > destroy_time:
+            self.controller_queue_dict.pop(controller_queue_uuid)
+            os.remove('dump/{0}.dump'.format(controller_queue_uuid))
+            return -12, msg_dict[-12]
+        elif destroy_time > curr_time > expire_time:
+            self.controller_queue_dict[controller_queue_uuid].controller_queue_status = -14
+            with open("dump/{0}.dump".format(controller_queue_uuid), "wb") as f:
+                f.write(pickle.dumps(self.controller_queue_dict[controller_queue_uuid].to_dict()))
+            if func.func_name != 'snapshot':
+                return -14, msg_dict[-14]
+        return func(self, controller_queue_uuid, *args, **kw)
+
+    return wrapper
 
 
 class Controller(object):
@@ -98,18 +122,18 @@ class Controller(object):
                 -1异常并返回错误信息
         """
         if not self.__controller_queue_exists(controller_queue_uuid):
-            return -1, msg_dict[-12]
+            return -12, msg_dict[-12]
         else:
             snap = self.controller_queue_dict[controller_queue_uuid].to_dict()
             snap["task_result_list"] = map(lambda x: x.values()[0], snap["task_result_list"])
             snap["task_status_list"] = map(lambda x: x.values()[0], snap["task_status_list"])
-            return 0, snap
+            return snap['controller_queue_status'], snap
 
-    def init_controller_queue(self, task_dict, specified_time=None):
+    def init_controller_queue(self, task_dict, force=False):
         """
         初始化controller_queue, 并向controller_queue中添加任务
         :param task_dict: 任务组和任务字典
-        :param specified_time: 指定时间
+        :param force: 强制
         :return 0正常
                 如非强制模式,返回有重合的队列状态
                 如强制模式,返回空
@@ -117,10 +141,8 @@ class Controller(object):
         """
         if not isinstance(task_dict, dict):
             return -1, msg_dict[-1]
-        else:
+        if force:
             for (k, v) in task_dict.iteritems():
-                if specified_time:
-                    v["trigger_time"] = "{0} {1}".format(specified_time, v["trigger_time"])
                 self.controller_queue_dict[k] = ControllerQueue(k, v["group_block"], v["trigger_time"])
                 for each in v["group_info"]:
                     self.__put_task_to_controller_queue(k, each)
@@ -129,22 +151,26 @@ class Controller(object):
                 if not v["group_block"]:
                     self.get_tasks_from_controller_queue(k)
             return 0, None
-
-    def update_task_info(self, controller_queue_uuid, task_uuid, task_info):
-        """
-        更新指定的task任务
-        :param controller_queue_uuid: controller_queue的controller_queue_uuid
-        :param task_uuid: task的uuid
-        :param task_info: task的信息
-        :return:
-        """
-        if not self.__controller_queue_exists(controller_queue_uuid):
-            return -1, msg_dict[-12]
         else:
-            ret, msg = self.controller_queue_dict[controller_queue_uuid].update_task_info(task_uuid, task_info)
-            with open("dump/{0}.dump".format(controller_queue_uuid), "wb") as f:
-                f.write(pickle.dumps(self.controller_queue_dict[controller_queue_uuid].to_dict()))
-            return ret, msg
+            ret_dict = dict()
+            for (k, v) in task_dict.iteritems():
+                if self.__controller_queue_exists(k):
+                    ret_dict.update({
+                        k: {
+                            "create_time": self.__get_create_time(k),
+                            "trigger_time": self.__get_trigger_time(k),
+                            "group_task": self.get_snapshot(k)
+                        }
+                    })
+                else:
+                    self.controller_queue_dict[k] = ControllerQueue(k, v["group_block"], v["trigger_time"])
+                    for each in v["group_info"]:
+                        self.__put_task_to_controller_queue(k, each)
+                        with open("dump/{0}.dump".format(k), "wb") as f:
+                            f.write(pickle.dumps(self.controller_queue_dict[k].to_dict()))
+                    if not v["group_block"]:
+                        self.get_tasks_from_controller_queue(k)
+            return 0, ret_dict
 
     def del_controller_queue(self, controller_queue_uuid):
         """
@@ -192,8 +218,6 @@ class Controller(object):
             task_earliest = msg["task_earliest"]
             task_latest = msg["task_latest"]
             task = msg["task"]
-            if "session" in msg:
-                session = msg["session"]
             controller_queue_create_time = msg["controller_queue_create_time"]
             controller_queue_trigger_time = msg["controller_queue_trigger_time"]
             msg_queue.todo_task_queue.put(
@@ -229,45 +253,21 @@ class Controller(object):
                 f.write(pickle.dumps(self.controller_queue_dict[controller_queue_uuid].to_dict()))
             return ret, msg
 
-    def run_asynchronous_task(self, task_info):
-        """
-        执行异步任务
-        :param task_info: 任务信息
-        :return:
-        """
-        if not self.__controller_queue_exists("asynchronous"):
-            self.controller_queue_dict["asynchronous"] = ControllerQueue("asynchronous", False, "00:00")
-        if isinstance(task_info, dict):
-            # 如果是字典, 则有一个任务
-            if "task_info" in task_info:
-                for each in task_info["task_info"]:
-                    each.update({"earliest": "", "latest": "", "session": task_info.get("session", None)})
-                    self.controller_queue_dict["asynchronous"].put_controller_todo_task_queue(each, False)
-            else:
-                task_info.update({"earliest": "", "latest": ""})
-                self.controller_queue_dict["asynchronous"].put_controller_todo_task_queue(task_info, False)
-        self.get_tasks_from_controller_queue("asynchronous", None)
-
-    def pop_task_from_controller_queue(self, controller_queue_uuid, task_uuid=None):
+    def pop_task_from_controller_queue(self, controller_queue_uuid, task_uuid=None, session=None):
         """
         从指定的controller_queue中移除第一个任务
         :param controller_queue_uuid: controller_queue的controller_queue_uuid
         :param task_uuid: task的task_uuid
+        :param session: user的session
         :return 0正常并返回队列第一项移除成功
                 -1异常并返回错误信息
         """
         if not self.__controller_queue_exists(controller_queue_uuid):
             return -1, msg_dict[-12]
-        if task_uuid:
-            ret, msg = self.peek_task_from_controller_queue(controller_queue_uuid, task_uuid)
-            if ret != 0:
-                return ret, msg
-            else:
-                ret, msg = self.controller_queue_dict[controller_queue_uuid].pop_controller_todo_task_queue()
-                return ret, msg
-        else:
-            ret, msg = self.controller_queue_dict[controller_queue_uuid].pop_controller_todo_task_queue()
-            return ret, msg
+        ret, msg = self.controller_queue_dict[controller_queue_uuid].skip_fail_task(task_uuid, session)
+        with open("dump/{0}.dump".format(controller_queue_uuid), "wb") as f:
+            f.write(pickle.dumps(self.controller_queue_dict[controller_queue_uuid].to_dict()))
+        return ret, msg
 
     def worker_init_callback(self, result):
         """
@@ -285,10 +285,7 @@ class Controller(object):
         logging.info(result.to_str())
         requests.post(
             "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
-                ip=app_host,
-                port=app_port,
-                id=result.task_uuid
-            ),
+                ip=app_host, port=app_port, id=result.task_uuid),
             json=result.to_dict()
         )
 
@@ -308,15 +305,12 @@ class Controller(object):
         logging.info(result.to_str())
         requests.post(
             "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
-                ip=app_host,
-                port=app_port,
-                id=result.task_uuid
-            ),
+                ip=app_host, port=app_port, id=result.task_uuid),
             json=result.to_dict()
         )
         # 非阻塞队列开始执行后
         if result.run_all and not self.__get_group_block(result.controller_queue_uuid):
-            self.get_task_from_controller_queue(result.controller_queue_uuid, result.session, True)
+            self.get_task_from_controller_queue(result.controller_queue_uuid, True)
 
     def worker_end_callback(self, result):
         """
@@ -334,10 +328,7 @@ class Controller(object):
         logging.info(result.to_str())
         requests.post(
             "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
-                ip=app_host,
-                port=app_port,
-                id=result.task_uuid
-            ),
+                ip=app_host, port=app_port, id=result.task_uuid),
             json=result.to_dict()
         )
         # 阻塞队列执行完成后
@@ -353,6 +344,8 @@ class Controller(object):
         dump_file_list = os.listdir("dump")
         logging.info("TaskQueue deserializing started")
         for each in dump_file_list:
+            if not "dump" in each:
+                continue
             with open("dump/{0}".format(each)) as f:
                 f_stream = f.read()
             try:
@@ -365,6 +358,8 @@ class Controller(object):
                 controller_queue_status = queue_status["controller_queue_status"]
                 create_time = queue_status["create_time"]
                 trigger_time = queue_status["trigger_time"]
+                expire_time = queue_status.get("expire_time", get_time.calc_expire_time(create_time, trigger_time))
+                destroy_time = queue_status.get("destroy_time", get_time.calc_destroy_time(create_time, trigger_time))
                 group_block = queue_status["group_block"]
                 queue_id = queue_status["controller_queue_uuid"]
                 task_list = queue_status["task_list"]
@@ -374,6 +369,8 @@ class Controller(object):
                 self.controller_queue_dict[queue_id].controller_queue_status = controller_queue_status
                 self.controller_queue_dict[queue_id].create_time = create_time
                 self.controller_queue_dict[queue_id].trigger_time = trigger_time
+                self.controller_queue_dict[queue_id].expire_time = expire_time
+                self.controller_queue_dict[queue_id].destroy_time = destroy_time
                 self.controller_queue_dict[queue_id].controller_task_list = task_list
                 self.controller_queue_dict[queue_id].controller_task_result_list = task_result_list
                 self.controller_queue_dict[queue_id].controller_task_status_list = task_status_list
@@ -390,27 +387,26 @@ class Controller(object):
     def init(self, task_dict, force=False):
         return self.init_controller_queue(task_dict, force)
 
-    def update(self, controller_queue_uuid, task_uuid, task_info):
-        return self.update_task_info(controller_queue_uuid, task_uuid, task_info)
-
+    @timeout
     def run_all(self, controller_queue_uuid, session=None):
         return self.get_tasks_from_controller_queue(controller_queue_uuid, session)
 
+    @timeout
     def run_next(self, controller_queue_uuid, session=None):
         return self.get_task_from_controller_queue(controller_queue_uuid, session, False)
 
-    def run_immediate(self, task_info):
-        return self.run_asynchronous_task(task_info)
+    def skip_next(self, controller_queue_uuid, task_uuid=None, session=None):
+        return self.pop_task_from_controller_queue(controller_queue_uuid, task_uuid, session)
 
-    def skip_next(self, controller_queue_uuid, task_uuid=None):
-        return self.pop_task_from_controller_queue(controller_queue_uuid, task_uuid)
-
+    @timeout
     def peek(self, controller_queue_uuid, task_uuid):
         return self.peek_task_from_controller_queue(controller_queue_uuid, task_uuid)
 
+    @timeout
     def snapshot(self, controller_queue_uuid):
         return self.get_snapshot(controller_queue_uuid)
 
+    @timeout
     def resume(self, controller_queue_uuid):
         return self.put_left_to_controller_queue(controller_queue_uuid)
 

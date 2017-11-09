@@ -9,8 +9,8 @@ from flask_script import Manager
 from app import create_app
 from app.models import *
 
-# test_app = create_app('development')
-test_app = create_app('production')
+test_app = create_app('development')
+# test_app = create_app('production')
 manager = Manager(test_app)
 
 

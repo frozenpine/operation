@@ -11,6 +11,10 @@ class Config(object):
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     GLOBAL_ENCRYPT = False  # 全局开启密码加密，注：密码长度不能超过16位
+
+    SQLALCHEMY_DATABASE_URI = os.environ.get('FLASK_SQLALCHEMY_DATABASE_URI') or \
+                                'sqlite:///' + os.path.join(base_dir, 'database/flask.db')
+
     '''
     NEO4J_DATABASE_URI = 'bolt://{0}:{1}@{2}:{3}'
     NEO4J_HOST = os.environ.get('NEO4J_HOST')
@@ -25,12 +29,18 @@ class Config(object):
     UI_PROTECTION = {
         'ui_element': [
             '#addNewGroups', '#defineOptionBook', '#inventory', '#operate-books',
-            '#editGroup', '#initGroup'
+            '#editGroup', '#initGroup', '#defineDatasource'
         ],
         'ui_uri': [
             '/api/operation-groups', '/api/operation-books', '/api/systems', '/api/emerge_ops',
-            '/api/operation-groups', '/api/op_group'
+            '/api/operation-groups', '/api/op_group', '/api/datasources'
         ]
+    }
+
+    TIME_ZONE = os.environ.get('TIME_ZONE') or 'Asia/Shanghai'
+
+    SQL_DRIVER = {
+        'mysql': 'pymysql'
     }
 
 
@@ -49,14 +59,10 @@ class Config(object):
 class DevelopmentConfig(Config):
     DEBUG = True
     # NEO4J_HOST = '192.168.101.152'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('FLASK_SQLALCHEMY_DATABASE_URI') or \
-                                'sqlite:///' + os.path.join(base_dir, 'database/flask.db')
     NEED_UI_PROTECTION = False
 
 class ProductionConfig(Config):
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get('FLASK_SQLALCHEMY_DATABASE_URI') or \
-                              'sqlite:///' + os.path.join(base_dir, 'database/flask.db')
     NEED_UI_PROTECTION = True
 
 config = {

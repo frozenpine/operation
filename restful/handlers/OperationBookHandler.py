@@ -150,7 +150,7 @@ class OperationBookCheckApi(Resource):
             except DataNotNullError as e:
                 return RestProtocol(e)
             else:
-                system = TradeSystem.find(**kwargs)
+                system = TradeSystem.find(id=data['sys_id'])
                 if system:
                     file_name, chdir = data.get('shell').split(' ')[0], data.get('chdir')
                     ssh = paramiko.SSHClient()

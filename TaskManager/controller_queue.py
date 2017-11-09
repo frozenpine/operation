@@ -19,9 +19,10 @@ class TaskStatus(Enum):
 class ControllerQueue(object):
     def __init__(self, controller_queue_uuid, group_block, trigger_time):
         self.create_time = get_time.current_ymd_hms()
-        # self.create_time = "2017-01-01 12:00:00"
         self.group_block = group_block
         self.trigger_time = trigger_time
+        self.expire_time = get_time.calc_expire_time(self.create_time, self.trigger_time)
+        self.destroy_time = get_time.calc_destroy_time(self.create_time, self.trigger_time)
         self.controller_queue_status = 0
         self.controller_queue_uuid = controller_queue_uuid
         self.controller_todo_task_queue = JoinableQueue()
@@ -36,6 +37,8 @@ class ControllerQueue(object):
         return {
             "create_time": self.create_time,
             "trigger_time": self.trigger_time,
+            "expire_time": self.expire_time,
+            "destroy_time": self.destroy_time,
             "group_block": self.group_block,
             "controller_queue_status": self.controller_queue_status,
             "controller_queue_uuid": self.controller_queue_uuid,
@@ -97,6 +100,30 @@ class ControllerQueue(object):
             self.controller_queue_status = 11
             return 0, task
 
+    # 20171025 新增跳过一个失败任务
+    def skip_fail_task(self, task_uuid, session):
+        if self.controller_queue_status != 14:
+            # 队列不可恢复
+            # return -1, msg_dict[self.controller_queue_status]
+            return -1, u'队列状态不可恢复,当前状态: {}'.format(msg_dict[self.controller_queue_status])
+        fail_task_uuid_list = list()
+        for each in self.controller_task_status_list:
+            if each.values()[0] and each.values()[0][0] in (1, 2, 3):
+                # 比对task_uuid
+                if task_uuid and task_uuid != each.keys()[0]:
+                    return -1, u"队列中失败任务"
+                # 如果出现执行失败或者执行超时
+                each.update({each.keys()[0]: (4, session)})
+                fail_task_uuid_list.append(each.keys()[0])
+        for each in self.controller_task_result_list:
+            if each.keys()[0] == task_uuid:
+                task_status = (4, u"任务跳过成功")
+                each.get(task_uuid).update({'task_status': task_status})
+        if not fail_task_uuid_list:
+            return -1, u"队列无失败任务"
+        self.controller_queue_status = 0
+        return 0, u"任务跳过成功"
+
     def put_left_controller_todo_task_queue(self):
         """
         将失败任务压入待做队列
@@ -150,7 +177,7 @@ class ControllerQueue(object):
             self.controller_queue_status = 0
             return 0, u"队列失败任务恢复成功"
 
-    def pop_controller_todo_task_queue(self):
+    def pop_controller_todo_task_queue(self, session=None):
         """
         移除待做队列中的第一项
         """
@@ -162,7 +189,7 @@ class ControllerQueue(object):
         for each in self.controller_task_status_list:
             for (k, v) in each.iteritems():
                 if k == task_uuid:
-                    each[k] = 4
+                    each[k] = (4, session)
         return 0, u"队列第一项移除成功"
 
     def change_task_info(self, task_uuid, task_status, session, task_result):

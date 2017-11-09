@@ -10,18 +10,18 @@ def run(client, module):
                 free | 
                 awk '
                     BEGIN{print "Name Total Free"}
-				    FNR==2 || FNR==3{
+                    FNR==2 || FNR==3{
                         gsub(":","",$1);
                         print tolower($1)" "$2" "$NF
-				    }' | column -t;
+                    }' | column -t;
             else
                 free | 
                 awk '
                     BEGIN{print "Name Total Free"}
-				    FNR==2 || FNR==4{
-					  gsub(":","",$1);
-					  print tolower($1)," "$2" "$NF+$(NF-1)+$(NF-3)
-				  }' | column -t;
+                    FNR==2 || FNR==4{
+                        gsub(":","",$1);
+                        print tolower($1)," "$2" "$NF+$(NF-1)+$(NF-3)
+                    }' | column -t;
             fi
         """
     }

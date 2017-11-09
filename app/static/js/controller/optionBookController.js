@@ -36,7 +36,8 @@ app.controller('optionBookController', ['$scope', '$rootScope', '$timeout', '$op
     };
     $scope.optionBookCommand = [{
         "shell": "",
-        "chdir": ""
+        "chdir": "",
+        "sys_id": undefined
     }];
 
     $scope.optionBookComAdd = function() {
@@ -54,6 +55,7 @@ app.controller('optionBookController', ['$scope', '$rootScope', '$timeout', '$op
             $message.ModelAlert("请选择系统", "modalInfoShowDefine");
             return;
         }
+        $scope.optionBookCommand[index].sys_id = $scope.optionBookEditData.sys.id;
         $operationBooks.operationbookCheck({
             sys_id: id,
             data: $scope.optionBookCommand[index],
@@ -90,6 +92,7 @@ app.controller('optionBookController', ['$scope', '$rootScope', '$timeout', '$op
             "mod": ""
         };
         $scope.optionBookCommand = [{
+            "sys_id": undefined,
             "shell": "",
             "chdir": ""
         }];

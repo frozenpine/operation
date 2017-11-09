@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import json
+import logging
 import time
 from multiprocessing import Pipe, Process
 from threading import Thread
@@ -8,11 +9,11 @@ from threading import Thread
 import gevent
 
 import get_time
-from SysManager.configs import RemoteConfig
-from SysManager.excepts import ConfigInvalid, SSHAuthenticationException, SSHException, SSHNoValidConnectionsError, \
-    WinRmNoValidConnectionsError, WinRmAuthenticationException
-from SysManager.executor import Executor
 from msg_queue import msg_queue
+from SysManager.configs import SSHConfig
+from SysManager.excepts import (ConfigInvalid, SSHAuthenticationException,
+                                SSHException, SSHNoValidConnectionsError)
+from SysManager.executor import Executor
 from worker_queue import WorkerQueue
 
 
@@ -71,10 +72,7 @@ class RunTask(Process):
         self.task_earliest = task_earliest
         self.task_latest = task_latest
         self.pipe_child = pipe_child
-        if session in self.task:
-            self.session = task["session"]
-        else:
-            self.session = session
+        self.session = session
         self.run_all = run_all
         # 计算是否需要睡眠等待以及当前进程池是否已满
         if idle_process_count < 0:
@@ -115,7 +113,7 @@ class RunTask(Process):
         """
         # 实例化SSHConfig初始化判断
         try:
-            conf = RemoteConfig.Create(self.task["remote"]["name"], self.task["remote"]["params"])
+            conf = SSHConfig(**self.task["remote"]["params"])
         except ConfigInvalid, status_msg:
             # 配置文件格式错误
             status_code = -1
@@ -132,13 +130,15 @@ class RunTask(Process):
             task_result = None
             self.send(status_code, status_msg, task_result)
             return -1
-
         # 开始正式执行
         ret_code, ret_msg = get_time.compare_timestamps(
             self.controller_queue_trigger_time, self.task_earliest, self.task_latest
         )
         if ret_code == 3:
             # 直接跳过不执行
+            ''' self.pipe_child.send(
+                Result(controller_queue_uuid=self.controller_queue_uuid, task_uuid=self.task_uuid,
+                       status_code=121, status_msg=u'超出时间范围', session=self.session, run_all=self.run_all)) '''
             pass
         else:
             if ret_code == 2:
@@ -149,15 +149,8 @@ class RunTask(Process):
                        status_code=status_code, status_msg=status_msg, session=self.session, run_all=self.run_all))
             mod = self.task["mod"]
             if isinstance(mod, dict):
-                try:
-                    # 一个任务
-                    task_result = exe.run(mod)
-                except (WinRmNoValidConnectionsError, WinRmAuthenticationException), status_msg:
-                    status_code = -1
-                    status_msg = status_msg.message
-                    task_result = None
-                    self.send(status_code, status_msg, task_result)
-                    return -1
+                # 一个任务
+                task_result = exe.run(mod)
                 status_code = task_result.return_code
                 if status_code != 0:
                     status_code = 1
@@ -166,22 +159,15 @@ class RunTask(Process):
                     status_msg = u"单任务执行成功"
             if isinstance(mod, list):
                 # 多个任务
-                try:
-                    for each in mod:
-                        task_result = exe.run(each)
-                        status_code = task_result.return_code
-                        if status_code != 0:
-                            status_code = 1
-                            status_msg = u"多任务执行失败"
-                            break
-                        else:
-                            status_msg = u"多任务执行成功"
-                except (WinRmNoValidConnectionsError, WinRmAuthenticationException), status_msg:
-                    status_code = -1
-                    status_msg = status_msg.message
-                    task_result = None
-                    self.send(status_code, status_msg, task_result)
-                    return -1
+                for each in mod:
+                    task_result = exe.run(each)
+                    status_code = task_result.return_code
+                    if status_code != 0:
+                        status_code = 1
+                        status_msg = u"多任务执行失败"
+                        break
+                    else:
+                        status_msg = u"多任务执行成功"
             self.send(status_code, status_msg, task_result)
 
 
@@ -227,7 +213,7 @@ class Worker(object):
         end_callback = self.callback_dict["end_callback"]
         pipe_parent, pipe_child = Pipe(duplex=False)
         ParentPipe(pipe_parent, init_callback, start_callback, end_callback).start()
-        max_process = 8
+        max_process = 2
         while 1:
             ret = msg_queue.todo_task_queue.get()
             controller_queue_uuid = ret["controller_queue_uuid"]
