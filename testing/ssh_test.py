@@ -9,19 +9,20 @@ from SysManager.executor import Executor
 
 
 if __name__ == '__main__':
-    conf = SSHConfig('192.168.92.121', 'root', 'quantdo123456')
+    # conf = SSHConfig('192.168.92.121', 'root', 'quantdo123456')
     # conf = SSHConfig('192.168.92.26', 'root', 'quantdo123456')
+    conf = SSHConfig('192.168.56.2', 'qoffer', 'Qoffer123')
     exe = Executor.Create(conf)
+
     mod = {
-        'name': 'customLog',
-        'customLog': '/var/log/messages',
-        'key_words': {
-            'warning': 'level=warning',
-            'error': 'level=error'
+        'name': 'cyg_psaux',
+        'args': {
+            'processes': [
+                ('qoffer', '1'),
+                ('qoffer', '2')
+            ]
         }
     }
-
-    exe = Executor.Create(conf)
 
     result = exe.run(mod)
     print result.return_code

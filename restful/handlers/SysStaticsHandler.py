@@ -16,7 +16,7 @@ from SysManager.configs import SSHConfig, WinRmConfig
 from SysManager.executor import Executor
 from app import flask_logger as logging
 from app import globalEncryptKey
-from app.models import (DataSource, DataSourceModel,
+from app.models import (DataSource, DataSourceModel, PlatformType,
                         DataSourceType, SocketDirection, TradeSystem)
 from restful.protocol import RestProtocol
 
@@ -214,7 +214,7 @@ class SystemList(object):
                             unicode(socket.port) in self.proc_status[proc]['established'].keys() else
                             {'stat': u'未连接'}
                         }
-                        proc_define['established'].append(connection_define)
+                        proc_define['connections'].append(connection_define)
                 sys_define['detail'].append(proc_define)
             self.rtn.append(sys_define)
 
@@ -240,8 +240,6 @@ class ProcStaticApi(Resource, SystemList):
         super(ProcStaticApi, self).__init__()
         self.proc_list = {}
         self.checker = []
-        # self.socket_status = {}
-        # self.connection_status = {}
 
     def find_processes(self):
         for child_sys in self.system_list:
@@ -301,10 +299,16 @@ class ProcStaticApi(Resource, SystemList):
             match = False
             for result in running_results:
                 exec_list = result['command'].split(' ')
-                if proc.exec_file in exec_list[0] and \
-                    reduce(lambda x, y: x or y,
-                           [find(proc.param, param) for param in exec_list[1:]],
-                           len(exec_list) <= 1):
+                if proc.server.platform == PlatformType.Linux and \
+                   proc.exec_file in exec_list[0] and \
+                   reduce(lambda x, y: x or y,
+                          [find(proc.param, param) for param in exec_list[1:]],
+                          len(exec_list) <= 1):
+                    self.proc_status[proc] = result
+                    match = True
+                    break
+                if proc.server.platform == PlatformType.Windows and \
+                   proc.exec_file + proc.param in exec_list[0]:
                     self.proc_status[proc] = result
                     match = True
                     break
@@ -322,32 +326,12 @@ class ProcStaticApi(Resource, SystemList):
                     except KeyError:
                         sockets = socket_results['LISTENING']
                     for socket in sockets:
-                        ''' self.socket_status['{}://{}:{}'.format(
-                            socket['proto'].lower(),
-                            socket['local_ip'],
-                            socket['local_port']
-                        )] = {
-                            'proto': socket['proto'].lower(),
-                            'ip': socket['local_ip'],
-                            'port': socket['local_port'],
-                            'stat': u'侦听中'
-                        } '''
                         if socket['pid'] == self.proc_status[proc]['pid']:
                             if 'listening' not in self.proc_status[proc].keys():
                                 self.proc_status[proc]['listening'] = {}
                             self.proc_status[proc]['listening'][socket['local_port']] = socket
                 if 'ESTABLISHED' in socket_results.keys():
                     for socket in socket_results['ESTABLISHED']:
-                        ''' self.connection_status['{}://{}:{}'.format(
-                            socket['proto'].lower(),
-                            socket['remote_ip'],
-                            socket['remote_port']
-                        )] = {
-                            'proto': socket['proto'].lower(),
-                            'ip': socket['remote_ip'],
-                            'port': socket['remote_port'],
-                            'stat': u'已连接'
-                        } '''
                         if socket['pid'] == self.proc_status[proc]['pid']:
                             if 'established' not in self.proc_status[proc].keys():
                                 self.proc_status[proc]['established'] = {}
