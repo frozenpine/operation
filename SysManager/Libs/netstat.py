@@ -1,36 +1,24 @@
 # -*- coding: UTF-8 -*-
-import shell
+from SysManager.Libs import shell
 
 
 def run(client, module):
     protocol = module.get('netstat', 'tcp').lower()[0]
     args = module.get('args')
     if args:
-        if args.has_key('processes'):
-            ''' process_list = args['processes'][0]
-            for proc in args['processes'][1:]:
-                process_list += '|{}'.format(proc) '''
-            process_list = reduce(lambda x, y: x[0] + '|' + y[0],
-                                  args['processes'])
-            if isinstance(process_list, tuple):
-                process_list = process_list[0]
+        if 'processes' in args.keys():
+            process_list = '|'.join(zip(*args['processes'])[0])
         else:
             process_list = ''
-        if args.has_key('ports'):
-            ''' port_list = ':{}'.format(args['ports'][0])
-            for port in args['ports'][1:]:
-                port_list += '|:{}'.format(port) '''
-            port_list = reduce(
-                lambda x, y: u':{}' + unicode(x) + u'|' + u':{}' + unicode(y),
-                args['ports']
-            )
+        if 'ports' in args.keys():
+            port_list = '|'.join(map(lambda x: isinstance(x, int) and unicode(x), args['ports']))
             if isinstance(port_list, int):
                 port_list = unicode(port_list)
         else:
             port_list = ''
         mod = {
             'shell': (
-                r"netstat -{proto}anp | " +
+                r"netstat -{proto}anp | "
                 r"awk '$0 ~/{ports}/ && $NF ~/{procs}/ && $NF !~/^-/ {{print}}'"
             ).format(
                 proto=protocol,
@@ -40,8 +28,6 @@ def run(client, module):
         }
     else:
         mod = {
-            'shell': """\
-netstat -{}anp | awk '$NF !~/^-/{{print}}'
-                """.format(protocol)
+            'shell': "netstat -{}anp | awk '$NF !~/^-/{{print}}'".format(protocol)
         }
     return shell.run(client, mod)
