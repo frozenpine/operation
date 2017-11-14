@@ -7,7 +7,7 @@ def run(client, module):
     args = module.get('args')
     if args:
         if 'ports' in args.keys():
-            port_list = '|'.join(map(lambda x: isinstance(x, int) and unicode(x), args['ports']))
+            port_list = '|'.join(map(lambda x: isinstance(x, int) and u':' + unicode(x), args['ports']))
             if isinstance(port_list, int):
                 port_list = unicode(port_list)
         else:
@@ -15,7 +15,7 @@ def run(client, module):
         mod = {
             'shell': (
                 r"""netstat -anop {proto} | """
-                r"""awk '$0 ~/{ports}/ {{print}}'"""
+                r"""awk 'FNR > 3 && $0 ~/{ports}/ {{print}}'"""
             ).format(
                 proto=protocol,
                 ports=port_list
@@ -24,7 +24,7 @@ def run(client, module):
     else:
         mod = {
             'shell': (
-                r"""netstat -anop {proto}"""
+                r"""netstat -anop {proto} | sed -n '4,$ p'"""
             ).format(proto=protocol)
         }
     return shell.run(client, mod)

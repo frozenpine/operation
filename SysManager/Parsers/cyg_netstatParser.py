@@ -8,8 +8,7 @@ class cyg_netstatParser(OutputParser):
         OutputParser.__init__(
             self,
             output_lines=output_lines,
-            re_str=
-            r'(.+?)\s+([^:]+|.*:.*:.*):(.+?)\s+([^:]+|.*:.*:.*):(.+?)\s+(.+?)\s+(.+)$',
+            re_str=r'\s*(.+?)\s+([^:]+|.*:.*:.*):(.+?)\s+([^:]+|.*:.*:.*):(.+?)\s+(.+?)\s+(.+)$',
             key_list=[
                 'proto', 'local_ip', 'local_port',
                 'remote_ip', 'remote_port', 'state', 'pid'

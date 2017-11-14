@@ -11,16 +11,13 @@ from SysManager.executor import Executor
 if __name__ == '__main__':
     # conf = SSHConfig('192.168.92.121', 'root', 'quantdo123456')
     # conf = SSHConfig('192.168.92.26', 'root', 'quantdo123456')
-    conf = SSHConfig('192.168.56.2', 'qoffer', 'Qoffer123')
+    conf = SSHConfig('192.168.56.2', 'Administrator', '022010blue@safe')
     exe = Executor.Create(conf)
 
     mod = {
-        'name': 'cyg_psaux',
+        'name': 'cyg_netstat',
         'args': {
-            'processes': [
-                ('qoffer', '1'),
-                ('qoffer', '2')
-            ]
+            'ports': [19200, 19300]
         }
     }
 
