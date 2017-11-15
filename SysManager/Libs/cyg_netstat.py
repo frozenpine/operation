@@ -1,24 +1,21 @@
 # -*- coding: UTF-8 -*-
-import shell
+from SysManager.Libs import shell
 
 
 def run(client, module):
     protocol = module.get('netstat', 'tcp').lower()
     args = module.get('args')
     if args:
-        if args.has_key('ports'):
-            port_list = reduce(
-                lambda x, y: u':{}' + unicode(x) + u'|' + u':{}' + unicode(y),
-                args['ports']
-            )
+        if 'ports' in args.keys():
+            port_list = '|'.join(map(lambda x: isinstance(x, int) and u':' + unicode(x), args['ports']))
             if isinstance(port_list, int):
                 port_list = unicode(port_list)
         else:
             port_list = ''
         mod = {
             'shell': (
-                r"""netstat -anobp {proto} | grep -iv time_wait | sed -n '5,$s/^ *//gp' | """
-                r"""awk '$0 ~/{ports}/ {{print}}'"""
+                r"""netstat -anop {proto} | """
+                r"""awk 'FNR > 3 && $0 ~/{ports}/ {{print}}'"""
             ).format(
                 proto=protocol,
                 ports=port_list
@@ -27,7 +24,7 @@ def run(client, module):
     else:
         mod = {
             'shell': (
-                r"""netstat -anop {proto} | grep -iv time_wait | sed -n '5,$s/^ *//p'"""
+                r"""netstat -anop {proto} | sed -n '4,$ p'"""
             ).format(proto=protocol)
         }
     return shell.run(client, mod)
