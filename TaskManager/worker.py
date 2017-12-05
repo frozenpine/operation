@@ -1,19 +1,20 @@
 # coding=utf-8
 
 import json
-import logging
 import time
-from multiprocessing import Pipe, Process
-from threading import Thread
+from multiprocessing import Process
+import logging
 
 import gevent
 
 import get_time
-from msg_queue import msg_queue
 from SysManager.configs import SSHConfig
 from SysManager.excepts import (ConfigInvalid, SSHAuthenticationException,
                                 SSHException, SSHNoValidConnectionsError)
 from SysManager.executor import Executor
+from msg_queue import msg_queue
+from my_socket import ParentPipe
+from my_socket import Pipe
 from worker_queue import WorkerQueue
 
 
@@ -100,6 +101,7 @@ class RunTask(Process):
         :param task_result: 任务状态结果
         :return:
         """
+        logging.info('socket send code: {0}'.format(status_code))
         self.pipe_child.send(
             Result(controller_queue_uuid=self.controller_queue_uuid, task_uuid=self.task_uuid,
                    status_code=status_code, status_msg=status_msg, session=self.session, run_all=self.run_all,
@@ -171,30 +173,30 @@ class RunTask(Process):
             self.send(status_code, status_msg, task_result)
 
 
-class ParentPipe(Thread):
-    def __init__(self, pipe_parent, init_callback, start_callback, end_callback):
-        Thread.__init__(self)
-        self.pipe_parent = pipe_parent
-        self.init_callback = init_callback
-        self.start_callback = start_callback
-        self.end_callback = end_callback
-
-    def run(self):
-        """
-        监听管道消息
-        :return:
-        """
-        while self.pipe_parent:
-            info = self.pipe_parent.recv()
-            if info:
-                if info.type() == "init":
-                    self.init_callback(info)
-                if info.type() == "start":
-                    self.start_callback(info)
-                if info.type() == "end":
-                    self.end_callback(info)
-            else:
-                break
+# class ParentPipe(Thread):
+#     def __init__(self, pipe_parent, init_callback, start_callback, end_callback):
+#         Thread.__init__(self)
+#         self.pipe_parent = pipe_parent
+#         self.init_callback = init_callback
+#         self.start_callback = start_callback
+#         self.end_callback = end_callback
+#
+#     def run(self):
+#         """
+#         监听管道消息
+#         :return:
+#         """
+#         while self.pipe_parent:
+#             info = self.pipe_parent.recv()
+#             if info:
+#                 if info.type() == "init":
+#                     self.init_callback(info)
+#                 if info.type() == "start":
+#                     self.start_callback(info)
+#                 if info.type() == "end":
+#                     self.end_callback(info)
+#             else:
+#                 break
 
 
 class Worker(object):

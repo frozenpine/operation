@@ -50,7 +50,7 @@ if __name__ == "__main__":
                             "name": "SSHConfig"
                         },
                         "mod": {
-                            "shell": "sleep 5",
+                            "shell": "exit 0",
                             "name": "shell"
                         }
                     }
@@ -69,7 +69,7 @@ if __name__ == "__main__":
                             "name": "SSHConfig"
                         },
                         "mod": {
-                            "shell": "sleep 5",
+                            "shell": "exit 0",
                             "name": "shell"
                         }
                     }
@@ -142,7 +142,5 @@ if __name__ == "__main__":
     }
     client = zerorpc.Client()
     client.connect("tcp://127.0.0.1:6000")
-    client.init(task_dict, "2017-10-25")
-    client.run_next("task_group1")
-    time.sleep(5)
-    client.skip_next("task_group1")
+    client.init(task_dict, "2017-12-05")
+    client.run_all("task_group1")
