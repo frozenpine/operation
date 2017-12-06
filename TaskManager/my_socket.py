@@ -24,7 +24,7 @@ class ParentPipe(Thread):
         """
         while True:
             client, address = self.server.accept()
-            info = client.recv(1024)
+            info = client.recv(8192)
             info = pickle.loads(info)
             logging.info('socket receive: {0}'.format(info.to_str()))
             if info:
