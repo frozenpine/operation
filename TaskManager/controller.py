@@ -1,7 +1,6 @@
 # coding=utf-8
 
 import json as pickle
-import logging
 import os
 from datetime import datetime
 
@@ -9,14 +8,13 @@ import requests
 from dateutil.parser import parse
 
 import get_time
+from TaskManager import tm_logger as logging
 from controller_msg import msg_dict
 from controller_queue import ControllerQueue
 from msg_queue import msg_queue
 
 app_host = os.environ.get("FLASK_HOST") or "127.0.0.1"
 app_port = os.environ.get("FLASK_PORT") or 6001
-
-logging.basicConfig(level="INFO")
 
 
 def timeout(func):

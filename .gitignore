@@ -134,3 +134,4 @@ ENV/
 # mypy
 .mypy_cache/
 database/flask.db
+TaskManager/test.py

@@ -3,7 +3,6 @@
 import json
 import time
 from multiprocessing import Process
-import logging
 
 import gevent
 
@@ -12,6 +11,7 @@ from SysManager.configs import SSHConfig
 from SysManager.excepts import (ConfigInvalid, SSHAuthenticationException,
                                 SSHException, SSHNoValidConnectionsError)
 from SysManager.executor import Executor
+from TaskManager import tm_logger as logging
 from msg_queue import msg_queue
 from my_socket import ParentPipe
 from my_socket import Pipe

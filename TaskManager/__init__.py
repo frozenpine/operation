@@ -1,5 +1,8 @@
 # coding=utf-8
 
+import logging
+from logging.handlers import TimedRotatingFileHandler
+
 from enum import Enum
 
 
@@ -67,3 +70,27 @@ class TaskStatus(Enum):
     @property
     def IsTimeout(self):
         return self in [TaskStatus.Timeout, TaskStatus.Terminated]
+
+
+tm_logger = logging.getLogger('tm')
+tm_logger.setLevel(logging.INFO)
+
+console = logging.StreamHandler()
+console.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s %(filename)s-%(funcName)s[line:%(lineno)d] %(levelname)s %(message)s')
+console.setFormatter(formatter)
+tm_logger.addHandler(console)
+
+Rthandler = TimedRotatingFileHandler(
+    '../Logs/flaskSyslog.log',
+    when='midnight',
+    interval=1,
+    backupCount=15,
+    encoding='utf-8'
+)
+Rthandler.setLevel(logging.WARN)
+formatter = logging.Formatter(
+    '%(asctime)s %(filename)s-%(funcName)s[line:%(lineno)d] %(levelname)s %(message)s'
+)
+Rthandler.setFormatter(formatter)
+tm_logger.addHandler(Rthandler)

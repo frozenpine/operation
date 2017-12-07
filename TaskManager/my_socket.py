@@ -1,9 +1,10 @@
 # coding=utf-8
 
-import logging
-import socket
 import pickle
+import socket
 from threading import Thread
+
+from TaskManager import tm_logger as logging
 
 
 class ParentPipe(Thread):
