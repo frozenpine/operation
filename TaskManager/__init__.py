@@ -82,7 +82,7 @@ console.setFormatter(formatter)
 tm_logger.addHandler(console)
 
 Rthandler = TimedRotatingFileHandler(
-    '../Logs/flaskSyslog.log',
+    './Logs/flaskSyslog.log',
     when='midnight',
     interval=1,
     backupCount=15,
