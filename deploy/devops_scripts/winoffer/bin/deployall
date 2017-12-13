@@ -1,0 +1,8 @@
+if [ $# -eq 0 ]
+then
+	echo "Usage: $0 make_deploy_dir|cpbase|cpini|cpall|cpobj"
+	exit
+else
+	callone deploy_batch $1 $HOME/list/list.run $2
+fi
+

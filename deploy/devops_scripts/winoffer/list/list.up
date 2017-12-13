@@ -1,0 +1,20 @@
+恭喜资管:
+Gongxi_QTrade->CTP qdam@qdam-gongxi.shsx 10.20.100.1 41205 
+Gongxi_QTrade->ES qdam@qdam-gongxi.shsx 211.152.40.37 3332 
+Gongxi_Qmarket>CTP qdam@qdam-gongxi.shsx 10.20.100.1 41213
+Gongxi_Qmarket>ES qdam@qdam-gongxi.shsx 211.152.40.36 3331
+
+熵一资管:
+Shangyi_QTrade->CTP qdam@qdam-shangyi.shsx 180.169.75.19 41205
+Shangyi_QTrade->CTP qdam@qdam-shangyi.shsx 124.74.247.126 41205
+Shangyi_QTrade->CTP qdam@qdam-shangyi.shsx 101.231.43.209 41205
+Shangyi_QTrade->CTP qdam@qdam-shangyi.shsx 180.166.132.66 41205
+Shangyi_QTrade->CTP qdam@qdam-shangyi.shsx 124.74.247.126 41205
+Shangyi_QTrade->CTP qdam@qdam-shangyi.shsx 61.186.254.135 41205
+Shangyi_QTrade->CTP qdam@qdam-shangyi.shsx 101.226.253.33 41205
+Shangyi_Qmarket>CTP qdam@qdam-shangyi.shsx 10.20.100.1 41213
+
+鸣石资管:
+Mingshi_QTrade->CTP qdp@qdam-mingshi.shsx 203.156.234.83 41205 
+Mingshi_QTrade->CTP qdp@qdam-mingshi.shsx 222.66.192.247 41205 
+Mingshi_Market->CTP qdp@qdam-mingshi.shsx 10.20.100.1 41213

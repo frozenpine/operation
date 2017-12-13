@@ -1,0 +1,184 @@
+#remote shell ecall
+#Editor: 徐忠华
+#date  : 2013-03-18
+#####################################################
+#define area  定义区域
+CP=scp
+SH="ssh -n"
+SH_ARG=""
+#PATH setup 路径设置
+BASEPATH=$HOME
+BACKUPPATH=$BASEPATH/qdambackup/
+
+#####################################################
+#impl area 功能函数区
+#用户可以根据实际需要增加 可以通过ecall function来调用function中实现的功能
+#ecall会为功能函数传入两个参数 $1:远程机器名  $2:远程服务名 远程机器名=远程服务名+编号 远程机器名定义在/etc/hosts中
+
+
+systemstatus()
+{
+	$SH $1@$2 $SH_ARG "cat ~/qtrade/dump/SystemStatus.csv"
+}
+backupdb()
+{
+	$SH $1@$2 $SH_ARG ./qdambackup.sh
+}
+backupdb()
+{
+	$SH $1@$2 $SH_ARG ./qdambackup.sh
+}
+
+copyins()
+{
+    $CP CtpInstrumentfile.ini  $1@$2:./qmarket/bin/
+	$CP InstrumentExchangID.ini  $1@$2:./qmarket/bin/
+}
+
+copyes()
+{
+    $CP symbol*.csv  $1@$2:./qmarket/bin/
+}
+clearrestartlog()
+{
+	$SH $1@$2 $SH_ARG ./clearrestartlog.sh
+}
+clearlog()
+{
+	$SH $1@$2 $SH_ARG ./clearlog.sh
+}
+
+looptime()
+{
+	$SH $1@$2 $SH_ARG ./looptime.sh
+}
+
+chkver()
+{
+	$SH $1@$2 $SH_ARG "cd bin;./deployall chkver"
+}
+
+start()
+{
+	$SH $1@$2 $SH_ARG "cd bin;./startall $5"
+}
+
+show()
+{
+	$SH $1@$2 $SH_ARG "cd bin;./showall $5"
+}
+
+stop()
+{
+	$SH $1@$2 $SH_ARG "cd bin;./stopall $5"
+}
+
+restart()
+{
+	$SH $1@$2 $SH_ARG "cd bin;./restartall $5"
+}
+
+chkini()
+{
+	$SH $1@$2 $SH_ARG "more ./*/bin/*.ini"
+}
+
+dumptinit()
+{
+	$SH $1@$2 $SH_ARG "export LD_LIBRARY_PATH=.;cd ./qdata/bin;./qdata -e"
+}
+
+chktxt()
+{	
+	$SH $1@$2 "cat ~/qtrade/dump/check.txt | grep -v Size" 
+}
+
+backlog()
+{
+	curdate=`date "+%Y%m%d"`
+	$SH $1@$2 $SH_ARG ./backlog.sh $1_$2_$curdate
+	$CP $1@$2:./$1_$2_$curdate.tar.gz $BACKUPPATH
+	$SH $1@$2 $SH_ARG rm -r	$1_$2_$curdate.tar.gz
+	ls -l $BACKUPPATH$1_$2_$curdate.tar.gz
+}
+
+qdamcheckphase1()
+{
+	$SH $1@$2 $SH_ARG "cd ; ./qdamcheckphase1.sh"
+}
+
+qdamcheckphase2()
+{
+	$SH $1@$2 $SH_ARG "cd ; ./qdamcheckphase2.sh"
+}
+
+qdamcheckphase3()
+{
+	$SH $1@$2 $SH_ARG "cd ; ./qdamcheckphase3.sh"
+}
+
+chkbase()
+{
+	callfuns CheckAllPort
+	callfuns checklink
+}
+
+dispdisk()
+{
+	#HomeBdf=`ssh -n  $1@$2 df -k | grep -w '/home'|grep -v '/home/' | awk ' { print $4 } '`
+	#CffexBdf=`ssh -n  $1@$2 df -k | grep -w '/cffex'|grep -v '/cffex/' | awk ' { print $4 } '`
+	#printf "%-24s /home:%-10s /cffex:%-12s\n"  "$1@$2"  	$HomeBdf	$CffexBdf
+	HomeBdf=`ssh -n  $1@$2 df -k | grep -w '/'|grep -v '//' | awk ' { print $5 } '`
+	printf "%-24s /home:%-10s \n"  "$1@$2"  	$HomeBdf
+}
+
+preattr()
+{
+	$SH $1@$2 $SH_ARG chmod u+w start
+	$SH $1@$2 $SH_ARG chmod u+w stop
+	$SH $1@$2 $SH_ARG chmod u+w restart
+	$SH $1@$2 $SH_ARG chmod u+w chktime.sh
+	$SH $1@$2 $SH_ARG chmod u+w chearlog.sh	
+	$SH $1@$2 $SH_ARG chmod u+w backlog.sh		
+	$SH $1@$2 $SH_ARG chmod u+w GenMD5
+	$SH $1@$2 $SH_ARG chmod u+w diffini.sh
+	$SH $1@$2 $SH_ARG chmod u+w ./*/bin/* 
+	$SH $1@$2 $SH_ARG chmod -R u+w ./config/*	
+	chmod 750 deploy_batch	
+	chmod 750 deployall	
+}
+
+aftattr()
+{
+	$SH $1@$2 $SH_ARG chmod -w start
+	$SH $1@$2 $SH_ARG chmod -w stop
+	$SH $1@$2 $SH_ARG chmod -w restart
+	$SH $1@$2 $SH_ARG chmod -w chktime.sh
+	$SH $1@$2 $SH_ARG chmod -w clearlog.sh	
+	$SH $1@$2 $SH_ARG chmod -w GenMD5
+	$SH $1@$2 $SH_ARG chmod -w diffini.sh
+	$SH $1@$2 $SH_ARG chmod -w ./*/bin/*
+	$SH $1@$2 $SH_ARG chmod -R -w ./config/*	
+	chmod 400 deploy_batch
+	chmod 400 deployall
+}
+
+showtime()
+{
+	xxt=`$SH $1@$2 date`
+	echo $xxt;
+}
+
+#ecall主调用入口
+ecall()
+{
+	if [ $# -eq 0 ]
+	then
+		echo "Usage: $0 number clearlog|backlog|dispdisk|showtime|chktxt|dumptinit|chkver|chkini|looptime user host"
+	else
+		printf "%s -p %s %-15s(%s):\n" "_________" $5 $2@$3 $4
+		SH_ARG="-p $5"
+		$*
+	fi
+}
+ecall $*

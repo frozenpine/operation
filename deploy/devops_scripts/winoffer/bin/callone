@@ -1,0 +1,19 @@
+#usage:
+#callone batch batcharg listfile [number] 
+#文件中几个参数，第一个表示唯一标识，后面是情况分析
+
+cntexpr=`wc -l $3 | awk '{print $1}'`
+cntall=`expr $cntexpr`
+
+i=0
+while [ $i -lt $cntall ]
+do
+	i=`expr $i + 1 `
+	read a1 a2 a3 a4 a5 a6
+	if [ "$i" =  "$4" -o "$4" = "a" -o "$4" = "" -o "$4" = "$a1" ]
+	then
+		printf "No.%02d " $i
+		$1 $2 $a2 $a3 $a4 $a5 $a6 $5
+		echo ---------------------------------------------------------
+	fi
+done < $3

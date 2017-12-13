@@ -1,0 +1,7 @@
+if [ $# -eq 0 ]
+then
+	echo "Usage: $0 make_deploy_dir|cpbase|cpini|cpall|cpobj|show|start|stop|chkver [name]"
+	exit
+else
+	./callone mc_batch $1 ../list/list.user $2 $3
+fi

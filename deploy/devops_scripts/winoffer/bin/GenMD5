@@ -1,0 +1,54 @@
+#! /bin/bash
+
+_usage() {
+    cat <<EOF >&2
+Usage: `basename $0` -g|c|b file|string
+        -g generate file
+        -c check file
+        -b generate string 
+EOF
+}
+
+_genFile() {
+    openssl md5 $1|cut -d' ' -f2>"$1.md5"
+}
+
+_checkFile() {
+    FILE_HASH=`openssl md5 $1|cut -d' '  -f2`
+    SAVED_HASH=`cat "$1.md5"`
+    [[ ${FILE_HASH} == ${SAVED_HASH} ]] && return 0 || return 255
+}
+
+_genString() {
+    echo -n "$*"|openssl md5|cut -d' ' -f2
+}
+
+getopts :gcb FLAG
+case $FLAG in
+    g)
+        shift $((OPTIND-1))
+        if [[ $# -eq 1 && -f "$1" ]]; then
+            _genFile "$1"
+        else
+            echo "Invalid params." >&2
+            _usage
+            exit 1
+        fi
+    ;;
+    c)
+        shift $((OPTIND-1))
+        if [[ $# -eq 1 && -f "$1" ]]; then
+            _checkFile "$1"
+        else
+            echo "Invalid params." >&2
+            _usage
+            exit 1
+        fi
+    ;;
+    b)
+        _genString "$*"
+    ;;
+    *)
+        _usage
+    ;;
+esac

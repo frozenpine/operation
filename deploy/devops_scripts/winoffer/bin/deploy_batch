@@ -1,0 +1,115 @@
+#remote shell ecall
+#Editor: 徐忠华
+#date  : 2013-03-18
+#####################################################
+#define area  定义区域
+CP=scp
+SH="ssh -n"
+SH_ARG=""
+#PATH setup 路径设置
+BASEPATH=$HOME
+OBJPATH=$BASEPATH/run
+CFGPATH=$BASEPATH/run/config
+
+#####################################################
+#impl area 功能函数区
+#用户可以根据实际需要增加 可以通过ecall function来调用function中实现的功能
+#ecall会为功能函数传入两个参数 $1:远程机器名  $2:远程服务名 远程机器名=远程服务名+编号 远程机器名定义在/etc/hosts中
+
+#构建服务运行依赖的基本目录
+make_deploy_dir()
+{
+	$SH $1@$2 $SH_ARG rm -fr $3$4 config
+	$SH $1@$2 $SH_ARG " rm stop start restart GenMD5 " 
+	#$SH $1@$2 $SH_ARG " rm stop start chktime.sh diffini.sh restart GenMD5 " 
+	$SH $1@$2 $SH_ARG "umask 027; mkdir $3$4"
+	$SH $1@$2 $SH_ARG "umask 027; mkdir $3$4/flow"
+	$SH $1@$2 $SH_ARG "umask 027; mkdir $3$4/dump"
+	$SH $1@$2 $SH_ARG "umask 027; mkdir $3$4/log"
+	$SH $1@$2 $SH_ARG "umask 027; mkdir $3$4/bin"
+	#if [ "$3" = "qgkmap" ]
+	#then
+	#	$SH $1@$2 $SH_ARG "umask 027; mkdir $3$4/bin/maClient"
+	#fi
+}
+
+cpall()
+{
+	cpini  $*
+	cpobj  $*
+}
+
+#发布服务器运行依赖的基本文件
+cpbase()
+{
+	$CP $OBJPATH/stop $1@$2:./
+	$CP $OBJPATH/start $1@$2:./
+	#$CP $OBJPATH/chktime.sh  $1@$2:./
+	$CP $OBJPATH/clearlog.sh  $1@$2:./
+	$CP $OBJPATH/backlog.sh  $1@$2:./
+	$CP $OBJPATH/restart $1@$2:./
+	$CP $OBJPATH/GenMD5 $1@$2:./
+	$SH $1@$2 "chmod  750 *"
+}
+
+#发布运行配置文件
+cpini()
+{
+	# 复制到目标ini配置文件	
+	GenMD5 -g $OBJPATH/$3/$3.ini
+	$CP $OBJPATH/$3/*.ini $1@$2:./$3$4/bin/
+	#$CP $OBJPATH/$3/$3.ini.md5 $1@$2:./$3$4/bin/$3.ini.md5
+	$CP $OBJPATH/$3/*.ini.md5 $1@$2:./$3$4/bin/
+	
+	#复制network.ini配置文件 chengm 20170213
+	GenMD5 -g $OBJPATH/network.ini
+	$CP $OBJPATH/network.ini $1@$2:./$3$4/bin/
+	$CP $OBJPATH/network.ini.md5 $1@$2:./$3$4/bin/
+	
+	$SH $1@$2 chmod 640 ./$3$4/bin/$3.ini*
+}
+
+#发布运行码
+cpobj()
+{
+	$CP $OBJPATH/$3/*.exe $1@$2:./$3$4/bin/
+	#if [ "$3" = "qtrade" -o "$3" = "qmarket_tcp" ]
+	#then
+	#	$CP $OBJPATH/$3/lib* $1@$2:./$3$4/bin/
+	#fi
+	#if [ "$3" = "qgkmap" ]
+	#then
+	#	$CP $OBJPATH/$3/maClient/lib* $1@$2:./$3$4/bin/maClient/
+	#	$SH $1@$2 "chmod 750 ./$3$4/bin/maClient/*"
+	#fi
+	$CP $OBJPATH/$3/*.dll $1@$2:./$3$4/bin/
+    $CP $OBJPATH/$3/*.bat $1@$2:~/$3$4/
+	#$CP ~/bin/gdb $1@$2:./$3$4/bin/
+	#$SH $1@$2 "chmod 750 ./$3$4/bin/*; chmod 750 ./$3$4/bin/gdb; chmod g+x *"  
+	$SH $1@$2 "chmod u+x ./$3$4/bin/*.exe ./$3$4/bin/*.dll"  
+	$SH $1@$2 "chmod u+x ./$3$4/*.bat"  
+}
+
+chkver()
+{
+	$SH $1@$2 $SH_ARG "cd $3$4/bin/;./$3 -v"
+}
+
+#功能函数调用接口
+#callImpl i user hosts service no 
+callImpl()
+{
+	$*
+}
+
+#ecall主调用入口
+ecall()
+{
+	if [ $# -eq 0 ]
+	then
+		echo "Usage: $0 make_deploy_dir|cpbase|cpini|cpall|cpobj user host module [number]"
+	else
+		callImpl $*
+	fi
+}
+ecall $*

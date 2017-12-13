@@ -1,0 +1,107 @@
+#remote shell ecall 
+#Editor: 徐忠华
+#date  : 2013-03-18
+#####################################################
+#define area  定义区域
+CP=scp
+SH="ssh -n"
+SH_ARG=""
+#PATH setup 路径设置
+
+#####################################################
+#impl area 功能函数区
+#用户可以根据实际需要增加 可以通过ecall function来调用function中实现的功能
+#ecall会为功能函数传入两个参数 $1:远程机器名  $2:远程服务名 远程机器名=远程服务名+编号 远程机器名定义在/etc/hosts中
+
+#启动服务
+start()
+{
+	##检查是否有进程
+	rm -f .run
+        #processname=$3
+        #if [ "$4" != "" ]
+        #then
+        #        processname=`echo $3 $4`
+        #fi
+	$SH $1@$2 $SH_ARG ps -fu $1|grep "$3$4/bin/$3"|grep -v ssh |grep -v sh|grep -v ps|grep -v grep | grep  -v shcdynamicrp |grep -v remsh|grep -v start|grep -v vi >/dev/null && > .run
+	if [ -r .run ]
+	then
+		echo "Warnning: service already running"	
+	else
+		$SH $1@$2 $SH_ARG ./start $3 $4 ">" $3$4/log/out &
+	fi
+	
+##	##检查时间是否正确
+##	$SH $1 $SH_ARG ./chktime.sh > .timeok
+##	read timeok curtime_org <.timeok
+##	if [ $timeok -ne 1 ]
+##	then
+##		timeok=0
+##		printf "StartTime Conflics, starttime($curtime_org) should be in 07:00:00 and 08:00:00\n"
+##	fi
+}
+
+restart()
+{
+	##检查是否有进程
+	rm -f .run
+	#processname=$3
+	#if [ "$4" != "" ]
+	#then
+	#		processname=`echo $3 $4`
+	#fi
+	$SH $1@$2 $SH_ARG ps -fu $1|grep -w "$3$4/bin/$3"|grep -v ssh |grep -v sh|grep -v ps|grep -v grep | grep  -v shcdynamicrp |grep -v remsh|grep -v start|grep -v vi >/dev/null && > .run
+	if [ -r .run ]
+	then
+		echo "Warnning: service already running"	
+	else
+	       $SH $1@$2 $SH_ARG ./restart $3 $4 ">" $3$4/log/out &
+	fi
+}
+
+#停止服务
+stop()
+{
+	$SH $1@$2 $SH_ARG ./stop $3 $4
+}
+
+
+#显示服务进程运行情况
+show()
+{
+	if [ $# -eq 3 ]
+	then
+		nk=`$SH $1@$2 $SH_ARG ps -fu $1|grep "$3/bin/$3" |grep -v sshd:|grep -v ps|grep -v ssh |grep -v ping| grep -v  shcdynamicr |grep -v tail|grep -v grep|grep -v remsh|grep -v start|grep -v vi|awk '{printf "    %-16s%-8s%8s",$6,$7,$5}'`
+	else
+		nk=`$SH $1@$2 $SH_ARG ps -fu $1|grep "$3$4/bin/$3" |grep -v sshd:|grep -v ps|grep -v ssh|grep -v ping | grep -v  shcdynamicr |grep -v tail|grep -v grep|grep -v remsh|grep -v start|grep -v vi|awk '{printf "    %-16s%-8s%8s",$6,$7,$5}'`
+	fi
+
+	printf "$nk \n"
+}
+
+callImpl()
+{
+        if [ $1 != "show" ]
+        then
+                printf "%s%-15s:\n" "_________" $4$5
+	else
+                printf ""
+        fi
+	$*
+}
+
+#ecall主调用入口
+ecall()
+{
+	#echo "#################################################"
+	#echo "##    begin to run batch                      ###"
+	#echo "#################################################"
+
+	if [ $# -lt 2 ]
+	then
+		echo "Usage: $0 show|stop|start|restart|chkver user host module [number]"
+	else
+		callImpl $*
+	fi
+}
+ecall $*

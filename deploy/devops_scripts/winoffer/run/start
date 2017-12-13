@@ -1,0 +1,42 @@
+export PATH=$PATH:.:$HOME
+LD_LIBRARY_PATH=/lib:/usr/lib:.
+export LD_LIBRARY_PATH
+ulimit -c unlimited
+ulimit  unlimited
+umask 0027
+
+if [ $# -eq 1 ]
+then
+	rm  -f $1/flow/* > /dev/null 2>/dev/null
+	cd $1/bin
+	rm -f *.con 2>/dev/null
+	rm -f *.id 2>/dev/null
+#	rm *.dat 2>/dev/null
+	> .NotRun
+	../../GenMD5 -c $1.ini &&  rm .NotRun
+	if [ -r .NotRun ]
+	then
+		echo $1:$1.ini had been changed!
+	else
+		nohup ./$1 2>&1  &
+	fi
+else
+	rm -f $1$2/flow/* > /dev/null 2>/dev/null
+	cd $1$2/bin
+	rm -f *.con 2>/dev/null
+	rm -f *.id 2>/dev/null
+#	rm *.dat 2>/dev/null
+	> .NotRun
+	../../GenMD5 -c $1.ini &&  rm .NotRun
+	if [ -r .NotRun ]
+	then
+		echo $1$2:$1.ini had been changed!
+	else
+		if [ $# -eq 2 ]
+		then
+			nohup ./$1 $2 2>&1 &
+		else
+			nohup ./$* 2>&1 &
+		fi
+	fi
+fi

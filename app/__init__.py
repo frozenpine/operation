@@ -2,7 +2,7 @@
 import logging
 import sys
 from logging.handlers import TimedRotatingFileHandler
-from os import environ
+from os import environ, path
 
 import zerorpc
 import zmq.green as zmq
@@ -29,7 +29,7 @@ console.setFormatter(formatter)
 flask_logger.addHandler(console)
 
 Rthandler = TimedRotatingFileHandler(
-    'Logs/flaskSyslog.log',
+    path.join(path.dirname(__file__), '../Logs/flaskSyslog.log'),
     when='midnight',
     interval=1,
     backupCount=15,

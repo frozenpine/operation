@@ -1,0 +1,7 @@
+name=`whoami`
+proc=`ps -fu $name|grep "$1$2/bin/$1"|egrep -v "grep|vim|bash"|awk '{print $2}'`
+if [ "$proc" != "" ]
+then
+	kill -9 $proc
+fi
+ 
