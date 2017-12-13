@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import logging
+import os
 from logging.handlers import TimedRotatingFileHandler
 
 from enum import Enum
@@ -82,7 +83,7 @@ console.setFormatter(formatter)
 tm_logger.addHandler(console)
 
 Rthandler = TimedRotatingFileHandler(
-    '../Logs/flaskSyslog.log',
+    os.path.join(os.path.dirname(__file__), '../Logs/tmSyslog.log'),
     when='midnight',
     interval=1,
     backupCount=15,

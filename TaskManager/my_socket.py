@@ -25,8 +25,13 @@ class ParentPipe(Thread):
         """
         while True:
             client, address = self.server.accept()
-            info = client.recv(8192)
-            info = pickle.loads(info)
+            info = client.recv(102400)
+            logging.info('socket receive info length: {0}'.format(len(info)))
+            try:
+                info = pickle.loads(info)
+            except Exception, e:
+                logging.warning('socket receive info deserialize error: {0}'.format(e))
+                continue
             logging.info('socket receive: {0}'.format(info.to_str()))
             if info:
                 if info.type() == "init":
@@ -36,7 +41,7 @@ class ParentPipe(Thread):
                 if info.type() == "end":
                     self.end_callback(info)
             else:
-                break
+                logging.warning('unexpected socket received: {0}'.format(info.to_str()))
 
 
 class PipeChild(object):
@@ -44,7 +49,9 @@ class PipeChild(object):
     def send(data):
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect(('127.0.0.1', 7000))
-        client.send(pickle.dumps(data))
+        dump_data = pickle.dumps(data)
+        logging.info('socket send info length: {0}'.format(len(dump_data)))
+        client.send(dump_data)
 
 
 def Pipe(duplex):
