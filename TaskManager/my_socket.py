@@ -51,7 +51,11 @@ class PipeChild(object):
         client.connect(('127.0.0.1', 7000))
         dump_data = pickle.dumps(data)
         logging.info('socket send info length: {0}'.format(len(dump_data)))
-        client.send(dump_data)
+        try:
+            client.send(dump_data)
+        except Exception, e:
+            logging.error('socket send error: {0}'.format(e))
+            raise
 
 
 def Pipe(duplex):

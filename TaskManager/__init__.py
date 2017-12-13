@@ -77,7 +77,7 @@ tm_logger = logging.getLogger('tm')
 tm_logger.setLevel(logging.INFO)
 
 console = logging.StreamHandler()
-console.setLevel(logging.DEBUG)
+console.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s %(filename)s-%(funcName)s[line:%(lineno)d] %(levelname)s %(message)s')
 console.setFormatter(formatter)
 tm_logger.addHandler(console)
@@ -89,7 +89,7 @@ Rthandler = TimedRotatingFileHandler(
     backupCount=15,
     encoding='utf-8'
 )
-Rthandler.setLevel(logging.WARN)
+Rthandler.setLevel(logging.INFO)
 formatter = logging.Formatter(
     '%(asctime)s %(filename)s-%(funcName)s[line:%(lineno)d] %(levelname)s %(message)s'
 )
