@@ -121,11 +121,7 @@ class MessageServer(object):
 
     @staticmethod
     def parse_request(websocket):
-        try:
-            msg = websocket.receive()
-        except WebSocketError as err:
-            Logger.info(err.message)
-            return
+        msg = websocket.receive()
         try:
             request = json.loads(msg)
         except ValueError:
