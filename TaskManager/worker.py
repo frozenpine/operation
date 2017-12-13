@@ -57,8 +57,9 @@ class Result(object):
             return "init"
         if self.task_status[0] in (200,):
             return "start"
-        if self.task_status[0] in (0, 1, 2, 3):
+        if self.task_status[0] in (0, 1, 2, 3, 4):
             return "end"
+        return self.task_status[0]
 
 
 class RunTask(Process):

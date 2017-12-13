@@ -36,7 +36,8 @@ class ParentPipe(Thread):
                 if info.type() == "end":
                     self.end_callback(info)
             else:
-                break
+                logging.error('Invalid task status code[{}]'.format(info))
+                continue
 
 
 class PipeChild(object):
