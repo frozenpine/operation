@@ -11,9 +11,8 @@ from SysManager.configs import SSHConfig
 from SysManager.excepts import (ConfigInvalid, SSHAuthenticationException,
                                 SSHException, SSHNoValidConnectionsError)
 from SysManager.executor import Executor
-from TaskManager import tm_logger as logging
 from msg_queue import msg_queue
-from my_socket import SocketClient
+from socket_conn import SocketClient
 from worker_queue import WorkerQueue
 
 
@@ -101,9 +100,10 @@ class RunTask(Process):
         :return:
         """
         SocketClient.send(
-            Result(controller_queue_uuid=self.controller_queue_uuid, task_uuid=self.task_uuid,
-                   status_code=status_code, status_msg=status_msg, session=self.session, run_all=self.run_all,
-                   task_result=task_result)
+            Result(controller_queue_uuid=self.controller_queue_uuid,
+                   task_uuid=self.task_uuid, status_code=status_code,
+                   status_msg=status_msg, session=self.session,
+                   run_all=self.run_all, task_result=task_result)
         )
 
     @staticmethod
@@ -145,17 +145,25 @@ class RunTask(Process):
         )
         if ret_code == 3:
             # 直接跳过不执行
-            ''' self.pipe_child.send(
-                Result(controller_queue_uuid=self.controller_queue_uuid, task_uuid=self.task_uuid,
-                       status_code=121, status_msg=u'超出时间范围', session=self.session, run_all=self.run_all)) '''
+            """
+            self.send_obj(
+                Result(controller_queue_uuid=self.controller_queue_uuid,
+                       task_uuid=self.task_uuid, status_code=121,
+                       status_msg=u'超出时间范围', session=self.session,
+                       run_all=self.run_all)
+            )
+            """
             pass
         else:
             if ret_code == 2:
                 time.sleep(ret_msg)
             status_code, status_msg = 200, u"开始执行"
             self.send_obj(
-                Result(controller_queue_uuid=self.controller_queue_uuid, task_uuid=self.task_uuid,
-                       status_code=status_code, status_msg=status_msg, session=self.session, run_all=self.run_all))
+                Result(controller_queue_uuid=self.controller_queue_uuid,
+                       task_uuid=self.task_uuid, status_code=status_code,
+                       status_msg=status_msg, session=self.session,
+                       run_all=self.run_all)
+            )
             mod = self.task["mod"]
             if isinstance(mod, dict):
                 # 一个任务
@@ -191,10 +199,6 @@ class Worker(object):
         取出worker_queue中的task并实例化executor执行
         :return:
         """
-        init_callback = self.callback_dict["init_callback"]
-        start_callback = self.callback_dict["start_callback"]
-        end_callback = self.callback_dict["end_callback"]
-        # SocketServer(init_callback, start_callback, end_callback).start()
         max_process = 4
         while 1:
             ret = msg_queue.todo_task_queue.get()

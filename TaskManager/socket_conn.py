@@ -2,7 +2,7 @@
 
 import pickle
 import socket
-import time
+from os import environ
 from threading import Thread
 
 from TaskManager import tm_logger as logging
@@ -53,15 +53,17 @@ class SocketServer(Thread):
 class SocketClient(object):
     @classmethod
     def send(cls, data):
+        socket_port = environ.get("SOCKET_PORT") or 7000
+        socket_timeout = environ.get("SOCKET_TIMEOUT") or 5
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client.connect(('127.0.0.1', 7000))
+        client.connect(('127.0.0.1', socket_port))
         dump_data = pickle.dumps(data)
         # 计算dump之后消息长度
         logging.info('[client] info length: {0}'.format(len(dump_data)))
         logging.debug('[client] info: {0}'.format(dump_data))
         retry_count = 0
         while 1:
-            client.settimeout(2.0)
+            client.settimeout(socket_timeout)
             try:
                 client.send(dump_data)
             except Exception, e:

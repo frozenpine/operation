@@ -10,16 +10,17 @@ from gevent import monkey
 try:
     from TaskManager.controller import Controller
     from TaskManager.worker import Worker
-    from TaskManager.my_socket import SocketServer
+    from TaskManager.socket_conn import SocketServer
 except ImportError:
     sys.path.append(path.join(path.dirname(sys.argv[0]), "../"))
     from TaskManager.controller import Controller
     from TaskManager.worker import Worker
-    from TaskManager.my_socket import SocketServer
+    from TaskManager.socket_conn import SocketServer
 
 tm_host = environ.get("TM_HOST") or "0.0.0.0"
 tm_port = environ.get("TM_PORT") or 6000
 socket_port = environ.get("SOCKET_PORT") or 7000
+socket_timeout = environ.get("SOCKET_TIMEOUT") or 5
 
 monkey.patch_all(socket=False, thread=False, time=False)
 
@@ -32,7 +33,8 @@ if __name__ == "__main__":
     worker.register_callback("init_callback", controller.worker_init_callback)
     worker.register_callback("start_callback", controller.worker_start_callback)
     worker.register_callback("end_callback", controller.worker_end_callback)
-    SocketServer(controller.worker_init_callback, controller.worker_start_callback,
-                 controller.worker_end_callback).start()
+    SocketServer(
+        controller.worker_init_callback, controller.worker_start_callback, controller.worker_end_callback).start()
+
     controller.register_callback("kill_callback", worker.kill_process_callback)
     gevent.joinall([gevent.spawn(server.run), gevent.spawn(worker.loop)])
