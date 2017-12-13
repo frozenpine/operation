@@ -1,21 +1,21 @@
 #!/bin/bash
 ListDB=$HOME/list/list.db
-DatabaseHost=`cat $ListDB | awk '{print $2}'`
+WebHost=`cat $ListDB | awk '{print $2}'`
 
-ret=`curl http://${DatabaseHost}:8080/quantdo/restfulservice/busAuditService/anonymousAuditAfterToTrade` 1>/dev/null 2>/dev/null
+ret=`curl http://${WebHost}:8080/quantdo/restfulservice/busAuditService/anonymousAuditAfterToTrade` 1>/dev/null 2>/dev/null
 
 if [ -z $ret ];then
-    echo "[ERR] Êý¾Ý»üºËÊ§°Ü£¬Çë¼ì²éºóÌ¨Êý¾Ý"
+    echo "[ERR] ï¿½ï¿½ï¿½Ý»ï¿½ï¿½ï¿½Ê§ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¨ï¿½ï¿½ï¿½ï¿½"
     exit 1
 else
     sFalse=`echo $ret | grep false` 
     if [ -z $sFalse ];then
-        echo "[OK] Êý¾Ý»üºË³É¹¦"
+        echo "[OK] ï¿½ï¿½ï¿½Ý»ï¿½ï¿½Ë³É¹ï¿½"
     else
         echo "============================================================="
-        echo "»üºË½á¹û£º"$ret
+        echo "ï¿½ï¿½ï¿½Ë½ï¿½ï¿½ï¿½ï¿½"$ret
         echo "============================================================="
-        echo "[ERR] Êý¾Ý»üºËÊ§°Ü£¬Çë¼ì²éºóÌ¨Êý¾Ý"
+        echo "[ERR] ï¿½ï¿½ï¿½Ý»ï¿½ï¿½ï¿½Ê§ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¨ï¿½ï¿½ï¿½ï¿½"
         exit 1
     fi
 fi

@@ -1,26 +1,27 @@
 #!/bin/bash
 ListDB=$HOME/list/list.db
 DatabaseHost=`cat $ListDB | awk '{print $2}'`
+WebHost=${DatabaseHost}
 DatabaseUser=`cat $ListDB | awk '{print $3}'`
 DatabasePwd=`cat $ListDB | awk '{print $4}'`
 DatabaseName=`cat $ListDB | awk '{print $5}'`
-#·þÎñÆ÷ÈÕÆÚ
+#ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 CurrDate=`date "+%Y%m%d"`
-#ÏÂÒ»½»Ò×ÈÕ
+#ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 TradingDate=`mysql -h${DatabaseHost} -u${DatabaseUser} -p${DatabasePwd} -D${DatabaseName} -Nse "select full_date from t_sys_calendar where '${CurrDate}' < full_date and is_trade = 1;" | head -n 1`
 
-echo "ÏÂÒ»½»Ò×ÈÕÊÇ"$TradingDate
+echo "ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"$TradingDate
 
-ret=`curl http://${DatabaseHost}:8080/quantdo/restfulservice/dataToTradeService/anonymousGenerateTradeData?tradingDay=${TradingDate}` 1>/dev/null 2>/dev/null
+ret=`curl http://${WebHost}:8080/quantdo/restfulservice/dataToTradeService/anonymousGenerateTradeData?tradingDay=${TradingDate}` 1>/dev/null 2>/dev/null
 if [ -z $ret ];then
-    echo "[ERR] Êý¾ÝÉÏ³¡Ê§°Ü£¬Çë¼ì²éºóÌ¨Êý¾Ý"
+    echo "[ERR] ï¿½ï¿½ï¿½ï¿½ï¿½Ï³ï¿½Ê§ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¨ï¿½ï¿½ï¿½ï¿½"
     exit 1
 else
     ret=`echo $ret | awk -F "," '{print $2}' | awk -F ":" '{print $2}'` 
     if [ $ret == 0 ];then
-        echo "[OK] Êý¾ÝÉÏ³¡³É¹¦"
+        echo "[OK] ï¿½ï¿½ï¿½ï¿½ï¿½Ï³ï¿½ï¿½É¹ï¿½"
     else
-        echo "[ERR] Êý¾ÝÉÏ³¡Ê§°Ü£¬Çë¼ì²éºóÌ¨Êý¾Ý"
+        echo "[ERR] ï¿½ï¿½ï¿½ï¿½ï¿½Ï³ï¿½Ê§ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¨ï¿½ï¿½ï¿½ï¿½"
         exit 1
     fi
 fi
