@@ -52,7 +52,7 @@
                             <input type="text" name="optionGroup_name" ng-model="optionGroupName" 
                                    ng-class="{true: 'invalid', false: ''}[optionGroupConfirm.operation_group.sys_id !== null && optionGroupName === undefined]" 
                                    ng-disabled="optionGroupConfirm.operation_group.sys_id===null" 
-                                   placeholder="必填项" maxlength="20" required>
+                                   placeholder="必填项" maxlength="50" required>
                         </div>
                     </div>
                     <div class="am-form-group am-form-icon font-green am-g">
@@ -60,7 +60,7 @@
                         <div class="am-u-sm-3">
                             <input type="text" name="optionGroup_des" ng-model="optionGroupDescription" 
                                    ng-disabled="optionGroupConfirm.operation_group.sys_id === null" 
-                                   maxlength="50" placeholder="选填项">
+                                   maxlength="100" placeholder="选填项">
                         </div>
                         <label for="doc-ipt-3-b" class="am-u-sm-2 am-form-label font-green">初始化时间</label>
                         <div class="am-u-sm-2">
@@ -111,11 +111,11 @@
                                                 <div class="am-u-sm-3" style="padding: 1px">
                                                     <input type="text" name="op_name{{$index}}" 
                                                            style="border: none;" ng-model="data.name" 
-                                                           maxlength="20" ng-class="{true: 'invalid', false: ''}[data.name === undefined]" required/>
+                                                           maxlength="50" ng-class="{true: 'invalid', false: ''}[data.name === undefined]" required/>
                                                 </div>
                                                 <div class="am-u-sm-4" style="padding: 1px">
                                                     <input type="text" style="border: none" 
-                                                           ng-model="data.description" maxlength="50" />
+                                                           ng-model="data.description" maxlength="100" />
                                                 </div>
                                                 <div class="am-u-sm-2" style="padding: 1px">
                                                     <input name="startTime{{$index}}" type="text" 
@@ -222,7 +222,7 @@
                                    ng-model="optionBookEditData.name" 
                                    placeholder="必填项" 
                                    ng-class="{true: 'invalid', false: ''}[optionBookEditData.name === undefined]" 
-                                   maxlength="20" required />
+                                   maxlength="50" required />
                         </div>
                         <label for="doc-ipt-3-d" class="am-u-sm-2 am-form-label">分类</label>
                         <div class="am-u-sm-5">
@@ -240,7 +240,7 @@
                             <input type="text" name="optionGroup_des" id="doc-ipt-3-d" 
                                    ng-disabled="optionBookEditData.sys === '' || optionBookEditData.sys === undefined" 
                                    ng-model="optionBookEditData.description" 
-                                   maxlength="50" placeholder="选填项" />
+                                   maxlength="100" placeholder="选填项" />
                         </div>
                     </div>
                     <div class="am-form-group am-form-icon font-green" ng-repeat="data in optionBookCommand track by $index">
@@ -249,7 +249,7 @@
                             <input type="text" ng-model="data.shell" ng-change="shellChanged()" 
                                    ng-disabled="optionBookEditData.sys === '' || optionBookEditData.sys === undefined" 
                                    ng-class="{true: 'invalid', false: ''}[data.shell === undefined]" 
-                                   maxlength="30" placeholder="必填项" required/>
+                                   maxlength="100" placeholder="必填项" required/>
                         </div>
                         <div class="am-u-sm-5">
                             <div class="am-input-group">
@@ -765,7 +765,7 @@
                                                    style="width: 50px; background-color: transparent; 
                                                           margin-top: -5px;font-size: 12px" 
                                                    ng-class="{true: 'invalid', false: ''}[children.name === undefined]" 
-                                                   maxlength="20" required> -
+                                                   maxlength="50" required> -
                                             <input type="time" ng-model="children.trigger_time" 
                                                    style="background-color: transparent; 
                                                           margin-top: -5px; font-size:12px" 
@@ -852,7 +852,7 @@
                                                    style="width: 60px; background-color: transparent; 
                                                           font-size: 14px;" 
                                                    ng-class="{true: 'invalid', false: ''}[children.name === undefined]" 
-                                                   maxlength="20" required> -
+                                                   maxlength="50" required> -
                                             <input type="time" 
                                                    style="background-color: transparent;font-size: 14px" 
                                                    ng-model="children.trigger_time" 
