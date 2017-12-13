@@ -117,17 +117,17 @@ class ServerStaticApi(Resource, ServerList):
         ]
         resultlist = []
         executor = Executor.Create(conf)
-        for mod in modlist:
-            resultlist.append(executor.run(mod))
+        if executor:
+            for mod in modlist:
+                resultlist.append(executor.run(mod))
         result['id'] = entry[0].id
         result['server'] = entry[0].ip
-        result['uptime'] = resultlist[0].data
-        result['cpu'] = resultlist[1].data
-        result['disks'] = resultlist[2].data
-        result['memory'] = resultlist[3].data['mem']
-        result['swap'] = resultlist[3].data['swap']
+        result['uptime'] = resultlist and resultlist[0].data or ''
+        result['cpu'] = resultlist and resultlist[1].data
+        result['disks'] = resultlist and resultlist[2].data
+        result['memory'] = resultlist and resultlist[3].data['mem']
+        result['swap'] = resultlist and resultlist[3].data['swap']
         entry[1]['status'] = result
-        executor.client.close()
 
 
 class SystemList(object):
