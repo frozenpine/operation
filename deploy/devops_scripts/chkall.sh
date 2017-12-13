@@ -8,7 +8,7 @@ countall=0
 
 mysql -h${DatabaseHost} -u${DatabaseUser} -p${DatabasePwd} -D${DatabaseName} -Nse "show tables from ${DatabaseName} where tables_in_${DatabaseName} like 't_oper\_%' or tables_in_${DatabaseName} like 't_s\_%';" > db.sql
 
-echo "¹²"`cat db.sql | wc -l`"ÕÅ±í"
+echo "å…±"`cat db.sql | wc -l`"å¼ è¡¨"
 
 while read table 
 do
@@ -19,10 +19,10 @@ done < db.sql
 echo "countall: "$countall
 
 if [ $countall == 0 ];then
-	echo "[OK] ³¡ÏÂ±íÇåÀí³É¹¦"
+	echo "[OK] åœºä¸‹è¡¨æ¸…ç†æˆåŠŸ"
 	exit 0
 else
-	echo "[ERR] ³¡ÏÂ±íÇåÀíÊ§°Ü"
+	echo "[ERR] åœºä¸‹è¡¨æ¸…ç†å¤±è´¥"
 	exit 1
 fi
 

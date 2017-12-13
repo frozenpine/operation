@@ -75,7 +75,7 @@ Chk_flow()
         }
     done<$ListRun
 
-	echo "[OK] Clean flow success"
+    echo "[OK] Clean flow success"
     exit 0
 }
 
