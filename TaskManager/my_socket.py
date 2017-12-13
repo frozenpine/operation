@@ -2,13 +2,14 @@
 
 import pickle
 import socket
+import time
 from threading import Thread
 
 from TaskManager import tm_logger as logging
 
 
-class ParentPipe(Thread):
-    def __init__(self, pipe_parent, init_callback, start_callback, end_callback):
+class SocketServer(Thread):
+    def __init__(self, init_callback, start_callback, end_callback):
         Thread.__init__(self)
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -26,13 +27,18 @@ class ParentPipe(Thread):
         while True:
             client, address = self.server.accept()
             info = client.recv(102400)
-            logging.info('socket receive info length: {0}'.format(len(info)))
+            # 计算收到的消息消息长度
+            logging.info('[server] info length: {0}'.format(len(info)))
             try:
                 info = pickle.loads(info)
             except Exception, e:
-                logging.warning('socket receive info deserialize error: {0}'.format(e))
+                logging.warning('[server] info deserialize error: {0}'.format(e))
                 continue
-            logging.info('socket receive: {0}'.format(info.to_str()))
+            logging.info('[server] receive: {0}'.format(info.to_str()))
+            try:
+                client.send('ok')
+            except Exception, e:
+                logging.warning('[server] send ok error: {0}'.format(e))
             if info:
                 if info.type() == "init":
                     self.init_callback(info)
@@ -44,19 +50,32 @@ class ParentPipe(Thread):
                 logging.warning('unexpected socket received: {0}'.format(info.to_str()))
 
 
-class PipeChild(object):
-    @staticmethod
-    def send(data):
+class SocketClient(object):
+    @classmethod
+    def send(cls, data):
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect(('127.0.0.1', 7000))
         dump_data = pickle.dumps(data)
-        logging.info('socket send info length: {0}'.format(len(dump_data)))
-        try:
-            client.send(dump_data)
-        except Exception, e:
-            logging.error('socket send error: {0}'.format(e))
-            raise
-
-
-def Pipe(duplex):
-    return None, PipeChild()
+        # 计算dump之后消息长度
+        logging.info('[client] info length: {0}'.format(len(dump_data)))
+        logging.debug('[client] info: {0}'.format(dump_data))
+        retry_count = 0
+        while 1:
+            client.settimeout(2.0)
+            try:
+                client.send(dump_data)
+            except Exception, e:
+                # 因server端socket异常未正常发送
+                logging.warning('[client] send info error: {0}'.format(e))
+                raise
+            try:
+                ack = client.recv(102400)
+            except socket.timeout:
+                # 未收到server端确认信息
+                retry_count += 1
+                logging.warn('[client] retry: {0}'.format(retry_count))
+            else:
+                break
+        # 收到server端确认消息
+        logging.info('[client] receive ack: {0}'.format(ack))
+        client.close()
