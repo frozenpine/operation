@@ -40,6 +40,8 @@ class SocketServer(Thread):
                 client.send('ok')
             except Exception, e:
                 logging.warning('[server] send ok error: {0}'.format(e))
+            finally:
+                client.close()
             if info:
                 if info.type() == "init":
                     self.init_callback(info)

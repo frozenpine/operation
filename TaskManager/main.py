@@ -22,7 +22,7 @@ tm_port = environ.get("TM_PORT") or 6000
 socket_port = environ.get("SOCKET_PORT") or 7000
 socket_timeout = environ.get("SOCKET_TIMEOUT") or 5
 
-monkey.patch_all(socket=False, thread=False, time=False)
+monkey.patch_all(socket=False, thread=False, time=False, subprocess=False)
 
 if __name__ == "__main__":
     controller = Controller()
