@@ -308,7 +308,7 @@ class Controller(object):
         )
         # 非阻塞队列开始执行后
         if result.run_all and not self.__get_group_block(result.controller_queue_uuid):
-            self.get_task_from_controller_queue(result.controller_queue_uuid, True)
+            self.get_task_from_controller_queue(result.controller_queue_uuid, result.session, True)
 
     def worker_end_callback(self, result):
         """
