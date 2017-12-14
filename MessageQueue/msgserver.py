@@ -8,6 +8,9 @@ from geventwebsocket import WebSocketError
 
 from msgsink import JSONSinker, LogSinker
 
+import logging
+Logger = logging.getLogger('flask')
+
 
 def req_subscribe(request):
     try:
@@ -61,6 +64,7 @@ def req_get(request):
     try:
         uri = request['request']
     except KeyError:
+        Logger.warning('Missing request uri in ws request.')
         request['ws'].send(json.dumps({
             'error': 'Missing request uri.'
         }))
@@ -121,9 +125,12 @@ class MessageServer(object):
         try:
             request = json.loads(msg)
         except ValueError:
+            Logger.warning('Invalid ws message protocol.')
             websocket.send(json.dumps({
                 'error': "Sorry, i don't understand."
             }))
+        except TypeError:
+            Logger.warning('Invalid ws message: {}'.format(msg))
         else:
             request['ws'] = websocket
             try:

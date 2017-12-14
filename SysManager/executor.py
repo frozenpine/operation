@@ -1,6 +1,4 @@
 # -*- coding: UTF-8 -*-
-# from SysManager import logger as logging
-import logging
 import sys
 import arrow
 from os import path
@@ -12,13 +10,19 @@ from paramiko import (AutoAddPolicy, PasswordRequiredException, RSAKey,
 from paramiko.ssh_exception import (AuthenticationException,
                                     NoValidConnectionsError)
 
-from configs import HttpConfig, Result, SSHConfig, WinRmConfig
-from excepts import (ImportRSAkeyFaild, ModuleNotFound,
-                     SSHAuthenticationException, SSHException,
-                     SSHNoValidConnectionsError)
-
-sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
-
+try:
+    from SysManager import smLogger as logging
+    from SysManager.configs import HttpConfig, Result, SSHConfig, WinRmConfig
+    from SysManager.excepts import (ImportRSAkeyFaild, ModuleNotFound,
+                                    SSHAuthenticationException, SSHException,
+                                    SSHNoValidConnectionsError)
+except ImportError:
+    sys.path.append(path.join(path.dirname(__file__), '../'))
+    from SysManager import smLogger as logging
+    from SysManager.configs import HttpConfig, Result, SSHConfig, WinRmConfig
+    from SysManager.excepts import (ImportRSAkeyFaild, ModuleNotFound,
+                                    SSHAuthenticationException, SSHException,
+                                    SSHNoValidConnectionsError)
 
 
 class Executor():
@@ -120,13 +124,13 @@ class SSHExecutor(Executor):
             else:
                 self.passConnect(remote_config)
         except NoValidConnectionsError, err:
-            logging.error(err)
+            logging.error(err.args[1].decode('gbk'))
             raise SSHNoValidConnectionsError
         except AuthenticationException, err:
-            logging.error(err)
+            logging.error(err.args[1].decode('gbk'))
             raise SSHAuthenticationException
         except Exception, err:
-            logging.error(err)
+            logging.error(err.args[1].decode('gbk'))
             raise SSHException
 
     def pKeyConnect(self, ssh_config):

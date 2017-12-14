@@ -1,14 +1,19 @@
 # -*- coding: UTF-8 -*-
 import ConfigParser
-import logging
 import re
 import sys
 from os import environ, path
 
-from Common import AESCrypto
-from excepts import ConfigInvalid
+try:
+    from SysManager import smLogger as logging
+    from SysManager.Common import AESCrypto
+    from SysManager.excepts import ConfigInvalid
+except ImportError:
+    sys.path.append(path.join(path.dirname(__file__), '../'))
+    from SysManager import smLogger as logging
+    from SysManager.Common import AESCrypto
+    from SysManager.excepts import ConfigInvalid
 
-sys.path.append(path.join(path.dirname(sys.argv[0]), '../'))
 
 SECRET_KEY = environ.get('FLASK_SECRET_KEY') or 'SOMEthing-you-WILL-never-Guess'
 
@@ -31,7 +36,7 @@ class GlobalConfig(object):
                     setattr(self, key, ini.get('Global', key))
                 except ConfigParser.NoSectionError:
                     logging.warning(
-                        'No section[Global] in INI file({})' \
+                        'No section[Global] in INI file({})'\
                             .format(global_file)
                     )
                     break

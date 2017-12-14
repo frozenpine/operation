@@ -1,11 +1,19 @@
 # -*- coding: UTF-8 -*-
 
-import logging
-
+import sys
+from os import path
 from requests.exceptions import ConnectionError
 from winrm.exceptions import InvalidCredentialsError
 
-from ..excepts import WinRmNoValidConnectionsError, WinRmAuthenticationException
+try:
+    from SysManager import smLogger as logging
+    from SysManager.excepts import (WinRmAuthenticationException,
+                                    WinRmNoValidConnectionsError)
+except ImportError:
+    sys.path.append(path.join(path.dirname(__file__), '../../'))
+    from SysManager import smLogger as logging
+    from SysManager.excepts import (WinRmAuthenticationException,
+                                    WinRmNoValidConnectionsError)
 
 
 def run(client, module):
