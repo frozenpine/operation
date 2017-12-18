@@ -1,4 +1,7 @@
-# -*- coding: UTF-8 -*-
+# coding=utf-8
+"""
+Protocol definetion used between TaskManager's Master Node and Work Node.
+"""
 
 import json
 import logging
@@ -11,9 +14,9 @@ from os import path
 import yaml
 from enum import Enum
 
-from excepts import DeserialError, InitialError
+from .excepts import DeserialError, InitialError
 
-tm_logger = logging.getLogger('tm')
+TM_LOGGER = logging.getLogger('tm')
 
 
 class MessageType(Enum):
@@ -27,21 +30,39 @@ class PayloadType(Enum):
 
 
 class TmPayload(object):
+    """ Payload base class
+    """
+
     __metaclass__ = ABCMeta
 
     @abstractmethod
     def to_json(self):
+        """ Used to get payload's JSON data
+        Args: None
+
+        Returns:
+            Payload's JSON data.
+        """
         pass
 
-    @abstractmethod
-    def from_json(json_data):
-        pass
+    @classmethod
+    def from_json(cls, json_data):
+        """ Create an class instance from dict
+        Args:
+            json_data:  An dict object with particular key/value pairs
+        """
+        return cls(**json_data)
 
 
 class HeartBeatPL(TmPayload):
+    """ Heart beat message payload
+    """
+
+    def __init__(self, **kwargs):
+        pass
+
     def to_json(self):
         return {
-
         }
 
 
@@ -95,8 +116,7 @@ class TmProtocol(object):
 
     def to_json(self):
         """ Used to get protocol message's JSON data
-        Args:
-            dump_file: Save json data to an yaml file if dump_file is not None, and file path exists.
+        Args: None
 
         Returns:
             Protocol message's JSON data w/o check_sum.
@@ -163,11 +183,11 @@ class TmProtocol(object):
                         file_name = path.basename(dump_file)
                 else:
                     message = '"{}" is neither an dir nor a regular file.'.format(dump_file)
-                    tm_logger.error(message)
+                    TM_LOGGER.error(message)
                     raise IOError(message)
             with open('{dir}/{file}'.format(dir=directory, file=file_name), mode='wb') as out_file:
                 message = 'Data is dumped into yaml file({dir}/{file})'.format(dir=directory, file=file_name)
-                tm_logger.info(message)
+                TM_LOGGER.info(message)
                 yaml.dump(self.to_json(), out_file, default_flow_style=False)
 
     def serial(self, is_json=False, dump_file=None):
