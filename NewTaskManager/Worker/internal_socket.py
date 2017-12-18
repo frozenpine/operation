@@ -2,6 +2,7 @@
 
 import SocketServer
 import json
+import pickle
 import socket
 from threading import Thread
 
@@ -14,8 +15,24 @@ socket_dict = dict()
 
 class MessageType(Enum):
     CONNECT = 101
-    HEARTBEAT = 102
+    INFO = 102
     DISCONNECT = 103
+
+
+class Protocol(object):
+    def __init__(self, message_type, message_info):
+        self.message_type = message_type
+        self.message_info = message_info
+
+    def to_dict(self):
+        return {'MessageType': self.message_type,
+                'MessageInfo': self.message_info}
+
+    def serialize(self, to_json=False):
+        if to_json:
+            return json.dumps(self.to_dict())
+        else:
+            return pickle.dumps(self.to_dict())
 
 
 class ThreadedTCPRequestHandler(SocketServer.StreamRequestHandler):
@@ -36,6 +53,7 @@ class ThreadedTCPRequestHandler(SocketServer.StreamRequestHandler):
         while True:
             data = self.request.recv(8192)
             if data:
+                self.request.send()
                 try:
                     data = json.loads(data)
                     logging.info('[socket] receive: {0}'.format(data))
@@ -48,9 +66,10 @@ class ThreadedTCPRequestHandler(SocketServer.StreamRequestHandler):
             else:
                 logging.warning('[socket] disconnect: {0}'.format(self.client_address))
                 break
+            self.request.send(102, None)
 
 
-class WorkerSocketServer(Thread):
+class InternalSocketServer(Thread):
 
     def __init__(self, host, port):
         class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
@@ -76,10 +95,6 @@ class WorkerSocketServer(Thread):
         self.socket_server.serve_forever()
 
 
-socket_server = WorkerSocketServer('127.0.0.1', 7000)
-
-"""
 if __name__ == '__main__':
-    p = WorkerSocketServer('0.0.0.0', 7000)
+    p = InternalSocketServer('127.0.0.1', 7000)
     p.start()
-"""
