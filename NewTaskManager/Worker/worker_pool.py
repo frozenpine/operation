@@ -1,38 +1,46 @@
 # coding=utf-8
 
 import socket
+import time
 from multiprocessing import Pool
 from multiprocessing import cpu_count
 
 import worker_time
 from NewTaskManager.Worker import worker_logger as logging
+from NewTaskManager.protocol import TaskStatus, TaskResult, msg_dict
 from SysManager.configs import SSHConfig
 from SysManager.excepts import (ConfigInvalid, SSHAuthenticationException, SSHException, SSHNoValidConnectionsError)
 from SysManager.executor import Executor
-from worker_protocol import TaskStatus
 
 
 def init_socket(host, port):
+    """
+    对于工作进程初始化socket连接
+    :param host: 主机
+    :param port: 端口
+    :return:
+    """
     global socket_client
     socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     socket_client.connect((host, port))
+    logging.info('Socket Client Connect To Host: {0}, Port: {1}'.format(host, port))
 
 
 def send(data):
     """
     发送消息
-    :param data:
+    :param data: 未序列化的数据
     :return:
     """
     global socket_client
-    if isinstance(data, Result):
-        dump_data = data.to_str()
+    if isinstance(data, TaskResult):
+        dump_data = data.serial()
         # 发送数据
         while 1:
             retry_count = 0
             try:
                 socket_client.send(dump_data)
-                logging.info('Socket Client Send Success: {0}'.format(dump_data))
+                logging.info('Socket Client Send Success: {0}'.format(data))
             except Exception, e:
                 # 因server端socket异常未正常发送
                 retry_count = retry_count + 1
@@ -51,6 +59,8 @@ def send(data):
                 retry_count = retry_count + 1
                 logging.warning('Socket Client Receive Error: {0}'.format(e))
                 logging.warning('Socket Client Receive Retry {0} Time'.format(retry_count))
+            else:
+                break
 
 
 def run(task_info):
@@ -58,91 +68,107 @@ def run(task_info):
     调用Executor执行task
     :return:
     """
+    # 获取queue_uuid, task_uuid
+    queue_uuid, task_uuid = task_info.queue_uuid, task_info.task_uuid
     # 判断是否满足执行条件
-    ret_code, ret_msg = worker_time.compare_timestamps(
-        task_info.trigger_time, task_info.task_earliest, task_info.task_latest)
-    if ret_code == 3:
-        # 无法执行
-        status_code, status_msg = TaskStatus.TimeRangeExcept.value, u'超出时间限制'
-    elif ret_code == 2:
-        # 需要等待
-        status_code, status_msg = TaskStatus.TriggerTimeWaiting.value, u'需要等待{0}秒'.format(ret_msg)
-    elif ret_code == 1:
-        if worker_pool.vacant():
-            status_code, status_msg = 100, u'可以直接执行'
-        else:
-            status_code, status_msg = 112, u'等待进程池空闲'
+    if not worker_pool.vacant():
+        # 进程池满
+        logging.warning('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.WorkerWating.value))
+        status_code = TaskStatus.WorkerWaiting
+        status_msg = msg_dict.get(status_code)
     else:
-        status_code, status_msg = -1, u'未知错误'
-    result = Result(task_info.queue_uuid, task_info.task_uuid, status_code, status_msg, task_info.session,
-                    task_info.run_all_flag, None)
-    socket_client.send(result)
+        ret_code, ret_msg = worker_time \
+            .compare_timestamps(task_info.trigger_time, task_info.task_earliest, task_info.task_latest)
+        if ret_code == 3:
+            # 无法执行 退出
+            logging.warning('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.TimeRangeExcept.value))
+            status_code = TaskStatus.TimeRangeExcept
+            status_msg = msg_dict.get(status_code)
+        elif ret_code == 2:
+            # 需要等待
+            logging.info('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.WorkerWating.value))
+            status_code = TaskStatus.TriggerTimeWaiting.value
+            status_msg = u'需要等待{0}秒'.format(ret_msg)
+        elif ret_code == 1:
+            # 可以执行
+            logging.info('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.Runnable.value))
+            status_code = TaskStatus.Runnable
+            status_msg = msg_dict.get(status_code)
+        else:
+            logging.warning('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.UnKnown.value))
+            status_code = TaskStatus.UnKnown
+            status_msg = msg_dict.get(status_code)
+    result = TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
+                        status_msg=status_msg, session=task_info.session, run_all_flag=task_info.run_all_flag)
+    send(result)
+    # 超时或未知情况下 退出
+    if status_code in (TaskStatus.TimeRangeExcept, TaskStatus.UnKnown):
+        return -1
     # 实例化SSHConfig初始化判断
     try:
         conf = SSHConfig(**task_info.task["remote"]["params"])
-    except ConfigInvalid, status_msg:
-        # 配置文件格式错误
-        status_code = -1
-        status_msg = status_msg.message
-        task_result = None
-        send(status_code, status_msg, task_result)
+    except ConfigInvalid, e:
+        # 配置文件格式错误 退出
+        logging.warning('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.InitFailed.value))
+        status_code, status_msg = TaskStatus.InitFailed, e
+        result = TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
+                            status_msg=status_msg, session=task_info.session, run_all_flag=task_info.run_all_flag)
+        send(result)
         return -1
     # 实例化Executor初始化判断
     try:
         exe = Executor.CreateByWorker(conf)
-    except (SSHNoValidConnectionsError, SSHAuthenticationException, SSHException), status_msg:
-        status_code = -1
-        status_msg = status_msg.message
-        task_result = None
-        self.send_info(status_code, status_msg, task_result)
+    except (SSHNoValidConnectionsError, SSHAuthenticationException, SSHException), e:
+        status_code, status_msg = TaskStatus.InitFailed, e
+        result = TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
+                            status_msg=status_msg, session=task_info.session, run_all_flag=task_info.run_all_flag)
+        send(result)
         return -1
     # 开始正式执行
-    ret_code, ret_msg = get_time.compare_timestamps(
-        self.controller_queue_trigger_time, self.task_earliest, self.task_latest
+    ret_code, ret_msg = worker_time.compare_timestamps(
+        task_info.trigger_time, task_info.task_earliest, task_info.task_latest
     )
     if ret_code == 3:
         # 直接跳过不执行
-        """
-        self.send_obj(
-            Result(controller_queue_uuid=self.controller_queue_uuid,
-                   task_uuid=self.task_uuid, status_code=121,
-                   status_msg=u'超出时间范围', session=self.session,
-                   run_all=self.run_all)
-        )
-        """
         pass
     else:
         if ret_code == 2:
             time.sleep(ret_msg)
-        status_code, status_msg = 200, u"开始执行"
-        self.send_obj(
-            Result(controller_queue_uuid=self.controller_queue_uuid,
-                   task_uuid=self.task_uuid, status_code=status_code,
-                   status_msg=status_msg, session=self.session,
-                   run_all=self.run_all)
-        )
-        mod = self.task["mod"]
+        status_code = TaskStatus.Running
+        status_msg = msg_dict.get(status_code)
+        result = TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
+                            status_msg=status_msg, session=task_info.session, run_all_flag=task_info.run_all_flag)
+        send(result)
+        mod = task_info.task["mod"]
         if isinstance(mod, dict):
             # 一个任务
             task_result = exe.run(mod)
-            status_code = task_result.return_code
-            if status_code != 0:
-                status_code = 1
+            ret_code = task_result.return_code
+            if ret_code != 0:
+                status_code = TaskStatus.Failed
                 status_msg = u"单任务执行失败"
             else:
+                status_code = TaskStatus.Success
                 status_msg = u"单任务执行成功"
-        if isinstance(mod, list):
+        elif isinstance(mod, list):
             # 多个任务
             for each in mod:
                 task_result = exe.run(each)
-                status_code = task_result.return_code
-                if status_code != 0:
-                    status_code = 1
+                ret_code = task_result.return_code
+                if ret_code != 0:
+                    status_code = TaskStatus.Failed
                     status_msg = u"多任务执行失败"
                     break
                 else:
+                    status_code = TaskStatus.Success
                     status_msg = u"多任务执行成功"
-        self.send_info(status_code, status_msg, task_result)
+        else:
+            status_code = TaskStatus.UnKnown
+            status_msg = msg_dict.get(status_code)
+        result = TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
+                            status_msg=status_msg, session=task_info.session, run_all_flag=task_info.run_all_flag,
+                            task_result=task_result)
+        send(result)
 
 
 class WorkerPool(object):

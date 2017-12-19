@@ -1,13 +1,13 @@
 # coding=utf-8
 """
-Protocol definetion used between TaskManager's Master Node and Work Node.
+Protocol definition used between TaskManager's Master Node and Work Node.
 """
 
+import hashlib
 import json
 import pickle
 import time
 from abc import ABCMeta, abstractmethod
-from hashlib import md5
 from os import path
 
 import yaml
@@ -25,6 +25,80 @@ class MessageType(Enum):
 class PayloadType(Enum):
     Heartbeat = 0
     StaticsInfo = 1
+
+
+class QueueStatus(Enum):
+    InitFailed = -1  # 初始化失败
+    QueueEmpty = -11  # 队列为空
+    QueueNotExits = -12  # 队列不存在
+    QueueFailNotRecoverable = -13  # 失败不可恢复
+    OK = 0  # 正常调度
+    JobIssued = 11  # 任务已下发
+    JobRunning = 12  # 任务执行中
+    JobWaiting = 13  # 任务等待中
+    JobFailed = 14  # 任务失败
+
+
+class TaskStatus(Enum):
+    UnKnown = -100 # 未知错误
+    InitFailed = -1  # 初始化失败
+    Runnable = 100  # 可以直接执行
+    TriggerTimeWaiting = 111  # 等待时间
+    WorkerWaiting = 112  # 等待进程池
+    TimeRangeExcept = 121  # 超出时间限制
+    Running = 200  # 开始执行
+    Success = 0  # 执行成功
+    Failed = 1  # 执行失败
+    Timeout = 2  # 自带超时
+    Terminated = 3  # 强制终止
+    Skipped = 4  # 跳过
+
+
+msg_dict = {QueueStatus.InitFailed: u'初始化失败',
+            QueueStatus.QueueEmpty: u'队列为空',
+            QueueStatus.QueueNotExits: u'队列不存在',
+            QueueStatus.QueueFailNotRecoverable: u'失败不可恢复',
+            QueueStatus.OK: u'正常调度',
+            QueueStatus.JobIssued: u'任务已下发',
+            QueueStatus.JobRunning: u'任务执行中',
+            QueueStatus.JobWaiting: u'任务等待中',
+            QueueStatus.JobFailed: u'任务失败',
+            TaskStatus.InitFailed: u'初始化失败',
+            TaskStatus.Runnable: u'可以直接执行',
+            TaskStatus.TriggerTimeWaiting: u'等待时间',
+            TaskStatus.WorkerWaiting: u'等待进程池',
+            TaskStatus.TimeRangeExcept: u'超出时间限制',
+            TaskStatus.Running: u'开始执行',
+            TaskStatus.Success: u'执行成功',
+            TaskStatus.Failed: u'执行失败',
+            TaskStatus.Timeout: u'自带超时',
+            TaskStatus.Terminated: u'强制终止',
+            TaskStatus.Skipped: u'跳过'}
+
+
+@property
+def IsExcepted(self):
+    return self in [TaskStatus.InitFail, TaskStatus.TimeRangeExcept]
+
+
+@property
+def IsInited(self):
+    return self in [TaskStatus.Runnable] or self.Waiting
+
+
+@property
+def IsWaiting(self):
+    return self in [TaskStatus.TriggerTimeWaiting, TaskStatus.WorkerWaiting]
+
+
+@property
+def IsDone(self):
+    return self in [TaskStatus.Success, TaskStatus.Failed] or self.IsTimeout
+
+
+@property
+def IsTimeout(self):
+    return self in [TaskStatus.Timeout, TaskStatus.Terminated]
 
 
 class JsonSerializable(object):
@@ -129,6 +203,7 @@ class JsonSerializable(object):
 class JsonSerializableEncoder(json.JSONEncoder):
     """ An json dumps encoder 4 JsonSerializable Class
     """
+
     def default(self, obj):
         if isinstance(obj, JsonSerializable):
             return obj.to_dict()
@@ -179,7 +254,7 @@ class TmProtocol(JsonSerializable):
         self.payload_type = payload_type
         self.payload = payload
         self.__exclude__.append('check_sum')
-        hasher = md5(json.dumps(self, cls=JsonSerializableEncoder, sort_keys=True))
+        hasher = hashlib.md5(json.dumps(self, cls=JsonSerializableEncoder, sort_keys=True))
         self.check_sum = hasher.hexdigest()
 
     @staticmethod
@@ -216,7 +291,7 @@ class TmProtocol(JsonSerializable):
 
         Returns: Ture 4 data is valid, False 4 data is invalid.
         """
-        hasher = md5(json.dumps(self, cls=JsonSerializableEncoder, sort_keys=True))
+        hasher = hashlib.md5(json.dumps(self, cls=JsonSerializableEncoder, sort_keys=True))
         return hasher.hexdigest() == self.check_sum
 
 
@@ -224,3 +299,26 @@ class Heartbeat(JsonSerializable):
     @staticmethod
     def from_dict(dict_data):
         return Heartbeat()
+
+
+class TaskResult(JsonSerializable):
+    def __init__(self, queue_uuid, task_uuid, status_code, status_msg, session, run_all_flag, task_result=None):
+        self.queue_uuid = queue_uuid
+        self.task_uuid = task_uuid
+        self.status_code = status_code
+        self.status_msg = status_msg
+        self.session = session
+        self.run_all_flag = run_all_flag
+        self.task_result = task_result
+
+    @staticmethod
+    def from_dict(dict_data):
+        queue_uuid = dict_data['queue_uuid']
+        task_uuid = dict_data['task_uuid']
+        status_code = dict_data['status_code']
+        status_msg = TaskStatus(dict_data['status_msg'])
+        session = dict_data['session']
+        run_all_flag = dict_data['run_all_flag']
+        task_result = dict_data['task_result']
+        return TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code, status_msg=status_msg,
+                          session=session, run_all_flag=run_all_flag, task_result=task_result)
