@@ -40,7 +40,7 @@ class Result(object):
         elif self.status_code in (0, 1, 2, 3, 4):
             return 'end'
         else:
-            logging.warning('[node] type unknown: {0}'.format(self.status_code))
+            logging.warning('Result Object Has Unknown Type {0}'.format(self.status_code))
 
 
 class Task(object):
@@ -57,8 +57,8 @@ class Task(object):
         self.session = session
         self.run_all_flag = run_all_flag
         # 初始化socket连接
-        self.socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket_client.connect(('127.0.0.1', 7000))
+        self.socket_client = self.init_socket()
+        # 判断是否满足执行条件
         ret_code, ret_msg = worker_time.compare_timestamps(self.trigger_time, self.task_earliest, self.task_latest)
         if ret_code == 3:
             # 无法执行
@@ -74,11 +74,43 @@ class Task(object):
         else:
             status_code, status_msg = -1, u'未知错误'
         result = Result(self.queue_uuid, self.task_uuid, status_code, status_msg, self.session, self.run_all_flag, None)
-        self.send(Result)
+        self.send(result)
+
+    @staticmethod
+    def init_socket():
+        socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        socket_client.connect(('127.0.0.1', 7000))
+        return socket_client
+
+    def close_socket(self):
+        self.socket_client.close()
 
     def send(self, data):
         if isinstance(data, Result):
-            data = data.to_str()
-            self.socket_client.send(data)
-            # todo: 设置超时时间
-            self.socket_client.recv(8192)
+            dump_data = data.to_str()
+            # 设置超时时间
+            self.socket_client.settimeout(2)
+            # 发送数据
+            while 1:
+                retry_count = 0
+                try:
+                    self.socket_client.send(dump_data)
+                    logging.info('Socket Client Send Success: {0}'.format(dump_data))
+                except Exception, e:
+                    # 因server端socket异常未正常发送
+                    retry_count = retry_count + 1
+                    logging.warning('Socket Client Send Error: {0}'.format(e))
+                    logging.warning('Socket Client Send Retry {0} Time'.format(retry_count))
+                else:
+                    break
+            # 接受数据
+            while 1:
+                retry_count = 0
+                try:
+                    ack = self.socket_client.recv(8192)
+                    logging.info('Socket Client Receive Success: {0}'.format(ack))
+                except socket.timeout, e:
+                    # 未收到server端确认信息
+                    retry_count = retry_count + 1
+                    logging.warning('Socket Client Receive Error: {0}'.format(e))
+                    logging.warning('Socket Client Receive Retry {0} Time'.format(retry_count))

@@ -17,10 +17,16 @@ class WorkerPool(object):
         else:
             return True
 
+    def add_running_process(self):
+        self.running_process += 1
+
+    def minus_running_process(self):
+        self.running_process -= 1
+
     def start(self):
         self.worker_pool = Pool(processes=self.process_count)
 
-    def run(self, func, args, ):
+    def run(self, func, args):
         self.worker_pool.apply_sync(func, args)
 
 
