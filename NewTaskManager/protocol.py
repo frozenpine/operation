@@ -306,6 +306,36 @@ class Heartbeat(JsonSerializable):
         return Heartbeat()
 
 
+class Task(JsonSerializable):
+    def __init__(self, queue_uuid, create_time, trigger_time, task_uuid, task_info, task_earliest, task_latest, session,
+                 run_all_flag):
+        self.queue_uuid = queue_uuid
+        self.create_time = create_time
+        self.trigger_time = trigger_time
+        self.task_uuid = task_uuid
+        self.task_info = task_info
+        self.task_earliest = task_earliest
+        self.task_latest = task_latest
+        self.task_info = task_info
+        self.session = session
+        self.run_all_flag = run_all_flag
+
+    @staticmethod
+    def from_dict(dict_data):
+        queue_uuid = dict_data['queue_uuid']
+        create_time = dict_data['create_time']
+        trigger_time = dict_data['trigger_time']
+        task_uuid = dict_data['task_uuid']
+        task_info = dict_data['task_info']
+        task_earliest = dict_data['task_earliest']
+        task_latest = dict_data['task_latest']
+        session = dict_data['session']
+        run_all_flag = dict_data['run_all_flag']
+        return Task(queue_uuid=queue_uuid, create_time=create_time, trigger_time=trigger_time, task_uuid=task_uuid,
+                    task_info=task_info, task_earliest=task_earliest, task_latest=task_latest, session=session,
+                    run_all_flag=run_all_flag)
+
+
 class TaskResult(JsonSerializable):
     def __init__(self, queue_uuid, task_uuid, status_code, status_msg, session, run_all_flag, task_result=None):
         self.queue_uuid = queue_uuid
