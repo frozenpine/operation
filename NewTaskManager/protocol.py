@@ -25,6 +25,7 @@ class MessageType(Enum):
 class PayloadType(Enum):
     Heartbeat = 0
     StaticsInfo = 1
+    TaskResult = 2
 
 
 class QueueStatus(Enum):
