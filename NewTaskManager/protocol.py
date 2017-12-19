@@ -4,7 +4,6 @@ Protocol definetion used between TaskManager's Master Node and Work Node.
 """
 
 import json
-import logging
 import pickle
 import time
 from abc import ABCMeta, abstractmethod
@@ -14,9 +13,8 @@ from os import path
 import yaml
 from enum import Enum
 
-from .excepts import DeserialError, InitialError
-
-TM_LOGGER = logging.getLogger('tm')
+from NewTaskManager import tm_logger
+from NewTaskManager.excepts import DeserialError, InitialError
 
 
 class MessageType(Enum):
@@ -29,44 +27,116 @@ class PayloadType(Enum):
     StaticsInfo = 1
 
 
-class TmPayload(object):
-    """ Payload base class
+class JsonSerializable(object):
+    """ A json serialiable base class
     """
 
     __metaclass__ = ABCMeta
+    __exclude__ = []
 
-    @abstractmethod
-    def to_json(self):
-        """ Used to get payload's JSON data
+    def to_dict(self):
+        """ Used to get  JSON data.
+
         Args: None
 
         Returns:
-            Payload's JSON data.
+            JSON data w/o attributes in self.__exclude__ list.
+
+        Raises:
+            TypeError: An error occour when attribute not JSON serializable.
+        """
+        results = {}
+        for field in [x for x in dir(self) if not x.startswith('_') and x not in self.__exclude__]:
+            obj = getattr(self, field)
+            if not callable(obj):
+                if isinstance(obj, JsonSerializable):
+                    results[field] = obj.to_dict()
+                elif isinstance(obj, Enum):
+                    results[field] = obj.value
+                else:
+                    results[field] = obj
+        return results
+
+    @staticmethod
+    @abstractmethod
+    def from_dict(dict_data):
+        """ An abstract method define, used to convert particular json to class instance
         """
         pass
+
+    def serial(self):
+        """ Used to serial object instance
+        Args: None
+
+        Returns: Serialized object instance
+        """
+        return pickle.dumps(self)
 
     @classmethod
-    def from_json(cls, json_data):
-        """ Create an class instance from dict
+    def deserial(cls, buff):
+        """ Used to deserial protocol message from str buffer
         Args:
-            json_data:  An dict object with particular key/value pairs
+            buff: pickle serialized buff string.
+
+        Returns: Instance of class.
+
+        Raises:
+            DeserialError: An error occured when deserialized instance is not type of cls
         """
-        return cls(**json_data)
+        instance = pickle.loads(buff)
+        if not isinstance(instance, cls):
+            raise DeserialError('Deserialized instance not match class.')
+        return instance
+
+    def dump_file(self, dump_file):
+        """ Dump class to YAML file
+
+        Args:
+            dump_file: A dump file path, either directory path or file path is fine
+                if dump_file is a directory, YAML saved in name 'TmProtocol' and '_%Y%m%d%H%M%S' in time format.
+                if dump_file is a file path and file exists, YAML saved with file name and
+                '_%Y%m%d%H%M%S' in time format, old file will not be overwrited.
+                if dump_file is a file path and file not exists, YAML saved in this particular dump file.
+
+        Returns: None
+
+        Raises:
+            IOError: An error occour when dump file path invalid.
+            TypeError: An error occour when attribute not JSON serializable.
+        """
+        if path.isdir(dump_file):
+            directory = dump_file
+            file_name = 'TmProtocol_{timestamp}.yaml'.format(timestamp=time.strftime('%Y%m%d%H%M%S'))
+        else:
+            directory = path.dirname(dump_file)
+            if path.isdir(directory):
+                if path.isfile(dump_file):
+                    file_name = '{file_name}_{timestamp}.yaml'.format(
+                        file_name=path.basename(dump_file).split('.')[0],
+                        timestamp=time.strftime('%Y%m%d%H%M%S'))
+                else:
+                    file_name = path.basename(dump_file)
+            else:
+                message = '"{}" is neither an dir nor a regular file.'.format(dump_file)
+                tm_logger.error(message)
+                raise IOError(message)
+        with open('{dir}/{file}'.format(dir=directory, file=file_name), mode='wb') as out_file:
+            message = 'Data is dumped into yaml file({dir}/{file})'.format(dir=directory, file=file_name)
+            tm_logger.info(message)
+            yaml.dump(self.to_dict(), out_file, default_flow_style=False)
 
 
-class HeartBeatPL(TmPayload):
-    """ Heart beat message payload
+class JsonSerializableEncoder(json.JSONEncoder):
+    """ An json dumps encoder 4 JsonSerializable Class
     """
-
-    def __init__(self, **kwargs):
-        pass
-
-    def to_json(self):
-        return {
-        }
+    def default(self, obj):
+        if isinstance(obj, JsonSerializable):
+            return obj.to_dict()
+        else:
+            return json.JSONEncoder.default(self, obj)
 
 
-class TmProtocol(object):
+class TmProtocol(JsonSerializable):
     """
     Attributes:
         version: An version dict in major, minor & revision keys.
@@ -82,7 +152,7 @@ class TmProtocol(object):
         'revision': 0
     }
 
-    def __init__(self, src=None, dest=None, payload=None, msg_type=MessageType.Broadcast):
+    def __init__(self, src, dest, payload, msg_type=MessageType.Broadcast):
         """
         Args:
             src: Message sender's name.
@@ -96,45 +166,27 @@ class TmProtocol(object):
             InitialError: An error occured missing args
         """
 
-        if src:
-            self.source = src
-        else:
-            raise InitialError('src')
-        if dest:
-            self.destination = dest
-        else:
-            raise InitialError('dest')
+        self.source = src
+        self.destination = dest
         self.message_type = msg_type
         if self.message_type == MessageType.Broadcast:
             self.destination = 'public'
-        if payload:
-            self.payload = payload
-        else:
-            raise InitialError('payload')
-        hasher = md5(json.dumps(self.to_json(), sort_keys=True))
+        try:
+            type_name = payload.__class__.__name__.split('.')[-1]
+            payload_type = PayloadType[type_name]
+        except KeyError:
+            raise InitialError('Invalid payload type "{}".'.format(type_name))
+        self.payload_type = payload_type
+        self.payload = payload
+        self.__exclude__.append('check_sum')
+        hasher = md5(json.dumps(self, cls=JsonSerializableEncoder, sort_keys=True))
         self.check_sum = hasher.hexdigest()
 
-    def to_json(self):
-        """ Used to get protocol message's JSON data
-        Args: None
-
-        Returns:
-            Protocol message's JSON data w/o check_sum.
-        """
-        data = {
-            'version': self.version,
-            'source': self.source,
-            'destination': self.destination,
-            'message_type': self.message_type.name,
-            'payload': self.payload.to_json() if isinstance(self.payload, TmPayload) else self.payload
-        }
-        return data
-
     @staticmethod
-    def from_json(json_data):
+    def from_dict(dict_data):
         """ Create an class instance from dict
         Args:
-            json_data: An dict object with specified key/value pairs
+            dict_data: An dict object with specified key/value pairs
                 Example: {
                     'source': 'some source',
                     'destination: 'some destination',
@@ -147,97 +199,16 @@ class TmProtocol(object):
         Raises:
             KeyError: An error occour validating key/value pair.
         """
-        src = json_data['source']
-        dest = json_data['destination']
-        msg_type = MessageType[json_data['message_type']]
-        payload = TmPayload.from_json(json_data['payload'])
+        src = dict_data['source']
+        dest = dict_data['destination']
+        msg_type = MessageType(dict_data['message_type'])
+        try:
+            payload_type = PayloadType(dict_data['payload_type'])
+        except KeyError:
+            raise DeserialError('Invlaid payload type "{}".'.format(dict_data['payload_type']))
+        payload = globals()[payload_type.name].from_dict(dict_data['payload'])
 
         return TmProtocol(src=src, dest=dest, payload=payload, msg_type=msg_type)
-
-    def dump_file(self, dump_file=None):
-        """ Dump protocol message to YAML file
-        Args:
-            dump_file: A dump file path, either directory path or file path is fine, defaults to None with save nothing
-                if dump_file is a directory, YAML saved in name 'TmProtocol' and '_%Y%m%d%H%M%S' in time format.
-                if dump_file is a file path and file exists, YAML saved with file name and
-                '_%Y%m%d%H%M%S' in time format, old file will not be overwrited.
-                if dump_file is a file path and file not exists, YAML saved in this particular dump file.
-
-        Returns: None
-
-        Raises:
-            IOError: An error occour when dump file path invalid.
-        """
-        if dump_file:
-            if path.isdir(dump_file):
-                directory = dump_file
-                file_name = 'TmProtocol_{timestamp}.yaml'.format(timestamp=time.strftime('%Y%m%d%H%M%S'))
-            else:
-                directory = path.dirname(dump_file)
-                if path.isdir(directory):
-                    if path.isfile(dump_file):
-                        file_name = '{file_name}_{timestamp}.yaml'.format(
-                            file_name=path.basename(dump_file).split('.')[0],
-                            timestamp=time.strftime('%Y%m%d%H%M%S'))
-                    else:
-                        file_name = path.basename(dump_file)
-                else:
-                    message = '"{}" is neither an dir nor a regular file.'.format(dump_file)
-                    TM_LOGGER.error(message)
-                    raise IOError(message)
-            with open('{dir}/{file}'.format(dir=directory, file=file_name), mode='wb') as out_file:
-                message = 'Data is dumped into yaml file({dir}/{file})'.format(dir=directory, file=file_name)
-                TM_LOGGER.info(message)
-                yaml.dump(self.to_json(), out_file, default_flow_style=False)
-
-    def serial(self, is_json=False, dump_file=None):
-        """ Used to serial protocol message
-        Args:
-            is_json (bool, optional):
-                True 4 serial in json format w/o check_sum,
-                False 4 serial in pickle formart w/ all attributes,
-                defaults to False
-            dump_file: An dump file path, either directory path or file path is fine, defaults to None with save nothing
-                for more detail, see docstring in func dump_file
-
-        Returns: Serialized protocol message.
-
-        Raises:
-            IOError: An error occour when dump file path invalid.
-        """
-        if is_json:
-            self.dump_file(dump_file)
-            return json.dumps(self.to_json())
-        else:
-            return pickle.dumps(self)
-
-    @staticmethod
-    def deserial(buff, is_json=False):
-        """ Used to deserial protocol message from str buffer
-        Args:
-            is_json (bool, optional):
-                True 4 deserial in json format w/o check_sum,
-                False 4 deserial in pickle formart w/ all attributes,
-                defaults to False
-
-        Returns: Instance of class TmProtocol.
-
-        Raises:
-            DeserialError: An error occured deserilizing
-        """
-        if is_json:
-            try:
-                proto = TmProtocol.from_json(json.loads(buff))
-            except KeyError as err:
-                raise DeserialError('Invalid key name {}'.format(err.message))
-            else:
-                return proto
-        else:
-            data = pickle.loads(buff)
-            if data.is_valid():
-                return data
-            else:
-                raise DeserialError('Invalid data check sum in pickle dump.')
 
     def is_valid(self):
         """ Verifing protocol message is valid
@@ -245,5 +216,11 @@ class TmProtocol(object):
 
         Returns: Ture 4 data is valid, False 4 data is invalid.
         """
-        hasher = md5(json.dumps(self.to_json(), sort_keys=True))
+        hasher = md5(json.dumps(self, cls=JsonSerializableEncoder, sort_keys=True))
         return hasher.hexdigest() == self.check_sum
+
+
+class Heartbeat(JsonSerializable):
+    @staticmethod
+    def from_dict(dict_data):
+        return Heartbeat()

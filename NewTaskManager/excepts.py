@@ -1,9 +1,11 @@
 # -*- coding: UTF-8 -*-
+""" Exception definetion for TaskManager
+"""
 
 
 class InitialError(Exception):
-    def __init__(self, param_name):
-        Exception.__init__(self, 'Missing initial args [{}]'.format(param_name))
+    def __init__(self, message):
+        Exception.__init__(self, message)
 
 
 class DeserialError(Exception):
