@@ -27,7 +27,7 @@ class ThreadedTCPRequestHandler(SocketServer.StreamRequestHandler):
         if data.get('MessageType') == MessageType.HEARTBEAT.value:
             pass
         if data.get('MessageType') == MessageType.DISCONNECT.value:
-            logging.info('[socket] disconnect: {0}'.format(self.client_address))
+            logging.info('Socket Disconnect: {0}'.format(self.client_address))
             socket_dict.pop(data.get('SocketID'))
             self.request.close()
             return -1
