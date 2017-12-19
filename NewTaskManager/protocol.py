@@ -24,8 +24,10 @@ class MessageType(Enum):
 
 class PayloadType(Enum):
     Heartbeat = 0
-    StaticsInfo = 1
-    TaskResult = 2
+    Authentication = 10
+    Confirmation = 20
+    Health = 30
+    TaskResult = 40
 
 
 class QueueStatus(Enum):
@@ -33,7 +35,7 @@ class QueueStatus(Enum):
     QueueEmpty = -11  # 队列为空
     QueueNotExits = -12  # 队列不存在
     QueueFailNotRecoverable = -13  # 失败不可恢复
-    OK = 0  # 正常调度
+    Ok = 0  # 正常调度
     JobIssued = 11  # 任务已下发
     JobRunning = 12  # 任务执行中
     JobWaiting = 13  # 任务等待中
@@ -41,7 +43,7 @@ class QueueStatus(Enum):
 
 
 class TaskStatus(Enum):
-    UnKnown = -100 # 未知错误
+    UnKnown = -100  # 未知错误
     InitFailed = -1  # 初始化失败
     Runnable = 100  # 可以直接执行
     TriggerTimeWaiting = 111  # 等待时间
@@ -55,31 +57,33 @@ class TaskStatus(Enum):
     Skipped = 4  # 跳过
 
 
-msg_dict = {QueueStatus.InitFailed: u'初始化失败',
-            QueueStatus.QueueEmpty: u'队列为空',
-            QueueStatus.QueueNotExits: u'队列不存在',
-            QueueStatus.QueueFailNotRecoverable: u'失败不可恢复',
-            QueueStatus.OK: u'正常调度',
-            QueueStatus.JobIssued: u'任务已下发',
-            QueueStatus.JobRunning: u'任务执行中',
-            QueueStatus.JobWaiting: u'任务等待中',
-            QueueStatus.JobFailed: u'任务失败',
-            TaskStatus.InitFailed: u'初始化失败',
-            TaskStatus.Runnable: u'可以直接执行',
-            TaskStatus.TriggerTimeWaiting: u'等待时间',
-            TaskStatus.WorkerWaiting: u'等待进程池',
-            TaskStatus.TimeRangeExcept: u'超出时间限制',
-            TaskStatus.Running: u'开始执行',
-            TaskStatus.Success: u'执行成功',
-            TaskStatus.Failed: u'执行失败',
-            TaskStatus.Timeout: u'自带超时',
-            TaskStatus.Terminated: u'强制终止',
-            TaskStatus.Skipped: u'跳过'}
+MSG_DICT = {
+    QueueStatus.InitFailed: u'初始化失败',
+    QueueStatus.QueueEmpty: u'队列为空',
+    QueueStatus.QueueNotExits: u'队列不存在',
+    QueueStatus.QueueFailNotRecoverable: u'失败不可恢复',
+    QueueStatus.Ok: u'正常调度',
+    QueueStatus.JobIssued: u'任务已下发',
+    QueueStatus.JobRunning: u'任务执行中',
+    QueueStatus.JobWaiting: u'任务等待中',
+    QueueStatus.JobFailed: u'任务失败',
+    TaskStatus.InitFailed: u'初始化失败',
+    TaskStatus.Runnable: u'可以直接执行',
+    TaskStatus.TriggerTimeWaiting: u'等待时间',
+    TaskStatus.WorkerWaiting: u'等待进程池',
+    TaskStatus.TimeRangeExcept: u'超出时间限制',
+    TaskStatus.Running: u'开始执行',
+    TaskStatus.Success: u'执行成功',
+    TaskStatus.Failed: u'执行失败',
+    TaskStatus.Timeout: u'自带超时',
+    TaskStatus.Terminated: u'强制终止',
+    TaskStatus.Skipped: u'跳过'
+}
 
 
 @property
 def IsExcepted(self):
-    return self in [TaskStatus.InitFail, TaskStatus.TimeRangeExcept]
+    return self in [TaskStatus.InitFailed, TaskStatus.TimeRangeExcept]
 
 
 @property
