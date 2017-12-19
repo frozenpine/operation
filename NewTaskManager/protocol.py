@@ -307,8 +307,8 @@ class Heartbeat(JsonSerializable):
 
 
 class Task(JsonSerializable):
-    def __init__(self, queue_uuid, create_time, trigger_time, task_uuid, task_info, task_earliest, task_latest, session,
-                 run_all_flag):
+    def __init__(self, queue_uuid, create_time, trigger_time, task_uuid,
+                 task_info, task_earliest, task_latest, session):
         self.queue_uuid = queue_uuid
         self.create_time = create_time
         self.trigger_time = trigger_time
@@ -318,7 +318,7 @@ class Task(JsonSerializable):
         self.task_latest = task_latest
         self.task_info = task_info
         self.session = session
-        self.run_all_flag = run_all_flag
+        # self.run_all_flag = run_all_flag
 
     @staticmethod
     def from_dict(dict_data):
@@ -330,20 +330,19 @@ class Task(JsonSerializable):
         task_earliest = dict_data['task_earliest']
         task_latest = dict_data['task_latest']
         session = dict_data['session']
-        run_all_flag = dict_data['run_all_flag']
+        # run_all_flag = dict_data['run_all_flag']
         return Task(queue_uuid=queue_uuid, create_time=create_time, trigger_time=trigger_time, task_uuid=task_uuid,
-                    task_info=task_info, task_earliest=task_earliest, task_latest=task_latest, session=session,
-                    run_all_flag=run_all_flag)
+                    task_info=task_info, task_earliest=task_earliest, task_latest=task_latest, session=session)
 
 
 class TaskResult(JsonSerializable):
-    def __init__(self, queue_uuid, task_uuid, status_code, status_msg, session, run_all_flag, task_result=None):
+    def __init__(self, queue_uuid, task_uuid, status_code, status_msg, session, task_result=None):
         self.queue_uuid = queue_uuid
         self.task_uuid = task_uuid
         self.status_code = status_code
         self.status_msg = status_msg
         self.session = session
-        self.run_all_flag = run_all_flag
+        # self.run_all_flag = run_all_flag
         self.task_result = task_result
 
     @staticmethod
@@ -353,7 +352,7 @@ class TaskResult(JsonSerializable):
         status_code = dict_data['status_code']
         status_msg = TaskStatus(dict_data['status_msg'])
         session = dict_data['session']
-        run_all_flag = dict_data['run_all_flag']
+        # run_all_flag = dict_data['run_all_flag']
         task_result = dict_data['task_result']
         return TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code, status_msg=status_msg,
-                          session=session, run_all_flag=run_all_flag, task_result=task_result)
+                          session=session, task_result=task_result)
