@@ -3,6 +3,7 @@
 Worker入口
 """
 
+from NewTaskManager.protocol import Task
 from external import ExternalSocketServer
 from internal import InternalSocketServer
 from msg_loop import msg_loop
@@ -24,3 +25,26 @@ if __name__ == '__main__':
     msg_loop.register_callback('end', external_socket_server.send)
     # 启动消息循环
     msg_loop.start()
+    # 初始化Task
+    task = Task(queue_uuid='queue1',
+                create_time='10:00',
+                trigger_time='10:00',
+                task_uuid='task1',
+                task_info={
+                    "remote": {
+                        "params": {
+                            "ip": "192.168.100.90",
+                            "password": "qdam",
+                            "user": "qdam"
+                        },
+                        "name": "SSHConfig"
+                    },
+                    "mod": {
+                        "shell": "sleep 5",
+                        "name": "shell"
+                    }
+                },
+                task_earliest='15:00',
+                task_latest='18:00',
+                session='session')
+    msg_loop.put('task', task)

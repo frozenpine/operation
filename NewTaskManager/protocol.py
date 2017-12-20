@@ -7,14 +7,15 @@ import hashlib
 import json
 import pickle
 import time
-from abc import ABCMeta, abstractmethod
-from os import path
 
 import yaml
+from abc import ABCMeta, abstractmethod
 from enum import Enum
+from os import path
 
 from NewTaskManager import tm_logger
 from NewTaskManager.excepts import DeserialError, InitialError
+from SysManager.configs import Result
 
 
 class MessageType(Enum):
@@ -316,9 +317,7 @@ class Task(JsonSerializable):
         self.task_info = task_info
         self.task_earliest = task_earliest
         self.task_latest = task_latest
-        self.task_info = task_info
         self.session = session
-        # self.run_all_flag = run_all_flag
 
     @staticmethod
     def from_dict(dict_data):
@@ -330,7 +329,6 @@ class Task(JsonSerializable):
         task_earliest = dict_data['task_earliest']
         task_latest = dict_data['task_latest']
         session = dict_data['session']
-        # run_all_flag = dict_data['run_all_flag']
         return Task(queue_uuid=queue_uuid, create_time=create_time, trigger_time=trigger_time, task_uuid=task_uuid,
                     task_info=task_info, task_earliest=task_earliest, task_latest=task_latest, session=session)
 
@@ -342,8 +340,20 @@ class TaskResult(JsonSerializable):
         self.status_code = status_code
         self.status_msg = status_msg
         self.session = session
-        # self.run_all_flag = run_all_flag
         self.task_result = task_result
+
+    def to_dict(self):
+        results = {}
+        for field in [x for x in dir(self) if not x.startswith('_') and x not in self.__exclude__]:
+            obj = getattr(self, field)
+            if not callable(obj):
+                if isinstance(obj, JsonSerializable) or isinstance(obj, Result):
+                    results[field] = obj.to_dict()
+                elif isinstance(obj, Enum):
+                    results[field] = obj.value
+                else:
+                    results[field] = obj
+        return results
 
     @staticmethod
     def from_dict(dict_data):
@@ -352,7 +362,12 @@ class TaskResult(JsonSerializable):
         status_code = dict_data['status_code']
         status_msg = TaskStatus(dict_data['status_msg'])
         session = dict_data['session']
-        # run_all_flag = dict_data['run_all_flag']
-        task_result = dict_data['task_result']
+        task_result = Result()
+        task_result.destination = dict_data['task_result']['destination']
+        task_result.lines = dict_data['task_result']['lines']
+        task_result.return_code = dict_data['task_result']['return_code']
+        task_result.module = dict_data['task_result']['module']
+        task_result.data = dict_data['task_result']['data']
+        task_result.error_msg = dict_data['task_result']['error_msg']
         return TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code, status_msg=status_msg,
                           session=session, task_result=task_result)

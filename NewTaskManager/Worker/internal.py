@@ -5,71 +5,28 @@ Worker节点用于与内部工作进程通信的SocketServer
 
 import SocketServer
 import json
-import pickle
 import socket
 from threading import Thread
 
-from enum import Enum
-
-from NewTaskManager.Controller import controller_logger as logging
+from NewTaskManager.Worker import worker_logger as logging
 
 internal_socket = dict()
 
 
-class MessageType(Enum):
-    CONNECT = 101
-    INFO = 102
-    DISCONNECT = 103
-
-
-class Protocol(object):
-    def __init__(self, message_type, message_info):
-        self.message_type = message_type
-        self.message_info = message_info
-
-    def to_dict(self):
-        return {'MessageType': self.message_type,
-                'MessageInfo': self.message_info}
-
-    def serialize(self, to_json=False):
-        if to_json:
-            return json.dumps(self.to_dict())
-        else:
-            return pickle.dumps(self.to_dict())
-
-
 class ThreadedTCPRequestHandler(SocketServer.StreamRequestHandler):
-
-    def process(self, data):
-        if data.get('MessageType') == MessageType.CONNECT.value:
-            internal_socket.update({data.get('SocketID'): self.request})
-            return 0
-        if data.get('MessageType') == MessageType.INFO.value:
-            pass
-        if data.get('MessageType') == MessageType.DISCONNECT.value:
-            logging.info('Socket Disconnect: {0}'.format(self.client_address))
-            internal_socket.pop(data.get('SocketID'))
-            self.request.close()
-            return -1
 
     def handle(self):
         while True:
             data = self.request.recv(8192)
             if data:
-                self.request.send()
+                self.request.send('{"ack": "OK"}')
                 try:
-                    data = json.loads(data)
-                    logging.info('Socket Receive: {0}'.format(data))
+                    logging.info('Server Receive Len: {0}'.format(len(data)))
                 except TypeError, e:
                     logging.warning('Socket Send Format Error: {0}'.format(data))
-                else:
-                    ret = self.process(data)
-                    if ret == -1:
-                        break
             else:
                 logging.warning('Socket Disconnect: {0}'.format(self.client_address))
                 break
-            self.request.send(102, None)
 
 
 class InternalSocketServer(Thread):
