@@ -10,7 +10,7 @@ from threading import Thread, Condition
 from multiprocessing.queues import JoinableQueue
 
 from NewTaskManager.protocol import JsonSerializable
-from NewTaskManager.common import get_time
+from NewTaskManager.Common import get_time
 
 
 def timeout(func):

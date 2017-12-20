@@ -9,7 +9,7 @@ import time
 from multiprocessing import Pool
 from multiprocessing import cpu_count
 
-import time_calc
+from NewTaskManager.Common import get_time
 from NewTaskManager.Worker import worker_logger as logging
 from NewTaskManager.protocol import TaskStatus, TaskResult, MSG_DICT
 from SysManager.configs import SSHConfig
@@ -81,7 +81,7 @@ def run(task_info):
         status_code = TaskStatus.WorkerWaiting
         status_msg = MSG_DICT.get(status_code)
     else:
-        ret_code, ret_msg = time_calc \
+        ret_code, ret_msg = get_time \
             .compare_timestamps(task_info.trigger_time, task_info.task_earliest, task_info.task_latest)
         if ret_code == 3:
             # 无法执行 退出
@@ -129,7 +129,7 @@ def run(task_info):
         send(result)
         return -1
     # 开始正式执行
-    ret_code, ret_msg = time_calc.compare_timestamps(
+    ret_code, ret_msg = get_time.compare_timestamps(
         task_info.trigger_time, task_info.task_earliest, task_info.task_latest
     )
     if ret_code == 3:
