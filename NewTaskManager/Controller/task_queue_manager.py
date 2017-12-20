@@ -20,7 +20,7 @@ from NewTaskManager.common import get_time
 from NewTaskManager.protocol import (MSG_DICT, JsonSerializable, QueueStatus,
                                      Task, TaskResult, TaskStatus)
 from NewTaskManager.Controller.excepts import *
-from NewTaskManager.Controller.events import EventName, MessageEvent
+from NewTaskManager.Controller.events import EventName
 
 
 class TaskQueueManager(threading.Thread):
@@ -45,7 +45,7 @@ class TaskQueueManager(threading.Thread):
                     logging.warning('Invalid result data received.')
             except Exception as err:
                 logging.error('Something bad happend: {}'.format(err.message)) '''
-        logging.info('Event received: {name} {body}'.format(event.Name, event.Data.to_dict()))
+        logging.info('Event received: {} {}'.format(event.Name, event.Data.to_dict()))
 
 
 def dumpper(func):
@@ -389,7 +389,7 @@ class RPCHandler(object):
         if rtn:
             if isinstance(rtn, Task):
                 rtn.session = session
-                self._event_queue.put(MessageEvent(EventName.TaskDispath, rtn))
+                self._event_queue.put_event(EventName.TaskDispath, rtn)
                 return 0, u'任务已调度'
             elif isinstance(rtn, QueueStatus):
                 return -1, MSG_DICT[rtn]

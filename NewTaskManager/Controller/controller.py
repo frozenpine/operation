@@ -11,32 +11,37 @@ sys.path.append(path.join(path.dirname(__file__), '../'))
 from NewTaskManager.protocol import TaskResult, TaskStatus
 from NewTaskManager.Controller.task_queue_manager import TaskQueueManager
 from NewTaskManager.Controller.events import EventName, MessageEvent
+from NewTaskManager.Controller.msg_loop import MsgQueue, MsgLoop
 # from NewTaskManager.Controller.msg_loop import msg_loop
 ''' from .msg_loop import MessageLoop
 from .socket_server import ControllerSocketServer '''
+
+msg_queue = MsgQueue()
 
 
 class Controller(Process):
     def __init__(self):
         # self._to_task_manager = Queue()
         # self._to_task_dispatcher = Queue()
-        self._events = Queue()
-        self._callback_cache = {}
+        # self._events = Queue()
+        # self._callback_cache = {}
         rpc_addr = environ.get('TM_HOST') or '0.0.0.0'
         rpc_port = environ.get('TM_PORT') or 6000
         # socket_port = environ.get("SOCKET_PORT") or 7000
         # socket_host = environ.get("SOCKET_HOST") or '0.0.0.0'
-        self._task_manager = TaskQueueManager(rpc_addr, rpc_port, self._events)
-        self._task_manager.setDaemon(True)
+        self._msg_loop = MsgLoop()
+        self._task_manager = TaskQueueManager(rpc_addr, rpc_port, msg_queue)
         # self._socket_server = ControllerSocketServer(socket_host, socket_port)
 
     def run(self):
-        self.register_callback(EventName.TaskResult, self._task_manager.result_callback)
-        self._task_manager.start()
-        self.register_callback(EventName.TaskDispath, self.task_dispath_test)
-        self.msg_loop()
+        # self.register_callback(EventName.TaskResult, self._task_manager.result_callback)
+        # self.register_callback(EventName.TaskDispath, self.task_dispath_test)
+        self._msg_loop.register_callback(EventName.TaskResult, self._task_manager.result_callback)
+        self._msg_loop.register_callback(EventName.TaskDispath, self.task_dispath_test)
+        self._msg_loop.start()
+        self._task_manager.run()
 
-    def register_callback(self, event_name, func):
+    ''' def register_callback(self, event_name, func):
         if event_name not in self._callback_cache:
             self._callback_cache.update({event_name: [func]})
         else:
@@ -53,15 +58,14 @@ class Controller(Process):
             else:
                 callback_list.remove(func)
                 if not callback_list:
-                    self._callback_cache.pop(event_name)
+                    self._callback_cache.pop(event_name) '''
 
     def task_dispath_test(self, event):
         logging.info('Task received: {}'.format(event.Data.to_dict()))
         time.sleep(3)
-        self._events.put(MessageEvent(
-            EventName.TaskResult, TaskResult('123', '456', TaskStatus.Success, None, {})))
+        msg_queue.put_event(EventName.TaskResult, TaskResult('123', '456', TaskStatus.Success, None, {}))
 
-    def msg_loop(self):
+    ''' def msg_loop(self):
         while True:
             event = self._events.get()
             if not event.IsNotify:
@@ -72,4 +76,4 @@ class Controller(Process):
             else:
                 callback_list = self._callback_cache.get(event.Name)
                 for func in callback_list:
-                    func(event)
+                    func(event) '''
