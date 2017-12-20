@@ -32,15 +32,30 @@ class PayloadType(Enum):
 
 
 class QueueStatus(Enum):
+    Initiating = -2  # 正在初始化
     InitFailed = -1  # 初始化失败
-    QueueEmpty = -11  # 队列为空
-    QueueNotExits = -12  # 队列不存在
-    QueueFailNotRecoverable = -13  # 失败不可恢复
-    Ok = 0  # 正常调度
+    Empty = -11  # 队列为空
+    NotExits = -12  # 队列不存在
+    NotRecoverable = -13  # 失败不可恢复
+    Expired = -14  # 队列已过期
+    Normal = 0  # 正常调度
+    Done = 10  # 队列已完成
     JobIssued = 11  # 任务已下发
     JobRunning = 12  # 任务执行中
     JobWaiting = 13  # 任务等待中
     JobFailed = 14  # 任务失败
+
+    @property
+    def Dispatchable(self):
+        return self == QueueStatus.Normal
+
+    @property
+    def Blocking(self):
+        return self in [QueueStatus.JobIssued, QueueStatus.JobWaiting]
+
+    @property
+    def Recoverable(self):
+        return self == QueueStatus.JobFailed
 
 
 class TaskStatus(Enum):
@@ -57,13 +72,36 @@ class TaskStatus(Enum):
     Terminated = 3  # 强制终止
     Skipped = 4  # 跳过
 
+    @property
+    def IsExcepted(self):
+        return self in [TaskStatus.InitFailed, TaskStatus.TimeRangeExcept]
+
+    @property
+    def IsInited(self):
+        return self in [TaskStatus.Runnable] or self.Waiting
+
+    @property
+    def IsWaiting(self):
+        return self in [TaskStatus.TriggerTimeWaiting, TaskStatus.WorkerWaiting]
+
+    @property
+    def IsDone(self):
+        return self in [TaskStatus.Success, TaskStatus.Failed] or self.IsTimeout
+
+    @property
+    def IsTimeout(self):
+        return self in [TaskStatus.Timeout, TaskStatus.Terminated]
+
 
 MSG_DICT = {
+    QueueStatus.Initiating: u'队列正在初始化',
     QueueStatus.InitFailed: u'初始化失败',
-    QueueStatus.QueueEmpty: u'队列为空',
-    QueueStatus.QueueNotExits: u'队列不存在',
-    QueueStatus.QueueFailNotRecoverable: u'失败不可恢复',
-    QueueStatus.Ok: u'正常调度',
+    QueueStatus.Empty: u'队列为空',
+    QueueStatus.NotExits: u'队列不存在',
+    QueueStatus.NotRecoverable: u'失败不可恢复',
+    QueueStatus.Expired: u'队列已过期',
+    QueueStatus.Normal: u'正常调度',
+    QueueStatus.Done: u'队列已完成',
     QueueStatus.JobIssued: u'任务已下发',
     QueueStatus.JobRunning: u'任务执行中',
     QueueStatus.JobWaiting: u'任务等待中',
@@ -80,31 +118,6 @@ MSG_DICT = {
     TaskStatus.Terminated: u'强制终止',
     TaskStatus.Skipped: u'跳过'
 }
-
-
-@property
-def IsExcepted(self):
-    return self in [TaskStatus.InitFailed, TaskStatus.TimeRangeExcept]
-
-
-@property
-def IsInited(self):
-    return self in [TaskStatus.Runnable] or self.Waiting
-
-
-@property
-def IsWaiting(self):
-    return self in [TaskStatus.TriggerTimeWaiting, TaskStatus.WorkerWaiting]
-
-
-@property
-def IsDone(self):
-    return self in [TaskStatus.Success, TaskStatus.Failed] or self.IsTimeout
-
-
-@property
-def IsTimeout(self):
-    return self in [TaskStatus.Timeout, TaskStatus.Terminated]
 
 
 class JsonSerializable(object):
@@ -186,7 +199,8 @@ class JsonSerializable(object):
         """
         if path.isdir(dump_file):
             directory = dump_file
-            file_name = 'TmProtocol_{timestamp}.yaml'.format(timestamp=time.strftime('%Y%m%d%H%M%S'))
+            file_name = '{name}_{timestamp}.yaml'.format(
+                name=self.__class__.__name__, timestamp=time.strftime('%Y%m%d%H%M%S'))
         else:
             directory = path.dirname(dump_file)
             if path.isdir(directory):
@@ -334,11 +348,10 @@ class Task(JsonSerializable):
 
 
 class TaskResult(JsonSerializable):
-    def __init__(self, queue_uuid, task_uuid, status_code, status_msg, session, task_result=None):
+    def __init__(self, queue_uuid, task_uuid, status_code, session, task_result=None):
         self.queue_uuid = queue_uuid
         self.task_uuid = task_uuid
         self.status_code = status_code
-        self.status_msg = status_msg
         self.session = session
         self.task_result = task_result
 
@@ -359,8 +372,7 @@ class TaskResult(JsonSerializable):
     def from_dict(dict_data):
         queue_uuid = dict_data['queue_uuid']
         task_uuid = dict_data['task_uuid']
-        status_code = dict_data['status_code']
-        status_msg = TaskStatus(dict_data['status_msg'])
+        status_code = TaskStatus(dict_data['status_code'])
         session = dict_data['session']
         task_result = Result()
         task_result.destination = dict_data['task_result']['destination']
@@ -369,5 +381,5 @@ class TaskResult(JsonSerializable):
         task_result.module = dict_data['task_result']['module']
         task_result.data = dict_data['task_result']['data']
         task_result.error_msg = dict_data['task_result']['error_msg']
-        return TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code, status_msg=status_msg,
+        return TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
                           session=session, task_result=task_result)
