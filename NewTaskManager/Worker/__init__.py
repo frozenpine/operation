@@ -1,15 +1,18 @@
 # coding=utf-8
 
 import logging
-import os
 from logging.handlers import TimedRotatingFileHandler
+
+import os
 
 worker_logger = logging.getLogger('worker')
 worker_logger.setLevel(logging.INFO)
 
 console = logging.StreamHandler()
 console.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s %(filename)s-%(funcName)s[line:%(lineno)d] %(levelname)s %(message)s')
+formatter = logging.Formatter(
+    '%(asctime)s %(levelname)s [%(process)d %(thread)d] [%(filename)s %(funcName)s %(lineno)d] [%(message)s]', '%c'
+)
 console.setFormatter(formatter)
 
 worker_logger.addHandler(console)

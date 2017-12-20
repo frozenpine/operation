@@ -1,16 +1,25 @@
 # coding=utf-8
+"""
+Worker内部消息循环
+"""
 
+from Queue import Queue
 from threading import Thread
 
 from NewTaskManager.Controller import controller_logger as logging
-from NewTaskManager.Controller.controller import msg_queue
+
+
+class Event(object):
+    def __init__(self, event_name, event_data):
+        self.event_name = event_name
+        self.event_data = event_data
 
 
 class MsgLoop(Thread):
     def __init__(self):
         super(MsgLoop, self).__init__()
         self.callback_dict = dict()
-        self.msg_queue = msg_queue
+        self.msg_queue = Queue()
 
     def register_callback(self, event_name, callback_func):
         if event_name not in self.callback_dict:
@@ -31,6 +40,9 @@ class MsgLoop(Thread):
                 callback_list.remove(func)
                 if not callback_list:
                     self.callback_dict.pop(event_name)
+
+    def put(self, event_name, event_data):
+        self.msg_queue.put(Event(event_name, event_data))
 
     def run(self):
         while 1:

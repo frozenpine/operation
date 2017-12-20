@@ -1,7 +1,8 @@
 # -*- coding: UTF-8 -*-
 import ConfigParser
-import re
 import sys
+
+import re
 from os import environ, path
 
 try:
@@ -13,7 +14,6 @@ except ImportError:
     from SysManager import smLogger as logging
     from SysManager.Common import AESCrypto
     from SysManager.excepts import ConfigInvalid
-
 
 SECRET_KEY = environ.get('FLASK_SECRET_KEY') or 'SOMEthing-you-WILL-never-Guess'
 
@@ -36,7 +36,7 @@ class GlobalConfig(object):
                     setattr(self, key, ini.get('Global', key))
                 except ConfigParser.NoSectionError:
                     logging.warning(
-                        'No section[Global] in INI file({})'\
+                        'No section[Global] in INI file({})' \
                             .format(global_file)
                     )
                     break
@@ -91,6 +91,15 @@ class Result(object):
     error_msg = ""
     data = {}
     lines = []
+
+    @classmethod
+    def to_dict(cls):
+        return {'destination': cls.destination,
+                'module': cls.module,
+                'return_code': cls.return_code,
+                'error_msg': cls.error_msg,
+                'data': cls.data,
+                'lines': cls.lines}
 
 
 if __name__ == '__main__':
