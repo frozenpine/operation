@@ -9,23 +9,37 @@ import socket
 from threading import Thread
 
 from NewTaskManager.Worker import worker_logger as logging
+from NewTaskManager.excepts import DeserialError
+from NewTaskManager.protocol import TaskResult
 
 internal_socket = dict()
 
 
 class ThreadedTCPRequestHandler(SocketServer.StreamRequestHandler):
 
+    @staticmethod
+    def process(data):
+        try:
+            task_result = TaskResult.deserial(data)
+            return task_result
+        except DeserialError:
+            logging.error('TaskResult Deserialize Error')
+            return -1
+
     def handle(self):
         while True:
             data = self.request.recv(8192)
             if data:
-                self.request.send('{"ack": "OK"}')
-                try:
-                    logging.info('Server Receive Len: {0}'.format(len(data)))
-                except TypeError, e:
-                    logging.warning('Socket Send Format Error: {0}'.format(data))
+                logging.info('Server Receive Len: {0}'.format(len(data)))
+                ret = self.process(data)
+                if ret != -1:
+                    ack = '{"ack": "Pass"}'
+                else:
+                    ack = '{"ack": "Fail"}'
+                self.request.send(ack)
+                logging.info('Server Send: {0}'.format(ack))
             else:
-                logging.warning('Socket Disconnect: {0}'.format(self.client_address))
+                logging.warning('Server Disconnect: {0}'.format(self.client_address))
                 break
 
 

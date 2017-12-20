@@ -44,7 +44,7 @@ if __name__ == '__main__':
                         "name": "shell"
                     }
                 },
-                task_earliest='15:00',
+                task_earliest='10:00',
                 task_latest='18:00',
                 session='session')
     msg_loop.put('task', task)
