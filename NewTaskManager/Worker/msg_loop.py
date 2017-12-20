@@ -6,7 +6,7 @@ Worker内部消息循环
 from Queue import Queue
 from threading import Thread
 
-from NewTaskManager.Controller import controller_logger as logging
+from NewTaskManager.Worker import worker_logger as logging
 
 
 class Event(object):
@@ -15,11 +15,20 @@ class Event(object):
         self.event_data = event_data
 
 
+class MsgQueue(Queue):
+    def __init__(self):
+        Queue.__init__(self)
+
+    def put_event(self, event_name, event_data):
+        self.put(Event(event_name, event_data))
+        logging.info('MsgQueue Put {0} {1}'.format(event_name, event_data))
+
+
 class MsgLoop(Thread):
+
     def __init__(self):
         super(MsgLoop, self).__init__()
         self.callback_dict = dict()
-        self.msg_queue = Queue()
 
     def register_callback(self, event_name, callback_func):
         if event_name not in self.callback_dict:
@@ -41,16 +50,13 @@ class MsgLoop(Thread):
                 if not callback_list:
                     self.callback_dict.pop(event_name)
 
-    def put(self, event_name, event_data):
-        self.msg_queue.put(Event(event_name, event_data))
-
     def run(self):
+        from NewTaskManager.Worker.worker import msg_queue
+        logging.info('msg_loop')
         while 1:
-            event = self.msg_queue.get()
+            event = msg_queue.get()
+            logging.info('MsgLoop Get {0} {1}'.format(event.event_name, event.event_data))
             event_name = event.event_name
             callback_list = self.callback_dict.get(event_name)
             for each in callback_list:
                 each(event)
-
-
-msg_loop = MsgLoop()

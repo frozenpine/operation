@@ -74,15 +74,19 @@ class TaskStatus(Enum):
 
     @property
     def IsExcepted(self):
-        return self in [TaskStatus.InitFailed, TaskStatus.TimeRangeExcept]
+        return self in [TaskStatus.UnKnown, TaskStatus.InitFailed, TaskStatus.TimeRangeExcept]
 
     @property
     def IsInited(self):
-        return self in [TaskStatus.Runnable] or self.Waiting
+        return self in [TaskStatus.Runnable] or self.IsWaiting
 
     @property
     def IsWaiting(self):
         return self in [TaskStatus.TriggerTimeWaiting, TaskStatus.WorkerWaiting]
+
+    @property
+    def IsRunning(self):
+        return self in [TaskStatus.Running]
 
     @property
     def IsDone(self):
@@ -348,10 +352,11 @@ class Task(JsonSerializable):
 
 
 class TaskResult(JsonSerializable):
-    def __init__(self, queue_uuid, task_uuid, status_code, session, task_result=None):
+    def __init__(self, queue_uuid, task_uuid, status_code, status_msg, session, task_result=None):
         self.queue_uuid = queue_uuid
         self.task_uuid = task_uuid
         self.status_code = status_code
+        self.status_msg = status_msg
         self.session = session
         self.task_result = task_result
 
@@ -373,6 +378,7 @@ class TaskResult(JsonSerializable):
         queue_uuid = dict_data['queue_uuid']
         task_uuid = dict_data['task_uuid']
         status_code = TaskStatus(dict_data['status_code'])
+        status_msg = TaskStatus(dict_data['status_msg'])
         session = dict_data['session']
         task_result = Result()
         task_result.destination = dict_data['task_result']['destination']
@@ -381,5 +387,5 @@ class TaskResult(JsonSerializable):
         task_result.module = dict_data['task_result']['module']
         task_result.data = dict_data['task_result']['data']
         task_result.error_msg = dict_data['task_result']['error_msg']
-        return TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
+        return TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code, status_msg=status_msg,
                           session=session, task_result=task_result)

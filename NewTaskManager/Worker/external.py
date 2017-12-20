@@ -9,14 +9,43 @@ import socket
 from threading import Thread
 
 from NewTaskManager.Worker import worker_logger as logging
-from NewTaskManager.Worker.msg_loop import msg_loop
+from NewTaskManager.Worker.worker import msg_queue
 from NewTaskManager.excepts import DeserialError
 from NewTaskManager.protocol import TmProtocol
 
 external_socket = dict()
+# 初始化Task
+
+from NewTaskManager.protocol import Task
+
+task = Task(
+    queue_uuid='queue1',
+    create_time='10:00',
+    trigger_time='10:00',
+    task_uuid='task1',
+    task_info={
+        "remote": {
+            "params": {
+                "ip": "192.168.100.90",
+                "password": "qdam",
+                "user": "qdam"
+            },
+            "name": "SSHConfig"
+        },
+        "mod": {
+            "shell": "sleep 5",
+            "name": "shell"
+        }
+    },
+    task_earliest='10:00',
+    task_latest='18:00',
+    session='session'
+)
 
 
 class ThreadedTCPRequestHandler(SocketServer.StreamRequestHandler):
+    msg_queue.put_event('task', task)
+
 
     def process(self, data):
         try:
@@ -29,7 +58,7 @@ class ThreadedTCPRequestHandler(SocketServer.StreamRequestHandler):
             task_info = data.payload
             if src not in external_socket:
                 external_socket.update({src: self.request})
-            msg_loop.put('task', task_info)
+            msg_queue.put('task', task_info)
 
     def handle(self):
         while True:
