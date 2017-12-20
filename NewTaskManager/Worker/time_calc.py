@@ -1,4 +1,7 @@
 # coding=utf-8
+"""
+Worker内部用于时间计算的逻辑
+"""
 
 import re
 import time

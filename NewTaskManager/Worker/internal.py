@@ -1,7 +1,11 @@
 # coding=utf-8
+"""
+Worker节点用于与内部工作进程通信的SocketServer
+"""
 
 import SocketServer
 import json
+import pickle
 import socket
 from threading import Thread
 
@@ -9,26 +13,42 @@ from enum import Enum
 
 from NewTaskManager.Controller import controller_logger as logging
 
-socket_dict = dict()
+internal_socket = dict()
 
 
 class MessageType(Enum):
     CONNECT = 101
-    HEARTBEAT = 102
+    INFO = 102
     DISCONNECT = 103
+
+
+class Protocol(object):
+    def __init__(self, message_type, message_info):
+        self.message_type = message_type
+        self.message_info = message_info
+
+    def to_dict(self):
+        return {'MessageType': self.message_type,
+                'MessageInfo': self.message_info}
+
+    def serialize(self, to_json=False):
+        if to_json:
+            return json.dumps(self.to_dict())
+        else:
+            return pickle.dumps(self.to_dict())
 
 
 class ThreadedTCPRequestHandler(SocketServer.StreamRequestHandler):
 
     def process(self, data):
         if data.get('MessageType') == MessageType.CONNECT.value:
-            socket_dict.update({data.get('SocketID'): self.request})
+            internal_socket.update({data.get('SocketID'): self.request})
             return 0
-        if data.get('MessageType') == MessageType.HEARTBEAT.value:
+        if data.get('MessageType') == MessageType.INFO.value:
             pass
         if data.get('MessageType') == MessageType.DISCONNECT.value:
             logging.info('Socket Disconnect: {0}'.format(self.client_address))
-            socket_dict.pop(data.get('SocketID'))
+            internal_socket.pop(data.get('SocketID'))
             self.request.close()
             return -1
 
@@ -36,6 +56,7 @@ class ThreadedTCPRequestHandler(SocketServer.StreamRequestHandler):
         while True:
             data = self.request.recv(8192)
             if data:
+                self.request.send()
                 try:
                     data = json.loads(data)
                     logging.info('Socket Receive: {0}'.format(data))
@@ -48,9 +69,10 @@ class ThreadedTCPRequestHandler(SocketServer.StreamRequestHandler):
             else:
                 logging.warning('Socket Disconnect: {0}'.format(self.client_address))
                 break
+            self.request.send(102, None)
 
 
-class WorkerSocketServer(Thread):
+class InternalSocketServer(Thread):
 
     def __init__(self, host, port):
         class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
@@ -65,21 +87,12 @@ class WorkerSocketServer(Thread):
         if isinstance(data, dict):
             data = json.dumps(data)
             try:
-                socket_dict.get(socket_id).send(data)
+                internal_socket.get(socket_id).send(data)
             except socket.error, e:
-                socket_dict.pop(socket_id)
+                internal_socket.pop(socket_id)
                 logging.info('Socket Disconnect: {0}'.format(socket_id))
         else:
             logging.warning('Socket Send Format Error: {0}'.format(data))
 
     def run(self):
         self.socket_server.serve_forever()
-
-
-socket_server = WorkerSocketServer('0.0.0.0', 7001)
-
-"""
-if __name__ == '__main__':
-    p = WorkerSocketServer('0.0.0.0', 7001)
-    p.start()
-"""

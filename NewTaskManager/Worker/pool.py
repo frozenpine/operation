@@ -1,13 +1,17 @@
 # coding=utf-8
+"""
+Worker进程池
+"""
 
+import logging
 import socket
 import time
 from multiprocessing import Pool
 from multiprocessing import cpu_count
 
-import worker_time
+import time_calc
 from NewTaskManager.Worker import worker_logger as logging
-from NewTaskManager.protocol import TaskStatus, TaskResult, msg_dict
+from NewTaskManager.protocol import TaskStatus, TaskResult, MSG_DICT
 from SysManager.configs import SSHConfig
 from SysManager.excepts import (ConfigInvalid, SSHAuthenticationException, SSHException, SSHNoValidConnectionsError)
 from SysManager.executor import Executor
@@ -75,15 +79,15 @@ def run(task_info):
         # 进程池满
         logging.warning('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.WorkerWating.value))
         status_code = TaskStatus.WorkerWaiting
-        status_msg = msg_dict.get(status_code)
+        status_msg = MSG_DICT.get(status_code)
     else:
-        ret_code, ret_msg = worker_time \
+        ret_code, ret_msg = time_calc \
             .compare_timestamps(task_info.trigger_time, task_info.task_earliest, task_info.task_latest)
         if ret_code == 3:
             # 无法执行 退出
             logging.warning('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.TimeRangeExcept.value))
             status_code = TaskStatus.TimeRangeExcept
-            status_msg = msg_dict.get(status_code)
+            status_msg = MSG_DICT.get(status_code)
         elif ret_code == 2:
             # 需要等待
             logging.info('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.WorkerWating.value))
@@ -93,13 +97,13 @@ def run(task_info):
             # 可以执行
             logging.info('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.Runnable.value))
             status_code = TaskStatus.Runnable
-            status_msg = msg_dict.get(status_code)
+            status_msg = MSG_DICT.get(status_code)
         else:
             logging.warning('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.UnKnown.value))
             status_code = TaskStatus.UnKnown
-            status_msg = msg_dict.get(status_code)
+            status_msg = MSG_DICT.get(status_code)
     result = TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
-                        status_msg=status_msg, session=task_info.session, run_all_flag=task_info.run_all_flag)
+                        status_msg=status_msg, session=task_info.session)
     send(result)
     # 超时或未知情况下 退出
     if status_code in (TaskStatus.TimeRangeExcept, TaskStatus.UnKnown):
@@ -112,7 +116,7 @@ def run(task_info):
         logging.warning('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.InitFailed.value))
         status_code, status_msg = TaskStatus.InitFailed, e
         result = TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
-                            status_msg=status_msg, session=task_info.session, run_all_flag=task_info.run_all_flag)
+                            status_msg=status_msg, session=task_info.session)
         send(result)
         return -1
     # 实例化Executor初始化判断
@@ -121,11 +125,11 @@ def run(task_info):
     except (SSHNoValidConnectionsError, SSHAuthenticationException, SSHException), e:
         status_code, status_msg = TaskStatus.InitFailed, e
         result = TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
-                            status_msg=status_msg, session=task_info.session, run_all_flag=task_info.run_all_flag)
+                            status_msg=status_msg, session=task_info.session)
         send(result)
         return -1
     # 开始正式执行
-    ret_code, ret_msg = worker_time.compare_timestamps(
+    ret_code, ret_msg = time_calc.compare_timestamps(
         task_info.trigger_time, task_info.task_earliest, task_info.task_latest
     )
     if ret_code == 3:
@@ -135,9 +139,9 @@ def run(task_info):
         if ret_code == 2:
             time.sleep(ret_msg)
         status_code = TaskStatus.Running
-        status_msg = msg_dict.get(status_code)
+        status_msg = MSG_DICT.get(status_code)
         result = TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
-                            status_msg=status_msg, session=task_info.session, run_all_flag=task_info.run_all_flag)
+                            status_msg=status_msg, session=task_info.session)
         send(result)
         mod = task_info.task["mod"]
         if isinstance(mod, dict):
@@ -164,10 +168,9 @@ def run(task_info):
                     status_msg = u"多任务执行成功"
         else:
             status_code = TaskStatus.UnKnown
-            status_msg = msg_dict.get(status_code)
+            status_msg = MSG_DICT.get(status_code)
         result = TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
-                            status_msg=status_msg, session=task_info.session, run_all_flag=task_info.run_all_flag,
-                            task_result=task_result)
+                            status_msg=status_msg, session=task_info.session, task_result=task_result)
         send(result)
 
 
@@ -190,10 +193,12 @@ class WorkerPool(object):
         self.running_process -= 1
 
     def start(self):
-        self.worker_pool = Pool(processes=self.process_count, initializer=init_socket, initargs=('127.0.0.1', 7001))
+        # self.worker_pool = Pool(processes=self.process_count, initializer=init_socket, initargs=('127.0.0.1', 7001))
+        self.worker_pool = Pool(processes=self.process_count)
 
-    def run(self, func, args):
-        self.worker_pool.apply_sync(func, args)
+    def run(self, event):
+        task_info = event.event_data
+        self.worker_pool.apply_sync(run, (task_info,))
 
 
 worker_pool = WorkerPool()
