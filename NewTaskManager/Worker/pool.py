@@ -3,7 +3,7 @@
 Worker进程池
 """
 
-import logging
+import json
 import socket
 import time
 from multiprocessing import Pool
@@ -38,32 +38,24 @@ def send(data):
     global socket_client
     if isinstance(data, TaskResult):
         dump_data = data.serial()
-        dict_data = data.to_dict()
+        dict_data = json.dumps(data.to_dict(), ensure_ascii=False)
         # 发送数据
         while 1:
             retry_count = 0
             try:
                 logging.info('Client Send Len: {0}'.format(len(dump_data)))
                 socket_client.send(dump_data)
-                logging.info('Client Send Success: {0}'.format(dict_data))
+                logging.info(u'Client Send: {0}'.format(dict_data))
+                ack = socket_client.recv(8192)
+                logging.info('Client Receive Success: {0}'.format(ack))
+                ack = json.loads(ack)
+                if ack.get('ack') == 'Fail':
+                    raise Exception('TaskResult Deserialize Error')
             except Exception, e:
                 # 因server端socket异常未正常发送
                 retry_count = retry_count + 1
                 logging.warning('Client Send Error: {0}'.format(e))
                 logging.warning('Client Send Retry {0} Time'.format(retry_count))
-            else:
-                break
-        # 接受数据
-        while 1:
-            retry_count = 0
-            try:
-                ack = socket_client.recv(8192)
-                logging.info('Client Receive Success: {0}'.format(ack))
-            except socket.timeout, e:
-                # 未收到server端确认信息
-                retry_count = retry_count + 1
-                logging.warning('Client Receive Error: {0}'.format(e))
-                logging.warning('Client Receive Retry {0} Time'.format(retry_count))
             else:
                 break
 
@@ -81,6 +73,10 @@ def run(task):
         logging.warning('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.WorkerWating.value))
         status_code = TaskStatus.WorkerWaiting
         status_msg = MSG_DICT.get(status_code)
+        result = TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
+                            status_msg=status_msg, session=task.session)
+        send(result)
+        return -1
     else:
         ret_code, ret_msg = get_time \
             .compare_timestamps(task.trigger_time, task.task_earliest, task.task_latest)

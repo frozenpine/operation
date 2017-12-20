@@ -4,12 +4,10 @@ Worker节点用于与Controller通信的SocketServer
 """
 
 import SocketServer
-import json
-import socket
 from threading import Thread
 
 from NewTaskManager.Worker import worker_logger as logging
-from NewTaskManager.Worker.msg_loop import msg_loop
+from NewTaskManager.Worker.worker import msg_queue
 from NewTaskManager.excepts import DeserialError
 from NewTaskManager.protocol import TmProtocol
 
@@ -24,12 +22,12 @@ class ThreadedTCPRequestHandler(SocketServer.StreamRequestHandler):
         except DeserialError, e:
             logging.warning('Task Deserialize Error: {0}'.format(e))
         else:
-            src = data.src
-            dest = data.dest
+            src = data.source
+            dest = data.destination
             task_info = data.payload
             if src not in external_socket:
                 external_socket.update({src: self.request})
-            msg_loop.put('task', task_info)
+            msg_queue.put_event('task', task_info)
 
     def handle(self):
         while True:
@@ -53,16 +51,8 @@ class ExternalSocketServer(Thread):
         self.socket_server = ThreadedTCPServer((host, port), ThreadedTCPRequestHandler)
 
     @staticmethod
-    def send(socket_id, data):
-        if isinstance(data, dict):
-            data = json.dumps(data)
-            try:
-                external_socket.get(socket_id).send(data)
-            except socket.error, e:
-                external_socket.pop(socket_id)
-                logging.info('Socket Disconnect: {0}'.format(socket_id))
-        else:
-            logging.warning('Socket Send Format Error: {0}'.format(data))
+    def send(event):
+        pass
 
     def run(self):
         self.socket_server.serve_forever()
