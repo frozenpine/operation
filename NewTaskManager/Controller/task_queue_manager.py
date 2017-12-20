@@ -20,17 +20,32 @@ from NewTaskManager.common import get_time
 from NewTaskManager.protocol import (MSG_DICT, JsonSerializable, QueueStatus,
                                      Task, TaskResult, TaskStatus)
 from NewTaskManager.Controller.excepts import *
+from NewTaskManager.Controller.events import EventName, MessageEvent
 
 
 class TaskQueueManager(threading.Thread):
-    def __init__(self, ip, port):
+    def __init__(self, ip, port, event_queue):
         threading.Thread.__init__(self)
         self._task_queues = {}
-        self._entrypoint = zerorpc.Server(RPCHandler(self._task_queues))
+        # self._results = results_pipe
+        self._event_queue = event_queue
+        self._entrypoint = zerorpc.Server(RPCHandler(self._task_queues, event_queue))
         self._entrypoint.bind("tcp://{ip}:{port}".format(ip=ip, port=port))
 
     def run(self):
         self._entrypoint.run()
+
+    def result_callback(self, event):
+        ''' while True:
+            result = self._results.get()
+            try:
+                if isinstance(result, TaskResult):
+                    self._task_queues[result.queue_uuid].update_status_by_result(result)
+                else:
+                    logging.warning('Invalid result data received.')
+            except Exception as err:
+                logging.error('Something bad happend: {}'.format(err.message)) '''
+        logging.info('Event received: {name} {body}'.format(event.Name, event.Data.to_dict()))
 
 
 def dumpper(func):
@@ -79,25 +94,12 @@ class TaskQueue(JsonSerializable):
         queue.make_todo_task_queue()
         return queue
 
-    ''' def ready(self):
-        return self._ready '''
-
     def status(self):
         self._condition.acquire()
-        ''' if not self._ready:
-            raise TimeoutError '''
         try:
             return self.queue_status
         finally:
             self._condition.release()
-
-    ''' def wait(self, timeout=None):
-        self._condition.acquire()
-        try:
-            if not self._ready:
-                self._condition.wait(timeout)
-        finally:
-            self._condition.release() '''
 
     def append(self, task):
         """
@@ -128,6 +130,17 @@ class TaskQueue(JsonSerializable):
         finally:
             self._condition.release()
 
+    def set_attribute(self, name, value):
+        self._condition.acquire()
+        try:
+            if hasattr(self, name):
+                setattr(self, name, value)
+                return True
+            else:
+                return False
+        finally:
+            self._condition.release()
+
     @dumpper
     def make_todo_task_queue(self):
         """
@@ -141,7 +154,6 @@ class TaskQueue(JsonSerializable):
             if not todo.empty():
                 self.todo_task_queue = todo
                 self.queue_status = QueueStatus.Normal
-            # self._ready = True
             self._condition.notifyAll()
         finally:
             self._condition.release()
@@ -153,8 +165,8 @@ class TaskQueue(JsonSerializable):
         """
         self._condition.acquire()
         try:
-            if self.todo_task_queue.empty():
-                return QueueStatus.Empty, MSG_DICT[QueueStatus.Empty]
+            if self.queue_status == QueueStatus.Empty:
+                return self.queue_status
             task = self.task_list[len(self.task_list) - self.todo_task_queue.qsize()]
             if task_uuid and task_uuid != task.task_uuid:
                 return None
@@ -171,48 +183,47 @@ class TaskQueue(JsonSerializable):
         self._condition.acquire()
         try:
             if self.todo_task_queue.empty():
-                return QueueStatus.Empty, MSG_DICT[QueueStatus.Empty]
+                return None
             if self.queue_status != QueueStatus.Normal:
-                return self.queue_status, MSG_DICT[self.queue_status]
+                return self.queue_status
             if not self.todo_task_queue.empty() and self.queue_status == QueueStatus.Normal:
                 task = self.todo_task_queue.get()
                 self.queue_status = QueueStatus.JobIssued
-                return 0, task
+                self._condition.notifyAll()
+                return task
         finally:
             self._condition.release()
 
     @dumpper
-    def skip_failed(self, task_uuid, session=None):
+    def skip_failed(self, session=None):
         self._condition.acquire()
         try:
             if self.queue_status != QueueStatus.JobFailed:
                 # 队列不可恢复
                 # return -1, MSG_DICT[self.queue_status]
-                return self.queue_status, u'队列状态不可恢复,当前状态: {}'.format(MSG_DICT[self.queue_status])
+                return False
             last_result = self.task_result_list[-1]
-            if task_uuid and last_result.task_uuid != task_uuid:
-                return -1, u'非失败任务不可跳过'
-            if last_result.status_code != TaskStatus.Failed:
-                return -1, u'队列无失败任务'
-            else:
-                last_result.status_code = TaskStatus.Skipped
-                self.queue_status = QueueStatus.Normal
-            return 0, u"任务跳过成功"
+            last_result.status_code = TaskStatus.Skipped
+            last_result.session = session
+            self.queue_status = QueueStatus.Normal
+            self._condition.notifyAll()
+            return True
         finally:
             self._condition.release()
 
     @dumpper
-    def resume_fail_task(self):
+    def resume_failed(self):
         """
         将失败任务压入待做队列
         """
         self._condition.acquire()
         try:
-            if self.task_result_list[-1].status_code == TaskStatus.Failed:
+            if self.queue_status == QueueStatus.JobFailed:
                 self.task_result_list.pop()
                 self.make_todo_task_queue()
+                return True
             else:
-                return -1, u'非失败任务不可恢复'
+                return False
         finally:
             self._condition.release()
 
@@ -224,12 +235,14 @@ class TaskQueue(JsonSerializable):
         self._condition.acquire()
         try:
             if self.todo_task_queue.empty():
-                return QueueStatus.Empty, MSG_DICT[QueueStatus.Empty]
-            code, next_task = self.get()
-            if code == 0:
+                return False
+            next_task = self.get()
+            if isinstance(next_task, Task):
                 self.task_result_list.append(TaskResult(
                     next_task.queue_uuid, next_task.task_uuid, TaskStatus.Skipped, session))
-                return 0, u"任务跳过成功"
+                return True
+            else:
+                return False
         finally:
             self._condition.release()
 
@@ -249,7 +262,7 @@ class TaskQueue(JsonSerializable):
                 logging.warning(u'任务结果与当前执行任务不匹配！')
                 logging.warning(u'当前任务：{}'.format(json.dumps(current_task.to_dict())))
                 logging.warning(u'任务结果：{}'.format(json.dumps(task_result.to_dict())))
-                return
+                return False
             switch = {
                 TaskStatus.UnKnown: lambda: QueueStatus.NotRecoverable,
                 TaskStatus.InitFailed: lambda: QueueStatus.NotRecoverable,
@@ -269,6 +282,7 @@ class TaskQueue(JsonSerializable):
             }
             self.queue_status = switch[task_result.task_status]()
             self._condition.notifyAll()
+            return True
         finally:
             self._condition.release()
 
@@ -300,7 +314,7 @@ class TaskQueue(JsonSerializable):
         self._condition.acquire()
         try:
             if task.task_uuid not in map(lambda x: x.task_uuid, self.task_list):
-                return -1, u"未找到对应任务"
+                return None
             elif task.task_uuid in map(lambda x: x.task_uuid, self.task_result_list):
                 if task.task_uuid == self.task_result_list[-1].task_uuid:
                     if self.task_result_list[-1].status_code in (
@@ -308,10 +322,9 @@ class TaskQueue(JsonSerializable):
                             TaskStatus.Timeout, TaskStatus.InitFailed, TaskStatus.TimeRangeExcept):
                         self.task_result_list.pop()
                     else:
-                        return -1, u'当前任务状态({})无法更新任务定义'.format(
-                            MSG_DICT[self.task_result_list[-1].status_code])
+                        return self.task_result_list[-1].status_code
                 else:
-                    return -1, u'不可更新已完成任务'
+                    return None
             new_list = self.task_list[:len(self.task_result_list)]
             for old_task in self.task_list[len(self.task_result_list):]:
                 if task.task_uuid == old_task.task_uuid:
@@ -320,46 +333,37 @@ class TaskQueue(JsonSerializable):
                     new_list.append(old_task)
             self.task_list = new_list
             self.make_todo_task_queue()
-            return 0, u"更新成功"
+            return task
         finally:
             self._condition.release()
 
 
-''' def expired(func):
-    def wrapper(self, queue_uuid, *args, **kwargs):
-        curr_time = datetime.now()
-        if not self._queue_exist(queue_uuid):
-            return QueueStatus.NotExits, MSG_DICT[QueueStatus.NotExits]
-        expire_time = parse(self._cache[queue_uuid].expire_time)
-        destroy_time = parse(self._cache[queue_uuid].destroy_time)
-        if curr_time > destroy_time:
-            self._cache.pop(queue_uuid)
-            os.remove('dump/{0}.dump'.format(queue_uuid))
-            return QueueStatus.NotExits, MSG_DICT[QueueStatus.NotExits]
-        elif destroy_time > curr_time > expire_time:
-            self._cache[queue_uuid].queue_status = -14
-            with open("dump/{0}.dump".format(queue_uuid), "wb") as f:
-                f.write(pickle.dumps(self._manager.queue_dict[queue_uuid].to_dict()))
-            if func.func_name != 'snapshot':
-                return -14, MSG_DICT[-14]
-        return func(self, queue_uuid, *args, **kwargs)
-
-    return wrapper '''
+def serialize(func):
+    def wrapper(*args, **kwargs):
+        code, obj = func(*args, **kwargs)
+        if isinstance(obj, JsonSerializable):
+            return code, obj.to_dict()
+        else:
+            return code, obj
+    wrapper.__doc__ = func.__doc__
+    return wrapper
 
 
 class RPCHandler(object):
-    def __init__(self, cache):
+    def __init__(self, cache, event_queue):
         self._cache = cache
+        self._event_queue = event_queue
 
     def _queue_exist(self, queue_id):
         return queue_id in self._cache.keys()
 
+    @serialize
     def init(self, queue_dict, force=False):
         if not isinstance(queue_dict, dict):
-            return QueueStatus.InitFailed, MSG_DICT[QueueStatus.InitFailed]
+            raise Exception(u'非法的队列初始化数据')
         for queue_id, queue_define in queue_dict.iteritems():
             if not force and self._queue_exist(queue_id):
-                return QueueStatus.InitFailed, MSG_DICT[QueueStatus.InitFailed]
+                return -1, u'队列已存在，且未过期'
             queue = TaskQueue(self._cache, queue_id, queue_define['trigger_time'], queue_define['group_block'])
             for task_define in queue_define['group_info']:
                 queue.append(Task.from_dict({
@@ -373,25 +377,51 @@ class RPCHandler(object):
                     'task_info': task_define['detail']
                 }))
             queue.make_todo_task_queue()
-        self._cache[queue.queue_uuid] = queue
+        return 0, u'队列初始化完成'
 
+    @serialize
     def run_all(self, queue_uuid, session=None):
         pass
 
+    @serialize
     def run_next(self, queue_uuid, session=None):
-        pass
+        rtn = self._cache[queue_uuid].get()
+        if rtn:
+            if isinstance(rtn, Task):
+                rtn.session = session
+                self._event_queue.put(MessageEvent(EventName.TaskDispath, rtn))
+                return 0, u'任务已调度'
+            elif isinstance(rtn, QueueStatus):
+                return -1, MSG_DICT[rtn]
+            else:
+                raise Exception(u'未知的任务调度返回')
+        else:
+            return -1, MSG_DICT[QueueStatus.Empty]
 
+    @serialize
     def skip_next(self, queue_uuid, task_uuid=None, session=None):
         pass
 
+    @serialize
     def peek(self, queue_uuid, task_uuid=None):
         if self._queue_exist(queue_uuid):
-            return self._cache[queue_uuid].peek(task_uuid)
+            rtn = self._cache[queue_uuid].peek(task_uuid)
+            if rtn:
+                if isinstance(rtn, Task):
+                    return 0, rtn.to_dict()
+                elif isinstance(rtn, QueueStatus):
+                    return -1, MSG_DICT[rtn]
+                else:
+                    return -1, u'返回状态未知'
+            else:
+                return -1, u'Task uuid[{uuid}] 和下一项待做任务不匹配'.format(uuid=task_uuid)
         else:
-            return QueueStatus.NotExits, MSG_DICT[QueueStatus.NotExits]
+            return -1, MSG_DICT[QueueStatus.NotExits]
 
+    @serialize
     def resume(self, queue_uuid):
         pass
 
+    @serialize
     def kill(self, task_uuid):
         pass

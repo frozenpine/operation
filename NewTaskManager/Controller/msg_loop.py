@@ -1,16 +1,20 @@
 # coding=utf-8
+"""
+Controller内部消息循环
+"""
 
+from Queue import Queue
 from threading import Thread
 
 from NewTaskManager.Controller import controller_logger as logging
-from NewTaskManager.Controller.controller import msg_queue
+from NewTaskManager.Controller.events import EventName, MessageEvent
 
 
-class MessageLoop(Thread):
+class MsgLoop(Thread):
     def __init__(self):
-        super(MessageLoop, self).__init__()
-        self.callback_dict = dict()
-        self.msg_queue = msg_queue
+        super(MsgLoop, self).__init__()
+        self.callback_dict = {}
+        self.msg_queue = Queue()
 
     def register_callback(self, event_name, callback_func):
         if event_name not in self.callback_dict:
@@ -32,6 +36,9 @@ class MessageLoop(Thread):
                 if not callback_list:
                     self.callback_dict.pop(event_name)
 
+    def put(self, event_name, event_data):
+        self.msg_queue.put(MessageEvent(event_name, event_data))
+
     def run(self):
         while 1:
             event = self.msg_queue.get()
@@ -41,4 +48,4 @@ class MessageLoop(Thread):
                 each(event)
 
 
-# msg_loop = MsgLoop()
+msg_loop = MsgLoop()

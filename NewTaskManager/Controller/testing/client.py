@@ -46,10 +46,15 @@ if __name__ == '__main__':
         }
     }
 
-    client.init(queue_dict, True)
+    try:
+        client.init(queue_dict, True)
+    except Exception as err:
+        print err.msg
 
-    result = client.peak(queue_id, task3_id)
+    result = client.peek(queue_id, task3_id)
     print result
 
     result = client.peek(queue_id, task1_id)
     print result
+
+    print client.run_next(queue_id)

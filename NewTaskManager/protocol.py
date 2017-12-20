@@ -146,6 +146,8 @@ class JsonSerializable(object):
                     results[field] = obj.to_dict()
                 elif isinstance(obj, Enum):
                     results[field] = obj.value
+                elif isinstance(obj, list) or isinstance(obj, tuple):
+                    results[field] = [x.to_dict() if isinstance(x, JsonSerializable) else x for x in obj]
                 else:
                     results[field] = obj
         return results
