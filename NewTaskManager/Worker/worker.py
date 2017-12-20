@@ -10,9 +10,6 @@ from pool import worker_pool
 msg_queue = MsgQueue()
 
 if __name__ == '__main__':
-    # 启动进程池
-    worker_pool.start()
-
     # 初始化消息循环
     from msg_loop import MsgLoop
 
@@ -29,6 +26,9 @@ if __name__ == '__main__':
 
     external_socket_server = ExternalSocketServer('127.0.0.1', 7002)
     external_socket_server.start()
+
+    # 启动进程池
+    worker_pool.start()
 
     # 注册消息循环回调
     msg_loop.register_callback('task', worker_pool.run)
