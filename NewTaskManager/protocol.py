@@ -373,13 +373,7 @@ class TaskResult(JsonSerializable):
         queue_uuid = dict_data['queue_uuid']
         task_uuid = dict_data['task_uuid']
         status_code = TaskStatus(dict_data['status_code'])
-        # status_msg = TaskStatus(dict_data['status_msg'])
         session = dict_data['session']
-<<<<<<< HEAD
-        # run_all_flag = dict_data['run_all_flag']
-        task_result = dict_data['task_result']
-        return TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
-=======
         task_result = Result()
         task_result.destination = dict_data['task_result']['destination']
         task_result.lines = dict_data['task_result']['lines']
@@ -387,6 +381,5 @@ class TaskResult(JsonSerializable):
         task_result.module = dict_data['task_result']['module']
         task_result.data = dict_data['task_result']['data']
         task_result.error_msg = dict_data['task_result']['error_msg']
-        return TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code, status_msg=status_msg,
->>>>>>> 3162c51b839b98c4a1d76d329cae6bbb3b173bfd
+        return TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
                           session=session, task_result=task_result)
