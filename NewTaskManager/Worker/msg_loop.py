@@ -21,7 +21,7 @@ class MsgQueue(Queue):
 
     def put_event(self, event_name, event_data):
         self.put(Event(event_name, event_data))
-        logging.info('MsgQueue Put {0} {1}'.format(event_name, event_data))
+        logging.info('MsgQueue Put EventName: {0} EventData: {1}'.format(event_name, event_data))
 
 
 class MsgLoop(Thread):
@@ -55,7 +55,7 @@ class MsgLoop(Thread):
         logging.info('msg_loop')
         while 1:
             event = msg_queue.get()
-            logging.info('MsgLoop Get {0} {1}'.format(event.event_name, event.event_data))
+            logging.info('MsgLoop Get EventName: {0} EventData: {1}'.format(event.event_name, event.event_data))
             event_name = event.event_name
             callback_list = self.callback_dict.get(event_name)
             for each in callback_list:

@@ -28,7 +28,8 @@ class PayloadType(Enum):
     Authentication = 10
     Confirmation = 20
     Health = 30
-    TaskResult = 40
+    Task = 40
+    TaskResult = 50
 
 
 class QueueStatus(Enum):

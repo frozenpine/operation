@@ -25,10 +25,10 @@ class ThreadedTCPRequestHandler(SocketServer.StreamRequestHandler):
                 msg_queue.put_event('init', task_result)
                 logging.info('MsgLoop Put Init {0}'.format(task_result))
             if task_status.IsRunning:
-                msg_queue.put_event('Run', task_result)
+                msg_queue.put_event('start', task_result)
                 logging.info('MsgLoop Put Run {0}'.format(task_result))
             if task_status.IsDone:
-                msg_queue.put_event('End', task_result)
+                msg_queue.put_event('end', task_result)
                 logging.info('MsgLoop Put End {0}'.format(task_result))
             return 0
         except DeserialError:
