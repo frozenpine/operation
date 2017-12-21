@@ -1,11 +1,8 @@
 # coding=utf-8
 
-import sys
-from os import path, environ
+from os import environ
 from uuid import uuid4
-
-sys.path.append(path.join(path.dirname(__file__), '../../../'))
-
+import sys
 from zerorpc import Client
 
 if __name__ == '__main__':
@@ -47,14 +44,18 @@ if __name__ == '__main__':
     }
 
     try:
-        client.init(queue_dict, True)
+        code, msg = client.init(queue_dict, False)
+        print msg
+        if code != 0:
+            sys.exit()
     except Exception as err:
-        print err.msg
+        print err
 
     result = client.peek(queue_id, task3_id)
-    print result
+    # print result
 
     result = client.peek(queue_id, task1_id)
-    print result
+    # print result
 
-    print client.run_next(queue_id)
+    client.run_next(queue_id)
+    client.close()

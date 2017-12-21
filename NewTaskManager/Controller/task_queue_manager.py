@@ -5,46 +5,62 @@
 import os
 import sys
 import threading
-import logging
 import json
 import time
 import random
-from datetime import datetime
-from multiprocessing import Queue, TimeoutError
+from multiprocessing.queues import Queue
+from multiprocessing import Process
+# from gevent.queue import Queue
+from gevent import monkey
 
 import zerorpc
-from dateutil.parser import parse
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
-from NewTaskManager.common import get_time
-from NewTaskManager.protocol import (MSG_DICT, JsonSerializable, QueueStatus,
-                                     Task, TaskResult, TaskStatus)
-from NewTaskManager.Controller.excepts import *
-from NewTaskManager.Controller.events import EventName
+try:
+    from NewTaskManager.Controller import controller_logger as logging
+    from NewTaskManager.common import get_time
+    from NewTaskManager.protocol import (MSG_DICT, JsonSerializable, QueueStatus,
+                                         Task, TaskResult, TaskStatus)
+    from NewTaskManager.Controller.task_dispatcher import TaskDispatcher
+    from NewTaskManager.Controller.events import EventName
+    from NewTaskManager.Controller.excepts import QueueError
+    from NewTaskManager.Controller.msg_loop import MsgQueue, MsgLoop
+except ImportError:
+    sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
+    from NewTaskManager.Controller import controller_logger as logging
+    from NewTaskManager.common import get_time
+    from NewTaskManager.protocol import (MSG_DICT, JsonSerializable, QueueStatus,
+                                         Task, TaskResult, TaskStatus)
+    from NewTaskManager.Controller.task_dispatcher import TaskDispatcher
+    from NewTaskManager.Controller.events import EventName
+    from NewTaskManager.Controller.excepts import QueueError
+    from NewTaskManager.Controller.msg_loop import MsgQueue, MsgLoop
 
 
-class TaskQueueManager(threading.Thread):
-    def __init__(self, ip, port, event_queue):
-        threading.Thread.__init__(self)
+class TaskQueueManager(Process):
+    def __init__(self, rpc_addr, rpc_port, msg_queue):
+        # threading.Thread.__init__(self)
+        Process.__init__(self)
+        # rpc_addr = os.environ.get('TM_HOST') or '0.0.0.0'
+        # rpc_port = os.environ.get('TM_PORT') or 6000
+        # socket_port = os.environ.get("SOCKET_PORT") or 7000
+        # socket_host = os.environ.get("SOCKET_HOST") or '0.0.0.0'
+        # self._msg_queue = MsgQueue()
+        # self._msg_loop = MsgLoop()
+        # self._task_dispatcher = TaskDispatcher(socket_host, socket_port, self._msg_queue)
+        self._msg_queue = msg_queue
         self._task_queues = {}
-        # self._results = results_pipe
-        self._event_queue = event_queue
-        self._entrypoint = zerorpc.Server(RPCHandler(self._task_queues, event_queue))
-        self._entrypoint.bind("tcp://{ip}:{port}".format(ip=ip, port=port))
+        self._entrypoint = zerorpc.Server(RPCHandler(self._task_queues, self._msg_queue))
+        self._entrypoint.bind("tcp://{ip}:{port}".format(ip=rpc_addr, port=rpc_port))
 
     def run(self):
+        ''' self._msg_loop.register_callback(EventName.TaskResult, self.result_callback)
+        self._msg_loop.register_callback(EventName.TaskDispath, self._task_dispatcher.task_dispatch_callback)
+        self._msg_loop.start()
+        self._task_dispatcher.start() '''
+        monkey.patch_all()
         self._entrypoint.run()
 
     def result_callback(self, event):
-        ''' while True:
-            result = self._results.get()
-            try:
-                if isinstance(result, TaskResult):
-                    self._task_queues[result.queue_uuid].update_status_by_result(result)
-                else:
-                    logging.warning('Invalid result data received.')
-            except Exception as err:
-                logging.error('Something bad happend: {}'.format(err.message)) '''
         logging.info('Event received: {} {}'.format(event.Name, event.Data.to_dict()))
 
 
@@ -88,13 +104,35 @@ class TaskQueue(JsonSerializable):
         self._timer.start()
         cache[self.queue_uuid] = self
 
+    def __del__(self):
+        if self._timer:
+            del self._timer
+
     @staticmethod
     def from_dict(dict_data):
         queue = TaskQueue(**dict_data)
         queue.make_todo_task_queue()
         return queue
 
-    def status(self):
+    @property
+    def IsSync(self):
+        """
+        查看任务队列是否为同步队列
+        """
+        return self.sync_group
+
+    @property
+    def UUID(self):
+        """
+        返回任务队列的UUID
+        """
+        return self.queue_uuid
+
+    @property
+    def Status(self):
+        """
+        返回任务队列的状态
+        """
         self._condition.acquire()
         try:
             return self.queue_status
@@ -103,7 +141,8 @@ class TaskQueue(JsonSerializable):
 
     def append(self, task):
         """
-        添加任务至任务队列的任务列表
+        添加任务至任务列表，该操作不更新待做任务队列
+        如需更新待做任务队列，在完成该操作后调用 make_todo_task_queue
         """
         self._condition.acquire()
         try:
@@ -118,9 +157,12 @@ class TaskQueue(JsonSerializable):
             self._condition.release()
 
     def extend(self, task_list):
+        """
+        扩展任务列表，该操作不更新待做任务队列
+        如需更新待做任务队列，在完成该操作后调用 make_todo_task_queue
+        """
         self._condition.acquire()
         try:
-            # self._ready = False
             if self.queue_status == QueueStatus.Initiating:
                 self.task_list.extend(task_list)
             else:
@@ -130,7 +172,10 @@ class TaskQueue(JsonSerializable):
         finally:
             self._condition.release()
 
-    def set_attribute(self, name, value):
+    ''' def set_attribute(self, name, value):
+        """
+        设置任务队列的属性
+        """
         self._condition.acquire()
         try:
             if hasattr(self, name):
@@ -139,29 +184,33 @@ class TaskQueue(JsonSerializable):
             else:
                 return False
         finally:
-            self._condition.release()
+            self._condition.release() '''
 
     @dumpper
     def make_todo_task_queue(self):
         """
-        将task放入controller的待做队列中
+        初始化待做任务队列
         """
         self._condition.acquire()
         try:
+            if self.Status not in (QueueStatus.Normal, QueueStatus.Initiating):
+                return False
             todo = Queue()
             for task in self.task_list[len(self.task_result_list):]:
                 todo.put(task)
             if not todo.empty():
                 self.todo_task_queue = todo
                 self.queue_status = QueueStatus.Normal
-            self._condition.notifyAll()
+                self._condition.notifyAll()
+                return True
+            else:
+                return False
         finally:
             self._condition.release()
 
     def peek(self, task_uuid=None):
         """
-        从controller的待做队列中查询第一个task
-        :param task_uuid: task的uuid
+        查看下一项待做任务且不从待做任务队列中取出任务
         """
         self._condition.acquire()
         try:
@@ -178,7 +227,7 @@ class TaskQueue(JsonSerializable):
     @dumpper
     def get(self):
         """
-        从controller的待做队列中取出task
+        从待做队列中取出任务
         """
         self._condition.acquire()
         try:
@@ -194,13 +243,43 @@ class TaskQueue(JsonSerializable):
         finally:
             self._condition.release()
 
+    def put(self, data, idx=0):
+        """
+        向任务队列添加单个任务或任务列表
+        该函数将直接更新待做任务队列
+        """
+        self._condition.acquire()
+        try:
+            if isinstance(data, Task):
+                if idx:
+                    if idx >= len(self.task_result_list):
+                        self.task_list = self.task_list[:idx] + [data] + self.task_list[idx:]
+                    else:
+                        raise Exception('Index in done task list')
+                else:
+                    self.append(data)
+            elif isinstance(data, list) or isinstance(data, tuple):
+                if idx:
+                    if idx >= len(self.task_result_list):
+                        self.task_list = self.task_list[:idx] + list(data) + self.task_list[idx:]
+                    else:
+                        raise Exception('Index in done task list')
+                else:
+                    self.extend(data)
+            else:
+                raise Exception('Invalid data input')
+            return self.make_todo_task_queue()
+        finally:
+            self._condition.release()
+
     @dumpper
     def skip_failed(self, session=None):
+        """
+        跳过队列中的失败任务
+        """
         self._condition.acquire()
         try:
             if self.queue_status != QueueStatus.JobFailed:
-                # 队列不可恢复
-                # return -1, MSG_DICT[self.queue_status]
                 return False
             last_result = self.task_result_list[-1]
             last_result.status_code = TaskStatus.Skipped
@@ -214,7 +293,7 @@ class TaskQueue(JsonSerializable):
     @dumpper
     def resume_failed(self):
         """
-        将失败任务压入待做队列
+        将失败任务恢复至待做队列
         """
         self._condition.acquire()
         try:
@@ -239,7 +318,8 @@ class TaskQueue(JsonSerializable):
             next_task = self.get()
             if isinstance(next_task, Task):
                 self.task_result_list.append(TaskResult(
-                    next_task.queue_uuid, next_task.task_uuid, TaskStatus.Skipped, session))
+                    next_task.queue_uuid, next_task.task_uuid,
+                    TaskStatus.Skipped, MSG_DICT[TaskStatus.Skipped], session))
                 return True
             else:
                 return False
@@ -249,11 +329,7 @@ class TaskQueue(JsonSerializable):
     @dumpper
     def update_status_by_result(self, task_result):
         """
-        更改task_status_list和task_result_list中的任务状态
-        :param task_uuid: task的uuid
-        :param task_status: task的状态
-        :param session: 用户session
-        :param task_result: task的执行结果
+        根据任务结果更新队列状态
         """
         self._condition.acquire()
         try:
@@ -288,6 +364,9 @@ class TaskQueue(JsonSerializable):
 
     @dumpper
     def update_status_by_time(self):
+        """
+        根据时间触发更新队列状态
+        """
         self._condition.acquire()
         try:
             current_time = time.time()
@@ -307,10 +386,14 @@ class TaskQueue(JsonSerializable):
         finally:
             self._condition.release()
         if current_time >= destory_time:
-            del self._cache[self.queue_uuid]
+            # self._cache.destory(self.UUID)
+            del self._cache[self.UUID]
 
     @dumpper
     def update_task_define(self, task):
+        """
+        更新已有任务的任务定义
+        """
         self._condition.acquire()
         try:
             if task.task_uuid not in map(lambda x: x.task_uuid, self.task_list):
@@ -338,6 +421,33 @@ class TaskQueue(JsonSerializable):
             self._condition.release()
 
 
+class TaskQueueCache(object):
+    def __init__(self):
+        self._sync_queue_cache = {}
+        self._async_queue_cache = {}
+
+    def put_queue(self, queue):
+        if queue.IsSync:
+            self._sync_queue_cache[queue.UUID] = queue
+        else:
+            self._async_queue_cache[queue.UUID] = queue
+
+    def queue_exist(self, queue_uuid):
+        if queue_uuid in self._sync_queue_cache:
+            return self._sync_queue_cache
+        if queue_uuid in self._async_queue_cache:
+            return self._async_queue_cache
+        return None
+
+    def destory(self, queue_uuid):
+        cache = self.queue_exist(queue_uuid)
+        if cache:
+            del cache[queue_uuid]
+            return True
+        else:
+            return False
+
+
 def serialize(func):
     def wrapper(*args, **kwargs):
         code, obj = func(*args, **kwargs)
@@ -354,20 +464,20 @@ class RPCHandler(object):
         self._cache = cache
         self._event_queue = event_queue
 
-    def _queue_exist(self, queue_id):
-        return queue_id in self._cache.keys()
+    def _queue_exist(self, queue_uuid):
+        return queue_uuid in self._cache
 
     @serialize
     def init(self, queue_dict, force=False):
         if not isinstance(queue_dict, dict):
             raise Exception(u'非法的队列初始化数据')
-        for queue_id, queue_define in queue_dict.iteritems():
-            if not force and self._queue_exist(queue_id):
-                return -1, u'队列已存在，且未过期'
-            queue = TaskQueue(self._cache, queue_id, queue_define['trigger_time'], queue_define['group_block'])
+        for queue_uuid, queue_define in queue_dict.iteritems():
+            if not force and self._queue_exist(queue_uuid):
+                return -1, u'队列已存在'
+            queue = TaskQueue(self._cache, queue_uuid, queue_define['trigger_time'], queue_define['group_block'])
             for task_define in queue_define['group_info']:
                 queue.append(Task.from_dict({
-                    'queue_uuid': queue_id,
+                    'queue_uuid': queue_uuid,
                     'create_time': queue.create_time,
                     'trigger_time': queue.trigger_time,
                     'task_uuid': task_define['task_uuid'],

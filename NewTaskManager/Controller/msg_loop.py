@@ -1,22 +1,24 @@
 # coding=utf-8
 """
-Worker内部消息循环
+Controller内部消息循环
 """
 
-from Queue import Queue
+from multiprocessing.queues import Queue
+# from Queue import Queue
+# from gevent.queue import Queue
 from threading import Thread
 
-from NewTaskManager.Worker import worker_logger as logging
+from NewTaskManager.Controller import controller_logger as logging
 from NewTaskManager.Controller.events import MessageEvent
 
 
 class MsgQueue(Queue):
-    def __init__(self):
-        Queue.__init__(self)
+    def __init__(self, *args, **kwargs):
+        Queue.__init__(self, *args, **kwargs)
 
     def put_event(self, event_name, event_data):
         self.put(MessageEvent(event_name, event_data))
-        logging.info('MsgQueue Put EventName: {0} EventData: {1}'.format(event_name, event_data.to_dict()))
+        # logging.info('MsgQueue Put EventName: {0} EventData: {1}'.format(event_name, event_data.to_dict()))
 
 
 class MsgLoop(Thread):
@@ -46,10 +48,10 @@ class MsgLoop(Thread):
 
     def run(self):
         from NewTaskManager.Controller.controller import msg_queue
-        logging.info('msg_loop')
-        while 1:
+        logging.info('Message loop started')
+        while True:
             event = msg_queue.get()
-            logging.info('MsgLoop Get EventName: {0} EventData: {1}'.format(event.Name, event.Data.to_dict()))
+            # logging.info('MsgLoop Get EventName: {0} EventData: {1}'.format(event.Name, event.Data.to_dict()))
             callback_list = self.callback_dict.get(event.Name)
             for each in callback_list:
                 each(event)

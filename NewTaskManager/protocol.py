@@ -211,12 +211,13 @@ class JsonSerializable(object):
         else:
             directory = path.dirname(dump_file)
             if path.isdir(directory):
-                if path.isfile(dump_file):
-                    file_name = '{file_name}_{timestamp}.yaml'.format(
-                        file_name=path.basename(dump_file).split('.')[0],
-                        timestamp=time.strftime('%Y%m%d%H%M%S'))
-                else:
-                    file_name = path.basename(dump_file)
+                # if path.isfile(dump_file):
+                #     file_name = '{file_name}_{timestamp}.yaml'.format(
+                #         file_name=path.basename(dump_file).split('.')[0],
+                #         timestamp=time.strftime('%Y%m%d%H%M%S'))
+                # else:
+                #     file_name = path.basename(dump_file)
+                file_name = path.basename(dump_file)
             else:
                 message = '"{}" is neither an dir nor a regular file.'.format(dump_file)
                 tm_logger.error(message)
