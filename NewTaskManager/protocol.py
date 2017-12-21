@@ -25,6 +25,7 @@ class MessageType(Enum):
 
 class PayloadType(Enum):
     Heartbeat = 0
+    Hello = 1
     Authentication = 10
     Confirmation = 20
     Health = 30
@@ -327,6 +328,12 @@ class Heartbeat(JsonSerializable):
     @staticmethod
     def from_dict(dict_data):
         return Heartbeat()
+
+
+class Hello(JsonSerializable):
+    @staticmethod
+    def from_dict(dict_data):
+        return Hello()
 
 
 class Task(JsonSerializable):

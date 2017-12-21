@@ -4,8 +4,6 @@ Controller内部消息循环
 """
 
 from multiprocessing.queues import Queue
-# from Queue import Queue
-# from gevent.queue import Queue
 from threading import Thread
 
 from NewTaskManager.Controller import controller_logger as logging

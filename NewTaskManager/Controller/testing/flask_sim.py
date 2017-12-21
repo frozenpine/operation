@@ -45,11 +45,12 @@ if __name__ == '__main__':
 
     try:
         code, msg = client.init(queue_dict, False)
-        print msg
+        print code, msg
         if code != 0:
             sys.exit()
     except Exception as err:
         print err
+        client.close()
 
     result = client.peek(queue_id, task3_id)
     # print result
@@ -57,5 +58,5 @@ if __name__ == '__main__':
     result = client.peek(queue_id, task1_id)
     # print result
 
-    client.run_next(queue_id)
+    print client.run_next(queue_id)
     client.close()

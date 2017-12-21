@@ -33,16 +33,10 @@ class Controller(Process):
         self._msg_loop = MsgLoop()
         self._task_manager = TaskQueueManager(rpc_addr, rpc_port, msg_queue)
         self._task_dispatcher = TaskDispatcher(socket_host, socket_port, msg_queue)
-
-    def run(self):
         self._msg_loop.register_callback(EventName.TaskResult, self._task_manager.result_callback)
-        # self._msg_loop.register_callback(EventName.TaskDispath, self.task_dispath_test)
         self._msg_loop.register_callback(EventName.TaskDispath, self._task_dispatcher.task_dispatch_callback)
         self._msg_loop.start()
         self._task_dispatcher.start()
-        self._task_manager.run()
 
-    def task_dispath_test(self, event):
-        logging.info('Task received: {}'.format(event.Data.to_dict()))
-        time.sleep(3)
-        msg_queue.put_event(EventName.TaskResult, TaskResult('123', '456', TaskStatus.Success, None, {}))
+    def run(self):
+        self._task_manager.run()
