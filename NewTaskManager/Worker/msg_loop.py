@@ -3,6 +3,7 @@
 Worker内部消息循环
 """
 
+import json
 from Queue import Queue
 from threading import Thread
 
@@ -21,7 +22,8 @@ class MsgQueue(Queue):
 
     def put_event(self, event_name, event_data):
         self.put(Event(event_name, event_data))
-        logging.info('MsgQueue Put EventName: {0} EventData: {1}'.format(event_name, event_data))
+        logging.info(u'MsgQueue Put EventName: {0}, EventData: {1}'.format(
+            event_name, json.dumps(event_data.to_dict(), ensure_ascii=False)))
 
 
 class MsgLoop(Thread):
@@ -55,7 +57,8 @@ class MsgLoop(Thread):
         logging.info('msg_loop')
         while 1:
             event = msg_queue.get()
-            logging.info('MsgLoop Get EventName: {0} EventData: {1}'.format(event.event_name, event.event_data))
+            logging.info(u'MsgLoop Get EventName: {0}, EventData: {1}'.format(
+                event.event_name, json.dumps(event.event_data.to_dict(), ensure_ascii=False)))
             event_name = event.event_name
             callback_list = self.callback_dict.get(event_name)
             for each in callback_list:
