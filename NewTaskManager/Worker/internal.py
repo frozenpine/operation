@@ -4,6 +4,7 @@ Worker节点用于与内部工作进程通信的SocketServer
 """
 
 import SocketServer
+import json
 from threading import Thread
 
 from NewTaskManager.Worker import worker_logger as logging
@@ -20,16 +21,14 @@ class ThreadedTCPRequestHandler(SocketServer.StreamRequestHandler):
     def process(data):
         try:
             task_result = TaskResult.deserial(data)
+            logging.info(u'Server Receive : {0}'.format(json.dumps(task_result.to_dict(), ensure_ascii=False)))
             task_status = task_result.status_code
             if task_status.IsInited:
                 msg_queue.put_event('init', task_result)
-                logging.info('MsgLoop Put Init {0}'.format(task_result))
             if task_status.IsRunning:
                 msg_queue.put_event('start', task_result)
-                logging.info('MsgLoop Put Run {0}'.format(task_result))
             if task_status.IsDone:
                 msg_queue.put_event('end', task_result)
-                logging.info('MsgLoop Put End {0}'.format(task_result))
             return 0
         except DeserialError:
             logging.error('TaskResult Deserialize Error')

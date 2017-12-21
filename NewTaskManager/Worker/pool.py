@@ -38,24 +38,23 @@ def send(data):
     global socket_client
     if isinstance(data, TaskResult):
         dump_data = data.serial()
-        dict_data = json.dumps(data.to_dict(), ensure_ascii=False)
         # 发送数据
         while 1:
             retry_count = 0
             try:
                 logging.info('Client Send Len: {0}'.format(len(dump_data)))
                 socket_client.send(dump_data)
-                logging.info(u'Client Send: {0}'.format(dict_data))
+                logging.info(u'Client Send: {0}'.format(json.dumps(data.to_dict(), ensure_ascii=False)))
                 ack = socket_client.recv(8192)
-                logging.info('Client Receive Success: {0}'.format(ack))
+                logging.info('Client Receive: {0}'.format(ack))
                 ack = json.loads(ack)
                 if ack.get('ack') == 'Fail':
                     raise Exception('TaskResult Deserialize Error')
-            except Exception, e:
+            except socket.error, e:
                 # 因server端socket异常未正常发送
                 retry_count = retry_count + 1
-                logging.warning('Client Send Error: {0}'.format(e))
-                logging.warning('Client Send Retry {0} Time'.format(retry_count))
+                init_socket('127.0.0.1', 7001)
+                logging.warning('Client Send Error, Retry {0}'.format(retry_count))
             else:
                 break
 
