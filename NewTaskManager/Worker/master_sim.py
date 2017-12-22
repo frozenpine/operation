@@ -2,6 +2,7 @@
 
 
 import socket
+import time
 
 from NewTaskManager.protocol import Task
 from NewTaskManager.protocol import TmProtocol
@@ -35,4 +36,9 @@ if __name__ == '__main__':
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect(('127.0.0.1', 7002))
-    s.send(buff)
+    count = 0
+    while 1:
+        count = count + 1
+        print count
+        s.send(buff)
+        time.sleep(5)
