@@ -114,7 +114,7 @@ class ThreadedTCPServer(ThreadingMixIn, TCPServer):
             TmProtocol(src='MASTER', dest=name, payload=task, msg_type=MessageType.Private).serial())
 
     def send_result(self, name, task_result):
-        if name:
+        if name and task_result.status_code.IsDone:
             self.free_worker(random.randint(1, 100), name)
         self._event_queue.put_event(EventName.TaskResult, task_result)
 
