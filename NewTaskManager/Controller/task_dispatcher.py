@@ -6,7 +6,7 @@ import random
 
 from Queue import Queue, PriorityQueue
 
-from NewTaskManager.protocol import TmProtocol, TaskResult, TaskStatus, MSG_DICT, Heartbeat, MessageType, Hello
+from NewTaskManager.protocol import TmProtocol, TaskResult, TaskStatus, MSG_DICT, MessageType, Hello
 from NewTaskManager.excepts import DeserialError
 from NewTaskManager.Controller import controller_logger as logging
 from NewTaskManager.Controller.events import EventName, MessageEvent
@@ -148,13 +148,17 @@ class ThreadedTCPServer(ThreadingMixIn, TCPServer):
             TmProtocol(src='MASTER', dest=name, payload=task, msg_type=MessageType.Private).serial())
 
     def send_result(self, task_result):
-        self._event_queue.put_nowait(MessageEvent(EventName.TaskResult, task_result))
+        self._event_queue.put_event(EventName.TaskResult, task_result)
 
     def task_dispatcher(self, event):
         if event.Name == EventName.TaskDispath:
             worker_name = self.worker_arb()
-            self.send_task(worker_name, event.Data)
+            task = event.Data
+            self.send_task(worker_name, task)
             logging.info('Task[{}] assigned to worker[{}]'.format(event.Data.task_uuid, worker_name))
+            self.send_result(TaskResult(
+                task.queue_uuid, task.task_uuid, TaskStatus.Dispatched,
+                MSG_DICT[TaskStatus.Dispatched], task.session))
         else:
             logging.warning('Invalid event[{}] routed'.format(event.Name))
 

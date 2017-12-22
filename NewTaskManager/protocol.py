@@ -24,8 +24,7 @@ class MessageType(Enum):
 
 
 class PayloadType(Enum):
-    Heartbeat = 0
-    Hello = 1
+    Hello = 0
     Authentication = 10
     Confirmation = 20
     Health = 30
@@ -43,9 +42,10 @@ class QueueStatus(Enum):
     Normal = 0  # 正常调度
     Done = 10  # 队列已完成
     JobIssued = 11  # 任务已下发
-    JobRunning = 12  # 任务执行中
-    JobWaiting = 13  # 任务等待中
-    JobFailed = 14  # 任务失败
+    JobDispatched = 12  # 任务已调度
+    JobRunning = 13  # 任务执行中
+    JobWaiting = 14  # 任务等待中
+    JobFailed = 15  # 任务失败
 
     @property
     def Dispatchable(self):
@@ -53,7 +53,7 @@ class QueueStatus(Enum):
 
     @property
     def Blocking(self):
-        return self in [QueueStatus.JobIssued, QueueStatus.JobWaiting]
+        return self in [QueueStatus.JobIssued, QueueStatus.JobDispatched, QueueStatus.JobWaiting]
 
     @property
     def Recoverable(self):
@@ -62,6 +62,7 @@ class QueueStatus(Enum):
 
 class TaskStatus(Enum):
     UnKnown = -100  # 未知错误
+    Dispatched = -2  # 任务已由调度器调度
     InitFailed = -1  # 初始化失败
     Runnable = 100  # 可以直接执行
     TriggerTimeWaiting = 111  # 等待时间
@@ -104,23 +105,26 @@ MSG_DICT = {
     QueueStatus.InitFailed: u'初始化失败',
     QueueStatus.Empty: u'队列为空',
     QueueStatus.NotExits: u'队列不存在',
-    QueueStatus.NotRecoverable: u'失败不可恢复',
+    QueueStatus.NotRecoverable: u'队列不可恢复',
     QueueStatus.Expired: u'队列已过期',
     QueueStatus.Normal: u'正常调度',
     QueueStatus.Done: u'队列已完成',
     QueueStatus.JobIssued: u'任务已下发',
+    QueueStatus.JobDispatched: u'任务已调度',
     QueueStatus.JobRunning: u'任务执行中',
     QueueStatus.JobWaiting: u'任务等待中',
     QueueStatus.JobFailed: u'任务失败',
+    TaskStatus.UnKnown: u'任务状态未知',
+    TaskStatus.Dispatched: u'任务已调度',
     TaskStatus.InitFailed: u'初始化失败',
     TaskStatus.Runnable: u'可以直接执行',
-    TaskStatus.TriggerTimeWaiting: u'等待时间',
+    TaskStatus.TriggerTimeWaiting: u'等待触发时间',
     TaskStatus.WorkerWaiting: u'等待进程池',
     TaskStatus.TimeRangeExcept: u'超出时间限制',
     TaskStatus.Running: u'开始执行',
     TaskStatus.Success: u'执行成功',
     TaskStatus.Failed: u'执行失败',
-    TaskStatus.Timeout: u'自带超时',
+    TaskStatus.Timeout: u'任务超时',
     TaskStatus.Terminated: u'强制终止',
     TaskStatus.Skipped: u'跳过'
 }

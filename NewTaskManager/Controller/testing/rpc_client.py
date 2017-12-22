@@ -11,10 +11,10 @@ if __name__ == '__main__':
     client = Client()
     client.connect("tcp://{ip}:{port}".format(ip=tm_host, port=tm_port))
 
-    queue_id = str(uuid4())
-    task1_id = str(uuid4())
-    task2_id = str(uuid4())
-    task3_id = str(uuid4())
+    queue_id = '2266f7c4-95f2-4172-96ec-fb8e516aec1a'
+    task1_id = 'd27d67d7-9c4f-428d-90df-a577a49f5b20'
+    task2_id = '5ad839b3-3a7a-45a1-b6fa-1abb2fcc0510'
+    task3_id = '306ef1a9-aeb1-4232-b4dc-9487cd3df55a'
 
     queue_dict = {
         queue_id: {
@@ -44,9 +44,10 @@ if __name__ == '__main__':
     }
 
     try:
+        force = False
         code, msg = client.init(queue_dict, False)
         print code, msg
-        if code != 0:
+        if force and code != 0:
             sys.exit()
     except Exception as err:
         print err
@@ -57,6 +58,8 @@ if __name__ == '__main__':
 
     result = client.peek(queue_id, task1_id)
     # print result
+
+    print client.run_next('123456')
 
     print client.run_next(queue_id)
     client.close()
