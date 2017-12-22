@@ -5,8 +5,9 @@ Worker节点用于与Controller通信的SocketServer
 
 import json
 import socket
-from threading import Thread
 import time
+from threading import Thread
+
 from NewTaskManager.Worker import worker_logger as logging
 from NewTaskManager.Worker.worker import msg_queue
 from NewTaskManager.excepts import DeserialError
@@ -30,10 +31,10 @@ class ExternalSocketServer(Thread):
             socket_client.connect((self.master_host, self.master_port))
             tm_hello = TmProtocol("worker", "master", Hello())
             socket_client.send(tm_hello.serial())
-            logging.info('Server Connect To Host: {0}, Port: {1}'.format(self.master_host, self.master_port))
+            logging.info('External Connect To Host: {0}, Port: {1}'.format(self.master_host, self.master_port))
         except socket.error, e:
             logging.error(e)
-            logging.warning('Server Connect Fail'.format())
+            logging.warning('External Connect Fail'.format())
         else:
             return socket_client
 
@@ -49,17 +50,18 @@ class ExternalSocketServer(Thread):
                 # todo: 判断ack逻辑
             except socket.timeout:
                 retry_count = retry_count + 1
-                logging.info('Server Timeout, Retry {0}'.format(retry_count))
+                logging.info('External Timeout, Retry {0}'.format(retry_count))
             except socket.error:
                 retry_count = retry_count + 1
                 self.socket_client = self.init_socket()
             else:
                 break
 
-    def process(self, data):
+    @staticmethod
+    def process(data):
         try:
             data = TmProtocol.deserial(data)
-            logging.info('Socket Receive: {0}'.format(json.dumps(data.to_dict(), ensure_ascii=False)))
+            logging.info('External Receive: {0}'.format(json.dumps(data.to_dict(), ensure_ascii=False)))
         except DeserialError, e:
             logging.warning('Task Deserialize Error: {0}'.format(e))
         else:
@@ -74,7 +76,10 @@ class ExternalSocketServer(Thread):
                 data = self.socket_client.recv(8192)
                 self.process(data)
             except socket.error:
+                retry_count = 0
                 while 1:
+                    retry_count = retry_count + 1
+                    logging.warning('External Disconnect, Retry {0}'.format(retry_count))
                     ret = self.init_socket()
                     if ret:
                         self.socket_client = ret

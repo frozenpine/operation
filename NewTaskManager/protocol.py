@@ -242,7 +242,6 @@ class JsonSerializable(object):
                 raise IOError(message)
         with open('{dir}/{file}'.format(dir=directory, file=file_name), mode='wb') as out_file:
             message = 'Data is dumped into yaml file({dir}/{file})'.format(dir=directory, file=file_name)
-            tm_logger.info(message)
             yaml.dump(self.to_dict(), out_file, default_flow_style=False)
 
 

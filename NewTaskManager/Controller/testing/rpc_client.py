@@ -82,17 +82,17 @@ if __name__ == '__main__':
         }
     }
 
-    try:
-        force = True
-        code, msg = client.init(queue_dict, force)
-        print code, msg
-        if force and code != 0:
-            sys.exit()
-    except Exception as err:
-        print err
-        client.close()
-
-    result = client.peek(queue_id, task3_id)
+    # try:
+    #     force = True
+    #     code, msg = client.init(queue_dict, force)
+    #     print code, msg
+    #     if force and code != 0:
+    #         sys.exit()
+    # except Exception as err:
+    #     print err
+    #     client.close()
+    #
+    # result = client.peek(queue_id, task3_id)
     # print result
 
     result = client.peek(queue_id, task1_id)
@@ -100,7 +100,7 @@ if __name__ == '__main__':
 
     # print client.run_next('123456')
 
-    print client.run_next(queue_id)
+    # print client.run_next(queue_id)
 
-    # print client.run_all(queue_id)
+    print client.run_all(queue_id)
     client.close()
