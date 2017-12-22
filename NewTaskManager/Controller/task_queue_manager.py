@@ -446,8 +446,11 @@ class RPCHandler(object):
         else:
             return -1, MSG_DICT[QueueStatus.NotExits]
 
-    def skip_next(self, queue_uuid, task_uuid=None, session=None):
-        pass
+    def skip_next(self, queue_uuid, task_uuid=None, session=None, force=False):
+        if force:
+            pass
+        else:
+            pass
 
     def peek(self, queue_uuid, task_uuid=None):
         if self._manager.queue_exist(queue_uuid):

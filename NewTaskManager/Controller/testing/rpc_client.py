@@ -98,9 +98,9 @@ if __name__ == '__main__':
     result = client.peek(queue_id, task1_id)
     # print result
 
-    print client.run_next('123456')
+    # print client.run_next('123456')
 
     print client.run_next(queue_id)
 
-    print client.run_all(queue_id)
+    # print client.run_all(queue_id)
     client.close()

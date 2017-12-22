@@ -17,7 +17,6 @@ logging.basicConfig(
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../../'))
 from NewTaskManager.protocol import TmProtocol, Task, TaskResult, TaskStatus, MSG_DICT, Heartbeat, Hello
 from NewTaskManager.excepts import DeserialError
-from SysManager import Task
 
 
 class SocketClient(object):
@@ -26,18 +25,7 @@ class SocketClient(object):
         self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         conn = ('localhost', 7000)
         self._socket.connect(conn)
-        # timer = threading.Timer(4 + random.random(), SocketClient._heartbeat, [self])
-        # timer.setDaemon(True)
-        # timer.start()
-        # self.Send(Heartbeat())
         self.Send(Hello())
-
-    ''' @staticmethod
-    def _heartbeat(socket_client):
-        socket_client.Send(Heartbeat())
-        timer = threading.Timer(5 + random.random(), SocketClient._heartbeat, [socket_client])
-        timer.setDaemon(True)
-        timer.start() '''
 
     def Send(self, payload):
         return self._socket.sendall(TmProtocol(src='work_sim', dest='MASTER', payload=payload).serial())
@@ -48,7 +36,6 @@ class SocketClient(object):
             proto = TmProtocol.deserial(buff)
         except DeserialError as err:
             logging.warning(err.message)
-        # logging.info('source: {}, dest: {}'.format(proto.source, proto.destination))
         return proto.payload
 
     def Close(self):
@@ -72,5 +59,3 @@ if __name__ == '__main__':
             client.Send(TaskResult(
                 payload.queue_uuid, payload.task_uuid, TaskStatus.Success,
                 MSG_DICT[TaskStatus.Success], payload.session, {}}))
-        if isinstance(payload, Heartbeat):
-            logging.info('Heart beat from server')
