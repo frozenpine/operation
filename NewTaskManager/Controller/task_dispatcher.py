@@ -19,7 +19,7 @@ class ThreadedTCPRequestHandler(StreamRequestHandler):
         worker_name = data.source
         payload = data.payload
         if isinstance(payload, TaskResult):
-            self.server.send_result(payload)
+            self.server.send_result(worker_name, payload)
         if isinstance(payload, Hello):
             self.server.free_worker(random.randint(1, 100), worker_name)
             logging.info('Client ({} {}) say hello.'.format(worker_name, self.client_address))
@@ -110,10 +110,12 @@ class ThreadedTCPServer(ThreadingMixIn, TCPServer):
 
     @locker
     def send_task(self, name, task):
-        self._worker_cache[name].send(
+        self._worker_cache[name].sendall(
             TmProtocol(src='MASTER', dest=name, payload=task, msg_type=MessageType.Private).serial())
 
-    def send_result(self, task_result):
+    def send_result(self, name, task_result):
+        if name:
+            self.free_worker(random.randint(1, 100), name)
         self._event_queue.put_event(EventName.TaskResult, task_result)
 
     def task_dispatcher(self, event):
@@ -122,7 +124,7 @@ class ThreadedTCPServer(ThreadingMixIn, TCPServer):
             task = event.Data
             self.send_task(worker_name, task)
             logging.info('Task[{}] assigned to worker[{}]'.format(event.Data.task_uuid, worker_name))
-            self.send_result(TaskResult(
+            self.send_result(None, TaskResult(
                 task.queue_uuid, task.task_uuid, TaskStatus.Dispatched,
                 MSG_DICT[TaskStatus.Dispatched], task.session))
         else:
