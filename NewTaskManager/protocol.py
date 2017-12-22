@@ -7,11 +7,11 @@ import hashlib
 import json
 import pickle
 import time
+from abc import ABCMeta, abstractmethod
+from os import path
 
 import yaml
-from abc import ABCMeta, abstractmethod
 from enum import Enum
-from os import path
 
 from NewTaskManager import tm_logger
 from NewTaskManager.excepts import DeserialError, InitialError
@@ -406,12 +406,15 @@ class TaskResult(JsonSerializable):
         status_code = TaskStatus(dict_data['status_code'])
         status_msg = dict_data['status_msg']
         session = dict_data['session']
-        task_result = Result()
-        task_result.destination = dict_data['task_result']['destination']
-        task_result.lines = dict_data['task_result']['lines']
-        task_result.return_code = dict_data['task_result']['return_code']
-        task_result.module = dict_data['task_result']['module']
-        task_result.data = dict_data['task_result']['data']
-        task_result.error_msg = dict_data['task_result']['error_msg']
+        if dict_data['task_result']:
+            task_result = Result()
+            task_result.destination = dict_data['task_result']['destination']
+            task_result.lines = dict_data['task_result']['lines']
+            task_result.return_code = dict_data['task_result']['return_code']
+            task_result.module = dict_data['task_result']['module']
+            task_result.data = dict_data['task_result']['data']
+            task_result.error_msg = dict_data['task_result']['error_msg']
+        else:
+            task_result = None
         return TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code, status_msg=status_msg,
                           session=session, task_result=task_result)

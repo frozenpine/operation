@@ -24,7 +24,7 @@ if __name__ == '__main__':
     # 启动外部通信用SocketServer
     from external import ExternalSocketServer
 
-    external_socket_server = ExternalSocketServer('127.0.0.1', 7002, '127.0.0.1', 8000)
+    external_socket_server = ExternalSocketServer('127.0.0.1', 7002, '10.9.101.39', 7000)
     external_socket_server.start()
 
     # 启动进程池

@@ -11,7 +11,7 @@ from threading import Thread
 from NewTaskManager.Worker import worker_logger as logging
 from NewTaskManager.Worker.worker import msg_queue
 from NewTaskManager.excepts import DeserialError
-from NewTaskManager.protocol import TmProtocol
+from NewTaskManager.protocol import TmProtocol, Hello
 
 external_socket = dict()
 
@@ -60,6 +60,8 @@ class ExternalSocketServer(Thread):
             try:
                 socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 socket_client.connect((self.master_host, self.master_port))
+                tm_hello = TmProtocol("worker", "master", Hello())
+                socket_client.send(tm_hello.serial())
                 socket_client.settimeout(2)
                 logging.info('Server Connect To Host: {0}, Port: {1}'.format(self.master_host, self.master_port))
             except socket.error, e:
