@@ -23,19 +23,58 @@ if __name__ == '__main__':
             'group_info': [
                 {
                     'task_uuid': task1_id,
-                    'detail': {},
+                    'detail': {
+                        "remote": {
+                            "params": {
+                                "ip": "192.168.100.90",
+                                "password": "qdam",
+                                "user": "qdam"
+                            },
+                            "name": "SSHConfig"
+                        },
+                        "mod": {
+                            "shell": "echo hello",
+                            "name": "shell"
+                        }
+                    },
                     'earliest': None,
                     'latest': None
                 },
                 {
                     'task_uuid': task2_id,
-                    'detail': {},
+                    'detail': {
+                        "remote": {
+                            "params": {
+                                "ip": "192.168.100.90",
+                                "password": "qdam",
+                                "user": "qdam"
+                            },
+                            "name": "SSHConfig"
+                        },
+                        "mod": {
+                            "shell": "sleep 5",
+                            "name": "shell"
+                        }
+                    },
                     'earliest': None,
                     'latest': None
                 },
                 {
                     'task_uuid': task3_id,
-                    'detail': {},
+                    'detail': {
+                        "remote": {
+                            "params": {
+                                "ip": "192.168.100.90",
+                                "password": "qdam",
+                                "user": "qdam"
+                            },
+                            "name": "SSHConfig"
+                        },
+                        "mod": {
+                            "shell": "echo done",
+                            "name": "shell"
+                        }
+                    },
                     'earliest': None,
                     'latest': None
                 }
@@ -44,7 +83,7 @@ if __name__ == '__main__':
     }
 
     try:
-        force = False
+        force = True
         code, msg = client.init(queue_dict, False)
         print code, msg
         if force and code != 0:
@@ -62,4 +101,6 @@ if __name__ == '__main__':
     print client.run_next('123456')
 
     print client.run_next(queue_id)
+
+    print client.run_all(queue_id)
     client.close()

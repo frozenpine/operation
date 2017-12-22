@@ -169,16 +169,19 @@ class JsonSerializable(object):
         """
         pass
 
-    def serial(self):
+    def serial(self, is_json=True):
         """ Used to serial object instance
         Args: None
 
         Returns: Serialized object instance
         """
-        return pickle.dumps(self)
+        if is_json:
+            return json.dumps(self, cls=JsonSerializableEncoder)
+        else:
+            return pickle.dumps(self)
 
     @classmethod
-    def deserial(cls, buff):
+    def deserial(cls, buff, is_json=True):
         """ Used to deserial protocol message from str buffer
         Args:
             buff: pickle serialized buff string.
@@ -188,7 +191,14 @@ class JsonSerializable(object):
         Raises:
             DeserialError: An error occured when deserialized instance is not type of cls
         """
-        instance = pickle.loads(buff)
+        if is_json:
+            json_data = json.loads(buff)
+            if 'payload_type' in json_data:
+                instance = globals[json_data['payload_type']].from_dict(json_data)
+            else:
+                instance = json_data
+        else:
+            instance = pickle.loads(buff)
         if not isinstance(instance, cls):
             raise DeserialError('Deserialized instance not match class.')
         return instance
