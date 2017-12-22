@@ -71,13 +71,19 @@ class ExternalSocketServer(Thread):
 
     def send(self, event):
         data = event.event_data
-        tm_data = TmProtocol('worker', 'master', data).serial()
+        tm_data = TmProtocol('worker', 'master', data)
+        retry_count = 0
         while 1:
             try:
-                self.socket_client.send(tm_data)
-                ack = self.socket_client.recv(8192)
+                self.socket_client.send(tm_data.serial())
+                logging.info(u'Server Send {0}'.format(json.dumps(tm_data.to_dict(), ensure_ascii=False)))
+                # ack = self.socket_client.recv(8192)
                 # todo: 判断ack逻辑
+            except socket.timeout:
+                retry_count = retry_count + 1
+                logging.info('Server Timeout, Retry {0}'.format(retry_count))
             except socket.error:
+                retry_count = retry_count + 1
                 self.socket_client = self.init_socket()
             else:
                 break

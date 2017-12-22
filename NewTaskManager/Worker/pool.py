@@ -5,6 +5,7 @@ Worker进程池
 
 import json
 import socket
+import threading
 import time
 from multiprocessing import Pool
 
@@ -15,6 +16,8 @@ from SysManager.configs import SSHConfig
 from SysManager.excepts import (ConfigInvalid, SSHAuthenticationException, SSHException, SSHNoValidConnectionsError)
 from SysManager.executor import Executor
 
+socket_object = threading.local()
+
 
 def init_socket(host, port):
     """
@@ -23,9 +26,11 @@ def init_socket(host, port):
     :param port: 端口
     :return:
     """
-    global socket_client
-    socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    socket_client.connect((host, port))
+    # global socket_client
+    # socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # socket_client.connect((host, port))
+    socket_object.socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    socket_object.socket_client.connect((host, port))
     logging.info('Client Connect To Host: {0}, Port: {1}'.format(host, port))
 
 
@@ -35,11 +40,11 @@ def send(data):
     :param data: 未序列化的数据
     :return:
     """
-    global socket_client
     if isinstance(data, TaskResult):
         dump_data = data.serial()
         # 发送数据
         while 1:
+            socket_client = socket_object.socket_client
             retry_count = 0
             try:
                 logging.info('Client Send Len: {0}'.format(len(dump_data)))
@@ -191,7 +196,7 @@ class WorkerPool(object):
     def __init__(self):
         self.running_process = 0
         # self.process_count = cpu_count()
-        self.process_count = 1
+        self.process_count = 2
         self.worker_pool = None
 
     def vacant(self):
