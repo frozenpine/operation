@@ -295,7 +295,8 @@ class TaskQueue(JsonSerializable):
                 TaskStatus.Skipped, MSG_DICT[TaskStatus.Skipped], session))
             return True
         else:
-            return False
+            logging.warning(next_task)
+            raise Exception(u'任务定义不正确')
 
     @locker
     @dumpper
@@ -365,32 +366,40 @@ class TaskQueue(JsonSerializable):
         self.make_todo_task_queue()
         return task
 
-
-''' class TaskQueueCache(object):
-    def __init__(self):
-        self._sync_queue_cache = {}
-        self._async_queue_cache = {}
-
-    def put_queue(self, queue):
-        if queue.IsSync:
-            self._sync_queue_cache[queue.UUID] = queue
+    @locker
+    def make_snapshot(self, compatiable=True):
+        if compatiable:
+            old_snap = {
+                "create_time": self.create_time,
+                "trigger_time": self.trigger_time,
+                "expire_time": self.expire_time,
+                "destroy_time": self.destroy_time,
+                "group_block": self.sync_group,
+                "controller_queue_status": self.queue_status.value,
+                "controller_queue_uuid": self.queue_uuid,
+                "task_list": [{
+                    'earliest': task.earliest,
+                    'latest': task.latest,
+                    'task_uuid': task.task_uuid,
+                    'detail': task.info
+                } for task in self.task_list],
+                "task_result_list": [None for result in self.task_result_list],
+                "task_status_list": [None for result in self.task_result_list]
+            }
+            for idx in xrange(len(self.task_result_list)):
+                result = self.task_result_list[idx]
+                old_snap['task_result_list'][idx] = {
+                    'controller_queue_uuid': self.queue_uuid,
+                    'task_uuid': result.task_uuid,
+                    'run_all': self.run_all,
+                    'session': result.session,
+                    'task_result': result.task_result.to_dict(),
+                    'task_status': [result.status_code.value, result.status_code.name]
+                }
+                old_snap['task_status_list'][idx] = (result.status_code.value, result.session)
+            return old_snap
         else:
-            self._async_queue_cache[queue.UUID] = queue
-
-    def queue_exist(self, queue_uuid):
-        if queue_uuid in self._sync_queue_cache:
-            return self._sync_queue_cache
-        if queue_uuid in self._async_queue_cache:
-            return self._async_queue_cache
-        return None
-
-    def destory(self, queue_uuid):
-        cache = self.queue_exist(queue_uuid)
-        if cache:
-            del cache[queue_uuid]
-            return True
-        else:
-            return False '''
+            return self.to_dict()
 
 
 class RPCHandler(object):
@@ -408,8 +417,6 @@ class RPCHandler(object):
             for task_define in queue_define['group_info']:
                 queue.append(Task.from_dict({
                     'queue_uuid': queue_uuid,
-                    'create_time': queue.create_time,
-                    'trigger_time': queue.trigger_time,
                     'task_uuid': task_define['task_uuid'],
                     'task_earliest': task_define['earliest'],
                     'task_latest': task_define['latest'],
@@ -447,10 +454,20 @@ class RPCHandler(object):
             return -1, MSG_DICT[QueueStatus.NotExits]
 
     def skip_next(self, queue_uuid, task_uuid=None, session=None, force=False):
-        if force:
-            pass
+        if self._manager.queue_exist(queue_uuid):
+            queue = self._manager.get_queue(queue_uuid)
+            if force:
+                if queue.skip_task(session):
+                    return 0, u'下一项任务已跳过'
+                else:
+                    return -1, u'无法跳过下一项任务, 当前队列状态: ' + MSG_DICT[queue.Status]
+            else:
+                if queue.skip_failed(session):
+                    return 0, u'失败任务已跳过'
+                else:
+                    return -1, u'无法跳过失败任务, 当前队列状态: ' + MSG_DICT[queue.Status]
         else:
-            pass
+            return -1, MSG_DICT[QueueStatus.NotExits]
 
     def peek(self, queue_uuid, task_uuid=None):
         if self._manager.queue_exist(queue_uuid):
@@ -463,12 +480,26 @@ class RPCHandler(object):
                 else:
                     return -1, u'返回状态未知'
             else:
-                return -1, u'Task uuid[{uuid}] 和下一项待做任务不匹配'.format(uuid=task_uuid)
+                return -1, u'任务[{uuid}] 和下一项待做任务不匹配'.format(uuid=task_uuid)
         else:
             return -1, MSG_DICT[QueueStatus.NotExits]
 
     def resume(self, queue_uuid):
-        pass
+        if self._manager.queue_exist(queue_uuid):
+            queue = self._manager.get_queue(queue_uuid)
+            if queue.resume_failed():
+                return 0, u'任务队列已恢复'
+            else:
+                return -1, u'无法恢复队列, 当前队列状态: ' + MSG_DICT[queue.Status]
+        else:
+            return -1, MSG_DICT[QueueStatus.NotExits]
+
+    def snapshot(self, queue_uuid, compatible=True):
+        if self._manager.queue_exist(queue_uuid):
+            queue = self._manager.get_queue(queue_uuid)
+            return 0, queue.make_snapshot(compatible)
+        else:
+            return -1, MSG_DICT[QueueStatus.NotExits]
 
     def kill(self, task_uuid):
-        pass
+        return -1, u'未实现'
