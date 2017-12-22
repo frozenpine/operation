@@ -58,4 +58,4 @@ if __name__ == '__main__':
             time.sleep(3)
             client.Send(TaskResult(
                 payload.queue_uuid, payload.task_uuid, TaskStatus.Success,
-                MSG_DICT[TaskStatus.Success], payload.session, {}}))
+                MSG_DICT[TaskStatus.Success], payload.session, {}))

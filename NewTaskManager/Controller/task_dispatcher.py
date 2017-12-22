@@ -110,7 +110,7 @@ class ThreadedTCPServer(ThreadingMixIn, TCPServer):
 
     @locker
     def send_task(self, name, task):
-        self._worker_cache[name].send(
+        self._worker_cache[name].sendall(
             TmProtocol(src='MASTER', dest=name, payload=task, msg_type=MessageType.Private).serial())
 
     def send_result(self, task_result):

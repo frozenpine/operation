@@ -386,19 +386,6 @@ class TaskResult(JsonSerializable):
         self.session = session
         self.task_result = task_result
 
-    def to_dict(self):
-        results = {}
-        for field in [x for x in dir(self) if not x.startswith('_') and x not in self.__exclude__]:
-            obj = getattr(self, field)
-            if not callable(obj):
-                if isinstance(obj, JsonSerializable) or isinstance(obj, Result):
-                    results[field] = obj.to_dict()
-                elif isinstance(obj, Enum):
-                    results[field] = obj.value
-                else:
-                    results[field] = obj
-        return results
-
     @staticmethod
     def from_dict(dict_data):
         queue_uuid = dict_data['queue_uuid']

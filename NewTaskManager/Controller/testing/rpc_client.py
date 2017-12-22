@@ -84,7 +84,7 @@ if __name__ == '__main__':
 
     try:
         force = True
-        code, msg = client.init(queue_dict, False)
+        code, msg = client.init(queue_dict, force)
         print code, msg
         if force and code != 0:
             sys.exit()

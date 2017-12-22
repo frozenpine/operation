@@ -6,7 +6,7 @@ Worker节点用于与Controller通信的SocketServer
 import json
 import socket
 from threading import Thread
-
+import time
 from NewTaskManager.Worker import worker_logger as logging
 from NewTaskManager.Worker.worker import msg_queue
 from NewTaskManager.excepts import DeserialError
@@ -24,21 +24,18 @@ class ExternalSocketServer(Thread):
         self.socket_client = self.init_socket()
 
     def init_socket(self):
-        retry_count = 0
-        while 1:
-            try:
-                socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                socket_client.connect((self.master_host, self.master_port))
-                tm_hello = TmProtocol("worker", "master", Hello())
-                socket_client.settimeout(2)
-                socket_client.send(tm_hello.serial())
-                logging.info('Server Connect To Host: {0}, Port: {1}'.format(self.master_host, self.master_port))
-            except socket.error, e:
-                retry_count = retry_count + 1
-                logging.error(e)
-                logging.warning('Server Connect Fail, Retry {0}'.format(retry_count))
-            else:
-                return socket_client
+        try:
+            socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            socket_client.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+            socket_client.connect((self.master_host, self.master_port))
+            tm_hello = TmProtocol("worker", "master", Hello())
+            socket_client.send(tm_hello.serial())
+            logging.info('Server Connect To Host: {0}, Port: {1}'.format(self.master_host, self.master_port))
+        except socket.error, e:
+            logging.error(e)
+            logging.warning('Server Connect Fail'.format())
+        else:
+            return socket_client
 
     def send(self, event):
         data = event.event_data
@@ -46,7 +43,7 @@ class ExternalSocketServer(Thread):
         retry_count = 0
         while 1:
             try:
-                self.socket_client.send(tm_data.serial())
+                self.socket_client.sendall(tm_data.serial())
                 logging.info(u'Server Send {0}'.format(json.dumps(tm_data.to_dict(), ensure_ascii=False)))
                 # ack = self.socket_client.recv(8192)
                 # todo: 判断ack逻辑
@@ -69,15 +66,18 @@ class ExternalSocketServer(Thread):
             src = data.source
             dest = data.destination
             task_info = data.payload
-            if src not in external_socket:
-                external_socket.update({src: self.request})
             msg_queue.put_event('task', task_info)
 
     def run(self):
         while True:
-            data = self.socket_client.recv(8192)
-            if data:
+            try:
+                data = self.socket_client.recv(8192)
                 self.process(data)
-            else:
-                logging.warning('Socket Disconnect: {0}'.format(self.client_address))
-                break
+            except socket.error:
+                while 1:
+                    ret = self.init_socket()
+                    if ret:
+                        self.socket_client = ret
+                        break
+                    else:
+                        time.sleep(5)
