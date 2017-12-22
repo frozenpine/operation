@@ -12,7 +12,7 @@ from Queue import Queue
 import zerorpc
 
 from NewTaskManager.Controller import controller_logger as logging
-from NewTaskManager.Common import get_time
+from NewTaskManager.common import get_time
 from NewTaskManager.protocol import (MSG_DICT, JsonSerializable, QueueStatus,
                                      Task, TaskResult, TaskStatus)
 from NewTaskManager.Controller.events import EventName
