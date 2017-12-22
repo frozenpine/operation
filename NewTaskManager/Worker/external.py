@@ -3,7 +3,6 @@
 Worker节点用于与Controller通信的SocketServer
 """
 
-import SocketServer
 import json
 import socket
 from threading import Thread
@@ -16,43 +15,13 @@ from NewTaskManager.protocol import TmProtocol, Hello
 external_socket = dict()
 
 
-class ThreadedTCPRequestHandler(SocketServer.StreamRequestHandler):
-
-    def process(self, data):
-        try:
-            data = TmProtocol.deserial(data)
-            logging.info('Socket Receive: {0}'.format(json.dumps(data.to_dict(), ensure_ascii=False)))
-        except DeserialError, e:
-            logging.warning('Task Deserialize Error: {0}'.format(e))
-        else:
-            src = data.source
-            dest = data.destination
-            task_info = data.payload
-            if src not in external_socket:
-                external_socket.update({src: self.request})
-            msg_queue.put_event('task', task_info)
-
-    def handle(self):
-        while True:
-            data = self.request.recv(8192)
-            if data:
-                self.process(data)
-            else:
-                logging.warning('Socket Disconnect: {0}'.format(self.client_address))
-                break
-
-
 class ExternalSocketServer(Thread):
 
-    def __init__(self, server_host, server_port, master_host, master_port):
-        class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
-            pass
+    def __init__(self, master_host, master_port):
 
         Thread.__init__(self)
-        self.server_host, self.server_port = server_host, server_port
         self.master_host, self.master_port = master_host, master_port
         self.socket_client = self.init_socket()
-        self.socket_server = ThreadedTCPServer((server_host, server_port), ThreadedTCPRequestHandler)
 
     def init_socket(self):
         retry_count = 0
@@ -61,8 +30,8 @@ class ExternalSocketServer(Thread):
                 socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 socket_client.connect((self.master_host, self.master_port))
                 tm_hello = TmProtocol("worker", "master", Hello())
-                socket_client.send(tm_hello.serial())
                 socket_client.settimeout(2)
+                socket_client.send(tm_hello.serial())
                 logging.info('Server Connect To Host: {0}, Port: {1}'.format(self.master_host, self.master_port))
             except socket.error, e:
                 retry_count = retry_count + 1
@@ -90,5 +59,25 @@ class ExternalSocketServer(Thread):
             else:
                 break
 
+    def process(self, data):
+        try:
+            data = TmProtocol.deserial(data)
+            logging.info('Socket Receive: {0}'.format(json.dumps(data.to_dict(), ensure_ascii=False)))
+        except DeserialError, e:
+            logging.warning('Task Deserialize Error: {0}'.format(e))
+        else:
+            src = data.source
+            dest = data.destination
+            task_info = data.payload
+            if src not in external_socket:
+                external_socket.update({src: self.request})
+            msg_queue.put_event('task', task_info)
+
     def run(self):
-        self.socket_server.serve_forever()
+        while True:
+            data = self.socket_client.recv(8192)
+            if data:
+                self.process(data)
+            else:
+                logging.warning('Socket Disconnect: {0}'.format(self.client_address))
+                break
