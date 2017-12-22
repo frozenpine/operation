@@ -34,7 +34,7 @@ class Controller(Process):
         self._task_manager = TaskQueueManager(rpc_addr, rpc_port, msg_queue)
         self._task_dispatcher = TaskDispatcher(socket_host, socket_port, msg_queue)
         self._msg_loop.register_callback(EventName.TaskResult, self._task_manager.result_callback)
-        self._msg_loop.register_callback(EventName.TaskDispath, self._task_dispatcher.task_dispatch_callback)
+        self._msg_loop.register_callback(EventName.TaskDispath, self._task_dispatcher.event_relay)
         self._msg_loop.start()
         self._task_dispatcher.start()
 

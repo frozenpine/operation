@@ -20,14 +20,14 @@ class ThreadedTCPRequestHandler(StreamRequestHandler):
         payload = data.payload
         if isinstance(payload, TaskResult):
             self.server.send_result(payload)
-        if isinstance(payload, Heartbeat):
+        ''' if isinstance(payload, Heartbeat):
             self.server.heartbeat_countup(worker_name)
             self.request.send(
                 TmProtocol(src='MASTER', dest=worker_name, payload=Heartbeat(), msg_type=MessageType.Private).serial())
-            logging.info('Heartbeat from client: {}'.format(self.client_address))
+            logging.info('Heartbeat from client: {}'.format(self.client_address)) '''
         if isinstance(payload, Hello):
-            self.server.free_worker(worker_name, random.randint(1, 100))
-            logging.info('Client {} say hello.'.format(self.client_address))
+            self.server.free_worker(random.randint(1, 100), worker_name)
+            logging.info('Client ({} {}) say hello.'.format(worker_name, self.client_address))
         return True
 
     def handle(self):
@@ -35,12 +35,12 @@ class ThreadedTCPRequestHandler(StreamRequestHandler):
             try:
                 buff = self.request.recv(8192)
             except:
-                logging.warning('[socket] disconnect: {0}'.format(self.client_address))
+                logging.warning('Client disconnect: {0}'.format(self.client_address))
                 break
             try:
                 data = TmProtocol.deserial(buff)
             except DeserialError as err:
-                logging.warning('[socket] format error: {0}'.format(err.message))
+                logging.warning('Protocol format error: {0}'.format(err.message))
             else:
                 if not self._process(data):
                     break
@@ -58,16 +58,16 @@ def locker(func):
 
 
 class ThreadedTCPServer(ThreadingMixIn, TCPServer):
-    def __init__(self, result_cache, server_addr, request_handler, bind_and_active=True):
+    def __init__(self, event_global, server_addr, request_handler, bind_and_active=True):
         TCPServer.__init__(self, server_addr, request_handler, bind_and_active)
         self._worker_cache = {}
-        self._result_cache = result_cache
+        self._event_queue = event_global
         self._worker_arb = PriorityQueue()
-        self._heartbeat_cache = Queue()
-        self._heartbeat_countdown = {}
+        # self._heartbeat_cache = Queue()
+        # self._heartbeat_countdown = {}
         self._condition = threading.Condition(threading.RLock())
 
-    @staticmethod
+    ''' @staticmethod
     def _heartbeat_timer(server, name):
         if server.heartbeat_countdown(name):
             timer = threading.Timer(5, ThreadedTCPServer._heartbeat_timer, [server, name])
@@ -83,11 +83,12 @@ class ThreadedTCPServer(ThreadingMixIn, TCPServer):
             self._heartbeat_countdown[name] = (current_count + 1)
         return self._heartbeat_countdown[name]
 
+    @locker
     def heartbeat_countdown(self, name):
         current_count = self._heartbeat_countdown[name]
         if current_count > 0:
             self._heartbeat_countdown[name] = (current_count - 1)
-        return self._heartbeat_countdown[name]
+        return self._heartbeat_countdown[name] '''
 
     @locker
     def wait_for_worker(self, timeout=None):
@@ -105,10 +106,10 @@ class ThreadedTCPServer(ThreadingMixIn, TCPServer):
     def add_worker(self, name, request):
         self._worker_cache[name] = request
         self._condition.notifyAll()
-        self._heartbeat_countdown[name] = 3
+        ''' self._heartbeat_countdown[name] = 3
         timmer = threading.Timer(5, ThreadedTCPServer._heartbeat_timer, [self, name])
         timmer.setDaemon(True)
-        timmer.start()
+        timmer.start() '''
 
     @locker
     def del_worker(self, name):
@@ -133,11 +134,12 @@ class ThreadedTCPServer(ThreadingMixIn, TCPServer):
             logging.warning(msg)
             raise Exception(msg)
 
-    def free_worker(self, name, priority):
+    def free_worker(self, priority, name):
         self._worker_arb.put((priority, name))
 
     def worker_arb(self):
         priority, name = self._worker_arb.get()
+        logging.info('Current worker: {}[{}]'.format(name, priority))
         return name
 
     @locker
@@ -146,33 +148,69 @@ class ThreadedTCPServer(ThreadingMixIn, TCPServer):
             TmProtocol(src='MASTER', dest=name, payload=task, msg_type=MessageType.Private).serial())
 
     def send_result(self, task_result):
-        self._result_cache.put_nowait(MessageEvent(EventName.TaskResult, task_result))
+        self._event_queue.put_nowait(MessageEvent(EventName.TaskResult, task_result))
+
+    def task_dispatcher(self, event):
+        if event.Name == EventName.TaskDispath:
+            worker_name = self.worker_arb()
+            self.send_task(worker_name, event.Data)
+            logging.info('Task[{}] assigned to worker[{}]'.format(event.Data.task_uuid, worker_name))
+        else:
+            logging.warning('Invalid event[{}] routed'.format(event.Name))
 
 
 class TaskDispatcher(threading.Thread):
     def __init__(self, host, port, event_queue):
         threading.Thread.__init__(self)
-        self._event_queue = event_queue
-        self._task_cache = Queue()
-        self._server = ThreadedTCPServer(event_queue, (host, port), ThreadedTCPRequestHandler)
-        self._task_handler = threading.Thread(
-            target=TaskDispatcher._dispatcher,
-            args=(self._task_cache, self._server)
-        )
-        self._task_handler.setDaemon(True)
-        self._task_handler.start()
+        self._event_global = event_queue
+        self._event_local = Queue()
+        self._callback_cache = {}
+        self._worker_manager = ThreadedTCPServer(self._event_global, (host, port), ThreadedTCPRequestHandler)
+        self._event_handler = threading.Thread(
+            target=self._event_dispatcher, args=(self._event_local, self._callback_cache, self._worker_manager))
+        self._event_handler.setDaemon(True)
+        self._registe_callback(EventName.TaskDispath, self._worker_manager.task_dispatcher)
 
     def run(self):
-        self._server.serve_forever()
+        self._event_handler.start()
+        self._worker_manager.serve_forever()
 
-    def task_dispatch_callback(self, event):
+    # this func called by outside message loop
+    def event_relay(self, event):
         logging.info('Event received: {} {}'.format(event.Name, event.Data.to_dict()))
-        self._task_cache.put_nowait(event.Data)
+        self._event_local.put_nowait(event)
+
+    def _registe_callback(self, event_name, callback):
+        if event_name not in self._callback_cache:
+            self._callback_cache[event_name] = [callback]
+        else:
+            self._callback_cache[event_name].append(callback)
+
+    def _unregiste_callback(self, event_name, callback):
+        if event_name not in self._callback_cache:
+            logging.warning(u'未找到该事件名称')
+            return False
+        else:
+            callback_list = self._callback_cache[event_name]
+            if callback not in callback_list:
+                logging.warning(u'未注册该回调函数')
+                return False
+            else:
+                callback_list.remove(callback)
+                if not callback_list:
+                    self._callback_cache.pop(event_name)
 
     @staticmethod
-    def _dispatcher(task_cache, worker_cache):
+    def _event_dispatcher(event_local, callback_cache, worker_manager):
+        worker_manager.wait_for_worker()
         while True:
-            worker_cache.wait_for_worker()
-            task = task_cache.get()
-            worker_name = worker_cache.worker_arb()
-            worker_cache.send_task(worker_name, task)
+            event = event_local.get()
+            if event.Name not in callback_cache:
+                logging.warning('No callback registed on this event[{}]: {}'.format(event.Name, event.Data.to_dict()))
+            else:
+                for func in callback_cache[event.Name]:
+                    tr = threading.Thread(target=func, args=(event,))
+                    tr.setDaemon(True)
+                    tr.start()
+            ''' worker_name = worker_cache.worker_arb()
+            worker_cache.send_task(worker_name, task) '''

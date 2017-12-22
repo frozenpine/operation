@@ -22,20 +22,21 @@ from NewTaskManager.excepts import DeserialError
 class SocketClient(object):
     def __init__(self):
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         conn = ('localhost', 7000)
         self._socket.connect(conn)
-        timer = threading.Timer(4 + random.random(), SocketClient._heartbeat, [self])
-        timer.setDaemon(True)
-        timer.start()
+        # timer = threading.Timer(4 + random.random(), SocketClient._heartbeat, [self])
+        # timer.setDaemon(True)
+        # timer.start()
         # self.Send(Heartbeat())
         self.Send(Hello())
 
-    @staticmethod
+    ''' @staticmethod
     def _heartbeat(socket_client):
         socket_client.Send(Heartbeat())
         timer = threading.Timer(5 + random.random(), SocketClient._heartbeat, [socket_client])
         timer.setDaemon(True)
-        timer.start()
+        timer.start() '''
 
     def Send(self, payload):
         return self._socket.sendall(TmProtocol(src='work_sim', dest='MASTER', payload=payload).serial())
