@@ -17,6 +17,7 @@ logging.basicConfig(
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../../'))
 from NewTaskManager.protocol import TmProtocol, Task, TaskResult, TaskStatus, MSG_DICT, Heartbeat, Hello
 from NewTaskManager.excepts import DeserialError
+from SysManager import Task
 
 
 class SocketClient(object):
@@ -66,10 +67,10 @@ if __name__ == '__main__':
             time.sleep(1)
             client.Send(TaskResult(
                 payload.queue_uuid, payload.task_uuid, TaskStatus.Running,
-                MSG_DICT[TaskStatus.Running], payload.session, None))
+                MSG_DICT[TaskStatus.Running], payload.session, {}))
             time.sleep(3)
             client.Send(TaskResult(
                 payload.queue_uuid, payload.task_uuid, TaskStatus.Success,
-                MSG_DICT[TaskStatus.Success], payload.session, None))
+                MSG_DICT[TaskStatus.Success], payload.session, {}}))
         if isinstance(payload, Heartbeat):
             logging.info('Heart beat from server')

@@ -160,6 +160,7 @@ class JsonSerializable(object):
                     results[field] = [x.to_dict() if isinstance(x, JsonSerializable) else x for x in obj]
                 else:
                     results[field] = obj
+        results.update({'_class_name': self.__class__.__name__.split('.')[-1]})
         return results
 
     @staticmethod
@@ -193,8 +194,8 @@ class JsonSerializable(object):
         """
         if is_json:
             json_data = json.loads(buff)
-            if 'payload_type' in json_data:
-                instance = globals[json_data['payload_type']].from_dict(json_data)
+            if '_class_name' in json_data:
+                instance = globals()[json_data['_class_name']].from_dict(json_data)
             else:
                 instance = json_data
         else:
@@ -403,7 +404,7 @@ class TaskResult(JsonSerializable):
         queue_uuid = dict_data['queue_uuid']
         task_uuid = dict_data['task_uuid']
         status_code = TaskStatus(dict_data['status_code'])
-        status_msg = TaskStatus(dict_data['status_msg'])
+        status_msg = dict_data['status_msg']
         session = dict_data['session']
         task_result = Result()
         task_result.destination = dict_data['task_result']['destination']

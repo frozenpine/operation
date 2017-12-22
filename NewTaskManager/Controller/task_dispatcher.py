@@ -20,11 +20,6 @@ class ThreadedTCPRequestHandler(StreamRequestHandler):
         payload = data.payload
         if isinstance(payload, TaskResult):
             self.server.send_result(payload)
-        ''' if isinstance(payload, Heartbeat):
-            self.server.heartbeat_countup(worker_name)
-            self.request.send(
-                TmProtocol(src='MASTER', dest=worker_name, payload=Heartbeat(), msg_type=MessageType.Private).serial())
-            logging.info('Heartbeat from client: {}'.format(self.client_address)) '''
         if isinstance(payload, Hello):
             self.server.free_worker(random.randint(1, 100), worker_name)
             logging.info('Client ({} {}) say hello.'.format(worker_name, self.client_address))
@@ -63,32 +58,7 @@ class ThreadedTCPServer(ThreadingMixIn, TCPServer):
         self._worker_cache = {}
         self._event_queue = event_global
         self._worker_arb = PriorityQueue()
-        # self._heartbeat_cache = Queue()
-        # self._heartbeat_countdown = {}
         self._condition = threading.Condition(threading.RLock())
-
-    ''' @staticmethod
-    def _heartbeat_timer(server, name):
-        if server.heartbeat_countdown(name):
-            timer = threading.Timer(5, ThreadedTCPServer._heartbeat_timer, [server, name])
-            timer.setDaemon(True)
-            timer.start()
-        else:
-            server.del_worker(name)
-
-    @locker
-    def heartbeat_countup(self, name):
-        current_count = self._heartbeat_countdown[name]
-        if current_count <= 3:
-            self._heartbeat_countdown[name] = (current_count + 1)
-        return self._heartbeat_countdown[name]
-
-    @locker
-    def heartbeat_countdown(self, name):
-        current_count = self._heartbeat_countdown[name]
-        if current_count > 0:
-            self._heartbeat_countdown[name] = (current_count - 1)
-        return self._heartbeat_countdown[name] '''
 
     @locker
     def wait_for_worker(self, timeout=None):
@@ -106,10 +76,6 @@ class ThreadedTCPServer(ThreadingMixIn, TCPServer):
     def add_worker(self, name, request):
         self._worker_cache[name] = request
         self._condition.notifyAll()
-        ''' self._heartbeat_countdown[name] = 3
-        timmer = threading.Timer(5, ThreadedTCPServer._heartbeat_timer, [self, name])
-        timmer.setDaemon(True)
-        timmer.start() '''
 
     @locker
     def del_worker(self, name):
