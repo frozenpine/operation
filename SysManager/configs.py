@@ -1,8 +1,7 @@
 # -*- coding: UTF-8 -*-
 import ConfigParser
-import sys
-
 import re
+import sys
 from os import environ, path
 
 try:
@@ -92,14 +91,13 @@ class Result(object):
     data = {}
     lines = []
 
-    @classmethod
-    def to_dict(cls):
-        return {'destination': cls.destination,
-                'module': cls.module,
-                'return_code': cls.return_code,
-                'error_msg': cls.error_msg,
-                'data': cls.data,
-                'lines': cls.lines}
+    def to_dict(self):
+        return {'destination': self.destination,
+                'module': self.module,
+                'return_code': self.return_code,
+                'error_msg': self.error_msg,
+                'data': self.data,
+                'lines': self.lines}
 
 
 if __name__ == '__main__':

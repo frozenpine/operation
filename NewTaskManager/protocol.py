@@ -154,6 +154,8 @@ class JsonSerializable(object):
             if not callable(obj):
                 if isinstance(obj, JsonSerializable):
                     results[field] = obj.to_dict()
+                elif isinstance(obj, Result):
+                    results[field] = obj.to_dict()
                 elif isinstance(obj, Enum):
                     results[field] = obj.value
                 elif isinstance(obj, list) or isinstance(obj, tuple):
