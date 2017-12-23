@@ -282,7 +282,7 @@ class OperationListRunAllApi(OperationMixin, Resource):
             op_group.operations, False
         )
         if need_auth:
-            if request.headers.has_key('Authorizor'):
+            if 'Authorizor' in request.headers:
                 # username, password = request.headers['Authorizor'].split('\n')
                 author = json.loads(request.headers['Authorizor'])
             else:
@@ -347,7 +347,7 @@ class OperationApi(OperationMixin, Resource):
             if not CheckPrivilege(current_user, '/api/operation/id/', MethodType.Authorize):
                 raise ExecuteTimeOutOfRange(op.time_range)
         if op.need_authorization:
-            if request.headers.has_key('Authorizor'):
+            if 'Authorizor' in request.headers:
                 # username, password = request.headers['Authorizor'].split('\n')
                 author = json.loads(request.headers['Authorizor'])
             else:
@@ -401,9 +401,10 @@ class OperationApi(OperationMixin, Resource):
         else:
             return RestProtocol(error_code=-1, message="Operation not found"), 404
 
+
 class OperationSkipApi(OperationApi):
     def __init__(self):
-        super(OperationApi, self).__init__()
+        super(OperationSkipApi, self).__init__()
 
     def get(self, **kwargs):
         op = Operation.find(**kwargs)
@@ -436,7 +437,7 @@ class OperationSkipApi(OperationApi):
                     ret, self.snapshot = taskManager.snapshot(op.group.uuid)
                     return RestProtocol(self.make_operation_detail(op, session))
                 else:
-                    raise ApiError(data)
+                    raise ApiError(msg)
             except AuthError as err:
                 return RestProtocol(error_code=err.status_code, message=err.message)
             except ApiError as err:
@@ -465,7 +466,7 @@ class OperationCallbackApi(OperationMixin, Resource):
                 status = TaskStatus(int(result['task_status'][0]))
                 record_params = json.loads(result['session'])
                 if status == TaskStatus.Running:
-                    if not record_params.has_key('operation_id'):
+                    if 'operation_id' not in record_params:
                         record_params['operation_id'] = op.id
                     record = OperateRecord(**record_params)
                     db.session.add(record)
@@ -493,7 +494,7 @@ class OperationUIApi(Resource):
                 params.get('ip'),
                 params.get('port', '8080')
             )
-            if session.has_key(key):
+            if key in session:
                 if arrow.utcnow().timestamp >= \
                         arrow.get(session[key].get('timeout')).timestamp:
                     session.pop(key)
@@ -557,9 +558,7 @@ class OperationCaptchaApi(Resource):
             rtn = make_response(rsp.content)
             return rtn
         else:
-            return {
-                       'message': 'operation not found.'
-                   }, 404
+            return {'message': 'operation not found.'}, 404
 
 
 class OperationLoginApi(Resource):
@@ -568,7 +567,7 @@ class OperationLoginApi(Resource):
         if op:
             params = op.operate_define.detail['remote']['params']
             key = '{}:{}'.format(params.get('ip'), params.get('port', '8080'))
-            if session.has_key(key):
+            if key in session:
                 cookies = session[key]['origin']
             else:
                 cookies = None
@@ -596,19 +595,20 @@ class OperationLoginApi(Resource):
                 }
                 return result
         else:
-            return {
-                       'message': 'operation not found.'
-                   }, 404
+            return {'message': 'operation not found.'}, 404
 
 
 class OperationExecuteApi(OperationApi):
+    def __init__(self):
+        super(OperationExecuteApi, self).__init__()
+
     def post(self, id):
         op = Operation.find(id=id)
         if op:
             self.ExecutionPrepare(op)
             params = op.operate_define.detail['remote']['params']
             key = '{}:{}'.format(params.get('ip'), params.get('port', '8080'))
-            if session.has_key(key):
+            if key in session:
                 self.session = session[key]['origin']
             try:
                 if not op.InTimeRange():
@@ -627,7 +627,7 @@ class OperationExecuteApi(OperationApi):
                     result = _handlerJsonResponse(rsp)
                 elif isinstance(module, list):
                     for mod in module:
-                        if mod.has_key('params'):
+                        if 'params' in mod:
                             data = mod['params']
                         else:
                             data = request.form
@@ -659,19 +659,12 @@ class OperationExecuteApi(OperationApi):
                 db.session.commit()
                 self.rtn['err_code'] = self.op_result.error_code
                 self.rtn['output_lines'] = self.op_result.detail
-                self.rtn['re_enter'] = (
-                                           op.operate_define.type.IsChecker() and \
-                                           not op.operate_define.type.IsBatcher()
-                                       ) or CheckPrivilege(
-                    current_user,
-                    '/api/operation/id/',
-                    MethodType.ReExecute
-                )
+                self.rtn['re_enter'] = ((op.operate_define.type.IsChecker() and
+                                         not op.operate_define.type.IsBatcher()) or
+                                        CheckPrivilege(current_user, '/api/operation/id/', MethodType.ReExecute))
                 return self.rtn
         else:
-            return {
-                       'message': 'operation not found.'
-                   }, 404
+            return {'message': 'operation not found.'}, 404
 
 
 def _handlerJsonResponse(response):
@@ -711,7 +704,7 @@ class OperationCSVApi(OperationApi):
             self.ExecutionPrepare(op)
             params = op.operate_define.detail['remote']['params']
             key = '{}:{}'.format(params.get('ip'), params.get('port', '8080'))
-            if session.has_key(key):
+            if key in session:
                 self.session = session[key]['origin']
             file = request.files['market_csv']
             if file:
@@ -757,20 +750,11 @@ class OperationCSVApi(OperationApi):
                     db.session.commit()
                     self.rtn['err_code'] = self.op_result.error_code
                     self.rtn['output_lines'] = self.op_result.detail
-                    self.rtn['re_enter'] = (
-                                               op.operate_define.type.IsChecker() and \
-                                               not op.operate_define.type.IsBatcher()
-                                           ) or CheckPrivilege(
-                        current_user,
-                        '/api/operation/id/',
-                        MethodType.ReExecute
-                    )
+                    self.rtn['re_enter'] = ((op.operate_define.type.IsChecker() and
+                                             not op.operate_define.type.IsBatcher()) or
+                                            CheckPrivilege(current_user, '/api/operation/id/', MethodType.ReExecute))
                     return self.rtn
             else:
-                return {
-                           'message': 'no file found.'
-                       }, 412
+                return {'message': 'no file found.'}, 412
         else:
-            return {
-                       'message': 'operation not found.'
-                   }, 404
+            return {'message': 'operation not found.'}, 404

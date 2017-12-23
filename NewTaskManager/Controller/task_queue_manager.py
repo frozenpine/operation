@@ -6,7 +6,7 @@ import os
 import threading
 import json
 import time
-import random
+import requests
 from Queue import Queue
 
 import zerorpc
@@ -17,6 +17,10 @@ from NewTaskManager.protocol import (MSG_DICT, JsonSerializable, QueueStatus,
                                      Task, TaskResult, TaskStatus)
 from NewTaskManager.Controller.events import EventName
 from NewTaskManager.Controller.excepts import QueueError
+
+
+FLASK_HOST = os.environ.get('FLASK_APP', '127.0.0.1')
+FLASK_PORT = os.environ.get('FLASK_PORT', 6001)
 
 
 class TaskQueueManager(object):
@@ -83,13 +87,30 @@ class TaskQueueManager(object):
                 if manager.queue_exist(result.queue_uuid):
                     queue = manager.get_queue(result.queue_uuid)
                     logging.info('Result for task[{}] dispatched.'.format(result.task_uuid))
-                    queue.update_status_by_result(result)
+                    if queue.update_status_by_result(result):
+                        TaskQueueManager._notify_outside(result)
                     if queue.Status == QueueStatus.Normal and queue.IsRunAll:
                         manager.send_event(EventName.TaskDispath, queue.get())
                 else:
                     logging.warning('Queue[{}] not exist.'.format(result.queue_id))
             else:
                 logging.warning('Can not handle event[{}]'.format(event.Name))
+
+    @staticmethod
+    def _notify_outside(result):
+        result_dict = {
+            'controller_queue_uuid': result.queue_uuid,
+            'task_uuid': result.task_uuid,
+            'task_status': (result.status_code.value, result.status_msg),
+            'session': result.session,
+            'task_result': result.task_result.to_dict() if result.task_result else None
+        }
+        try:
+            url = "http://{ip}:{port}/api/operation/uuid/{id}/callback".format(
+                ip=FLASK_HOST, port=FLASK_PORT, id=result.task_uuid)
+            requests.post(url, json=result_dict)
+        except Exception as err:
+            logging.warning('Notify outside failed.')
 
 
 def locker(func):
@@ -362,6 +383,10 @@ class TaskQueue(JsonSerializable):
         else:
             if not self.queue_status.Blocking:
                 self._condition.notifyAll()
+            if self.task_result_list:
+                last_result = self.task_result_list[-1]
+                if last_result.task_uuid == task_result.task_uuid:
+                    self.task_result_list.pop()
             self.task_result_list.append(task_result)
             logging.info('Queue status[{}] updated by result: {}'.format(self.queue_status, task_result.to_dict()))
             return True
@@ -421,7 +446,7 @@ class TaskQueue(JsonSerializable):
                     'task_uuid': result.task_uuid,
                     'run_all': self.run_all,
                     'session': result.session,
-                    'task_result': result.task_result.to_dict(),
+                    'task_result': result.task_result.to_dict() if result.task_result else None,
                     'task_status': [result.status_code.value, result.status_code.name]
                 }
                 old_snap['task_status_list'][idx] = (result.status_code.value, result.session)
