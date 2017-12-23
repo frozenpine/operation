@@ -13,8 +13,9 @@ from flask_restful import Resource
 
 from SysManager.Common import AESCrypto
 # from TaskManager.controller_msg import msg_dict
-from TaskManager import QueueStatus, TaskStatus
-from TaskManager.controller_msg import msg_dict
+# from TaskManager import QueueStatus, TaskStatus
+# from TaskManager.controller_msg import msg_dict
+from NewTaskManager.protocol import QueueStatus, TaskStatus, MSG_DICT as msg_dict
 from app import db, globalEncryptKey, msgQueues, taskManager, taskRequests
 from app import flask_logger as logging
 from app.auth.errors import (AuthError, InvalidUsernameOrPassword,
@@ -25,14 +26,6 @@ from app.models import (MethodType, OperateRecord, OperateResult, Operation,
 from restful.errors import (ApiError, ExecuteTimeOutOfRange,
                             InvalidParams, ProxyExecuteError)
 from restful.protocol import RestProtocol
-
-''' dispatchMessage = {
-    DispatchResult.Dispatched: u'任务调度成功',
-    DispatchResult.EmptyQueue: u'队列任务已完成',
-    DispatchResult.QueueBlock: u'上一项任务未完成，无法调度新任务',
-    DispatchResult.QueueMissing: u'队列不存在',
-    DispatchResult.QueueNoError: u'队列无失败任务'
-} '''
 
 
 class OperationMixin(object):
@@ -72,7 +65,7 @@ class OperationMixin(object):
         }
         idx, status = self.find_op_status(op)
         if status:
-            if status != TaskStatus.InitFail:
+            if status != TaskStatus.InitFailed:
                 if not op_session:
                     op_session = json.loads(self.snapshot['task_status_list'][idx][1])
                 operator = Operator.find(id=op_session['operator_id'])
@@ -91,7 +84,7 @@ class OperationMixin(object):
                 dtl['exec_code'] = -2
                 dtl['operated_at'] = arrow.get(op_session['operated_at']) \
                     .to(current_app.config['TIME_ZONE']).strftime('%Y-%m-%d %H:%M:%S')
-            elif status == TaskStatus.Success or status == TaskStatus.Failed or status == TaskStatus.Skipped:
+            elif status in (TaskStatus.Success, TaskStatus.Failed, TaskStatus.Skipped):
                 dtl['exec_code'] = self.snapshot['task_result_list'][idx]['task_result']['return_code'] if \
                     status != TaskStatus.Skipped else -3
                 dtl['output_lines'] = self.snapshot['task_result_list'][idx]['task_result']['lines']
@@ -100,21 +93,21 @@ class OperationMixin(object):
             elif status and status.IsTimeout:
                 dtl['exec_code'] = -6
             ''' elif status == TaskStatus.Skipped:
-                dtl['exec_code'] = -3 '''
+                dtl['exec_code'] = -3 ''''''  '''
         else:
             dtl['exec_code'] = -1
         if idx > 0:
-            dtl['enabled'] = self.snapshot['task_status_list'][idx - 1] \
-                and (self.snapshot['task_status_list'][idx - 1][0] == TaskStatus.Success.value 
-                    or self.snapshot['task_status_list'][idx - 1][0] == TaskStatus.Skipped.value) \
-                and (not self.snapshot['task_status_list'][idx] \
-                    or (self.snapshot['task_status_list'][idx][0] != TaskStatus.Success.value 
-                        and self.snapshot['task_status_list'][idx][0] != TaskStatus.Skipped.value))
+            dtl['enabled'] = (self.snapshot['task_status_list'][idx - 1] and
+                              (self.snapshot['task_status_list'][idx - 1][0] == TaskStatus.Success.value or
+                               self.snapshot['task_status_list'][idx - 1][0] == TaskStatus.Skipped.value) and
+                              (not self.snapshot['task_status_list'][idx] or
+                               (self.snapshot['task_status_list'][idx][0] != TaskStatus.Success.value and
+                                self.snapshot['task_status_list'][idx][0] != TaskStatus.Skipped.value)))
             if not dtl['enabled']:
                 dtl['enabled'] = False
         elif idx == 0:
-            dtl['enabled'] = not self.snapshot['task_status_list'][0] or \
-                self.snapshot['task_status_list'][0][0] != TaskStatus.Success.value
+            dtl['enabled'] = (not self.snapshot['task_status_list'][0] or
+                              self.snapshot['task_status_list'][0][0] != TaskStatus.Success.value)
         else:
             dtl['enabled'] = False
         return dtl
@@ -133,7 +126,7 @@ class OperationMixin(object):
             rtn['status_code'] = self.snapshot['controller_queue_status']
             rtn['create_time'] = self.snapshot['create_time']
         else:
-            rtn['status_code'] = QueueStatus.Missing.value
+            rtn['status_code'] = QueueStatus.NotExits.value
             rtn['create_time'] = None
         for op in op_group.operations:
             rtn['details'].append(self.make_operation_detail(op))
@@ -183,17 +176,15 @@ class OperationListApi(OperationMixin, Resource):
                 # 自动初始化逻辑：
                 # 应急操作队列直接初始化
                 # 当前日期与队列创建日期比较超过1天且当前时间晚于队列触发时间
-                if op_group.is_emergency \
-                    or ((now_time.day > create_time.day \
-                            or (now_time.day < create_time.day \
-                                and now_time.month > create_time.month)) \
-                        and (isinstance(trigger_time, datetime.time) \
-                            and now_time.time() > trigger_time)):
+                if (op_group.is_emergency or
+                        ((now_time.day > create_time.day or
+                          (now_time.day < create_time.day and now_time.month > create_time.month)) and
+                         (isinstance(trigger_time, datetime.time) and now_time.time() > trigger_time))):
                     taskManager.init(task_queue, True)
                     ret, self.snapshot = taskManager.snapshot(op_group.uuid)
                     rtn = self.make_operation_list(op_group)
                     msgQueues['tasks'].send_object(rtn)
-            elif ret == QueueStatus.Missing.value:
+            else:
                 if isinstance(trigger_time, datetime.time) and (now_time.time() > trigger_time):
                     taskManager.init(task_queue, True)
                     ret, self.snapshot = taskManager.snapshot(op_group.uuid)

@@ -24,15 +24,36 @@ class TaskQueueManager(object):
         self._event_global = event_global
         self._task_queues = {}
         self._event_local = Queue()
+        self._condition = threading.Condition(threading.RLock())
+
         self._entrypoint = zerorpc.Server(RPCHandler(self))
         self._entrypoint.bind("tcp://{ip}:{port}".format(ip=rpc_addr, port=rpc_port))
+
         self._event_handler = threading.Thread(
             target=TaskQueueManager._result_dispatcher, args=(self._event_local, self))
         self._event_handler.setDaemon(True)
+        self._event_handler.start()
+
+        self._queue_status_handler = threading.Thread(
+            target=TaskQueueManager._queue_manipulator, args=(self, ))
+        self._queue_status_handler.setDaemon(True)
+        self._queue_status_handler.start()
 
     def run(self):
-        self._event_handler.start()
         self._entrypoint.run()
+
+    @staticmethod
+    def _queue_manipulator(manager):
+        while True:
+            for queue in manager.get_queue_cache().values():
+                current_time = time.time()
+                expire_time = time.mktime(time.strptime(queue.expire_time, '%Y-%m-%d %H:%M:%S'))
+                destroy_time = time.mktime(time.strptime(queue.destroy_time, '%Y-%m-%d %H:%M:%S'))
+                if current_time >= destroy_time:
+                    queue.destroy()
+                elif current_time >= expire_time:
+                    queue.expire()
+            time.sleep(0.5)
 
     def event_relay(self, event):
         logging.info('Event received: {} {}'.format(event.Name, event.Data.to_dict()))
@@ -59,11 +80,11 @@ class TaskQueueManager(object):
             event = event_local.get()
             if event.Name == EventName.TaskResult:
                 result = event.Data
-                if result.queue_uuid in manager._task_queues:
-                    queue = manager._task_queues[result.queue_uuid]
+                if manager.queue_exist(result.queue_uuid):
+                    queue = manager.get_queue(result.queue_uuid)
                     logging.info('Result for task[{}] dispatched.'.format(result.task_uuid))
                     queue.update_status_by_result(result)
-                    if queue.Status == QueueStatus.Normal and queue.RunAll:
+                    if queue.Status == QueueStatus.Normal and queue.IsRunAll:
                         manager.send_event(EventName.TaskDispath, queue.get())
                 else:
                     logging.warning('Queue[{}] not exist.'.format(result.queue_id))
@@ -112,7 +133,7 @@ class TaskQueue(JsonSerializable):
         self.__exclude__.append('todo_task_queue')
         self._condition = threading.Condition(threading.RLock())
         self._cache = cache
-        cache[self.queue_uuid] = self
+        self._cache[queue_uuid] = self
 
     @staticmethod
     def from_dict(dict_data):
@@ -129,7 +150,7 @@ class TaskQueue(JsonSerializable):
 
     @property
     @locker
-    def RunAll(self):
+    def IsRunAll(self):
         return self.run_all
 
     @property
@@ -146,6 +167,11 @@ class TaskQueue(JsonSerializable):
         返回任务队列的状态
         """
         return self.queue_status
+
+    @locker
+    def wait(self, timeout=None):
+        if self.queue_status.Blocking:
+            self._condition.wait(timeout)
 
     @locker
     def append(self, task):
@@ -334,6 +360,8 @@ class TaskQueue(JsonSerializable):
             logging.warning('Invalid status[{}] in result: {}'.format(task_result.task_status, task_result.to_dict()))
             return False
         else:
+            if not self.queue_status.Blocking:
+                self._condition.notifyAll()
             self.task_result_list.append(task_result)
             logging.info('Queue status[{}] updated by result: {}'.format(self.queue_status, task_result.to_dict()))
             return True
@@ -378,13 +406,13 @@ class TaskQueue(JsonSerializable):
                 "controller_queue_status": self.queue_status.value,
                 "controller_queue_uuid": self.queue_uuid,
                 "task_list": [{
-                    'earliest': task.earliest,
-                    'latest': task.latest,
+                    'earliest': task.task_earliest,
+                    'latest': task.task_latest,
                     'task_uuid': task.task_uuid,
-                    'detail': task.info
+                    'detail': task.task_info
                 } for task in self.task_list],
-                "task_result_list": [None for result in self.task_result_list],
-                "task_status_list": [None for result in self.task_result_list]
+                "task_result_list": [None for x in self.task_list],
+                "task_status_list": [None for x in self.task_list]
             }
             for idx in xrange(len(self.task_result_list)):
                 result = self.task_result_list[idx]
@@ -400,6 +428,32 @@ class TaskQueue(JsonSerializable):
             return old_snap
         else:
             return self.to_dict()
+
+    @locker
+    def expire(self):
+        if self.queue_status.Blocking:
+            def wait_and_expire(queue):
+                queue.wait()
+                queue.expire()
+            tr = threading.Thread(
+                target=wait_and_expire, args=(self, ))
+            tr.setDaemon(True)
+            tr.start()
+        else:
+            self.queue_status = QueueStatus.Expired
+
+    @locker
+    def destroy(self):
+        if self.queue_status.Blocking:
+            def wait_and_destroy(queue):
+                queue.wait()
+                queue.destroy()
+            tr = threading.Thread(
+                target=wait_and_destroy, args=(self, ))
+            tr.setDaemon(True)
+            tr.start()
+        else:
+            del self._cache[self.queue_uuid]
 
 
 class RPCHandler(object):
@@ -418,6 +472,8 @@ class RPCHandler(object):
                 queue.append(Task.from_dict({
                     'queue_uuid': queue_uuid,
                     'task_uuid': task_define['task_uuid'],
+                    'create_time': queue.create_time,
+                    'trigger_time': queue.trigger_time,
                     'task_earliest': task_define['earliest'],
                     'task_latest': task_define['latest'],
                     'session': None,
