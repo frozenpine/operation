@@ -11,7 +11,7 @@ from threading import Thread
 from NewTaskManager.Worker import worker_logger as logging
 from NewTaskManager.Worker.worker import msg_queue
 from NewTaskManager.excepts import DeserialError
-from NewTaskManager.protocol import TmProtocol, Hello
+from NewTaskManager.protocol import TmProtocol, Hello, Health
 
 external_socket = dict()
 
@@ -41,7 +41,9 @@ class ExternalSocketServer(Thread):
             socket_client.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
             socket_client.connect((self.master_host, self.master_port))
             tm_hello = TmProtocol("worker", "master", Hello())
+            tm_health = TmProtocol("worker", "master", Health())
             socket_client.sendall(tm_hello.serial())
+            socket_client.sendall(tm_health.serial())
             logging.info('External Connect To Host: {0}, Port: {1}'.format(self.master_host, self.master_port))
         except socket.error, e:
             logging.warning('External Connect Fail'.format())
