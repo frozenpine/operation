@@ -31,7 +31,7 @@ class TaskQueueManager(object):
         self._event_local = Queue()
         self._condition = threading.Condition(threading.RLock())
 
-        self._deserial()
+        self._deserial(self._task_queues)
 
         self._entrypoint = zerorpc.Server(RPCHandler(self))
         self._entrypoint.bind("tcp://{ip}:{port}".format(ip=rpc_addr, port=rpc_port))
@@ -49,7 +49,7 @@ class TaskQueueManager(object):
     def run(self):
         self._entrypoint.run()
 
-    def _deserial(self):
+    def _deserial(self, cache):
         current_time = time.time()
         directory = os.path.join(os.path.dirname(__file__), 'dump')
         for each_file in os.listdir(directory):
@@ -61,8 +61,7 @@ class TaskQueueManager(object):
                 else:
                     destroy_time = time.mktime(time.strptime(dict_data['destroy_time'], '%Y-%m-%d %H:%M:%S'))
                     if current_time < destroy_time:
-                        queue = TaskQueue.from_dict(dict_data)
-                        self._task_queues[queue.queue_uuid] = queue
+                        TaskQueue.from_dict(cache, dict_data)
 
     @staticmethod
     def _queue_manipulator(manager):
@@ -199,8 +198,17 @@ class TaskQueue(JsonSerializable):
         self._cache[queue_uuid] = self
 
     @staticmethod
-    def from_dict(dict_data):
-        queue = TaskQueue(**dict_data)
+    def from_dict(cache, dict_data):
+        queue = TaskQueue(
+            cache, dict_data['queue_uuid'], trigger_time=dict_data['trigger_time'], sync_group=dict_data['sync_group'])
+        queue.queue_status = QueueStatus(dict_data['queue_status'])
+        queue.run_all = dict_data['run_all']
+        for task_define in dict_data['task_list']:
+            task = Task.from_dict(task_define)
+            queue.task_list.append(task)
+        for result_define in dict_data['task_result_list']:
+            result = TaskResult.from_dict(result_define)
+            queue.task_result_list.append(result)
         queue.make_todo_task_queue()
         return queue
 
