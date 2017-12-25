@@ -8,19 +8,20 @@ from SocketServer import StreamRequestHandler, TCPServer, ThreadingMixIn
 from NewTaskManager.Controller import controller_logger as logging
 from NewTaskManager.Controller.events import EventName, MessageEvent
 from NewTaskManager.excepts import DeserialError
-from NewTaskManager.protocol import (MSG_DICT, Health, Hello, MessageType,
+from NewTaskManager.protocol import (MSG_DICT, Health, Hello, MessageType, Goodbye,
                                      TaskResult, TaskStatus, TmProtocol)
 
 
 class ThreadedTCPRequestHandler(StreamRequestHandler):
     def _process(self, data):
-        # if not self.server.worker_exists(data.source):
-        #     self.server.add_worker(data.source, self.request)
         worker_name = data.source
         payload = data.payload
         if isinstance(payload, Hello):
             self.server.add_worker(data.source, self.request)
-            logging.info('Client ({} {}) say hello.'.format(worker_name, self.client_address))
+            logging.info('Client[{}]{} say hello.'.format(worker_name, self.client_address))
+        if isinstance(payload, Goodbye):
+            self.server.del_worker(worker_name)
+            logging.info('Client[{}]{} say goodbye.'.format(worker_name, self.client_address))
         if isinstance(payload, Health):
             self.server.free_worker(random.randint(1, 100), worker_name)
         if isinstance(payload, TaskResult):

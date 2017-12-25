@@ -25,6 +25,7 @@ class MessageType(Enum):
 
 class PayloadType(Enum):
     Hello = 0
+    Goodbye = 1
     Authentication = 10
     Confirmation = 20
     Health = 30
@@ -350,6 +351,12 @@ class Hello(JsonSerializable):
     @staticmethod
     def from_dict(dict_data):
         return Hello()
+
+
+class Goodbye(JsonSerializable):
+    @staticmethod
+    def from_dict(dict_data):
+        return Goodbye()
 
 
 class Health(JsonSerializable):
