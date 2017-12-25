@@ -585,4 +585,5 @@ class RPCHandler(object):
             return -1, MSG_DICT[QueueStatus.NotExits]
 
     def kill(self, task_uuid):
+        pass
         return -1, u'未实现'
