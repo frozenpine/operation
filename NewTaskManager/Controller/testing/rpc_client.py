@@ -82,7 +82,7 @@ if __name__ == '__main__':
         }
     }
 
-    try:
+    ''' try:
         force = True
         code, msg = client.init(queue_dict, force)
         print code, msg
@@ -90,7 +90,7 @@ if __name__ == '__main__':
             sys.exit()
     except Exception as err:
         print err
-        client.close()
+        client.close() '''
     #
     # result = client.peek(queue_id, task3_id)
     # print result

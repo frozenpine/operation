@@ -15,7 +15,7 @@ logging.basicConfig(
 )
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../../'))
-from NewTaskManager.protocol import TmProtocol, Task, TaskResult, TaskStatus, MSG_DICT, Heartbeat, Hello
+from NewTaskManager.protocol import TmProtocol, Task, TaskResult, TaskStatus, MSG_DICT, Heartbeat, Hello, Health
 from NewTaskManager.excepts import DeserialError
 from SysManager.configs import Result
 
@@ -27,6 +27,7 @@ class SocketClient(object):
         conn = ('localhost', 7000)
         self._socket.connect(conn)
         self.Send(Hello())
+        self.Send(Health())
 
     def Send(self, payload):
         return self._socket.sendall(TmProtocol(src='work_sim', dest='MASTER', payload=payload).serial())

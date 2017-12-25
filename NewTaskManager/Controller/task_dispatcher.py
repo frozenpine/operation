@@ -1,28 +1,30 @@
 # coding=utf-8
 
-from SocketServer import StreamRequestHandler, ThreadingMixIn, TCPServer
-import threading
 import random
+import threading
+from Queue import PriorityQueue, Queue
+from SocketServer import StreamRequestHandler, TCPServer, ThreadingMixIn
 
-from Queue import Queue, PriorityQueue
-
-from NewTaskManager.protocol import TmProtocol, TaskResult, TaskStatus, MSG_DICT, MessageType, Hello
-from NewTaskManager.excepts import DeserialError
 from NewTaskManager.Controller import controller_logger as logging
 from NewTaskManager.Controller.events import EventName, MessageEvent
+from NewTaskManager.excepts import DeserialError
+from NewTaskManager.protocol import (MSG_DICT, Health, Hello, MessageType,
+                                     TaskResult, TaskStatus, TmProtocol)
 
 
 class ThreadedTCPRequestHandler(StreamRequestHandler):
     def _process(self, data):
-        if not self.server.worker_exists(data.source):
-            self.server.add_worker(data.source, self.request)
+        # if not self.server.worker_exists(data.source):
+        #     self.server.add_worker(data.source, self.request)
         worker_name = data.source
         payload = data.payload
+        if isinstance(payload, Hello):
+            self.server.add_worker(data.source, self.request)
+            logging.info('Client ({} {}) say hello.'.format(worker_name, self.client_address))
+        if isinstance(payload, Health):
+            self.server.free_worker(random.randint(1, 100), worker_name)
         if isinstance(payload, TaskResult):
             self.server.send_result(worker_name, payload)
-        if isinstance(payload, Hello):
-            self.server.free_worker(random.randint(1, 100), worker_name)
-            logging.info('Client ({} {}) say hello.'.format(worker_name, self.client_address))
         return True
 
     def handle(self):
@@ -111,13 +113,14 @@ class ThreadedTCPServer(ThreadingMixIn, TCPServer):
     @staticmethod
     def send_task(server, name, task):
         while True:
-            server.wait_for_worker()
             try:
                 worker = server.get_worker(name)
                 worker.sendall(
                     TmProtocol(src='MASTER', dest=name, payload=task, msg_type=MessageType.Private).serial())
-            except Exception:
-                server.del_worker(name)
+            except Exception as err:
+                # server.del_worker(name)
+                server.wait_for_worker()
+                logging.warning(err)
                 name = server.worker_arb()
             else:
                 break

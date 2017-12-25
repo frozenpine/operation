@@ -352,6 +352,12 @@ class Hello(JsonSerializable):
         return Hello()
 
 
+class Health(JsonSerializable):
+    @staticmethod
+    def from_dict(dict_data):
+        return Health()
+
+
 class Task(JsonSerializable):
     def __init__(self, queue_uuid, create_time, trigger_time, task_uuid,
                  task_info, task_earliest, task_latest, session):
