@@ -522,6 +522,8 @@ app.filter('exe_result', function() {
                 return "执行超时";
             case -7:
                 return "超出时间范围";
+            case -8:
+                return "任务已下发";
             default:
                 return "执行失败";
         }

@@ -90,7 +90,9 @@ class TaskQueueManager(object):
                     if queue.update_status_by_result(result):
                         TaskQueueManager._notify_outside(result)
                     if queue.Status == QueueStatus.Normal and queue.IsRunAll:
-                        manager.send_event(EventName.TaskDispath, queue.get())
+                        task = queue.get()
+                        task.session = result.session
+                        manager.send_event(EventName.TaskDispath, task)
                 else:
                     logging.warning('Queue[{}] not exist.'.format(result.queue_id))
             else:
@@ -524,7 +526,7 @@ class RPCHandler(object):
                 if isinstance(rtn, Task):
                     rtn.session = session
                     self._manager.send_event(EventName.TaskDispath, rtn)
-                    return 0, u'任务已调度'
+                    return 0, rtn.task_uuid
                 elif isinstance(rtn, QueueStatus):
                     return -1, u'调度失败，当前队列状态：' + MSG_DICT[rtn]
                 else:

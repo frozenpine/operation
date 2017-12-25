@@ -74,6 +74,8 @@ class OperationMixin(object):
                     'operator_uuid': operator.uuid,
                     'operator_name': operator.name
                 }
+            if status == TaskStatus.Dispatched:
+                dtl['exec_code'] = -8
             if status == TaskStatus.Runnable:
                 dtl['exec_code'] = -4
             if status == TaskStatus.TimeRangeExcept:

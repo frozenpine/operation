@@ -28,7 +28,7 @@ class ThreadedTCPRequestHandler(StreamRequestHandler):
     def handle(self):
         while True:
             try:
-                buff = self.request.recv(10240)
+                buff = self.request.recv(8192)
             except:
                 logging.warning('Client disconnect: {0}'.format(self.client_address))
                 break
