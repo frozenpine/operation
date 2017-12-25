@@ -7,6 +7,7 @@ import threading
 import json
 import time
 import requests
+import yaml
 from Queue import Queue
 
 import zerorpc
@@ -30,6 +31,8 @@ class TaskQueueManager(object):
         self._event_local = Queue()
         self._condition = threading.Condition(threading.RLock())
 
+        self._deserial()
+
         self._entrypoint = zerorpc.Server(RPCHandler(self))
         self._entrypoint.bind("tcp://{ip}:{port}".format(ip=rpc_addr, port=rpc_port))
 
@@ -45,6 +48,21 @@ class TaskQueueManager(object):
 
     def run(self):
         self._entrypoint.run()
+
+    def _deserial(self):
+        current_time = time.time()
+        directory = os.path.join(os.path.dirname(__file__), 'dump')
+        for each_file in os.listdir(directory):
+            if each_file.endswith('.yaml'):
+                try:
+                    dict_data = yaml.load(open(os.path.join(directory, each_file), mode='r'))
+                except Exception as err:
+                    logging.warning('Invalid yaml dump file[{}]'.format(each_file))
+                else:
+                    destroy_time = time.mktime(time.strptime(dict_data['destroy_time'], '%Y-%m-%d %H:%M:%S'))
+                    if current_time < destroy_time:
+                        queue = TaskQueue.from_dict(dict_data)
+                        self._task_queues[queue.queue_uuid] = queue
 
     @staticmethod
     def _queue_manipulator(manager):
@@ -128,12 +146,34 @@ def locker(func):
 
 def dumpper(func):
     def wrapper(self, *args, **kwargs):
-        if isinstance(self, JsonSerializable):
+        if isinstance(self, TaskQueue):
             result = func(self, *args, **kwargs)
             directory = os.path.join(os.path.dirname(__file__), 'dump')
             file_name = self.queue_uuid
             self.dump_file(dump_file='{dir}/{file_name}.yaml'.format(dir=directory, file_name=file_name))
             return result
+        else:
+            return func(self, *args, **kwargs)
+    wrapper.__doc__ = func.__doc__
+    return wrapper
+
+
+def loader(func):
+    def wrapper(self, *args, **kwargs):
+        if isinstance(self, TaskQueue):
+            queue_uuid = args[1]
+            file_name = os.path.join(os.path.dirname(__file__), 'dump/{}.yaml'.format(queue_uuid))
+            if os.path.exists(file_name):
+                try:
+                    dict_data = yaml.load(open(file_name, mode='r'))
+                except Exception as err:
+                    logging.warning('Invalid yaml dump file[{}]'.format(file_name))
+                else:
+                    current_time = time.time()
+                    destroy_time = time.mktime(time.strptime(dict_data['destroy_time']))
+                    if current_time < destroy_time:
+                        return TaskQueue.from_dict(dict_data)
+            return func(self, *args, **kwargs)
         else:
             return func(self, *args, **kwargs)
     wrapper.__doc__ = func.__doc__
