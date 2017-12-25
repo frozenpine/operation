@@ -278,16 +278,15 @@ class TaskQueue(JsonSerializable):
         if self.queue_status not in (QueueStatus.Normal, QueueStatus.Initiating) and not force:
             logging.warning('Invalid queue status.')
             return False
-        todo = Queue()
+        self.todo_task_queue = Queue()
         for task in self.task_list[len(self.task_result_list):]:
-            todo.put(task)
-        if not todo.empty():
-            self.todo_task_queue = todo
-            self.queue_status = QueueStatus.Normal
-            return True
-        else:
+            self.todo_task_queue.put(task)
+        if not force and self.todo_task_queue.empty():
             logging.warning('Queue[{}] todo queue empty in status[{}]'.format(self.queue_uuid, self.queue_status.name))
             return False
+        elif not force:
+            self.queue_status = QueueStatus.Normal
+        return True
 
     @locker
     def peek(self, task_uuid=None):
