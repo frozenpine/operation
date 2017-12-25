@@ -84,7 +84,8 @@ class ExternalSocketServer(Thread):
         while True:
             try:
                 data = self.socket_client.recv(8192)
-                self.process(data)
+                if not data:
+                    raise socket.error
             except socket.error:
                 retry_count = 0
                 while 1:
@@ -96,3 +97,5 @@ class ExternalSocketServer(Thread):
                         break
                     else:
                         time.sleep(5)
+            else:
+                self.process(data)

@@ -131,7 +131,7 @@ class ThreadedTCPServer(ThreadingMixIn, TCPServer):
         if event.Name == EventName.TaskDispath:
             worker_name = self.worker_arb()
             task = event.Data
-            tr = threading.Thread(target=ThreadedTCPServer.send_task, args=(worker_name, task))
+            tr = threading.Thread(target=ThreadedTCPServer.send_task, args=(self, worker_name, task))
             tr.setDaemon(True)
             tr.start()
             logging.info('Task[{}] assigned to worker[{}]'.format(event.Data.task_uuid, worker_name))
