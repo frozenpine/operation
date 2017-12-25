@@ -110,8 +110,16 @@ class ThreadedTCPServer(ThreadingMixIn, TCPServer):
 
     @locker
     def send_task(self, name, task):
-        self._worker_cache[name].sendall(
-            TmProtocol(src='MASTER', dest=name, payload=task, msg_type=MessageType.Private).serial())
+        while True:
+            try:
+                self._worker_cache[name].sendall(
+                    TmProtocol(src='MASTER', dest=name, payload=task, msg_type=MessageType.Private).serial())
+            except Exception:
+                self.del_worker(name)
+                name = self.worker_arb()
+            else:
+                break
+
 
     def send_result(self, name, task_result):
         if name and task_result.status_code.IsDone:
