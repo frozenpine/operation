@@ -17,6 +17,7 @@ logging.basicConfig(
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../../'))
 from NewTaskManager.protocol import TmProtocol, Task, TaskResult, TaskStatus, MSG_DICT, Heartbeat, Hello
 from NewTaskManager.excepts import DeserialError
+from SysManager.configs import Result
 
 
 class SocketClient(object):
@@ -54,8 +55,13 @@ if __name__ == '__main__':
             time.sleep(1)
             client.Send(TaskResult(
                 payload.queue_uuid, payload.task_uuid, TaskStatus.Running,
-                MSG_DICT[TaskStatus.Running], payload.session, {}))
+                MSG_DICT[TaskStatus.Running], payload.session))
             time.sleep(3)
+            result = Result()
+            result.data = {}
+            result.return_code = 0
+            result.lines = ['result from worker_sim']
+            result.error_msg = u'成功'
             client.Send(TaskResult(
                 payload.queue_uuid, payload.task_uuid, TaskStatus.Success,
-                MSG_DICT[TaskStatus.Success], payload.session, {}))
+                MSG_DICT[TaskStatus.Success], payload.session, result))

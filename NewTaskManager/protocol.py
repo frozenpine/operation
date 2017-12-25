@@ -353,12 +353,12 @@ class Hello(JsonSerializable):
 
 
 class Task(JsonSerializable):
-    def __init__(self, queue_uuid, create_time, trigger_time, task_uuid,
-                 task_info, task_earliest, task_latest, session):
-        # def __init__(self, queue_uuid, task_uuid, task_info, task_earliest, task_latest, session):
+    # def __init__(self, queue_uuid, create_time, trigger_time, task_uuid,
+    #              task_info, task_earliest, task_latest, session):
+    def __init__(self, queue_uuid, task_uuid, task_info, task_earliest, task_latest, session):
         self.queue_uuid = queue_uuid
-        self.create_time = create_time
-        self.trigger_time = trigger_time
+        # self.create_time = create_time
+        # self.trigger_time = trigger_time
         self.task_uuid = task_uuid
         self.task_info = task_info
         self.task_earliest = task_earliest
@@ -368,15 +368,15 @@ class Task(JsonSerializable):
     @staticmethod
     def from_dict(dict_data):
         queue_uuid = dict_data['queue_uuid']
-        create_time = dict_data['create_time']
-        trigger_time = dict_data['trigger_time']
+        # create_time = dict_data['create_time']
+        # trigger_time = dict_data['trigger_time']
         task_uuid = dict_data['task_uuid']
         task_info = dict_data['task_info']
         task_earliest = dict_data['task_earliest']
         task_latest = dict_data['task_latest']
         session = dict_data['session']
-        return Task(queue_uuid=queue_uuid, create_time=create_time, trigger_time=trigger_time, task_uuid=task_uuid,
-                    task_info=task_info, task_earliest=task_earliest, task_latest=task_latest, session=session)
+        return Task(queue_uuid=queue_uuid, task_uuid=task_uuid, task_info=task_info,
+                    task_earliest=task_earliest, task_latest=task_latest, session=session)
 
 
 class TaskResult(JsonSerializable):
