@@ -355,7 +355,7 @@ class Hello(JsonSerializable):
 class Task(JsonSerializable):
     def __init__(self, queue_uuid, create_time, trigger_time, task_uuid,
                  task_info, task_earliest, task_latest, session):
-    # def __init__(self, queue_uuid, task_uuid, task_info, task_earliest, task_latest, session):
+        # def __init__(self, queue_uuid, task_uuid, task_info, task_earliest, task_latest, session):
         self.queue_uuid = queue_uuid
         self.create_time = create_time
         self.trigger_time = trigger_time

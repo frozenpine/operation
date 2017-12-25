@@ -6,7 +6,7 @@ Worker进程池
 import json
 import socket
 import time
-from multiprocessing import Pool
+from multiprocessing import Pool, cpu_count
 
 from NewTaskManager.Common import get_time
 from NewTaskManager.Worker import worker_logger as logging
@@ -16,27 +16,31 @@ from SysManager.excepts import (ConfigInvalid, SSHAuthenticationException, SSHEx
 from SysManager.executor import Executor
 
 
-def init_socket(host, port):
+def init_socket():
     """
     对于工作进程初始化socket连接
-    :param host: 主机
-    :param port: 端口
     :return:
     """
     global socket_client
+    host, port = '127.0.0.1', 7001
     socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     socket_client.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
     socket_client.connect((host, port))
     logging.info('Client Connect To Host: {0}, Port: {1}'.format(host, port))
 
 
-def reconnect_socket(self):
+def reconnect_socket():
+    """
+    socket连接重新连接
+    :return:
+    """
     try:
         global socket_client
+        host, port = '127.0.0.1', 7001
         socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         socket_client.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-        socket_client.connect((self.master_host, self.master_port))
-        logging.info('Internal Connect To Host: {0}, Port: {1}'.format(self.master_host, self.master_port))
+        socket_client.connect((host, port))
+        logging.info('Internal Connect To Host: {0}, Port: {1}'.format(host, port))
     except socket.error:
         return -1
     else:
@@ -54,10 +58,9 @@ def send(data):
         # 发送数据
         while 1:
             global socket_client
-            retry_count = 0
             try:
                 logging.info('Client Send Len: {0}'.format(len(dump_data)))
-                socket_client.send(dump_data)
+                socket_client.sendall(dump_data)
                 logging.info(u'Client Send: {0}'.format(json.dumps(data.to_dict(), ensure_ascii=False)))
                 ack = socket_client.recv(8192)
                 logging.info('Client Receive: {0}'.format(ack))
@@ -70,7 +73,7 @@ def send(data):
                 while 1:
                     retry_count = retry_count + 1
                     logging.warning('External Disconnect, Retry {0}'.format(retry_count))
-                    ret = init_socket('127.0.0.1', '7001')
+                    ret = reconnect_socket()
                     if ret == 0:
                         break
                     else:
@@ -214,8 +217,7 @@ def run(task):
 class WorkerPool(object):
     def __init__(self):
         self.running_process = 0
-        # self.process_count = cpu_count()
-        self.process_count = 2
+        self.process_count = cpu_count()
         self.worker_pool = None
 
     def vacant(self):
@@ -226,16 +228,19 @@ class WorkerPool(object):
 
     def add_running_process(self):
         self.running_process += 1
+        logging.info('Running Process Add 1, Now {0}'.format(self.running_process))
 
-    def minus_running_process(self):
+    def minus_running_process(self, result):
         self.running_process -= 1
+        logging.info('Running Process Minus 1, Now {0}'.format(self.running_process))
 
     def start(self):
-        self.worker_pool = Pool(processes=self.process_count, initializer=init_socket, initargs=('127.0.0.1', 7001))
+        self.worker_pool = Pool(processes=self.process_count, initializer=init_socket)
 
     def run(self, event):
         task_info = event.event_data
-        self.worker_pool.apply_async(run, (task_info,))
+        self.worker_pool.apply_async(func=run, args=(task_info,), callback=self.minus_running_process)
+        self.add_running_process()
 
 
 worker_pool = WorkerPool()

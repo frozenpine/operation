@@ -108,16 +108,17 @@ class ThreadedTCPServer(ThreadingMixIn, TCPServer):
         logging.info('Current worker: {}[{}]'.format(name, priority))
         return name
 
-    @locker
-    def send_task(self, name, task):
+    @staticmethod
+    def send_task(server, name, task):
         while True:
+            server.wait_for_worker()
             try:
-                self._worker_cache[name].sendall(
+                worker = server.get_worker(name)
+                worker.sendall(
                     TmProtocol(src='MASTER', dest=name, payload=task, msg_type=MessageType.Private).serial())
             except Exception:
-                self.del_worker(name)
-                self.wait_for_worker(0.5)
-                name = self.worker_arb()
+                server.del_worker(name)
+                name = server.worker_arb()
             else:
                 break
 
@@ -130,7 +131,9 @@ class ThreadedTCPServer(ThreadingMixIn, TCPServer):
         if event.Name == EventName.TaskDispath:
             worker_name = self.worker_arb()
             task = event.Data
-            self.send_task(worker_name, task)
+            tr = threading.Thread(target=ThreadedTCPServer.send_task, args=(worker_name, task))
+            tr.setDaemon(True)
+            tr.start()
             logging.info('Task[{}] assigned to worker[{}]'.format(event.Data.task_uuid, worker_name))
             self.send_result(None, TaskResult(
                 task.queue_uuid, task.task_uuid, TaskStatus.Dispatched,
