@@ -113,19 +113,21 @@ def run(task):
         elif ret_code == 2:
             # 需要等待
             logging.info('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.WorkerWaiting.value))
-            status_code = TaskStatus.TriggerTimeWaiting.value
+            status_code = TaskStatus.TriggerTimeWaiting
             status_msg = u'需要等待{0}秒'.format(ret_msg)
             result = TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
                                 status_msg=status_msg, session=task.session)
             send(result)
         elif ret_code == 1:
+            # 该状态不通知Master
             # 可以执行
-            logging.info('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.Runnable.value))
-            status_code = TaskStatus.Runnable
-            status_msg = MSG_DICT.get(status_code)
-            result = TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
-                                status_msg=status_msg, session=task.session)
-            send(result)
+            # logging.info('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.Runnable.value))
+            # status_code = TaskStatus.Runnable
+            # status_msg = MSG_DICT.get(status_code)
+            # result = TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
+            #                     status_msg=status_msg, session=task.session)
+            # send(result)
+            pass
         else:
             # 异常情况 直接返回-1
             logging.warning('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.UnKnown.value))
