@@ -209,7 +209,7 @@ class TaskQueue(JsonSerializable):
         for result_define in dict_data['task_result_list']:
             result = TaskResult.from_dict(result_define)
             queue.task_result_list.append(result)
-        queue.make_todo_task_queue()
+        queue.make_todo_task_queue(force=True)
         return queue
 
     @property
@@ -271,11 +271,11 @@ class TaskQueue(JsonSerializable):
 
     @locker
     @dumpper
-    def make_todo_task_queue(self):
+    def make_todo_task_queue(self, force=False):
         """
         初始化待做任务队列
         """
-        if self.queue_status not in (QueueStatus.Normal, QueueStatus.Initiating):
+        if self.queue_status not in (QueueStatus.Normal, QueueStatus.Initiating) and not force:
             logging.warning('Invalid queue status.')
             return False
         todo = Queue()
@@ -286,7 +286,7 @@ class TaskQueue(JsonSerializable):
             self.queue_status = QueueStatus.Normal
             return True
         else:
-            logging.warning('Todo queue empty')
+            logging.warning('Queue[{}] todo queue empty in status[{}]'.format(self.queue_uuid, self.queue_status.name))
             return False
 
     @locker
