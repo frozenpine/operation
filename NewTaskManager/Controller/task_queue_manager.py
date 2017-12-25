@@ -29,7 +29,7 @@ class TaskQueueManager(object):
         self._event_global = event_global
         self._task_queues = {}
         self._event_local = Queue()
-        self._condition = threading.Condition(threading.RLock())
+        # self._condition = threading.Condition(threading.RLock())
 
         self._deserial(self._task_queues)
 
@@ -505,7 +505,7 @@ class TaskQueue(JsonSerializable):
 
     @locker
     def expire(self):
-        if self.queue_status.Blocking:
+        ''' if self.queue_status.Blocking:
             def wait_and_expire(queue):
                 queue.wait()
                 queue.expire()
@@ -514,11 +514,13 @@ class TaskQueue(JsonSerializable):
             tr.setDaemon(True)
             tr.start()
         else:
+            self.queue_status = QueueStatus.Expired '''
+        if not (self.queue_status.Blocking or self.queue_status == QueueStatus.Done):
             self.queue_status = QueueStatus.Expired
 
     @locker
     def destroy(self):
-        if self.queue_status.Blocking:
+        ''' if self.queue_status.Blocking:
             def wait_and_destroy(queue):
                 queue.wait()
                 queue.destroy()
@@ -527,6 +529,8 @@ class TaskQueue(JsonSerializable):
             tr.setDaemon(True)
             tr.start()
         else:
+            del self._cache[self.queue_uuid] '''
+        if not self.queue_status.Blocking:
             del self._cache[self.queue_uuid]
 
 
