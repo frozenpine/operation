@@ -30,13 +30,16 @@ class Controller(Process):
         rpc_port = environ.get('TM_PORT') or 6000
         socket_port = environ.get("SOCKET_PORT") or 7000
         socket_host = environ.get("SOCKET_HOST") or '0.0.0.0'
-        self._msg_loop = MsgLoop()
-        self._task_manager = TaskQueueManager(rpc_addr, rpc_port, msg_queue)
+
         self._task_dispatcher = TaskDispatcher(socket_host, socket_port, msg_queue)
+        self._task_dispatcher.start()
+
+        self._task_manager = TaskQueueManager(rpc_addr, rpc_port, msg_queue)
+
+        self._msg_loop = MsgLoop()
         self._msg_loop.register_callback(EventName.TaskResult, self._task_manager.event_relay)
         self._msg_loop.register_callback(EventName.TaskDispath, self._task_dispatcher.event_relay)
         self._msg_loop.start()
-        self._task_dispatcher.start()
 
     def run(self):
         self._task_manager.run()
