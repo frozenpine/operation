@@ -91,11 +91,11 @@ if __name__ == '__main__':
     except Exception as err:
         print err
         client.close()
-
-    result = client.peek(queue_id, task3_id)
+    #
+    # result = client.peek(queue_id, task3_id)
     # print result
 
-    result = client.peek(queue_id, task1_id)
+    # result = client.peek(queue_id, task1_id)
     # print result
 
     # print client.run_next('123456')

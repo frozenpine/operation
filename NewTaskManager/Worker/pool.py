@@ -5,7 +5,6 @@ Worker进程池
 
 import json
 import socket
-import threading
 import time
 from multiprocessing import Pool
 
@@ -16,8 +15,6 @@ from SysManager.configs import SSHConfig
 from SysManager.excepts import (ConfigInvalid, SSHAuthenticationException, SSHException, SSHNoValidConnectionsError)
 from SysManager.executor import Executor
 
-socket_object = threading.local()
-
 
 def init_socket(host, port):
     """
@@ -26,12 +23,24 @@ def init_socket(host, port):
     :param port: 端口
     :return:
     """
-    # global socket_client
-    # socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # socket_client.connect((host, port))
-    socket_object.socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    socket_object.socket_client.connect((host, port))
+    global socket_client
+    socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    socket_client.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+    socket_client.connect((host, port))
     logging.info('Client Connect To Host: {0}, Port: {1}'.format(host, port))
+
+
+def reconnect_socket(self):
+    try:
+        global socket_client
+        socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        socket_client.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        socket_client.connect((self.master_host, self.master_port))
+        logging.info('Internal Connect To Host: {0}, Port: {1}'.format(self.master_host, self.master_port))
+    except socket.error:
+        return -1
+    else:
+        return 0
 
 
 def send(data):
@@ -44,7 +53,7 @@ def send(data):
         dump_data = data.serial()
         # 发送数据
         while 1:
-            socket_client = socket_object.socket_client
+            global socket_client
             retry_count = 0
             try:
                 logging.info('Client Send Len: {0}'.format(len(dump_data)))
@@ -57,8 +66,16 @@ def send(data):
                     raise Exception('TaskResult Deserialize Error')
             except socket.error, e:
                 # 因server端socket异常未正常发送
-                retry_count = retry_count + 1
-                init_socket('127.0.0.1', 7001)
+                retry_count = 0
+                while 1:
+                    retry_count = retry_count + 1
+                    logging.warning('External Disconnect, Retry {0}'.format(retry_count))
+                    ret = init_socket('127.0.0.1', '7001')
+                    if ret == 0:
+                        break
+                    else:
+                        time.sleep(5)
+
                 logging.warning('Client Send Error, Retry {0}'.format(retry_count))
             else:
                 break
@@ -96,19 +113,21 @@ def run(task):
         elif ret_code == 2:
             # 需要等待
             logging.info('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.WorkerWaiting.value))
-            status_code = TaskStatus.TriggerTimeWaiting.value
+            status_code = TaskStatus.TriggerTimeWaiting
             status_msg = u'需要等待{0}秒'.format(ret_msg)
             result = TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
                                 status_msg=status_msg, session=task.session)
             send(result)
         elif ret_code == 1:
+            # 该状态不通知Master
             # 可以执行
-            logging.info('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.Runnable.value))
-            status_code = TaskStatus.Runnable
-            status_msg = MSG_DICT.get(status_code)
-            result = TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
-                                status_msg=status_msg, session=task.session)
-            send(result)
+            # logging.info('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.Runnable.value))
+            # status_code = TaskStatus.Runnable
+            # status_msg = MSG_DICT.get(status_code)
+            # result = TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
+            #                     status_msg=status_msg, session=task.session)
+            # send(result)
+            pass
         else:
             # 异常情况 直接返回-1
             logging.warning('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.UnKnown.value))
