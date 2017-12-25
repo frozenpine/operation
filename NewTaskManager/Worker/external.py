@@ -25,6 +25,17 @@ class ExternalSocketServer(Thread):
         self.socket_client = self.init_socket()
 
     def init_socket(self):
+        retry_count = 0
+        while 1:
+            retry_count = retry_count + 1
+            ret = self.reconnect_socket()
+            if ret:
+                return ret
+            else:
+                logging.warning('External Disconnect, Retry {0}'.format(retry_count))
+                time.sleep(5)
+
+    def reconnect_socket(self):
         try:
             socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             socket_client.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
@@ -33,7 +44,6 @@ class ExternalSocketServer(Thread):
             socket_client.send(tm_hello.serial())
             logging.info('External Connect To Host: {0}, Port: {1}'.format(self.master_host, self.master_port))
         except socket.error, e:
-            logging.error(e)
             logging.warning('External Connect Fail'.format())
         else:
             return socket_client
