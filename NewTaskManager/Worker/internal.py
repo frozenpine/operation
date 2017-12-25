@@ -44,7 +44,7 @@ class ThreadedTCPRequestHandler(SocketServer.StreamRequestHandler):
                     ack = '{"ack": "Pass"}'
                 else:
                     ack = '{"ack": "Fail"}'
-                self.request.send(ack)
+                self.request.sendall(ack)
                 logging.info('Server Send: {0}'.format(ack))
             else:
                 logging.warning('Server Disconnect: {0}'.format(self.client_address))

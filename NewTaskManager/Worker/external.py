@@ -41,7 +41,7 @@ class ExternalSocketServer(Thread):
             socket_client.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
             socket_client.connect((self.master_host, self.master_port))
             tm_hello = TmProtocol("worker", "master", Hello())
-            socket_client.send(tm_hello.serial())
+            socket_client.sendall(tm_hello.serial())
             logging.info('External Connect To Host: {0}, Port: {1}'.format(self.master_host, self.master_port))
         except socket.error, e:
             logging.warning('External Connect Fail'.format())
