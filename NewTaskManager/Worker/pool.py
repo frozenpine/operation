@@ -16,6 +16,16 @@ from SysManager.excepts import (ConfigInvalid, SSHAuthenticationException, SSHEx
 from SysManager.executor import Executor
 
 
+def dumper(func):
+    def wrapper(*args, **kwargs):
+        ret = func(*args, **kwargs)
+
+        return ret
+
+    wrapper.__doc__ = func.__doc__
+    return wrapper
+
+
 def init_socket():
     """
     对于工作进程初始化socket连接
@@ -84,14 +94,8 @@ def send(data):
                 break
 
 
-def run(task):
-    """
-    调用Executor执行task
-    :return:
-    """
-    # 获取queue_uuid, task_uuid
-    queue_uuid, task_uuid = task.queue_uuid, task.task_uuid
-    # 判断是否满足执行条件
+@dumper
+def init_status(task, queue_uuid, task_uuid):
     if not worker_pool.vacant():
         # 进程池满
         logging.warning('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.WorkerWating.value))
@@ -140,9 +144,13 @@ def run(task):
                                 status_msg=status_msg, session=task.session)
             send(result)
             return -1
-    # 实例化SSHConfig初始化判断
+
+
+@dumper
+def init_conf(task, queue_uuid, task_uuid):
     try:
         conf = SSHConfig(**task.task_info["remote"]["params"])
+        return conf
     except ConfigInvalid, e:
         # 配置文件格式错误 直接返回-1
         logging.warning('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.InitFailed.value))
@@ -151,9 +159,12 @@ def run(task):
                             status_msg=status_msg, session=task.session)
         send(result)
         return -1
-    # 实例化Executor初始化判断
+
+
+def init_exe(task, queue_uuid, task_uuid, conf):
     try:
         exe = Executor.CreateByWorker(conf)
+        return exe
     except (SSHNoValidConnectionsError, SSHAuthenticationException, SSHException), e:
         # SSH连接失败 直接返回-1
         status_code, status_msg = TaskStatus.InitFailed, e
@@ -161,6 +172,10 @@ def run(task):
                             status_msg=status_msg, session=task.session)
         send(result)
         return -1
+
+
+@dumper
+def run_task(task, queue_uuid, task_uuid, conf, exe):
     # 开始正式执行
     ret_code, ret_msg = get_time.compare_timestamps(
         task.trigger_time, task.task_earliest, task.task_latest
@@ -214,6 +229,35 @@ def run(task):
         return -1
 
 
+def process(task):
+    """
+    调用Executor执行task
+    :return:
+    """
+    # 获取queue_uuid, task_uuid
+    queue_uuid, task_uuid = task.queue_uuid, task.task_uuid
+    # 判断是否满足执行条件
+    status_ret = init_status(task, queue_uuid, task_uuid)
+    if status_ret != -1:
+        # 实例化SSHConfig初始化判断
+        conf_ret = init_conf(task, queue_uuid, task_uuid)
+        if conf_ret != -1:
+            # 实例化Executor初始化判断
+            conf = conf_ret
+            exe_ret = init_exe(task, queue_uuid, task_uuid, conf)
+            if exe_ret != -1:
+                # 开始运行程序
+                exe = exe_ret
+                run_ret = run_task(task, queue_uuid, task_uuid, conf, exe)
+                return run_ret
+            else:
+                return exe_ret
+        else:
+            return conf_ret
+    else:
+        return status_ret
+
+
 class WorkerPool(object):
     def __init__(self):
         self.running_process = 0
@@ -239,7 +283,7 @@ class WorkerPool(object):
 
     def run(self, event):
         task_info = event.event_data
-        self.worker_pool.apply_async(func=run, args=(task_info,), callback=self.minus_running_process)
+        self.worker_pool.apply_async(func=process, args=(task_info,), callback=self.minus_running_process)
         self.add_running_process()
 
 
