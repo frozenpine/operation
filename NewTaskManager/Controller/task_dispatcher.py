@@ -32,7 +32,6 @@ class ThreadedTCPRequestHandler(StreamRequestHandler):
                 worker_name, self.client_address, payload.to_dict()))
             if payload.status_code.IsDone:
                 self.server.free_worker(random.randint(1, 100), worker_name)
-        return True
 
     def handle(self):
         while True:
@@ -41,15 +40,15 @@ class ThreadedTCPRequestHandler(StreamRequestHandler):
             except socket.error:
                 logging.warning('Client disconnect: {0}'.format(self.client_address))
                 break
-            try:
-                data = TmProtocol.deserial(buff)
-            except DeserialError as err:
-                logging.warning('Protocol format error: {0}'.format(err.message))
+            if buff:
+                try:
+                    data = TmProtocol.deserial(buff)
+                except (DeserialError, ValueError) as err:
+                    logging.warning('Protocol format error: {0}'.format(err.message))
+                else:
+                    self._process(data)
             else:
-                if not self._process(data):
-                    break
-        del self.server
-        self.request.close()
+                break
 
 
 def locker(func):
@@ -137,8 +136,6 @@ class ThreadedTCPServer(ThreadingMixIn, TCPServer):
                 break
 
     def send_result(self, task_result):
-        ''' if name and task_result.status_code.IsDone:
-            self.free_worker(random.randint(1, 100), name) '''
         self._event_queue.put_event(EventName.TaskResult, task_result)
 
     def task_dispatcher(self, event):
@@ -148,9 +145,6 @@ class ThreadedTCPServer(ThreadingMixIn, TCPServer):
         if event.Name == EventName.TaskDispath:
             worker_name = self.worker_arb()
             task = event.Data
-            ''' tr = threading.Thread(target=ThreadedTCPServer.send_task, args=(self, worker_name, task))
-            tr.setDaemon(True)
-            tr.start() '''
             self.send_task(worker_name, task)
             logging.info('Task[{}] assigned to worker[{}]'.format(event.Data.task_uuid, worker_name))
             self.send_result(TaskResult(
@@ -213,9 +207,4 @@ class TaskDispatcher(threading.Thread):
                 logging.warning('No callback registed on this event[{}]: {}'.format(event.Name, event.Data.to_dict()))
             else:
                 for func in callback_cache[event.Name]:
-                    ''' tr = threading.Thread(target=func, args=(event,))
-                    tr.setDaemon(True)
-                    tr.start() '''
                     func(event)
-            ''' worker_name = worker_cache.worker_arb()
-            worker_cache.send_task(worker_name, task) '''

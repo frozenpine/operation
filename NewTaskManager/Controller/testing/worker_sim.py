@@ -36,6 +36,7 @@ class SocketClient(object):
         self.Send(Health())
 
     def Reconnect(self, timeout=3):
+        self._socket.close()
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         while True:
@@ -54,11 +55,14 @@ class SocketClient(object):
 
     def Receive(self, buff_size=8192):
         buff = self._socket.recv(buff_size)
-        try:
-            proto = TmProtocol.deserial(buff)
-        except DeserialError as err:
-            logging.warning(err.message)
-        return proto.payload
+        if buff:
+            try:
+                proto = TmProtocol.deserial(buff)
+            except DeserialError as err:
+                logging.warning(err.message)
+            return proto.payload
+        else:
+            return None
 
     def Close(self):
         return self._socket.close()
@@ -71,24 +75,25 @@ if __name__ == '__main__':
         except socket.error:
             logging.error('socket disconnect')
             client.Reconnect()
-        if isinstance(payload, Task):
-            logging.info('Task from server: {}'.format(payload.to_dict()))
-            time.sleep(1)
-            client.Send(TaskResult(
-                payload.queue_uuid, payload.task_uuid, TaskStatus.Running,
-                MSG_DICT[TaskStatus.Running], payload.session))
-            time.sleep(3)
-            result = Result()
-            result.data = {}
-            if payload.task_info['mod']['shell'] == 'startall':
-                result.return_code = 1
-                result.lines = ['fail simu from worker_sim']
-                result.error_msg = u'失败'
-            else:
-                result.return_code = 0
-                result.lines = ['result from worker_sim']
-                result.error_msg = u'成功'
-            client.Send(TaskResult(
-                payload.queue_uuid, payload.task_uuid,
-                TaskStatus.Success if result.return_code == 0 else TaskStatus.Failed,
-                MSG_DICT[TaskStatus.Success], payload.session, result))
+        else:
+            if isinstance(payload, Task):
+                logging.info('Task from server: {}'.format(payload.to_dict()))
+                time.sleep(1)
+                client.Send(TaskResult(
+                    payload.queue_uuid, payload.task_uuid, TaskStatus.Running,
+                    MSG_DICT[TaskStatus.Running], payload.session))
+                time.sleep(3)
+                result = Result()
+                result.data = {}
+                if payload.task_info['mod']['shell'] == 'startall':
+                    result.return_code = 1
+                    result.lines = ['fail simu from worker_sim']
+                    result.error_msg = u'失败'
+                else:
+                    result.return_code = 0
+                    result.lines = ['result from worker_sim']
+                    result.error_msg = u'成功'
+                client.Send(TaskResult(
+                    payload.queue_uuid, payload.task_uuid,
+                    TaskStatus.Success if result.return_code == 0 else TaskStatus.Failed,
+                    MSG_DICT[TaskStatus.Success], payload.session, result))

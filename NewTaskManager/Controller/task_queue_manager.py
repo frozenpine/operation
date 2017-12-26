@@ -29,17 +29,11 @@ class TaskQueueManager(object):
         self._event_global = event_global
         self._task_queues = {}
         self._event_local = Queue()
-        # self._condition = threading.Condition(threading.RLock())
 
         self._deserial(self._task_queues)
 
         self._entrypoint = zerorpc.Server(RPCHandler(self))
         self._entrypoint.bind("tcp://{ip}:{port}".format(ip=rpc_addr, port=rpc_port))
-
-        # self._event_handler = threading.Thread(
-        #     target=TaskQueueManager._result_dispatcher, args=(self._event_local, self))
-        # self._event_handler.setDaemon(True)
-        # self._event_handler.start()
 
         self._queue_status_handler = threading.Thread(
             target=TaskQueueManager._queue_manipulator, args=(self, ))
@@ -74,12 +68,10 @@ class TaskQueueManager(object):
                     queue.destroy()
                 elif current_time >= expire_time:
                     queue.expire()
-            time.sleep(0.5)
+            time.sleep(1)
 
     def event_relay(self, event):
         logging.info('Event received: {} {}'.format(event.Name, event.Data.to_dict()))
-        # self._event_local.put_nowait(event)
-        # self._event_local.put(event)
         if event.Name == EventName.TaskResult:
             result = event.Data
             if self.queue_exist(result.queue_uuid):
