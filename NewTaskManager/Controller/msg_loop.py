@@ -21,7 +21,8 @@ class MsgQueue(Queue):
 
 class MsgLoop(Thread):
     def __init__(self):
-        super(MsgLoop, self).__init__()
+        # super(MsgLoop, self).__init__()
+        Thread.__init__(self)
         self.callback_dict = dict()
 
     def register_callback(self, event_name, callback_func):

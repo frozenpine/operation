@@ -100,7 +100,9 @@ if __name__ == '__main__':
 
     # print client.run_next('123456')
 
-    print client.run_next(queue_id)
+    # print client.run_next(queue_id)
 
     # print client.run_all(queue_id)
+    code, snap = client.snapshot('961f14f1-abf3-4390-829e-8b50ddf40533', False)
+    print snap
     client.close()
