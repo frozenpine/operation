@@ -2,9 +2,15 @@
 """
 Worker入口
 """
-
-from msg_loop import MsgQueue
-from pool import worker_pool
+import os
+import sys
+try:
+    from msg_loop import MsgQueue
+    from pool import worker_pool
+except ImportError:
+    sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
+    from msg_loop import MsgQueue
+    from pool import worker_pool
 
 # 初始化消息队列
 msg_queue = MsgQueue()

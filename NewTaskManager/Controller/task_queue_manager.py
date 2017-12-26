@@ -371,7 +371,8 @@ class TaskQueue(JsonSerializable):
         """
         if self.queue_status == QueueStatus.JobFailed:
             self.task_result_list.pop()
-            self.make_todo_task_queue()
+            self.queue_status = QueueStatus.Normal
+            self.make_todo_task_queue(force=True)
             return True
         else:
             return False
@@ -572,7 +573,8 @@ class RPCHandler(object):
 
     def run_next(self, queue_uuid, session=None):
         if self._manager.queue_exist(queue_uuid):
-            rtn = self._manager.get_queue(queue_uuid).get()
+            queue = self._manager.get_queue(queue_uuid)
+            rtn = queue.get()
             if rtn:
                 if isinstance(rtn, Task):
                     rtn.session = session
@@ -583,7 +585,7 @@ class RPCHandler(object):
                 else:
                     raise Exception(u'未知的任务调度返回')
             else:
-                return -1, MSG_DICT[QueueStatus.Empty]
+                return -1, MSG_DICT[queue.Status]
         else:
             return -1, MSG_DICT[QueueStatus.NotExits]
 

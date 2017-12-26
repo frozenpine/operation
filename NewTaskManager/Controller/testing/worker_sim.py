@@ -22,12 +22,32 @@ from SysManager.configs import Result
 
 class SocketClient(object):
     def __init__(self):
+        self._conn = ('localhost', 7000)
+        self.Connect()
+
+    def Connect(self):
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-        conn = ('localhost', 7000)
-        self._socket.connect(conn)
+        try:
+            self._socket.connect(self._conn)
+        except socket.error:
+            self.Reconnect()
         self.Send(Hello())
         self.Send(Health())
+
+    def Reconnect(self, timeout=3):
+        self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        while True:
+            try:
+                self._socket.connect(self._conn)
+            except socket.error as err:
+                logging.warning('Connect to server fail, retry in {}s'.format(timeout))
+                time.sleep(timeout)
+            else:
+                self.Send(Hello())
+                self.Send(Health())
+                break
 
     def Send(self, payload):
         return self._socket.sendall(TmProtocol(src='work_sim', dest='MASTER', payload=payload).serial())
@@ -48,9 +68,9 @@ if __name__ == '__main__':
     while True:
         try:
             payload = client.Receive()
-        except:
+        except socket.error:
             logging.error('socket disconnect')
-            break
+            client.Reconnect()
         if isinstance(payload, Task):
             logging.info('Task from server: {}'.format(payload.to_dict()))
             time.sleep(1)
@@ -60,9 +80,15 @@ if __name__ == '__main__':
             time.sleep(3)
             result = Result()
             result.data = {}
-            result.return_code = 0
-            result.lines = ['result from worker_sim']
-            result.error_msg = u'成功'
+            if payload.task_info['mod']['shell'] == 'startall':
+                result.return_code = 1
+                result.lines = ['fail simu from worker_sim']
+                result.error_msg = u'失败'
+            else:
+                result.return_code = 0
+                result.lines = ['result from worker_sim']
+                result.error_msg = u'成功'
             client.Send(TaskResult(
-                payload.queue_uuid, payload.task_uuid, TaskStatus.Success,
+                payload.queue_uuid, payload.task_uuid,
+                TaskStatus.Success if result.return_code == 0 else TaskStatus.Failed,
                 MSG_DICT[TaskStatus.Success], payload.session, result))
