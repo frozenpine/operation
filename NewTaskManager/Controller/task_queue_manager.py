@@ -36,10 +36,10 @@ class TaskQueueManager(object):
         self._entrypoint = zerorpc.Server(RPCHandler(self))
         self._entrypoint.bind("tcp://{ip}:{port}".format(ip=rpc_addr, port=rpc_port))
 
-        self._event_handler = threading.Thread(
-            target=TaskQueueManager._result_dispatcher, args=(self._event_local, self))
-        self._event_handler.setDaemon(True)
-        self._event_handler.start()
+        # self._event_handler = threading.Thread(
+        #     target=TaskQueueManager._result_dispatcher, args=(self._event_local, self))
+        # self._event_handler.setDaemon(True)
+        # self._event_handler.start()
 
         self._queue_status_handler = threading.Thread(
             target=TaskQueueManager._queue_manipulator, args=(self, ))
@@ -78,7 +78,23 @@ class TaskQueueManager(object):
 
     def event_relay(self, event):
         logging.info('Event received: {} {}'.format(event.Name, event.Data.to_dict()))
-        self._event_local.put_nowait(event)
+        # self._event_local.put_nowait(event)
+        # self._event_local.put(event)
+        if event.Name == EventName.TaskResult:
+            result = event.Data
+            if self.queue_exist(result.queue_uuid):
+                queue = self.get_queue(result.queue_uuid)
+                logging.info('Result for task[{}] dispatched.'.format(result.task_uuid))
+                if queue.update_status_by_result(result):
+                    TaskQueueManager._notify_outside(result)
+                if queue.Status == QueueStatus.Normal and queue.IsRunAll:
+                    task = queue.get()
+                    task.session = result.session
+                    self.send_event(EventName.TaskDispath, task)
+            else:
+                logging.warning('Queue[{}] not exist.'.format(result.queue_id))
+        else:
+            logging.warning('Can not handle event[{}]'.format(event.Name))
 
     def get_queue(self, queue_id):
         if queue_id in self._task_queues:
@@ -98,22 +114,25 @@ class TaskQueueManager(object):
     @staticmethod
     def _result_dispatcher(event_local, manager):
         while True:
-            event = event_local.get()
-            if event.Name == EventName.TaskResult:
-                result = event.Data
-                if manager.queue_exist(result.queue_uuid):
-                    queue = manager.get_queue(result.queue_uuid)
-                    logging.info('Result for task[{}] dispatched.'.format(result.task_uuid))
-                    if queue.update_status_by_result(result):
-                        TaskQueueManager._notify_outside(result)
-                    if queue.Status == QueueStatus.Normal and queue.IsRunAll:
-                        task = queue.get()
-                        task.session = result.session
-                        manager.send_event(EventName.TaskDispath, task)
+            try:
+                event = event_local.get()
+                if event.Name == EventName.TaskResult:
+                    result = event.Data
+                    if manager.queue_exist(result.queue_uuid):
+                        queue = manager.get_queue(result.queue_uuid)
+                        logging.info('Result for task[{}] dispatched.'.format(result.task_uuid))
+                        if queue.update_status_by_result(result):
+                            TaskQueueManager._notify_outside(result)
+                        if queue.Status == QueueStatus.Normal and queue.IsRunAll:
+                            task = queue.get()
+                            task.session = result.session
+                            manager.send_event(EventName.TaskDispath, task)
+                    else:
+                        logging.warning('Queue[{}] not exist.'.format(result.queue_id))
                 else:
-                    logging.warning('Queue[{}] not exist.'.format(result.queue_id))
-            else:
-                logging.warning('Can not handle event[{}]'.format(event.Name))
+                    logging.warning('Can not handle event[{}]'.format(event.Name))
+            except Exception as err:
+                logging.warning('Something bad happend: {}'.format(err.message))
 
     @staticmethod
     def _notify_outside(result):
