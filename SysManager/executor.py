@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
 import sys
-import arrow
 from os import path
 
 import requests
@@ -160,6 +159,9 @@ class SSHExecutor(Executor):
             username=ssh_config.remote_user,
             password=ssh_config.remote_password)
 
+    def close(self):
+        self.client.close()
+
 
 class HttpExecutor(Executor):
     def __init__(self, remote_config, parser=None, session=None):
@@ -169,3 +171,6 @@ class HttpExecutor(Executor):
 
     def run(self, module):
         pass
+
+    def close(self):
+        self.client.close()

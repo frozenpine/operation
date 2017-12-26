@@ -99,7 +99,8 @@ if __name__ == '__main__':
     # print result
 
     # print client.run_next('123456')
-    client.init(queue_dict, True)
+    # client.init(queue_dict, True)
     # print client.run_next(queue_id)
-    print client.run_all(queue_id)
+    # print client.run_all(queue_id)
+    print client.snapshot('f59666ac-a336-452f-9665-aaa792f41d83', compatiable=False)
     client.close()

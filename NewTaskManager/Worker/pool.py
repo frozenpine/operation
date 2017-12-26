@@ -249,6 +249,10 @@ def process(task):
                 # 开始运行程序
                 exe = exe_ret
                 run_ret = run_task(task, queue_uuid, task_uuid, conf, exe)
+                # 关闭连接
+                exe.close()
+                del exe
+                del conf
                 return run_ret
             else:
                 return exe_ret
