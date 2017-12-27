@@ -1,10 +1,10 @@
 #! /bin/bash
 
 BASE_DIR=`dirname $0`
-LOG_FILE="${BASE_DIR}/run/Controller.log"
+LOG_FILE="${BASE_DIR}/run/controller.log"
 cd  ${BASE_DIR}
 
-CONTROLLER_APP="${BASE_DIR}/Controller/Controller/controller.py"
+CONTROLLER_APP="${BASE_DIR}/NewTaskManager/Controller/testing/server.py"
 CONTROLLER_PID="${BASE_DIR}/run/controller.pid"
 TM_USER="${UID}"
 _CONTROLLER_PID=
@@ -56,7 +56,7 @@ controller_status(){
             rm -f "${CONTROLLER_PID}"
         fi
     fi
-    _CONTROLLER_PID=`ps -fu "${TM_USER}" | grep "python NewTaskManager/Controller/server.py" | awk '$0 !~/grep|awk|vim?|nano/{print $2}'`
+    _CONTROLLER_PID=`ps -fu "${TM_USER}" | grep "/Controller/testing/server.py" | awk '$0 !~/grep|awk|vim?|nano/{print $2}'`
     if [[ -n ${_CONTROLLER_PID} ]]; then
         _LOG "Controller is running[${_CONTROLLER_PID}]."
         echo -n ${_CONTROLLER_PID}>"${CONTROLLER_PID}"
@@ -73,7 +73,7 @@ controller_start(){
         _ERR "Controller already running[${_CONTROLLER_PID}]"
         exit 1
     else
-        nohup python "${CONTROLLER_APP}" &>"${BASE_DIR}/run/Controller.out" &
+        nohup python "${CONTROLLER_APP}" &>"${BASE_DIR}/run/controller.out" &
         _CONTROLLER_PID=$!
         echo -n ${_CONTROLLER_PID} >"${CONTROLLER_PID}"
         _LOG "Controller started[PID:${_CONTROLLER_PID}]"

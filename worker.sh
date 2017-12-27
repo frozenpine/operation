@@ -1,11 +1,11 @@
 #! /bin/bash
 
 BASE_DIR=`dirname $0`
-LOG_FILE="${BASE_DIR}/run/Worker.log"
+LOG_FILE="${BASE_DIR}/run/worker.log"
 cd  ${BASE_DIR}
 
-Worker_APP="${BASE_DIR}/Worker/Worker/Worker.py"
-Worker_PID="${BASE_DIR}/run/Worker.pid"
+Worker_APP="${BASE_DIR}/NewTaskManager/Worker/worker.py"
+Worker_PID="${BASE_DIR}/run/worker.pid"
 TM_USER="${UID}"
 _Worker_PID=
 
