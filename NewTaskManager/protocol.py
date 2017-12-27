@@ -147,7 +147,7 @@ class JsonSerializable(object):
             JSON data w/o attributes in self.__exclude__ list.
 
         Raises:
-            TypeError: An error occour when attribute not JSON serializable.
+            TypeError: An error occur when attribute not JSON serializable.
         """
         results = {}
         for field in [x for x in dir(self) if not x.startswith('_') and x not in self.__exclude__]:
@@ -189,6 +189,7 @@ class JsonSerializable(object):
         """ Used to deserial protocol message from str buffer
         Args:
             buff: pickle serialized buff string.
+            is_json: use json or pickle to deserial string
 
         Returns: Instance of class.
 
@@ -332,10 +333,10 @@ class TmProtocol(JsonSerializable):
         return TmProtocol(src=src, dest=dest, payload=payload, msg_type=msg_type)
 
     def is_valid(self):
-        """ Verifing protocol message is valid
+        """ Verifying protocol message is valid
         Args: None
 
-        Returns: Ture 4 data is valid, False 4 data is invalid.
+        Returns: True 4 data is valid, False 4 data is invalid.
         """
         hasher = hashlib.md5(json.dumps(self, cls=JsonSerializableEncoder, sort_keys=True))
         return hasher.hexdigest() == self.check_sum
@@ -360,8 +361,17 @@ class Goodbye(JsonSerializable):
 
 
 class Health(JsonSerializable):
+    # def __init__(self, cpu_idle, mem_idle, vacant):
+    #     self.cpu_idle = cpu_idle
+    #     self.mem_idle = mem_idle
+    #     self.vacant = vacant
+
     @staticmethod
     def from_dict(dict_data):
+        # cpu_idle = dict_data['cpu_idle']
+        # mem_idle = dict_data['mem_idle']
+        # vacant = dict_data['vacant']
+        # return Health(cpu_idle=cpu_idle, mem_idle=mem_idle, vacant=vacant)
         return Health()
 
 

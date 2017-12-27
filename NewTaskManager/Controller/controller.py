@@ -24,7 +24,7 @@ except ImportError:
 msg_queue = MsgQueue()
 
 
-class Controller(Process):
+class Controller(object):
     def __init__(self):
         rpc_addr = environ.get('TM_HOST') or '0.0.0.0'
         rpc_port = environ.get('TM_PORT') or 6000
@@ -38,7 +38,7 @@ class Controller(Process):
 
         self._msg_loop = MsgLoop()
         self._msg_loop.register_callback(EventName.TaskResult, self._task_manager.event_relay)
-        self._msg_loop.register_callback(EventName.TaskDispath, self._task_dispatcher.event_relay)
+        self._msg_loop.register_callback(EventName.TaskDispatch, self._task_dispatcher.event_relay)
         self._msg_loop.start()
 
     def run(self):

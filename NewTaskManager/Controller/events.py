@@ -4,7 +4,7 @@ from enum import Enum
 
 
 class EventName(Enum):
-    TaskDispath = 10
+    TaskDispatch = 10
     TaskResult = 11
 
 

@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-""" Exception definetion for TaskManager's Controller
+""" Exception definition for TaskManager's Controller
 """
 
 
