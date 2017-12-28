@@ -4,6 +4,7 @@ Worker入口
 """
 import os
 import sys
+
 try:
     from msg_loop import MsgQueue
     from pool import worker_pool

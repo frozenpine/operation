@@ -1,12 +1,10 @@
 # coding=utf-8
 
-import sys
+import logging
 import os
 import socket
-import logging
+import sys
 import time
-import random
-import threading
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -14,10 +12,15 @@ logging.basicConfig(
     datefmt='%a, %d %b %Y %H:%M:%S'
 )
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '../../../'))
-from NewTaskManager.protocol import TmProtocol, Task, TaskResult, TaskStatus, MSG_DICT, Heartbeat, Hello, Health
-from NewTaskManager.excepts import DeserialError
-from SysManager.configs import Result
+try:
+    from NewTaskManager.protocol import TmProtocol, Task, TaskResult, TaskStatus, MSG_DICT, Hello, Health
+    from NewTaskManager.excepts import DeserialError
+    from SysManager.configs import Result
+except ImportError:
+    sys.path.append(os.path.join(os.path.dirname(__file__), '../../../'))
+    from NewTaskManager.protocol import TmProtocol, Task, TaskResult, TaskStatus, MSG_DICT, Hello, Health
+    from NewTaskManager.excepts import DeserialError
+    from SysManager.configs import Result
 
 
 class SocketClient(object):
@@ -66,6 +69,7 @@ class SocketClient(object):
 
     def Close(self):
         return self._socket.close()
+
 
 if __name__ == '__main__':
     client = SocketClient()

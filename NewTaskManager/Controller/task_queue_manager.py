@@ -2,23 +2,22 @@
 """ Zero rpc server 4 TaskManager Controller
 """
 
+import json
 import os
 import threading
-import json
 import time
-import requests
-import yaml
 from Queue import Queue
 
+import requests
+import yaml
 import zerorpc
 
-from NewTaskManager.Controller import controller_logger as logging
 from NewTaskManager.Common import get_time
-from NewTaskManager.protocol import (MSG_DICT, JsonSerializable, QueueStatus,
-                                     Task, TaskResult, TaskStatus)
+from NewTaskManager.Controller import controller_logger as logging
 from NewTaskManager.Controller.events import EventName
 from NewTaskManager.Controller.excepts import QueueError
-
+from NewTaskManager.protocol import (MSG_DICT, JsonSerializable, QueueStatus,
+                                     Task, TaskResult, TaskStatus)
 
 FLASK_HOST = os.environ.get('FLASK_APP', '127.0.0.1')
 FLASK_PORT = os.environ.get('FLASK_PORT', 6001)
@@ -36,7 +35,7 @@ class TaskQueueManager(object):
         self._entrypoint.bind("tcp://{ip}:{port}".format(ip=rpc_addr, port=rpc_port))
 
         self._queue_status_handler = threading.Thread(
-            target=TaskQueueManager._queue_manipulator, args=(self, ))
+            target=TaskQueueManager._queue_manipulator, args=(self,))
         self._queue_status_handler.setDaemon(True)
         self._queue_status_handler.start()
 
@@ -150,6 +149,7 @@ def locker(func):
             return func(self, *args, **kwargs)
         finally:
             self._condition.release()
+
     wrapper.__doc__ = func.__doc__
     return wrapper
 
@@ -164,6 +164,7 @@ def dumper(func):
             return result
         else:
             return func(self, *args, **kwargs)
+
     wrapper.__doc__ = func.__doc__
     return wrapper
 
@@ -186,6 +187,7 @@ def loader(func):
             return func(self, *args, **kwargs)
         else:
             return func(self, *args, **kwargs)
+
     wrapper.__doc__ = func.__doc__
     return wrapper
 
@@ -481,8 +483,8 @@ class TaskQueue(JsonSerializable):
         return task
 
     @locker
-    def make_snapshot(self, compatiable=True):
-        if compatiable:
+    def make_snapshot(self, compatible=True):
+        if compatible:
             old_snap = {
                 "create_time": self.create_time,
                 "trigger_time": self.trigger_time,

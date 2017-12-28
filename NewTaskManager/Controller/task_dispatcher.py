@@ -1,13 +1,13 @@
 # coding=utf-8
 
 import random
-import threading
 import socket
+import threading
 from Queue import PriorityQueue, Queue
 from SocketServer import StreamRequestHandler, TCPServer, ThreadingMixIn
 
 from NewTaskManager.Controller import controller_logger as logging
-from NewTaskManager.Controller.events import EventName, MessageEvent
+from NewTaskManager.Controller.events import EventName
 from NewTaskManager.excepts import DeserialError
 from NewTaskManager.protocol import (MSG_DICT, Health, Hello, MessageType, Goodbye,
                                      TaskResult, TaskStatus, TmProtocol)
@@ -59,6 +59,7 @@ def locker(func):
             return func(self, *args, **kwargs)
         finally:
             self._condition.release()
+
     wrapper.__doc__ = func.__doc__
     return wrapper
 

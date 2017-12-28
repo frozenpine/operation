@@ -1,9 +1,6 @@
 # coding=utf-8
 
 import sys
-import logging
-import time
-from multiprocessing import Process
 from os import environ, path
 
 try:
@@ -19,7 +16,6 @@ except ImportError:
     from NewTaskManager.Controller.task_dispatcher import TaskDispatcher
     from NewTaskManager.Controller.events import EventName
     from NewTaskManager.Controller.msg_loop import MsgQueue, MsgLoop
-
 
 msg_queue = MsgQueue()
 

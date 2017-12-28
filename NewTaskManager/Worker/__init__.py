@@ -1,9 +1,8 @@
 # coding=utf-8
 
 import logging
-from logging.handlers import TimedRotatingFileHandler
-
 import os
+from logging.handlers import TimedRotatingFileHandler
 
 worker_logger = logging.getLogger('worker')
 worker_logger.setLevel(logging.INFO)

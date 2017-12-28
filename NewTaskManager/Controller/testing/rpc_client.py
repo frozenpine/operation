@@ -1,8 +1,7 @@
 # coding=utf-8
 
 from os import environ
-from uuid import uuid4
-import sys
+
 from zerorpc import Client
 
 if __name__ == '__main__':
@@ -91,16 +90,15 @@ if __name__ == '__main__':
     except Exception as err:
         print err
         client.close() '''
-    #
     # result = client.peek(queue_id, task3_id)
     # print result
-
     # result = client.peek(queue_id, task1_id)
     # print result
-
     # print client.run_next('123456')
-    # client.init(queue_dict, True)
-    # print client.run_next(queue_id)
-    # print client.run_all(queue_id)
+    client.init(queue_dict, True)
+    print client.snapshot('f59666ac-a336-452f-9665-aaa792f41d83', compatiable=False)
+    print client.run_next(queue_id)
+    print client.snapshot('f59666ac-a336-452f-9665-aaa792f41d83', compatiable=False)
+    print client.run_all(queue_id)
     print client.snapshot('f59666ac-a336-452f-9665-aaa792f41d83', compatiable=False)
     client.close()
