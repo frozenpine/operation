@@ -2,15 +2,15 @@
 """
 Worker进程池
 """
-
 import json
+import os
 import socket
 import time
 from multiprocessing import Pool, cpu_count
 
 from NewTaskManager.Common import get_time
 from NewTaskManager.Worker import worker_logger as logging
-from NewTaskManager.protocol import TaskStatus, TaskResult, MSG_DICT
+from NewTaskManager.protocol import TaskStatus, TaskResult, MSG_DICT, Task
 from SysManager.configs import SSHConfig
 from SysManager.excepts import (ConfigInvalid, SSHAuthenticationException, SSHException, SSHNoValidConnectionsError)
 from SysManager.executor import Executor
@@ -18,9 +18,18 @@ from SysManager.executor import Executor
 
 def dumper(func):
     def wrapper(*args, **kwargs):
-        ret = func(*args, **kwargs)
-
-        return ret
+        if isinstance(args[0], Task):
+            ret = func(*args, **kwargs)
+            # directory = os.path.join(os.path.dirname(__file__), 'dump')
+            # file_name = args[0].task_uuid
+            # args[0].dump_file(dump_file='{dir}/{file_name}.yaml'.format(dir=directory, file_name=file_name))
+            return ret
+        if isinstance(args[0], TaskResult):
+            ret = func(*args, **kwargs)
+            directory = os.path.join(os.path.dirname(__file__), 'dump')
+            file_name = args[0].task_uuid
+            args[0].dump_file(dump_file='{dir}/{file_name}.yaml'.format(dir=directory, file_name=file_name))
+            return ret
 
     wrapper.__doc__ = func.__doc__
     return wrapper
@@ -57,6 +66,7 @@ def reconnect_socket():
         return 0
 
 
+@dumper
 def send(data):
     """
     发送消息

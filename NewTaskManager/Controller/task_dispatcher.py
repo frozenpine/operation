@@ -4,8 +4,8 @@
 """
 
 import random
-import threading
 import socket
+import threading
 from Queue import PriorityQueue, Queue
 from SocketServer import StreamRequestHandler, TCPServer, ThreadingMixIn
 
@@ -30,6 +30,7 @@ class ThreadedTCPRequestHandler(StreamRequestHandler):
             self.server.del_worker(worker_name)
             logging.info('Client[{}]{} say goodbye.'.format(worker_name, self.client_address))
         if isinstance(payload, Health):
+            # todo: 更改Health字段
             self.server.free_worker(random.randint(1, 100), worker_name)
             logging.info('Client[{}]{} health: '.format(worker_name, self.client_address))
         if isinstance(payload, TaskResult):
@@ -65,6 +66,7 @@ def locker(func):
             return func(self, *args, **kwargs)
         finally:
             self._condition.release()
+
     wrapper.__doc__ = func.__doc__
     return wrapper
 
@@ -149,7 +151,7 @@ class ThreadedTCPServer(ThreadingMixIn, TCPServer):
         """
         任务分发器，由外部callback触发
         """
-        if event.Name == EventName.TaskDispath:
+        if event.Name == EventName.TaskDispatch:
             worker_name = self.worker_arb()
             task = event.Data
             self.send_task(worker_name, task)
@@ -175,7 +177,7 @@ class TaskDispatcher(threading.Thread):
         self._event_handler.setDaemon(True)
         self._event_handler.start()
 
-        self._registe_callback(EventName.TaskDispath, self._worker_manager.task_dispatcher)
+        self._register_callback(EventName.TaskDispatch, self._worker_manager.task_dispatcher)
 
     def run(self):
         self._worker_manager.serve_forever()
@@ -185,13 +187,13 @@ class TaskDispatcher(threading.Thread):
         logging.info('Event received: {} {}'.format(event.Name, event.Data.to_dict()))
         self._event_local.put_nowait(event)
 
-    def _registe_callback(self, event_name, callback):
+    def _register_callback(self, event_name, callback):
         if event_name not in self._callback_cache:
             self._callback_cache[event_name] = [callback]
         else:
             self._callback_cache[event_name].append(callback)
 
-    def _unregiste_callback(self, event_name, callback):
+    def _unregister_callback(self, event_name, callback):
         if event_name not in self._callback_cache:
             logging.warning(u'未找到该事件名称')
             return False

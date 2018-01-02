@@ -2,23 +2,22 @@
 """ Zero rpc server 4 TaskManager Controller
 """
 
+import json
 import os
 import threading
-import json
 import time
-import requests
-import yaml
 from Queue import Queue
 
+import requests
+import yaml
 import zerorpc
 
-from NewTaskManager.Controller import controller_logger as logging
 from NewTaskManager.Common import get_time
-from NewTaskManager.protocol import (MSG_DICT, JsonSerializable, QueueStatus,
-                                     Task, TaskResult, TaskStatus)
+from NewTaskManager.Controller import controller_logger as logging
 from NewTaskManager.Controller.events import EventName
 from NewTaskManager.Controller.excepts import QueueError
-
+from NewTaskManager.protocol import (MSG_DICT, JsonSerializable, QueueStatus,
+                                     Task, TaskResult, TaskStatus)
 
 FLASK_HOST = os.environ.get('FLASK_APP', '127.0.0.1')
 FLASK_PORT = os.environ.get('FLASK_PORT', 6001)
@@ -36,7 +35,7 @@ class TaskQueueManager(object):
         self._entrypoint.bind("tcp://{ip}:{port}".format(ip=rpc_addr, port=rpc_port))
 
         self._queue_status_handler = threading.Thread(
-            target=TaskQueueManager._queue_manipulator, args=(self, ))
+            target=TaskQueueManager._queue_manipulator, args=(self,))
         self._queue_status_handler.setDaemon(True)
         self._queue_status_handler.start()
 
@@ -82,7 +81,7 @@ class TaskQueueManager(object):
                 if queue.Status == QueueStatus.Normal and queue.IsRunAll:
                     task = queue.get()
                     task.session = result.session
-                    self.send_event(EventName.TaskDispath, task)
+                    self.send_event(EventName.TaskDispatch, task)
             else:
                 logging.warning('Queue[{}] not exist.'.format(result.queue_id))
         else:
@@ -118,7 +117,7 @@ class TaskQueueManager(object):
                         if queue.Status == QueueStatus.Normal and queue.IsRunAll:
                             task = queue.get()
                             task.session = result.session
-                            manager.send_event(EventName.TaskDispath, task)
+                            manager.send_event(EventName.TaskDispatch, task)
                     else:
                         logging.warning('Queue[{}] not exist.'.format(result.queue_id))
                 else:
@@ -150,11 +149,12 @@ def locker(func):
             return func(self, *args, **kwargs)
         finally:
             self._condition.release()
+
     wrapper.__doc__ = func.__doc__
     return wrapper
 
 
-def dumpper(func):
+def dumper(func):
     def wrapper(self, *args, **kwargs):
         if isinstance(self, TaskQueue):
             result = func(self, *args, **kwargs)
@@ -164,6 +164,7 @@ def dumpper(func):
             return result
         else:
             return func(self, *args, **kwargs)
+
     wrapper.__doc__ = func.__doc__
     return wrapper
 
@@ -186,6 +187,7 @@ def loader(func):
             return func(self, *args, **kwargs)
         else:
             return func(self, *args, **kwargs)
+
     wrapper.__doc__ = func.__doc__
     return wrapper
 
@@ -281,7 +283,7 @@ class TaskQueue(JsonSerializable):
             raise QueueError(u'队列未在初始化状态')
 
     @locker
-    @dumpper
+    @dumper
     def make_todo_task_queue(self, force=False):
         """
         初始化待做任务队列
@@ -313,7 +315,7 @@ class TaskQueue(JsonSerializable):
             return task
 
     @locker
-    @dumpper
+    @dumper
     def get(self):
         """
         从待做队列中取出任务
@@ -355,12 +357,12 @@ class TaskQueue(JsonSerializable):
         return self.make_todo_task_queue()
 
     @locker
-    @dumpper
+    @dumper
     def set_run_all(self):
         self.run_all = True
 
     @locker
-    @dumpper
+    @dumper
     def skip_failed(self, session=None):
         """
         跳过队列中的失败任务
@@ -375,7 +377,7 @@ class TaskQueue(JsonSerializable):
         return True
 
     @locker
-    @dumpper
+    @dumper
     def resume_failed(self):
         """
         将失败任务恢复至待做队列
@@ -389,7 +391,7 @@ class TaskQueue(JsonSerializable):
             return False
 
     @locker
-    @dumpper
+    @dumper
     def skip_task(self, session=None):
         """
         跳过下一项任务
@@ -407,7 +409,7 @@ class TaskQueue(JsonSerializable):
             raise Exception(u'任务定义不正确')
 
     @locker
-    @dumpper
+    @dumper
     def update_status_by_result(self, task_result):
         """
         根据任务结果更新队列状态
@@ -453,7 +455,7 @@ class TaskQueue(JsonSerializable):
             return True
 
     @locker
-    @dumpper
+    @dumper
     def update_task_define(self, task):
         """
         更新已有任务的任务定义
@@ -481,8 +483,8 @@ class TaskQueue(JsonSerializable):
         return task
 
     @locker
-    def make_snapshot(self, compatiable=True):
-        if compatiable:
+    def make_snapshot(self, compatible=True):
+        if compatible:
             old_snap = {
                 "create_time": self.create_time,
                 "trigger_time": self.trigger_time,
@@ -589,7 +591,7 @@ class RPCHandler(object):
             if rtn:
                 if isinstance(rtn, Task):
                     rtn.session = session
-                    self._manager.send_event(EventName.TaskDispath, rtn)
+                    self._manager.send_event(EventName.TaskDispatch, rtn)
                     return 0, rtn.task_uuid
                 elif isinstance(rtn, QueueStatus):
                     return -1, u'调度失败，当前队列状态：' + MSG_DICT[rtn]

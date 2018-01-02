@@ -1,7 +1,7 @@
 # coding=utf-8
 
-import os
 import logging
+import os
 from logging.handlers import TimedRotatingFileHandler
 
 tm_logger = logging.getLogger('tm')
