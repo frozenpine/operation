@@ -5,6 +5,7 @@ Worker进程池
 import json
 import os
 import socket
+import ssl
 import time
 from multiprocessing import Pool, cpu_count
 
@@ -44,6 +45,11 @@ def init_socket():
     host, port = '127.0.0.1', 7001
     socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     socket_client.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+    socket_client = ssl.wrap_socket(socket_client,
+                                    ca_certs=os.path.join(os.path.dirname(__file__), 'certs', 'ca.crt'),
+                                    certfile=os.path.join(os.path.dirname(__file__), 'certs', 'client.crt'),
+                                    keyfile=os.path.join(os.path.dirname(__file__), 'certs', 'client.key'),
+                                    cert_reqs=ssl.CERT_REQUIRED, ssl_version=ssl.PROTOCOL_TLSv1_2)
     socket_client.connect((host, port))
     logging.info('Client Connect To Host: {0}, Port: {1}'.format(host, port))
 

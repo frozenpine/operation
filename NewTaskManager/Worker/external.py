@@ -4,6 +4,8 @@ Worker节点用于与Controller通信的SocketServer
 """
 
 import json
+import ssl
+import os
 import socket
 import time
 from threading import Thread
@@ -39,6 +41,11 @@ class ExternalSocketServer(Thread):
         try:
             socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             socket_client.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+            socket_client = ssl.wrap_socket(socket_client,
+                                            ca_certs=os.path.join(os.path.dirname(__file__), 'certs', 'ca.crt'),
+                                            certfile=os.path.join(os.path.dirname(__file__), 'certs', 'client.crt'),
+                                            keyfile=os.path.join(os.path.dirname(__file__), 'certs', 'client.key'),
+                                            cert_reqs=ssl.CERT_REQUIRED, ssl_version=ssl.PROTOCOL_TLSv1_2)
             socket_client.connect((self.master_host, self.master_port))
             tm_hello = TmProtocol("worker", "master", Hello())
             tm_health = TmProtocol("worker", "master", Health())
