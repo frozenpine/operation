@@ -1,4 +1,7 @@
 # coding=utf-8
+"""
+任务调度器
+"""
 
 import random
 import socket
@@ -15,6 +18,9 @@ from NewTaskManager.protocol import (MSG_DICT, Health, Hello, MessageType, Goodb
 
 
 class ThreadedTCPRequestHandler(StreamRequestHandler):
+    """
+    SocketServer 每连接处理线程
+    """
     def _process(self, data):
         worker_name = data.source
         payload = data.payload
@@ -54,6 +60,7 @@ class ThreadedTCPRequestHandler(StreamRequestHandler):
 
 
 def locker(func):
+    """ 线程锁装饰器 """
     def wrapper(self, *args, **kwargs):
         self._condition.acquire()
         try:
