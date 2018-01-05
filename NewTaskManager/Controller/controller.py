@@ -25,7 +25,7 @@ class Controller(object):
         rpc_addr = environ.get('TM_HOST') or '0.0.0.0'
         rpc_port = environ.get('TM_PORT') or 6000
         socket_port = environ.get("SOCKET_PORT") or 7000
-        socket_host = environ.get("SOCKET_HOST") or '0.0.0.0'
+        socket_host = environ.get("SOCKET_HOST") or '127.0.0.1'
 
         self._task_dispatcher = TaskDispatcher(socket_host, socket_port, msg_queue)
         self._task_dispatcher.start()

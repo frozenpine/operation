@@ -52,8 +52,8 @@ class ExternalSocketServer(Thread):
             socket_client.sendall(tm_hello.serial())
             socket_client.sendall(tm_health.serial())
             logging.info('External Connect To Host: {0}, Port: {1}'.format(self.master_host, self.master_port))
-        except socket.error, e:
-            logging.warning('External Connect Fail'.format())
+        except socket.error:
+            logging.warning('External Connect Fail')
         else:
             return socket_client
 
