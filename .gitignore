@@ -4,6 +4,7 @@ src/**/obj/**
 test/**/bin/**
 test/**/obj/**
 .vscode
+virtualenv
 
 # MSTest test Results
 src/TestResults/
