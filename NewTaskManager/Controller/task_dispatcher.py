@@ -35,7 +35,8 @@ class ThreadedTCPRequestHandler(StreamRequestHandler):
             priority = 60 * payload.process_load + 20 * payload.cpu_load + 20 * payload.mem_load
             # self.server.free_worker(random.randint(1, 100), worker_name)
             self.server.free_worker(priority, worker_name)
-            logging.info('Client[{}]{} health: '.format(worker_name, self.client_address))
+            logging.info('Client[{}]{} health: (cpu_use: {:.2%}, mem_use: {:.2%}, worker_use: {:.2%})'.format(
+                worker_name, self.client_address, payload.cpu_load, payload.mem_load, payload.process_load))
         if isinstance(payload, TaskResult):
             self.server.send_result(payload)
             logging.info('Client[{}]{} report task result: {}'.format(
