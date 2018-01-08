@@ -4,9 +4,9 @@ Worker节点用于与Controller通信的SocketServer
 """
 
 import json
-import ssl
 import os
 import socket
+import ssl
 import time
 from threading import Thread
 
@@ -24,38 +24,56 @@ class ExternalSocketServer(Thread):
 
         Thread.__init__(self)
         self.master_host, self.master_port = master_host, master_port
-        self.socket_client = self.init_socket()
+        self.socket_client = self.init_ssl()
+        self.init_socket()
+
+    @staticmethod
+    def init_ssl():
+        try:
+            socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            socket_client.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+            socket_client = ssl.wrap_socket(
+                socket_client,
+                ca_certs=os.path.join(os.path.dirname(__file__), os.pardir, 'Certs', 'ca.crt'),
+                certfile=os.path.join(os.path.dirname(__file__), os.pardir, 'Certs', 'client.crt'),
+                keyfile=os.path.join(os.path.dirname(__file__), os.pardir, 'Certs', 'client.key'),
+                cert_reqs=ssl.CERT_REQUIRED, ssl_version=ssl.PROTOCOL_TLSv1_2
+            )
+        except Exception, e:
+            logging.error('External Init SSL Fail: {0}'.format(e))
+        else:
+            return socket_client
 
     def init_socket(self):
         retry_count = 0
         while 1:
             retry_count = retry_count + 1
             ret = self.reconnect_socket()
-            if ret:
-                return ret
+            if ret == 0:
+                break
             else:
                 logging.warning('External Disconnect, Retry {0}'.format(retry_count))
                 time.sleep(5)
 
     def reconnect_socket(self):
         try:
-            socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            socket_client.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-            socket_client = ssl.wrap_socket(socket_client,
-                                            ca_certs=os.path.join(os.path.dirname(__file__), 'certs', 'ca.crt'),
-                                            certfile=os.path.join(os.path.dirname(__file__), 'certs', 'client.crt'),
-                                            keyfile=os.path.join(os.path.dirname(__file__), 'certs', 'client.key'),
-                                            cert_reqs=ssl.CERT_REQUIRED, ssl_version=ssl.PROTOCOL_TLSv1_2)
-            socket_client.connect((self.master_host, self.master_port))
-            tm_hello = TmProtocol("worker", "master", Hello())
-            tm_health = TmProtocol("worker", "master", Health())
-            socket_client.sendall(tm_hello.serial())
-            socket_client.sendall(tm_health.serial())
+            self.socket_client.connect((self.master_host, self.master_port))
             logging.info('External Connect To Host: {0}, Port: {1}'.format(self.master_host, self.master_port))
         except socket.error:
             logging.warning('External Connect Fail')
+            return -1
         else:
-            return socket_client
+            self.hello()
+            self.health()
+            return 0
+
+    @staticmethod
+    def hello():
+        msg_queue.put_event('hello', Hello())
+
+    @staticmethod
+    def health():
+        msg_queue.put_event('health_query', Health(None, None, None))
 
     def send(self, event):
         data = event.event_data
@@ -72,7 +90,9 @@ class ExternalSocketServer(Thread):
                 logging.info('External Timeout, Retry {0}'.format(retry_count))
             except socket.error:
                 retry_count = retry_count + 1
-                self.socket_client = self.init_socket()
+                del self.socket_client
+                self.socket_client = self.init_ssl()
+                self.reconnect_socket()
             else:
                 break
 
@@ -100,9 +120,11 @@ class ExternalSocketServer(Thread):
                 while 1:
                     retry_count = retry_count + 1
                     logging.warning('External Disconnect, Retry {0}'.format(retry_count))
-                    ret = self.init_socket()
-                    if ret:
-                        self.socket_client = ret
+                    # 删除原先的连接重连
+                    del self.socket_client
+                    self.socket_client = self.init_ssl()
+                    ret = self.reconnect_socket()
+                    if ret == 0:
                         break
                     else:
                         time.sleep(5)

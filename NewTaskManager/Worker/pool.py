@@ -9,9 +9,10 @@ import ssl
 import time
 from multiprocessing import Pool, cpu_count
 
-from NewTaskManager.Common import get_time
+from NewTaskManager.Common import get_time, get_health
 from NewTaskManager.Worker import worker_logger as logging
-from NewTaskManager.protocol import TaskStatus, TaskResult, MSG_DICT, Task
+from NewTaskManager.Worker.worker import msg_queue
+from NewTaskManager.protocol import TaskStatus, TaskResult, MSG_DICT, Task, Health
 from SysManager.configs import SSHConfig
 from SysManager.excepts import (ConfigInvalid, SSHAuthenticationException, SSHException, SSHNoValidConnectionsError)
 from SysManager.executor import Executor
@@ -45,11 +46,12 @@ def init_socket():
     host, port = '127.0.0.1', 7001
     socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     socket_client.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-    socket_client = ssl.wrap_socket(socket_client,
-                                    ca_certs=os.path.join(os.path.dirname(__file__), 'certs', 'ca.crt'),
-                                    certfile=os.path.join(os.path.dirname(__file__), 'certs', 'client.crt'),
-                                    keyfile=os.path.join(os.path.dirname(__file__), 'certs', 'client.key'),
-                                    cert_reqs=ssl.CERT_REQUIRED, ssl_version=ssl.PROTOCOL_TLSv1_2)
+    socket_client = ssl.wrap_socket(
+        socket_client,
+        ca_certs=os.path.join(os.path.dirname(__file__), os.pardir, 'Certs', 'ca.crt'),
+        certfile=os.path.join(os.path.dirname(__file__), os.pardir, 'Certs', 'client.crt'),
+        keyfile=os.path.join(os.path.dirname(__file__), os.pardir, 'Certs', 'client.key'),
+        cert_reqs=ssl.CERT_REQUIRED, ssl_version=ssl.PROTOCOL_TLSv1_2)
     socket_client.connect((host, port))
     logging.info('Client Connect To Host: {0}, Port: {1}'.format(host, port))
 
@@ -170,7 +172,7 @@ def init_conf(task, queue_uuid, task_uuid):
     except ConfigInvalid, e:
         # 配置文件格式错误 直接返回-1
         logging.warning('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.InitFailed.value))
-        status_code, status_msg = TaskStatus.InitFailed, e
+        status_code, status_msg = TaskStatus.InitFailed, e.message
         result = TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
                             status_msg=status_msg, session=task.session)
         send(result)
@@ -183,7 +185,7 @@ def init_exe(task, queue_uuid, task_uuid, conf):
         return exe
     except (SSHNoValidConnectionsError, SSHAuthenticationException, SSHException), e:
         # SSH连接失败 直接返回-1
-        status_code, status_msg = TaskStatus.InitFailed, e
+        status_code, status_msg = TaskStatus.InitFailed, e.message
         result = TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
                             status_msg=status_msg, session=task.session)
         send(result)
@@ -283,6 +285,7 @@ class WorkerPool(object):
         self.running_process = 0
         self.process_count = cpu_count()
         self.worker_pool = None
+        self.msg_queue = msg_queue
 
     def vacant(self):
         if self.running_process == self.process_count:
@@ -298,12 +301,24 @@ class WorkerPool(object):
         self.running_process -= 1
         logging.info('Running Process Minus 1, Now {0}'.format(self.running_process))
 
+    def get_health(self, event):
+        process_load = self.running_process * 1.0 / self.process_count
+        cpu_load = get_health.get_cpu()
+        mem_load = get_health.get_mem()
+        worker_health = Health(cpu_load, mem_load, process_load)
+        self.msg_queue.put_event('health_callback', worker_health)
+
+    def worker_done_callback(self, result):
+        # 任务完成后触发回调
+        self.minus_running_process(result)
+        self.get_health(None)
+
     def start(self):
         self.worker_pool = Pool(processes=self.process_count, initializer=init_socket)
 
     def run(self, event):
         task_info = event.event_data
-        self.worker_pool.apply_async(func=process, args=(task_info,), callback=self.minus_running_process)
+        self.worker_pool.apply_async(func=process, args=(task_info,), callback=self.worker_done_callback)
         self.add_running_process()
 
 

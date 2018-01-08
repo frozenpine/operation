@@ -3,8 +3,9 @@
 import psutil
 
 
-class WorkerInfo(object):
-    def __init__(self, vacant_info):
-        cpu_info = psutil.cpu_percent()
-        mem_info = psutil.virtual_memory().percent()
-        vacant_info = vacant_info
+def get_cpu():
+    return psutil.cpu_percent()
+
+
+def get_mem():
+    return psutil.virtual_memory().percent

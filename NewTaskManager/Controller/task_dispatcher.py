@@ -78,9 +78,9 @@ class ThreadedTCPServer(ThreadingMixIn, TCPServer):
         self._worker_cache = {}
         self._event_queue = event_global
         self._worker_arb = PriorityQueue()
-        self._server_cert = os.path.join(os.path.dirname(__file__), 'certs', 'server.crt')
-        self._server_key = os.path.join(os.path.dirname(__file__), 'certs', 'server.key')
-        self._ca_certs = os.path.join(os.path.dirname(__file__), 'certs', 'ca.crt')
+        self._server_cert = os.path.join(os.path.dirname(__file__), os.pardir, 'Certs', 'server.crt')
+        self._server_key = os.path.join(os.path.dirname(__file__), os.pardir, 'Certs', 'server.key')
+        self._ca_certs = os.path.join(os.path.dirname(__file__), os.pardir, 'Certs', 'ca.crt')
         self._condition = threading.Condition(threading.RLock())
 
     def get_request(self):

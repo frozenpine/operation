@@ -24,6 +24,8 @@ class ThreadedTCPRequestHandler(SocketServer.StreamRequestHandler):
             task_result = TaskResult.deserial(data)
             logging.info(u'Server Receive : {0}'.format(json.dumps(task_result.to_dict(), ensure_ascii=False)))
             task_status = task_result.status_code
+            if task_status.IsExcepted:
+                msg_queue.put_event('except', task_result)
             if task_status.IsInited:
                 msg_queue.put_event('init', task_result)
             if task_status.IsRunning:
@@ -58,15 +60,15 @@ class InternalSocketServer(Thread):
         class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
             def __init__(self, server_address, request_handler, bind_and_activate=True):
                 SocketServer.TCPServer.__init__(self, server_address, request_handler, bind_and_activate)
-                self.server_cert = os.path.join(os.path.dirname(__file__), 'certs', 'server.crt')
-                self.server_key = os.path.join(os.path.dirname(__file__), 'certs', 'server.key')
-                self.ca_certs = os.path.join(os.path.dirname(__file__), 'certs', 'ca.crt')
+                self._server_cert = os.path.join(os.path.dirname(__file__), os.pardir, 'Certs', 'server.crt')
+                self._server_key = os.path.join(os.path.dirname(__file__), os.pardir, 'Certs', 'server.key')
+                self._ca_certs = os.path.join(os.path.dirname(__file__), os.pardir, 'Certs', 'ca.crt')
 
             def get_request(self):
                 new_socket, from_address = self.socket.accept()
                 conn_stream = ssl.wrap_socket(
-                    new_socket, server_side=True, certfile=self.server_cert, keyfile=self.server_key,
-                    ca_certs=self.ca_certs, ssl_version=ssl.PROTOCOL_TLSv1_2)
+                    new_socket, server_side=True, certfile=self._server_cert, keyfile=self._server_key,
+                    ca_certs=self._ca_certs, ssl_version=ssl.PROTOCOL_TLSv1_2)
                 return conn_stream, from_address
 
         Thread.__init__(self)
