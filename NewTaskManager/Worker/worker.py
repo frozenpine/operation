@@ -7,15 +7,20 @@ import sys
 
 try:
     from msg_loop import MsgQueue
-    from pool import worker_pool
 except ImportError:
     sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
     sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
     from msg_loop import MsgQueue
-    from pool import worker_pool
 
 # 初始化消息队列
 msg_queue = MsgQueue()
+
+try:
+    from pool import worker_pool
+except ImportError:
+    sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
+    sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
+    from pool import worker_pool
 
 if __name__ == '__main__':
     # 初始化消息循环
@@ -41,6 +46,9 @@ if __name__ == '__main__':
     # 注册消息循环回调
     msg_loop.register_callback('task', worker_pool.run)
     msg_loop.register_callback('init', external_socket_server.send)
+    msg_loop.register_callback('hello', external_socket_server.send)
+    msg_loop.register_callback('health_query', worker_pool.get_health)
+    msg_loop.register_callback('health_callback', external_socket_server.send)
     msg_loop.register_callback('start', external_socket_server.send)
     msg_loop.register_callback('end', external_socket_server.send)
 

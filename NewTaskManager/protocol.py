@@ -361,18 +361,18 @@ class Goodbye(JsonSerializable):
 
 
 class Health(JsonSerializable):
-    # def __init__(self, cpu_idle, mem_idle, vacant):
-    #     self.cpu_idle = cpu_idle
-    #     self.mem_idle = mem_idle
-    #     self.vacant = vacant
+    def __init__(self, cpu_load, mem_load, process_load):
+        self.cpu_load = cpu_load
+        self.mem_load = mem_load
+        self.process_load = process_load
 
     @staticmethod
     def from_dict(dict_data):
-        # cpu_idle = dict_data['cpu_idle']
-        # mem_idle = dict_data['mem_idle']
-        # vacant = dict_data['vacant']
-        # return Health(cpu_idle=cpu_idle, mem_idle=mem_idle, vacant=vacant)
-        return Health()
+        cpu_load = dict_data['cpu_load']
+        mem_load = dict_data['mem_load']
+        process_load = dict_data['process_load']
+        return Health(cpu_load=cpu_load, mem_load=mem_load, process_load=process_load)
+        # return Health()
 
 
 class Task(JsonSerializable):
