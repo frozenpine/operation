@@ -302,7 +302,7 @@ class WorkerPool(object):
         logging.info('Running Process Minus 1, Now {0}'.format(self.running_process))
 
     def get_health(self, event):
-        process_load = self.running_process * 1.0 / self.process_count
+        process_load = self.running_process * 1.00 / self.process_count
         cpu_load = get_health.get_cpu()
         mem_load = get_health.get_mem()
         worker_health = Health(cpu_load, mem_load, process_load)
