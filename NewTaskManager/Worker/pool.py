@@ -172,7 +172,7 @@ def init_conf(task, queue_uuid, task_uuid):
     except ConfigInvalid, e:
         # 配置文件格式错误 直接返回-1
         logging.warning('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.InitFailed.value))
-        status_code, status_msg = TaskStatus.InitFailed, e
+        status_code, status_msg = TaskStatus.InitFailed, e.message
         result = TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
                             status_msg=status_msg, session=task.session)
         send(result)
@@ -185,7 +185,7 @@ def init_exe(task, queue_uuid, task_uuid, conf):
         return exe
     except (SSHNoValidConnectionsError, SSHAuthenticationException, SSHException), e:
         # SSH连接失败 直接返回-1
-        status_code, status_msg = TaskStatus.InitFailed, e
+        status_code, status_msg = TaskStatus.InitFailed, e.message
         result = TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
                             status_msg=status_msg, session=task.session)
         send(result)
@@ -308,12 +308,17 @@ class WorkerPool(object):
         worker_health = Health(cpu_load, mem_load, process_load)
         self.msg_queue.put_event('health_callback', worker_health)
 
+    def worker_done_callback(self, result):
+        # 任务完成后触发回调
+        self.minus_running_process(result)
+        self.get_health(None)
+
     def start(self):
         self.worker_pool = Pool(processes=self.process_count, initializer=init_socket)
 
     def run(self, event):
         task_info = event.event_data
-        self.worker_pool.apply_async(func=process, args=(task_info,), callback=self.minus_running_process)
+        self.worker_pool.apply_async(func=process, args=(task_info,), callback=self.worker_done_callback)
         self.add_running_process()
 
 

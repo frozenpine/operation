@@ -24,6 +24,8 @@ class ThreadedTCPRequestHandler(SocketServer.StreamRequestHandler):
             task_result = TaskResult.deserial(data)
             logging.info(u'Server Receive : {0}'.format(json.dumps(task_result.to_dict(), ensure_ascii=False)))
             task_status = task_result.status_code
+            if task_status.IsExcepted:
+                msg_queue.put_event('except', task_result)
             if task_status.IsInited:
                 msg_queue.put_event('init', task_result)
             if task_status.IsRunning:

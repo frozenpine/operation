@@ -45,6 +45,7 @@ if __name__ == '__main__':
 
     # 注册消息循环回调
     msg_loop.register_callback('task', worker_pool.run)
+    msg_loop.register_callback('except', external_socket_server.send)
     msg_loop.register_callback('init', external_socket_server.send)
     msg_loop.register_callback('hello', external_socket_server.send)
     msg_loop.register_callback('health_query', worker_pool.get_health)
