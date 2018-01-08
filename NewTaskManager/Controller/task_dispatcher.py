@@ -3,7 +3,7 @@
 任务调度器
 """
 
-import random
+# import random
 import socket
 import threading
 from Queue import PriorityQueue, Queue
@@ -32,14 +32,16 @@ class ThreadedTCPRequestHandler(StreamRequestHandler):
             logging.info('Client[{}]{} say goodbye.'.format(worker_name, self.client_address))
         if isinstance(payload, Health):
             # todo: 更改Health字段
-            self.server.free_worker(random.randint(1, 100), worker_name)
+            priority = 60 * payload.process_load + 20 * payload.cpu_load + 20 * payload.mem_load
+            # self.server.free_worker(random.randint(1, 100), worker_name)
+            self.server.free_worker(priority, worker_name)
             logging.info('Client[{}]{} health: '.format(worker_name, self.client_address))
         if isinstance(payload, TaskResult):
             self.server.send_result(payload)
             logging.info('Client[{}]{} report task result: {}'.format(
                 worker_name, self.client_address, payload.to_dict()))
-            if payload.status_code.IsDone:
-                self.server.free_worker(random.randint(1, 100), worker_name)
+            ''' if payload.status_code.IsDone:
+                self.server.free_worker(random.randint(1, 100), worker_name) '''
 
     def handle(self):
         while True:
