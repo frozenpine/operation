@@ -4,12 +4,13 @@ import sys
 from logging.handlers import TimedRotatingFileHandler
 from os import environ, path
 
-import zerorpc
+# import zerorpc
 import zmq.green as zmq
 from flask import Flask, Blueprint
 from flask_sqlalchemy import SQLAlchemy
 
 from MessageQueue.msgserver import MessageQueues
+from RPCMod.rpc_client import ZeroClient
 from settings import config
 
 sys.modules['zmq'] = zmq
@@ -50,7 +51,8 @@ tm_port = environ.get('TM_PORT') or 6000
 
 msgQueues = MessageQueues
 globalEncryptKey = None
-taskManager = zerorpc.Client()
+# taskManager = zerorpc.Client()
+taskManager = ZeroClient().init()
 taskManager.connect("tcp://{ip}:{port}".format(ip=tm_host, port=tm_port))
 taskRequests = {}
 
