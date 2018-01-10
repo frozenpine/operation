@@ -10,7 +10,6 @@ from app import create_app
 from app.models import *
 
 test_app = create_app('development')
-# test_app = create_app('production')
 manager = Manager(test_app)
 
 
@@ -18,7 +17,7 @@ def _encrypt(match):
     return match.group(1) + \
            AESCrypto.encrypt(
                match.group(2),
-               current_app.config['SECRET_KEY']
+               test_app.config['SECRET_KEY']
            ) + \
            match.group(3)
 
@@ -27,7 +26,7 @@ def _decrypt(match):
     return match.group(1) + \
            AESCrypto.decrypt(
                match.group(2),
-               current_app.config['SECRET_KEY']
+               test_app.config['SECRET_KEY']
            ) + \
            match.group(3)
 

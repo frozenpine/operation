@@ -9,20 +9,6 @@ FLASK_PID="${BASE_DIR}/run/flask.pid"
 FLASK_USER="${UID}"
 _PID=
 
-source "${BASE_DIR}/settings.conf"
-
-if [[ ! -d "${BASE_DIR}/run" ]]; then
-    mkdir -p "${BASE_DIR}/run"
-fi
-
-# switch to python virtual env
-source "${BASE_DIR}/bin/activate"
-# export FLASK_SQLALCHEMY_DATABASE_URI
-# export FLASK_HOST
-# export FLASK_PORT
-# export TM_HOST
-# export TM_PORT
-
 _ERR(){
     if [[ $# > 0 ]]; then
         echo "[ERROR] $*" >&2
@@ -46,6 +32,18 @@ _LOG(){
         cat >>"${LOG_FILE}"
     fi
 }
+
+if [[ ! -d "${BASE_DIR}/run" ]]; then
+    mkdir -p "${BASE_DIR}/run"
+fi
+
+[[ -s "${BASE_DIR}/settings.conf" ]] && source "${BASE_DIR}/settings.conf" || {
+    _ERR '"settings.conf" not found!'
+    exit 1
+}
+
+# switch to python virtual env
+source "${BASE_DIR}/${VIRTUALENV}/bin/activate"
 
 flask_status(){
     if [[ -f "${FLASK_PID}" ]]; then

@@ -2,7 +2,7 @@
 import os
 
 # from neomodel import config as neoconfig
-base_dir = os.path.abspath(os.path.dirname(__file__))
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config(object):
@@ -13,7 +13,7 @@ class Config(object):
     GLOBAL_ENCRYPT = False  # 全局开启密码加密，注：密码长度不能超过16位
 
     SQLALCHEMY_DATABASE_URI = os.environ.get('FLASK_SQLALCHEMY_DATABASE_URI') or \
-                                'sqlite:///' + os.path.join(base_dir, 'database/flask.db')
+                              'sqlite:///' + os.path.join(BASE_DIR, 'database/flask.db')
 
     '''
     NEO4J_DATABASE_URI = 'bolt://{0}:{1}@{2}:{3}'
@@ -43,7 +43,6 @@ class Config(object):
         'mysql': 'pymysql'
     }
 
-
     @classmethod
     def init_app(cls, app):
         '''
@@ -58,8 +57,8 @@ class Config(object):
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    # NEO4J_HOST = '192.168.101.152'
     NEED_UI_PROTECTION = False
+
 
 class ProductionConfig(Config):
     DEBUG = False
@@ -68,5 +67,5 @@ class ProductionConfig(Config):
 config = {
     'development': 'DevelopmentConfig',
     'production': 'ProductionConfig',
-    'default': 'DevelopmentConfig'
+    'default': 'ProductionConfig'
 }
