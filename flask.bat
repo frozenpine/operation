@@ -57,7 +57,7 @@ GOTO:EOF
 :STOP
 call:STATUS 1>nul 2>nul
 if ERRORLEVEL 1 (
-    echo Flask is not running. >&2
+    echo Flask is already stopped. >&2
     exit /b 1
 ) else (
     taskkill /F /PID %_PID%
