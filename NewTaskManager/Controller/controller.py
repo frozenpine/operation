@@ -22,8 +22,8 @@ msg_queue = MsgQueue()
 
 class Controller(object):
     def __init__(self):
-        rpc_addr = environ.get('TM_HOST') or '0.0.0.0'
-        rpc_port = environ.get('TM_PORT') or 6000
+        rpc_addr = environ.get('RPC_SVR') or '0.0.0.0'
+        rpc_port = environ.get('RPC_PORT') or 6000
         socket_port = environ.get("SOCKET_PORT") or 7000
         socket_host = environ.get("SOCKET_HOST") or '127.0.0.1'
 
