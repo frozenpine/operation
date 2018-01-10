@@ -46,7 +46,8 @@ GOTO:EOF
 :START
 call:STATUS 1>nul 2>nul
 if ERRORLEVEL 1 (
-    start python %FLASK_APP% production
+    start /MIN "Flask" python %FLASK_APP% production
+    call:STATUS 1>nul 2>nul
 ) else (
     echo Flask[%_PID%] is already running. >&2
     exit /b 1
@@ -60,23 +61,30 @@ if ERRORLEVEL 1 (
     exit /b 1
 ) else (
     taskkill /F /PID %_PID%
+    del /s/q %FLASK_PID% 1>nul 2>nul
 )
 GOTO:EOF
 
 :STATUS
 if exist %FLASK_PID% (
-    for /F %%i in (%FLASK_PID%) do set _PID=%%i
-    wmic process where processid="%_PID%" get commandline | findstr %FLASK_APP% 1>nul 2>nul
-    if ERRORLEVEL 1 (
-        set _PID=
-        call:_ERR Pid file exist, but process not running, clean pid file.
-        del /s/q %FLASK_PID% 1>nul 2>nul
+    for /F %%i in (%FLASK_PID%) do (
+        wmic process where processid="%%i" get commandline | findstr %FLASK_APP% 1>nul 2>nul
+        if ERRORLEVEL 1 (
+            set _PID=
+            call:_ERR Pid file exist, but process not running, clean pid file.
+            del /s/q %FLASK_PID% 1>nul 2>nul
+        ) else (
+            set _PID=%%i
+        )
     )
-) else (
+)
+if not defined _PID (
     for /F "tokens=3 delims=," %%i in ('wmic process where name^=^"python.exe^" get processid^,commandline /FORMAT:CSV^|findstr %FLASK_APP%') do (
         set _PID=%%i
-        call:_LOG Process running, but pid file missing, rebuild pid file.
-        set /p=%%i<nul>%FLASK_PID%
+        if defined _PID (
+            call:_LOG Process running, but pid file missing, rebuild pid file.
+            set /p=%%i<nul>%FLASK_PID%
+        )
     )
 )
 if defined _PID (
