@@ -48,9 +48,9 @@ def init_socket():
     socket_client.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
     socket_client = ssl.wrap_socket(
         socket_client,
-        ca_certs=os.path.join(os.path.dirname(__file__), os.pardir, 'Certs', 'ca.crt'),
-        certfile=os.path.join(os.path.dirname(__file__), os.pardir, 'Certs', 'client.crt'),
-        keyfile=os.path.join(os.path.dirname(__file__), os.pardir, 'Certs', 'client.key'),
+        ca_certs=os.path.join(os.path.dirname(__file__), os.pardir, 'SSLCerts', 'ca.crt'),
+        certfile=os.path.join(os.path.dirname(__file__), os.pardir, 'SSLCerts', 'client.crt'),
+        keyfile=os.path.join(os.path.dirname(__file__), os.pardir, 'SSLCerts', 'client.key'),
         cert_reqs=ssl.CERT_REQUIRED, ssl_version=ssl.PROTOCOL_TLSv1_2)
     socket_client.connect((host, port))
     logging.info('Client Connect To Host: {0}, Port: {1}'.format(host, port))

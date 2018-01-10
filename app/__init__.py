@@ -10,7 +10,7 @@ from flask import Flask, Blueprint
 from flask_sqlalchemy import SQLAlchemy
 
 from MessageQueue.msgserver import MessageQueues
-from RPCMod.rpc_client import ZeroClient
+from NewTaskManager.RPCMod.rpc_client import ZeroClient
 from settings import config
 
 sys.modules['zmq'] = zmq

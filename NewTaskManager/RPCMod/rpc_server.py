@@ -21,8 +21,8 @@ class ZeroServer(object):
         else:
             self.whitelist = whitelist
         self.base_dir = os.path.dirname(__file__)
-        self.public_keys_dir = os.path.join(self.base_dir, 'public_keys')
-        self.secret_keys_dir = os.path.join(self.base_dir, 'private_keys')
+        self.public_keys_dir = os.path.join(self.base_dir, os.pardir, 'RPCCerts', 'public_keys')
+        self.secret_keys_dir = os.path.join(self.base_dir, os.pardir, 'RPCCerts', 'private_keys')
         self.server_secret_file = os.path.join(self.secret_keys_dir, "server.key_secret")
         self.server_public, self.server_secret = zmq.auth.load_certificate(self.server_secret_file)
 

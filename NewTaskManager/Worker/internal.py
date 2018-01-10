@@ -60,9 +60,9 @@ class InternalSocketServer(Thread):
         class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
             def __init__(self, server_address, request_handler, bind_and_activate=True):
                 SocketServer.TCPServer.__init__(self, server_address, request_handler, bind_and_activate)
-                self._server_cert = os.path.join(os.path.dirname(__file__), os.pardir, 'Certs', 'server.crt')
-                self._server_key = os.path.join(os.path.dirname(__file__), os.pardir, 'Certs', 'server.key')
-                self._ca_certs = os.path.join(os.path.dirname(__file__), os.pardir, 'Certs', 'ca.crt')
+                self._server_cert = os.path.join(os.path.dirname(__file__), os.pardir, 'SSLCerts', 'server.crt')
+                self._server_key = os.path.join(os.path.dirname(__file__), os.pardir, 'SSLCerts', 'server.key')
+                self._ca_certs = os.path.join(os.path.dirname(__file__), os.pardir, 'SSLCerts', 'ca.crt')
 
             def get_request(self):
                 new_socket, from_address = self.socket.accept()
