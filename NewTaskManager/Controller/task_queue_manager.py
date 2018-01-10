@@ -103,6 +103,8 @@ class TaskQueueManager(object):
     def send_event(self, event_name, data):
         self._event_global.put_event(event_name, data)
 
+    """
+    Deprecated Method!
     @staticmethod
     def _result_dispatcher(event_local, manager):
         while True:
@@ -125,6 +127,7 @@ class TaskQueueManager(object):
                     logging.warning('Can not handle event[{}]'.format(event.Name))
             except Exception as err:
                 logging.warning('Something bad happend: {}'.format(err.message))
+    """
 
     @staticmethod
     def _notify_outside(result):
