@@ -4,6 +4,7 @@ Worker入口
 """
 import os
 import sys
+from os import environ
 
 try:
     from msg_loop import MsgQueue
@@ -29,19 +30,23 @@ if __name__ == '__main__':
     msg_loop = MsgLoop()
 
     # 启动内部通信用SocketServer
+    from NewTaskManager.Common import get_port
     from internal import InternalSocketServer
 
-    internal_socket_server = InternalSocketServer('127.0.0.1', 7001)
+    port = get_port.get_port()
+    internal_socket_server = InternalSocketServer('127.0.0.1', port)
     internal_socket_server.start()
 
     # 启动外部通信用SocketServer
     from external import ExternalSocketServer
 
-    external_socket_server = ExternalSocketServer('127.0.0.1', 7000)
+    controller_host = environ.get('CONTROLLER_HOST', '127.0.0.1')
+    controller_port = int(environ.get('CONTROLLER_PORT', 7000))
+    external_socket_server = ExternalSocketServer(controller_host, controller_port)
     external_socket_server.start()
 
     # 启动进程池
-    worker_pool.start()
+    worker_pool.start(port)
 
     # 注册消息循环回调
     msg_loop.register_callback('task', worker_pool.run)
