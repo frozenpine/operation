@@ -37,13 +37,13 @@ def dumper(func):
     return wrapper
 
 
-def init_socket():
+def init_socket(port):
     """
     对于工作进程初始化socket连接
     :return:
     """
-    global socket_client
-    host, port = '127.0.0.1', 7001
+    global socket_client, connected_host, connected_port
+    connected_host, connected_port = '127.0.0.1', port
     socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     socket_client.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
     socket_client = ssl.wrap_socket(
@@ -52,8 +52,8 @@ def init_socket():
         certfile=os.path.join(os.path.dirname(__file__), os.pardir, 'SSLCerts', 'client.crt'),
         keyfile=os.path.join(os.path.dirname(__file__), os.pardir, 'SSLCerts', 'client.key'),
         cert_reqs=ssl.CERT_REQUIRED, ssl_version=ssl.PROTOCOL_TLSv1_2)
-    socket_client.connect((host, port))
-    logging.info('Client Connect To Host: {0}, Port: {1}'.format(host, port))
+    socket_client.connect((connected_host, connected_port))
+    logging.info('Client Connect To Host: {0}, Port: {1}'.format(connected_host, connected_port))
 
 
 def reconnect_socket():
@@ -62,12 +62,11 @@ def reconnect_socket():
     :return:
     """
     try:
-        global socket_client
-        host, port = '127.0.0.1', 7001
+        global socket_client, connected_host, connected_port
         socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         socket_client.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-        socket_client.connect((host, port))
-        logging.info('Internal Connect To Host: {0}, Port: {1}'.format(host, port))
+        socket_client.connect((connected_host, connected_port))
+        logging.info('Internal Connect To Host: {0}, Port: {1}'.format(connected_host, connected_port))
     except socket.error:
         return -1
     else:
@@ -313,8 +312,8 @@ class WorkerPool(object):
         self.minus_running_process(result)
         self.get_health(None)
 
-    def start(self):
-        self.worker_pool = Pool(processes=self.process_count, initializer=init_socket)
+    def start(self, port):
+        self.worker_pool = Pool(processes=self.process_count, initializer=init_socket, initargs=(port,))
 
     def run(self, event):
         task_info = event.event_data

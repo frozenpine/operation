@@ -8,7 +8,7 @@ from geventwebsocket.handler import WebSocketHandler
 
 from app import create_app
 
-app_host = environ.get('FLASK_HOST') or '0.0.0.0'
+app_host = environ.get('FLASK_SVR') or '0.0.0.0'
 app_port = environ.get('FLASK_PORT') or 6001
 
 

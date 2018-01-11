@@ -24,10 +24,10 @@ class Controller(object):
     def __init__(self):
         rpc_addr = environ.get('RPC_SVR') or '0.0.0.0'
         rpc_port = environ.get('RPC_PORT') or 6000
-        socket_host = environ.get("SOCKET_HOST") or '127.0.0.1'
-        socket_port = environ.get("SOCKET_PORT") or 7000
+        controller_svr = environ.get("CONTROLLER_SVR") or '127.0.0.1'
+        controller_port = environ.get("CONTROLLER_PORT") or 7000
 
-        self._task_dispatcher = TaskDispatcher(socket_host, socket_port, msg_queue)
+        self._task_dispatcher = TaskDispatcher(controller_svr, controller_port, msg_queue)
         self._task_dispatcher.start()
 
         self._task_manager = TaskQueueManager(rpc_addr, rpc_port, msg_queue)
@@ -39,8 +39,3 @@ class Controller(object):
 
     def run(self):
         self._task_manager.run()
-
-
-if __name__ == '__main__':
-    controller = Controller()
-    controller.run()

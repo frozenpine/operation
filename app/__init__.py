@@ -46,14 +46,14 @@ flask_logger.addHandler(Rthandler)
 db = SQLAlchemy()
 db_list = {}
 
-tm_host = environ.get('TM_HOST') or '127.0.0.1'
-tm_port = environ.get('TM_PORT') or 6000
+rpc_host = environ.get('RPC_HOST') or '127.0.0.1'
+rpc_port = environ.get('RPC_PORT') or 6000
 
 msgQueues = MessageQueues
 globalEncryptKey = None
 # taskManager = zerorpc.Client()
 taskManager = ZeroClient().init()
-taskManager.connect("tcp://{ip}:{port}".format(ip=tm_host, port=tm_port))
+taskManager.connect("tcp://{ip}:{port}".format(ip=rpc_host, port=rpc_port))
 taskRequests = {}
 
 from auth import auth as auth_blueprint, login_manager
