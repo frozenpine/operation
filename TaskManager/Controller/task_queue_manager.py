@@ -11,13 +11,13 @@ from Queue import Queue
 import requests
 import yaml
 
-from NewTaskManager.Common import get_time
-from NewTaskManager.Controller import controller_logger as logging
-from NewTaskManager.Controller.events import EventName
-from NewTaskManager.Controller.excepts import QueueError
-from NewTaskManager.RPCMod.rpc_server import ZeroServer
-from NewTaskManager.protocol import (MSG_DICT, JsonSerializable, QueueStatus,
-                                     Task, TaskResult, TaskStatus)
+from TaskManager.Common import get_time
+from TaskManager.Controller import controller_logger as logging
+from TaskManager.Controller.events import EventName
+from TaskManager.Controller.excepts import QueueError
+from TaskManager.RPCMod.rpc_server import ZeroServer
+from TaskManager.protocol import (MSG_DICT, JsonSerializable, QueueStatus,
+                                  Task, TaskResult, TaskStatus)
 
 FLASK_HOST = os.environ.get('FLASK_HOST', '127.0.0.1')
 FLASK_PORT = int(os.environ.get('FLASK_PORT', 6001))

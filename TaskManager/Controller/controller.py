@@ -4,18 +4,18 @@ import sys
 from os import environ, path
 
 try:
-    from NewTaskManager.protocol import TaskResult, TaskStatus
-    from NewTaskManager.Controller.task_queue_manager import TaskQueueManager
-    from NewTaskManager.Controller.task_dispatcher import TaskDispatcher
-    from NewTaskManager.Controller.events import EventName
-    from NewTaskManager.Controller.msg_loop import MsgQueue, MsgLoop
+    from TaskManager.protocol import TaskResult, TaskStatus
+    from TaskManager.Controller.task_queue_manager import TaskQueueManager
+    from TaskManager.Controller.task_dispatcher import TaskDispatcher
+    from TaskManager.Controller.events import EventName
+    from TaskManager.Controller.msg_loop import MsgQueue, MsgLoop
 except ImportError:
     sys.path.append(path.join(path.dirname(__file__), '../'))
-    from NewTaskManager.protocol import TaskResult, TaskStatus
-    from NewTaskManager.Controller.task_queue_manager import TaskQueueManager
-    from NewTaskManager.Controller.task_dispatcher import TaskDispatcher
-    from NewTaskManager.Controller.events import EventName
-    from NewTaskManager.Controller.msg_loop import MsgQueue, MsgLoop
+    from TaskManager.protocol import TaskResult, TaskStatus
+    from TaskManager.Controller.task_queue_manager import TaskQueueManager
+    from TaskManager.Controller.task_dispatcher import TaskDispatcher
+    from TaskManager.Controller.events import EventName
+    from TaskManager.Controller.msg_loop import MsgQueue, MsgLoop
 
 msg_queue = MsgQueue()
 

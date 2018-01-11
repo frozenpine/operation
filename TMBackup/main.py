@@ -8,14 +8,14 @@ import zerorpc
 from gevent import monkey
 
 try:
-    from TaskManager.controller import Controller
-    from TaskManager.worker import Worker
-    from TaskManager.socket_conn import SocketServer
+    from TMBackup.controller import Controller
+    from TMBackup.worker import Worker
+    from TMBackup.socket_conn import SocketServer
 except ImportError:
     sys.path.append(path.join(path.dirname(sys.argv[0]), "../"))
-    from TaskManager.controller import Controller
-    from TaskManager.worker import Worker
-    from TaskManager.socket_conn import SocketServer
+    from TMBackup.controller import Controller
+    from TMBackup.worker import Worker
+    from TMBackup.socket_conn import SocketServer
 
 tm_host = environ.get("TM_HOST") or "0.0.0.0"
 tm_port = environ.get("TM_PORT") or 6000

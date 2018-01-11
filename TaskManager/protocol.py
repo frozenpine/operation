@@ -13,8 +13,8 @@ from os import path
 import yaml
 from enum import Enum
 
-from NewTaskManager import tm_logger
-from NewTaskManager.excepts import DeserialError, InitialError
+from TaskManager import tm_logger
+from TaskManager.excepts import DeserialError, InitialError
 from SysManager.configs import Result
 
 

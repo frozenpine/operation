@@ -30,7 +30,7 @@ if __name__ == '__main__':
     msg_loop = MsgLoop()
 
     # 启动内部通信用SocketServer
-    from NewTaskManager.Common import get_port
+    from TaskManager.Common import get_port
     from internal import InternalSocketServer
 
     port = get_port.get_port()

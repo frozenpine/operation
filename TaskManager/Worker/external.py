@@ -10,10 +10,10 @@ import ssl
 import time
 from threading import Thread
 
-from NewTaskManager.Worker import worker_logger as logging
-from NewTaskManager.Worker.worker import msg_queue
-from NewTaskManager.excepts import DeserialError
-from NewTaskManager.protocol import TmProtocol, Hello, Health
+from TaskManager.Worker import worker_logger as logging
+from TaskManager.Worker.worker import msg_queue
+from TaskManager.excepts import DeserialError
+from TaskManager.protocol import TmProtocol, Hello, Health
 
 external_socket = dict()
 

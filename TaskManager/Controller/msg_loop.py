@@ -6,8 +6,8 @@ Controller内部消息循环
 from multiprocessing.queues import Queue
 from threading import Thread
 
-from NewTaskManager.Controller import controller_logger as logging
-from NewTaskManager.Controller.events import MessageEvent
+from TaskManager.Controller import controller_logger as logging
+from TaskManager.Controller.events import MessageEvent
 
 
 class MsgQueue(Queue):
@@ -46,7 +46,7 @@ class MsgLoop(Thread):
                     self.callback_dict.pop(event_name)
 
     def run(self):
-        from NewTaskManager.Controller.controller import msg_queue
+        from TaskManager.Controller.controller import msg_queue
         logging.info('Message loop started')
         while True:
             event = msg_queue.get()

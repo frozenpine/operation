@@ -7,7 +7,7 @@ import json
 from Queue import Queue
 from threading import Thread
 
-from NewTaskManager.Worker import worker_logger as logging
+from TaskManager.Worker import worker_logger as logging
 
 
 class Event(object):
@@ -53,7 +53,7 @@ class MsgLoop(Thread):
                     self.callback_dict.pop(event_name)
 
     def run(self):
-        from NewTaskManager.Worker.worker import msg_queue
+        from TaskManager.Worker.worker import msg_queue
         logging.info('msg_loop')
         while 1:
             event = msg_queue.get()

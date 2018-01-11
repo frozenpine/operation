@@ -8,10 +8,10 @@ import json
 import ssl
 from threading import Thread
 
-from NewTaskManager.Worker import worker_logger as logging
-from NewTaskManager.Worker.worker import msg_queue
-from NewTaskManager.excepts import DeserialError
-from NewTaskManager.protocol import TaskResult
+from TaskManager.Worker import worker_logger as logging
+from TaskManager.Worker.worker import msg_queue
+from TaskManager.excepts import DeserialError
+from TaskManager.protocol import TaskResult
 
 internal_socket = dict()
 

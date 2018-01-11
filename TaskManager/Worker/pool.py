@@ -9,10 +9,10 @@ import ssl
 import time
 from multiprocessing import Pool, cpu_count
 
-from NewTaskManager.Common import get_time, get_health
-from NewTaskManager.Worker import worker_logger as logging
-from NewTaskManager.Worker.worker import msg_queue
-from NewTaskManager.protocol import TaskStatus, TaskResult, MSG_DICT, Task, Health
+from TaskManager.Common import get_time, get_health
+from TaskManager.Worker import worker_logger as logging
+from TaskManager.Worker.worker import msg_queue
+from TaskManager.protocol import TaskStatus, TaskResult, MSG_DICT, Task, Health
 from SysManager.configs import SSHConfig
 from SysManager.excepts import (ConfigInvalid, SSHAuthenticationException, SSHException, SSHNoValidConnectionsError)
 from SysManager.executor import Executor

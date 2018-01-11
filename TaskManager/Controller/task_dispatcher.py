@@ -10,11 +10,11 @@ from Queue import PriorityQueue, Queue
 from SocketServer import StreamRequestHandler, TCPServer, ThreadingMixIn
 import os
 import ssl
-from NewTaskManager.Controller import controller_logger as logging
-from NewTaskManager.Controller.events import EventName
-from NewTaskManager.excepts import DeserialError
-from NewTaskManager.protocol import (MSG_DICT, Health, Hello, MessageType, Goodbye,
-                                     TaskResult, TaskStatus, TmProtocol)
+from TaskManager.Controller import controller_logger as logging
+from TaskManager.Controller.events import EventName
+from TaskManager.excepts import DeserialError
+from TaskManager.protocol import (MSG_DICT, Health, Hello, MessageType, Goodbye,
+                                  TaskResult, TaskStatus, TmProtocol)
 
 
 class ThreadedTCPRequestHandler(StreamRequestHandler):

@@ -15,7 +15,7 @@ from SysManager.Common import AESCrypto
 # from TaskManager.controller_msg import msg_dict
 # from TaskManager import QueueStatus, TaskStatus
 # from TaskManager.controller_msg import msg_dict
-from NewTaskManager.protocol import QueueStatus, TaskStatus, MSG_DICT as msg_dict
+from TaskManager.protocol import QueueStatus, TaskStatus, MSG_DICT as msg_dict
 from app import db, globalEncryptKey, msgQueues, taskManager, taskRequests
 from app import flask_logger as logging
 from app.auth.errors import (AuthError, InvalidUsernameOrPassword,
