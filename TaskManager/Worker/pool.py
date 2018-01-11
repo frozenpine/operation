@@ -8,14 +8,15 @@ import socket
 import ssl
 import time
 from multiprocessing import Pool, cpu_count
+from os import environ
 
+from SysManager.configs import SSHConfig
+from SysManager.excepts import (ConfigInvalid, SSHAuthenticationException, SSHException, SSHNoValidConnectionsError)
+from SysManager.executor import Executor
 from TaskManager.Common import get_time, get_health
 from TaskManager.Worker import worker_logger as logging
 from TaskManager.Worker.worker import msg_queue
 from TaskManager.protocol import TaskStatus, TaskResult, MSG_DICT, Task, Health
-from SysManager.configs import SSHConfig
-from SysManager.excepts import (ConfigInvalid, SSHAuthenticationException, SSHException, SSHNoValidConnectionsError)
-from SysManager.executor import Executor
 
 
 def dumper(func):
@@ -282,7 +283,7 @@ def process(task):
 class WorkerPool(object):
     def __init__(self):
         self.running_process = 0
-        self.process_count = cpu_count()
+        self.process_count = environ.get('PROCESS_COUNT', cpu_count())
         self.worker_pool = None
         self.msg_queue = msg_queue
 
