@@ -186,10 +186,10 @@ IF NOT DEFINED _PID (
 )
 IF DEFINED _PID (
     echo Flask[%_PID%] is running.
-    echo
+    echo.
 ) ELSE (
     echo Flask is not running. >&2
-    echo
+    echo.
     exit /b 1
 )
 GOTO :EOF
