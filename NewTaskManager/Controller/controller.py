@@ -39,7 +39,3 @@ class Controller(object):
 
     def run(self):
         self._task_manager.run()
-
-# if __name__ == '__main__':
-#     controller = Controller()
-#     controller.run()
