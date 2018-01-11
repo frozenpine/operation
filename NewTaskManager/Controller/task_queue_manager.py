@@ -19,8 +19,8 @@ from NewTaskManager.RPCMod.rpc_server import ZeroServer
 from NewTaskManager.protocol import (MSG_DICT, JsonSerializable, QueueStatus,
                                      Task, TaskResult, TaskStatus)
 
-FLASK_HOST = os.environ.get('FLASK_APP', '127.0.0.1')
-FLASK_PORT = os.environ.get('FLASK_PORT', 6001)
+FLASK_HOST = os.environ.get('FLASK_HOST', '127.0.0.1')
+FLASK_PORT = int(os.environ.get('FLASK_PORT', 6001))
 
 
 class TaskQueueManager(object):
