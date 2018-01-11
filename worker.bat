@@ -135,6 +135,7 @@ CALL :STATUS 1>NUL 2>NUL
 IF ERRORLEVEL 1 (
     CALL :ACTIVATE
     IF ERRORLEVEL 0 (
+        echo Starting Worker.
         start /MIN "Worker" python %WORKER_APP%
         CALL :STATUS 1>NUL 2>NUL
         CALL :STATUS
@@ -152,6 +153,7 @@ IF ERRORLEVEL 1 (
     echo Worker is already stopped. >&2
     exit /b 1
 ) ELSE (
+    echo Stopping Worker.
     taskkill /F /PID %_PID%
     :LOOP
     CALL :STATUS 1>NUL 2>NUL
