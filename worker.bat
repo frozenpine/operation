@@ -15,7 +15,7 @@ IF NOT EXIST settings.conf (
     exit /b 1
 )
 
-for /F "tokens=1,2 delims==" %%i in (settings.conf) do (
+for /F "tokens=1,2 delims==" %%i in ('findstr "^[^#]" .\settings.conf') do (
     CALL :_LOG %%i=%%~j 1>NUL
     SET %%i=%%~j
 )
@@ -186,8 +186,10 @@ IF NOT DEFINED _PID (
 )
 IF DEFINED _PID (
     echo Worker[%_PID%] is running.
+    echo
 ) ELSE (
     echo Worker is not running. >&2
+    echo
     exit /b 1
 )
 GOTO :EOF
