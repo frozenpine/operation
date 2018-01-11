@@ -47,24 +47,28 @@ flask_status(){
     if [[ -f "${FLASK_PID}" ]]; then
         _PID=`cat "${FLASK_PID}"`
         kill -0 ${_PID} &>/dev/null
-        if [[ $? eq 0 ]]; then
+        if [[ $? == 0 ]]; then
             ps -fu ${FLASK_USER} | awk '$2=='${_PID}' && $0 ~/python run.py/{print}' | grep python &>/dev/null
-            if [[ $? eq 0 ]]; then
+            if [[ $? == 0 ]]; then
                 _LOG "Flask[${_PID}] is running."
+                echo
                 return 0
             fi
             _PID=
             _ERR "Incorrect pid file, clean pid file."
+            echo
             rm -f "${FLASK_PID}"
         fi
     fi
     _PID=`ps -fu "${FLASK_USER}" | grep "python run.py" | awk '$0 !~/grep|awk|vim?|nano/{print $2}'`
     if [[ -n ${_PID} ]]; then
         _LOG "Flask[${_PID}] is running, rebuild pid file."
+        echo
         echo -n ${_PID}>"${FLASK_PID}"
         return 0
     else
         _ERR "Flask not running."
+        echo
         return 1
     fi
 }
@@ -114,6 +118,7 @@ case $1 in
         flask_stop || exit 1
     ;;
     'status')
+        echo
         flask_status || exit 1
     ;;
     'restart')
