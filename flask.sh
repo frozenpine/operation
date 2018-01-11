@@ -54,11 +54,11 @@ flask_status(){
                 echo
                 return 0
             fi
-            _PID=
-            _ERR "Incorrect pid file, clean pid file."
-            echo
-            rm -f "${FLASK_PID}"
         fi
+        _PID=
+        _ERR "Incorrect pid file, clean pid file."
+        echo
+        rm -f "${FLASK_PID}"
     fi
     _PID=`ps -fu "${FLASK_USER}" | grep "${FLASK_APP} ${FLASK_MODE}" | awk '$0 !~/grep|awk|vim?|nano/{print $2}'`
     if [[ -n ${_PID} ]]; then
@@ -128,7 +128,8 @@ case $1 in
         flask_status || exit 1
     ;;
     'restart')
-        flask_stop && flask_start || exit 1
+        flask_stop
+        flask_start || exit 1
     ;;
     *)
         echo "Usage: `basename $0` [start|stop|status|restart]" >&2

@@ -4,23 +4,10 @@ BASE_DIR=`dirname $0`
 LOG_FILE="${BASE_DIR}/run/worker.log"
 cd  ${BASE_DIR}
 
-WORKER_APP="${BASE_DIR}/TaskManager/Worker/worker.py"
-WORKER_PID="${BASE_DIR}/run/worker.pid"
+WORKER_APP="TaskManager/Worker/worker.py"
+WORKER_PID="run/worker.pid"
 TM_USER="${UID}"
 _WORKER_PID=
-
-#source "${BASE_DIR}/settings.conf"
-
-if [[ ! -d "${BASE_DIR}/run" ]]; then
-    mkdir -p "${BASE_DIR}/run"
-fi
-
-# switch to python virtual env
-source "${BASE_DIR}/bin/activate"
-# export FLASK_HOST
-# export FLASK_PORT
-# export TM_HOST
-# export TM_PORT
 
 _ERR(){
     if [[ $# > 0 ]]; then
@@ -43,26 +30,41 @@ _LOG(){
     fi
 }
 
+if [[ ! -d "${BASE_DIR}/run" ]]; then
+    mkdir -p "${BASE_DIR}/run"
+fi
+
+[[ -s "${BASE_DIR}/settings.conf" ]] && source "${BASE_DIR}/settings.conf" || {
+    _ERR '"settings.conf" not found!'
+    exit 1
+}
+
 worker_status(){
     if [[ -f "${WORKER_PID}" ]]; then
         _WORKER_PID=`cat "${WORKER_PID}"`
         kill -0 ${_WORKER_PID} &>/dev/null
         if [[ $? == 0 ]]; then
-            _LOG "Worker is running[${_WORKER_PID}]."
-            return 0
-        else
-            _WORKER_PID=
-            _ERR "Worker pid file is incorrect, cleaned."
-            rm -f "${WORKER_PID}"
+            ps -fu ${TM_USER} | awk '$2=='${_WORKER_PID}' && $0 ~/'"${WORKER_APP}"'/{print}' | grep python &>/dev/null
+            if [[ $? == 0 ]]; then
+                _LOG "Worker[${_WORKER_PID}] is running."
+                echo
+                return 0
+            fi
         fi
+        _WORKER_PID=
+        _ERR "Incorrect pid file, clean pid file."
+        echo
+        rm -f "${WORKER_PID}"
     fi
-    _WORKER_PID=`ps -fu "${TM_USER}" | grep "python TaskManager/Worker/worker.py" | awk '$0 !~/grep|awk|vim?|nano/{print $2}'`
+    _WORKER_PID=`ps -fu "${TM_USER}" | grep "${WORKER_APP}" | awk '$0 !~/grep|awk|vim?|nano/{print $2}'`
     if [[ -n ${_WORKER_PID} ]]; then
-        _LOG "Worker is running[${_WORKER_PID}]."
+        _LOG "Worker[${_WORKER_PID}] is running."
+        echo
         echo -n ${_WORKER_PID}>"${WORKER_PID}"
         return 0
     else
-        _ERR "Worker not running."
+        _LOG "Worker not running."
+        echo
         return 1
     fi
 }
@@ -70,42 +72,59 @@ worker_status(){
 worker_start(){
     worker_status &>/dev/null
     if [[ $? == 0 ]]; then
-        _ERR "Worker already running[${_WORKER_PID}]"
-        exit 1
+        echo
+        _ERR "Worker[${_WORKER_PID}] is already running."
+        echo
+        return 1
     else
+        # switch to python virtual env
+        source "${BASE_DIR}/${VIRTUALENV}/bin/activate"
+        echo
+        _LOG "Starting Worker"
         nohup python "${WORKER_APP}" &>"${BASE_DIR}/run/worker.out" &
         _WORKER_PID=$!
         echo -n ${_WORKER_PID} >"${WORKER_PID}"
-        _LOG "Worker started[PID:${_WORKER_PID}]"
+        worker_status
     fi
 }
 
 worker_stop(){
     worker_status &>/dev/null
     if [[ $? == 0 ]]; then
-        kill ${_WORKER_PID} &>/dev/null && kill -9 ${_WORKER_PID} &>/dev/null
-        _LOG "Worker stopped[PID:${_WORKER_PID}]."
-        rm -f "${WORKER_PID}"
+        echo
+        _LOG "Stopping Worker."
+        kill ${_WORKER_PID} &>/dev/null
+        while true; do
+            worker_status &>/dev/null
+            if [[ $? == 0 ]]; then
+                kill -9 ${_WORKER_PID} &>/dev/null
+                sleep 1
+            else
+                break
+            fi
+        done
+        worker_status
     else
+        echo
         _ERR "Worker already stopped."
-        exit 1
+        echo
+        return 1
     fi
 }
 
 case $1 in
     'start')
-        worker_start
+        worker_start || exit 1
     ;;
     'stop')
-        worker_stop
+        worker_stop || exit 1
     ;;
     'status')
-        worker_status
+        worker_status || exit 1
     ;;
     'restart')
         worker_stop
-        sleep 3
-        worker_start
+        worker_start || exit 1
     ;;
     *)
         echo "Usage: `basename $0` [start|stop|status|restart]" >&2

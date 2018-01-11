@@ -2,25 +2,12 @@
 
 BASE_DIR=`dirname $0`
 LOG_FILE="${BASE_DIR}/run/controller.log"
-cd  ${BASE_DIR}
+cd ${BASE_DIR}
 
-CONTROLLER_APP="${BASE_DIR}/TaskManager/Controller/testing/server.py"
-CONTROLLER_PID="${BASE_DIR}/run/controller.pid"
+CONTROLLER_APP="TaskManager/Controller/server.py"
+CONTROLLER_PID="run/controller.pid"
 TM_USER="${UID}"
 _CONTROLLER_PID=
-
-#source "${BASE_DIR}/settings.conf"
-
-if [[ ! -d "${BASE_DIR}/run" ]]; then
-    mkdir -p "${BASE_DIR}/run"
-fi
-
-# switch to python virtual env
-source "${BASE_DIR}/bin/activate"
-# export FLASK_HOST
-# export FLASK_PORT
-# export TM_HOST
-# export TM_PORT
 
 _ERR(){
     if [[ $# > 0 ]]; then
@@ -43,26 +30,41 @@ _LOG(){
     fi
 }
 
+if [[ ! -d "${BASE_DIR}/run" ]]; then
+    mkdir -p "${BASE_DIR}/run"
+fi
+
+[[ -s "${BASE_DIR}/settings.conf" ]] && source "${BASE_DIR}/settings.conf" || {
+    _ERR '"settings.conf" not found!'
+    exit 1
+}
+
 controller_status(){
     if [[ -f "${CONTROLLER_PID}" ]]; then
         _CONTROLLER_PID=`cat "${CONTROLLER_PID}"`
         kill -0 ${_CONTROLLER_PID} &>/dev/null
         if [[ $? == 0 ]]; then
-            _LOG "Controller is running[${_CONTROLLER_PID}]."
-            return 0
-        else
-            _CONTROLLER_PID=
-            _ERR "Controller pid file is incorrect, cleaned."
-            rm -f "${CONTROLLER_PID}"
+            ps -fu ${TM_USER} | awk '$2=='${_CONTROLLER_PID}' && $0 ~/'"${CONTROLLER_APP}"'/{print}' | grep python &>/dev/null
+            if [[ $? == 0 ]]; then
+                _LOG "Controller[${_CONTROLLER_PID}] is running."
+                echo
+                return 0
+            fi
         fi
+        _CONTROLLER_PID=
+        _ERR "Incorrect pid file, clean pid file."
+        echo
+        rm -f "${CONTROLLER_PID}"
     fi
-    _CONTROLLER_PID=`ps -fu "${TM_USER}" | grep "/Controller/testing/server.py" | awk '$0 !~/grep|awk|vim?|nano/{print $2}'`
+    _CONTROLLER_PID=`ps -fu "${TM_USER}" | grep "${CONTROLLER_APP}" | awk '$0 !~/grep|awk|vim?|nano/{print $2}'`
     if [[ -n ${_CONTROLLER_PID} ]]; then
-        _LOG "Controller is running[${_CONTROLLER_PID}]."
+        _LOG "Controller[${_CONTROLLER_PID}] is running."
+        echo
         echo -n ${_CONTROLLER_PID}>"${CONTROLLER_PID}"
         return 0
     else
-        _ERR "Controller not running."
+        _LOG "Controller not running."
+        echo
         return 1
     fi
 }
@@ -70,42 +72,59 @@ controller_status(){
 controller_start(){
     controller_status &>/dev/null
     if [[ $? == 0 ]]; then
-        _ERR "Controller already running[${_CONTROLLER_PID}]"
-        exit 1
+        echo
+        _ERR "Controller[${_CONTROLLER_PID}] is already running."
+        echo
+        return 1
     else
+        # switch to python virtual env
+        source "${BASE_DIR}/${VIRTUALENV}/bin/activate"
+        echo
+        _LOG "Starting Controller"
         nohup python "${CONTROLLER_APP}" &>"${BASE_DIR}/run/controller.out" &
         _CONTROLLER_PID=$!
         echo -n ${_CONTROLLER_PID} >"${CONTROLLER_PID}"
-        _LOG "Controller started[PID:${_CONTROLLER_PID}]"
+        controller_status
     fi
 }
 
 controller_stop(){
     controller_status &>/dev/null
     if [[ $? == 0 ]]; then
-        kill ${_CONTROLLER_PID} &>/dev/null && kill -9 ${_CONTROLLER_PID} &>/dev/null
-        _LOG "Controller stopped[PID:${_CONTROLLER_PID}]."
-        rm -f "${CONTROLLER_PID}"
+        echo
+        _LOG "Stopping Controller."
+        kill ${_CONTROLLER_PID} &>/dev/null
+        while true; do
+            controller_status &>/dev/null
+            if [[ $? == 0 ]]; then
+                kill -9 ${_CONTROLLER_PID} &>/dev/null
+                sleep 1
+            else
+                break
+            fi
+        done
+        controller_status
     else
+        echo
         _ERR "Controller already stopped."
-        exit 1
+        echo
+        return 1
     fi
 }
 
 case $1 in
     'start')
-        controller_start
+        controller_start || exit 1
     ;;
     'stop')
-        controller_stop
+        controller_stop || exit 1
     ;;
     'status')
-        controller_status
+        controller_status || exit 1
     ;;
     'restart')
         controller_stop
-        sleep 3
-        controller_start
+        controller_start || exit 1
     ;;
     *)
         echo "Usage: `basename $0` [start|stop|status|restart]" >&2
