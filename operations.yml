@@ -1,6 +1,6 @@
 OperationCatalog:
   - name: &cata4 系统起停
-    order: !!int 40
+    order: !!int 50
   - name: &cata3 数据准备
     order: !!int 20
   - name: &cata2 数据清理
@@ -8,7 +8,7 @@ OperationCatalog:
   - name: &cata1 数据备份
     order: !!int 10
   - name: &cata5 系统检查
-    order: !!int 35
+    order: !!int 40
 # OperationBook:
 #   - name: &start_show 启动并检查系统进程
 #     description: 清流启动系统进程，并检查系统进程状态
