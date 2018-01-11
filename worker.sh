@@ -44,7 +44,7 @@ worker_status(){
         _WORKER_PID=`cat "${WORKER_PID}"`
         kill -0 ${_WORKER_PID} &>/dev/null
         if [[ $? == 0 ]]; then
-            ps -fu ${TM_USER} | awk '$2=='${_WORKER_PID}' && $0 ~/'"${WORKER_APP}"'/{print}' | grep python &>/dev/null
+            ps -fu ${TM_USER} | awk '$2=='${_WORKER_PID}' && $0 ~/'"`basename ${WORKER_APP}`"'/{print}' | grep python &>/dev/null
             if [[ $? == 0 ]]; then
                 _LOG "Worker[${_WORKER_PID}] is running."
                 echo
@@ -120,6 +120,7 @@ case $1 in
         worker_stop || exit 1
     ;;
     'status')
+        echo
         worker_status || exit 1
     ;;
     'restart')

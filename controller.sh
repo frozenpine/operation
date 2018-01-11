@@ -44,7 +44,7 @@ controller_status(){
         _CONTROLLER_PID=`cat "${CONTROLLER_PID}"`
         kill -0 ${_CONTROLLER_PID} &>/dev/null
         if [[ $? == 0 ]]; then
-            ps -fu ${TM_USER} | awk '$2=='${_CONTROLLER_PID}' && $0 ~/'"${CONTROLLER_APP}"'/{print}' | grep python &>/dev/null
+            ps -fu ${TM_USER} | awk '$2=='${_CONTROLLER_PID}' && $0 ~/'"`basename ${CONTROLLER_APP}`"'/{print}' | grep python &>/dev/null
             if [[ $? == 0 ]]; then
                 _LOG "Controller[${_CONTROLLER_PID}] is running."
                 echo
@@ -120,6 +120,7 @@ case $1 in
         controller_stop || exit 1
     ;;
     'status')
+        echo
         controller_status || exit 1
     ;;
     'restart')
