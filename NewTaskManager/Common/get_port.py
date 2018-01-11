@@ -8,7 +8,7 @@ def is_close(ip, port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         s.connect((ip, int(port)))
-        s.shutdown(1)
+        s.shutdown(2)
         return False
     except Exception, e:
         return True
