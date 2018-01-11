@@ -6,7 +6,7 @@ from os import path
 try:
     from TaskManager.Controller.controller import Controller
 except ImportError:
-    sys.path.append(path.join(path.dirname(__file__), '../../../'))
+    sys.path.append(path.join(path.dirname(__file__), '../../'))
     from TaskManager.Controller.controller import Controller
 
 

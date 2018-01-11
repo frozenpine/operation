@@ -27,10 +27,10 @@ class Controller(object):
         controller_svr = environ.get("CONTROLLER_SVR") or '127.0.0.1'
         controller_port = environ.get("CONTROLLER_PORT") or 7000
 
-        self._task_dispatcher = TaskDispatcher(controller_svr, controller_port, msg_queue)
+        self._task_dispatcher = TaskDispatcher(controller_svr, int(controller_port), msg_queue)
         self._task_dispatcher.start()
 
-        self._task_manager = TaskQueueManager(rpc_addr, rpc_port, msg_queue)
+        self._task_manager = TaskQueueManager(rpc_addr, int(rpc_port), msg_queue)
 
         self._msg_loop = MsgLoop()
         self._msg_loop.register_callback(EventName.TaskResult, self._task_manager.event_relay)
