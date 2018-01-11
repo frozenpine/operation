@@ -4,7 +4,7 @@ BASE_DIR=`dirname $0`
 LOG_FILE="${BASE_DIR}/run/controller.log"
 cd  ${BASE_DIR}
 
-CONTROLLER_APP="${BASE_DIR}/NewTaskManager/Controller/testing/server.py"
+CONTROLLER_APP="${BASE_DIR}/TaskManager/Controller/testing/server.py"
 CONTROLLER_PID="${BASE_DIR}/run/controller.pid"
 TM_USER="${UID}"
 _CONTROLLER_PID=

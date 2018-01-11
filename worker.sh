@@ -4,10 +4,10 @@ BASE_DIR=`dirname $0`
 LOG_FILE="${BASE_DIR}/run/worker.log"
 cd  ${BASE_DIR}
 
-Worker_APP="${BASE_DIR}/NewTaskManager/Worker/worker.py"
-Worker_PID="${BASE_DIR}/run/worker.pid"
+WORKER_APP="${BASE_DIR}/TaskManager/Worker/worker.py"
+WORKER_PID="${BASE_DIR}/run/worker.pid"
 TM_USER="${UID}"
-_Worker_PID=
+_WORKER_PID=
 
 #source "${BASE_DIR}/settings.conf"
 
@@ -44,22 +44,22 @@ _LOG(){
 }
 
 worker_status(){
-    if [[ -f "${Worker_PID}" ]]; then
-        _Worker_PID=`cat "${Worker_PID}"`
-        kill -0 ${_Worker_PID} &>/dev/null
+    if [[ -f "${WORKER_PID}" ]]; then
+        _WORKER_PID=`cat "${WORKER_PID}"`
+        kill -0 ${_WORKER_PID} &>/dev/null
         if [[ $? == 0 ]]; then
-            _LOG "Worker is running[${_Worker_PID}]."
+            _LOG "Worker is running[${_WORKER_PID}]."
             return 0
         else
-            _Worker_PID=
+            _WORKER_PID=
             _ERR "Worker pid file is incorrect, cleaned."
-            rm -f "${Worker_PID}"
+            rm -f "${WORKER_PID}"
         fi
     fi
-    _Worker_PID=`ps -fu "${TM_USER}" | grep "python NewTaskManager/Worker/worker.py" | awk '$0 !~/grep|awk|vim?|nano/{print $2}'`
-    if [[ -n ${_Worker_PID} ]]; then
-        _LOG "Worker is running[${_Worker_PID}]."
-        echo -n ${_Worker_PID}>"${Worker_PID}"
+    _WORKER_PID=`ps -fu "${TM_USER}" | grep "python TaskManager/Worker/worker.py" | awk '$0 !~/grep|awk|vim?|nano/{print $2}'`
+    if [[ -n ${_WORKER_PID} ]]; then
+        _LOG "Worker is running[${_WORKER_PID}]."
+        echo -n ${_WORKER_PID}>"${WORKER_PID}"
         return 0
     else
         _ERR "Worker not running."
@@ -70,22 +70,22 @@ worker_status(){
 worker_start(){
     worker_status &>/dev/null
     if [[ $? == 0 ]]; then
-        _ERR "Worker already running[${_Worker_PID}]"
+        _ERR "Worker already running[${_WORKER_PID}]"
         exit 1
     else
-        nohup python "${Worker_APP}" &>"${BASE_DIR}/run/worker.out" &
-        _Worker_PID=$!
-        echo -n ${_Worker_PID} >"${Worker_PID}"
-        _LOG "Worker started[PID:${_Worker_PID}]"
+        nohup python "${WORKER_APP}" &>"${BASE_DIR}/run/worker.out" &
+        _WORKER_PID=$!
+        echo -n ${_WORKER_PID} >"${WORKER_PID}"
+        _LOG "Worker started[PID:${_WORKER_PID}]"
     fi
 }
 
 worker_stop(){
     worker_status &>/dev/null
     if [[ $? == 0 ]]; then
-        kill ${_Worker_PID} &>/dev/null && kill -9 ${_Worker_PID} &>/dev/null
-        _LOG "Worker stopped[PID:${_Worker_PID}]."
-        rm -f "${Worker_PID}"
+        kill ${_WORKER_PID} &>/dev/null && kill -9 ${_WORKER_PID} &>/dev/null
+        _LOG "Worker stopped[PID:${_WORKER_PID}]."
+        rm -f "${WORKER_PID}"
     else
         _ERR "Worker already stopped."
         exit 1
