@@ -2,114 +2,150 @@
 
 cd /d %~dp0
 
-set LOG_FILE=run\flask.log
-set FLASK_APP=run.py
-set FLASK_PID=run\flask.pid
-set _PID=
+SET LOG_FILE=run\flask.log
+SET FLASK_APP=run.py
+SET FLASK_PID=run\flask.pid
+SET _PID=
 
-if not exist run md run
+IF NOT EXIST run md run
 
-if not exist settings.conf (
-    call:_ERR settings.conf not exist.
+IF NOT EXIST settings.conf (
+    CALL :_ERR Config file "settings.conf" not exist.
     exit /b 1
 )
 
 for /F "tokens=1,2 delims==" %%i in (settings.conf) do (
-    call:_LOG %%i=%%~j 1>nul
-    set %%i=%%~j
+    CALL :_LOG %%i=%%~j 1>NUL
+    SET %%i=%%~j
 )
 
-if exist %VIRTUALENV%\Scripts\activate (
-    call %VIRTUALENV%\Scripts\activate
-) else (
-    call:_ERR Virtual enviroment not exist.
-    exit /b 1
-)
-
-set _command=%~1
-if not defined _command (
-    call:_HELP >&2
-    exit /b 1
-) else (
-    echo %_command% | findstr /i /r "start stop status restart" 1>nul 2>nul
-    if ERRORLEVEL 1 (
-        call:_HELP >&2
+SET _command=%~1
+IF NOT DEFINED _command (
+    echo.
+    echo ************************************************
+    echo *                                              *
+    echo *          1. Show help message                *
+    echo *          2. Show Flask status                *
+    echo *          3. Start Flask service              *
+    echo *          4. Stop Flask service               *
+    echo *                                              *
+    echo *   Default choice [2] in 5 seconds delay.     *
+    echo *                                              *
+    echo ************************************************
+    CHOICE /C 1234 /T 5 /D 2 /N /M "Please input you choice:"
+    IF ERRORLEVEL 4 (
+        CALL :STOP
+        GOTO :EOF
+    )
+    IF ERRORLEVEL 3 (
+        CALL :START
+        GOTO :EOF
+    )
+    IF ERRORLEVEL 2 (
+        CALL :STATUS
+        GOTO :EOF
+    )
+    IF ERRORLEVEL 1 (
+        CALL :HELP
+        GOTO :EOF
+    )
+) ELSE (
+    echo %_command% | findstr /i /r "start stop status restart help" 1>NUL 2>NUL
+    IF ERRORLEVEL 1 (
+        CALL :HELP >&2
         exit /b 1
-    ) else (
-        call:%_command%
+    ) ELSE (
+        CALL :%_command%
     )
 )
 
-deactivate
-GOTO:EOF
+:ACTIVATE
+IF EXIST %VIRTUALENV%\Scripts\activate (
+    CALL %VIRTUALENV%\Scripts\activate
+) ELSE (
+    CALL :_ERR Virtual enviroment not exist.
+    exit /b 1
+)
+GOTO :EOF
 
 :START
-call:STATUS 1>nul 2>nul
-if ERRORLEVEL 1 (
-    start /MIN "Flask" python %FLASK_APP% production
-    call:STATUS 1>nul 2>nul
-) else (
+CALL :STATUS 1>NUL 2>NUL
+IF ERRORLEVEL 1 (
+    CALL :ACTIVATE
+    IF ERRORLEVEL 0 (
+        start /MIN "Flask" python %FLASK_APP% production
+        CALL :STATUS 1>NUL 2>NUL
+        CALL :STATUS
+        deactivate
+    )
+) ELSE (
     echo Flask[%_PID%] is already running. >&2
     exit /b 1
 )
-GOTO:EOF
+GOTO :EOF
 
 :STOP
-call:STATUS 1>nul 2>nul
-if ERRORLEVEL 1 (
+CALL :STATUS 1>NUL 2>NUL
+IF ERRORLEVEL 1 (
     echo Flask is already stopped. >&2
     exit /b 1
-) else (
+) ELSE (
     taskkill /F /PID %_PID%
-    del /s/q %FLASK_PID% 1>nul 2>nul
+    ::LOOP
+    CALL :STATUS 1>NUL 2>NUL
+    IF NOT ERRORLEVEL 1 (
+        ping -n 1 127.0.0.1 >NUL
+        GOTO ::LOOP
+    )
+    CALL :STATUS
 )
-GOTO:EOF
+GOTO :EOF
 
 :STATUS
-if exist %FLASK_PID% (
+IF EXIST %FLASK_PID% (
     for /F %%i in (%FLASK_PID%) do (
-        wmic process where processid="%%i" get commandline | findstr %FLASK_APP% 1>nul 2>nul
-        if ERRORLEVEL 1 (
-            set _PID=
-            call:_ERR Pid file exist, but process not running, clean pid file.
-            del /s/q %FLASK_PID% 1>nul 2>nul
-        ) else (
-            set _PID=%%i
+        wmic process where processid=%%i get commandline 2>NUL | findstr %FLASK_APP% 1>NUL 2>NUL
+        IF ERRORLEVEL 1 (
+            SET _PID=
+            CALL :_ERR Pid file exist, but process not running, clean pid file.
+            del /s/q %FLASK_PID% 1>NUL 2>NUL
+        ) ELSE (
+            SET _PID=%%i
         )
     )
 )
-if not defined _PID (
-    for /F "tokens=3 delims=," %%i in ('wmic process where name^=^"python.exe^" get processid^,commandline /FORMAT:CSV^|findstr %FLASK_APP%') do (
-        set _PID=%%i
-        if defined _PID (
-            call:_LOG Process running, but pid file missing, rebuild pid file.
-            set /p=%%i<nul>%FLASK_PID%
+IF NOT DEFINED _PID (
+    for /F "tokens=3 delims=," %%i in ('wmic process where name^=^"python.exe^" get processid^,commandline /FORMAT:CSV 2^>NUL ^| findstr %FLASK_APP%') do (
+        SET _PID=%%i
+        IF DEFINED _PID (
+            CALL :_LOG Process running, but pid file missing, rebuild pid file.
+            SET /p=%%i<NUL>%FLASK_PID%
         )
     )
 )
-if defined _PID (
+IF DEFINED _PID (
     echo Flask[%_PID%] is running.
-) else (
+) ELSE (
     echo Flask is not running. >&2
     exit /b 1
 )
-GOTO:EOF
+GOTO :EOF
 
 :RESTART
-call:STOP
-call:START
-GOTO:EOF
+CALL :STOP
+CALL :START
+GOTO :EOF
 
 :_ERR
 echo %date% %time% [ERROR] %* >> %LOG_FILE%
 echo [ERROR] %* >&2
-GOTO:EOF
+GOTO :EOF
 
 :_LOG
 echo %date% %time% [INFO ] %* >> %LOG_FILE%
 echo [INFO] %*
-GOTO:EOF
+GOTO :EOF
 
-:_HELP
-echo Usage: %~nx0 ^[start^|stop^|status^|restart^]
-GOTO:EOF
+:HELP
+echo Usage: %~nx0 ^[start^|stop^|status^|restart^|help^]
+GOTO :EOF
