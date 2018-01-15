@@ -376,8 +376,12 @@ class TaskQueue(JsonSerializable):
         last_result = self.task_result_list[-1]
         last_result.status_code = TaskStatus.Skipped
         last_result.session = session
-        self.queue_status = QueueStatus.Normal
+        if self.todo_task_queue.empty():
+            self.queue_status = QueueStatus.Done
+        else:
+            self.queue_status = QueueStatus.Normal
         self._condition.notifyAll()
+        # TaskQueueManager._notify_outside(last_result)
         return True
 
     @locker
@@ -404,9 +408,15 @@ class TaskQueue(JsonSerializable):
             return False
         next_task = self.get()
         if isinstance(next_task, Task):
-            self.task_result_list.append(TaskResult(
+            result = TaskResult(
                 next_task.queue_uuid, next_task.task_uuid,
-                TaskStatus.Skipped, MSG_DICT[TaskStatus.Skipped], session))
+                TaskStatus.Skipped, MSG_DICT[TaskStatus.Skipped], session)
+            self.task_result_list.append(result)
+            # TaskQueueManager._notify_outside(result)
+            if self.todo_task_queue.empty():
+                self.queue_status = QueueStatus.Done
+            else:
+                self.queue_status = QueueStatus.Normal
             return True
         else:
             logging.warning(next_task)
