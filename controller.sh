@@ -103,6 +103,14 @@ controller_stop(){
                 break
             fi
         done
+        while true; do
+            netstat -tan | grep "${RPC_PORT}" >/dev/null
+            if [[ $? == 0 ]]; then
+                sleep 1
+            else
+                break
+            fi
+        done
         controller_status
     else
         echo

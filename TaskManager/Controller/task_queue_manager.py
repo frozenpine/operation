@@ -310,7 +310,7 @@ class TaskQueue(JsonSerializable):
         """
         查看下一项待做任务且不从待做任务队列中取出任务
         """
-        if self.queue_status == QueueStatus.Empty:
+        if self.queue_status in (QueueStatus.Empty, QueueStatus.Done):
             return self.queue_status
         task = self.task_list[len(self.task_list) - self.todo_task_queue.qsize()]
         if task_uuid and task_uuid != task.task_uuid:
