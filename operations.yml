@@ -9,341 +9,258 @@ OperationCatalog:
     order: !!int 10
   - name: &cata5 系统检查
     order: !!int 40
-# OperationBook:
-#   - name: &start_show 启动并检查系统进程
-#     description: 清流启动系统进程，并检查系统进程状态
-#     type: ScriptType.Execute_Checker
-#     #操作类型，其余可配置项：Checker，Interactivator，Execute_Checker，Interactive_Checker
-#     catalog: *cata4 #所属操作类型，由OperationCatalog定义，如catalog_id配置存在，则以catalog_id优先
-#     #catalog_id: !!int 123
-#     order: !!int 30 #所属操作类型内的排序
-#     detail: 
-#       remote:
-#         name: SSHConfig
-#         params: #如全为默认项，配置留空即可，但必须预留字段
-#           ip:
-#           user:
-#           password:
-#       mod:  #支持定义为模块列表，列表内容为需顺序执行的各模块定义，ScriptType必须为组合类型
-#         - name: shell
-#           shell: startall
-#         - name: shell
-#           shell: showall
-#     system: QDIAM
-#     # 操作对应的系统名称，trade_systems表内定义，支持填写系统对应的UUID
-#     is_emergency: True #配置该操作是否在应急操作列表内出现
-#   - name: &showall  检查系统进程
-#     description: 检查系统进程状态
-#     type: ScriptType.Checker
-#     catalog: *cata4
-#     order: !!int 10
-#     detail: 
-#       remote:
-#         name: SSHConfig
-#         params:
-#           ip:
-#           user:
-#           password:
-#       mod:
-#         name: shell
-#         shell: showall
-#     system: 40c52001-a50d-46a6-a169-f4676885567b
-#     is_emergency: True
-#   - name: &stop_show  停止并检查系统进程
-#     description: 停止并检查系统进程状态
-#     type: ScriptType.Execute_Checker
-#     catalog: *cata4
-#     order: !!int 40
-#     detail: 
-#       remote:
-#         name: SSHConfig
-#         params:
-#           ip:
-#           user:
-#           password:
-#       mod:
-#         - name: shell
-#           shell: stopall
-#         - name: shell
-#           shell:  showall
-#     system: 40c52001-a50d-46a6-a169-f4676885567b
-#     is_emergency: True
-#   - name: &restart_show  重启并检查系统进程
-#     description: 带流重启并检查系统进程状态
-#     type: ScriptType.Execute_Checker
-#     catalog: *cata4
-#     order: !!int 20
-#     detail: 
-#       remote:
-#         name: SSHConfig
-#         params:
-#           ip:
-#           user:
-#           password:
-#       mod:
-#         - name: shell
-#           shell: restartall
-#         - name: shell
-#           shell:  showall
-#     system: 40c52001-a50d-46a6-a169-f4676885567b
-#     is_emergency: True
-#   - name: &chksystem  检查系统状态
-#     description: 检查系统状态
-#     type: ScriptType.Checker
-#     catalog: *cata5
-#     order: !!int 10
-#     detail: 
-#       remote:
-#         name: SSHConfig
-#         params:
-#           ip:
-#           user:
-#           password:
-#       mod:
-#         name: shell
-#         shell: dball chksystemstatus
-#         args:
-#           chdir: bin
-#     system: 40c52001-a50d-46a6-a169-f4676885567b
-#     is_emergency: True
-#   - name: &chkphase2  检查盘前数据
-#     description: 检查盘前数据
-#     type: ScriptType.Checker
-#     catalog: *cata5
-#     order: !!int 10
-#     detail: 
-#       remote:
-#         name: SSHConfig
-#         params:
-#           ip:
-#           user:
-#           password:
-#       mod:
-#         name: shell
-#         shell: callone mc_batch qdamcheckphase2 ../list/list.db.user
-#         args:
-#           chdir: bin
-#     system: 40c52001-a50d-46a6-a169-f4676885567b
-#     is_emergency: True
-#   - name: &gendata  上场数据生成
-#     description: 生成系统上场数据，
-#     type: ScriptType.Interactive_Checker
-#     catalog: *cata3
-#     order: !!int 10
-#     detail: 
-#       remote:
-#         name: HttpConfig
-#         params:
-#           ip:
-#           user: caozuo
-#           password: '123456'
-#           captcha: True
-#           captcha_uri: /quantdo/captcha
-#           login_uri: /quantdo/logon
-#       mod:
-#         name: quantdoGenTradeData_1.3.6+  #预开发的交互式操作模块界面名，其余可配置项：quantdoGenTradeData_1.3.6-，quantdoAuditTradeData_1.3.6-，quantdoAuditTradeData_1.3.6+，quantdoMarketCSV_1.3.6+，模块功能详见说明
-#         request:
-#           - method: post  #交互请求提交方式
-#             uri: /quantdo/service/dataToTradeService/generateTradeData  #数据上场接口
-#           - method: post
-#             uri: /quantdo/service/sysCalendarService/getCurrDate  #获取当前交易日接口
-#             params: #可选项，支持定义需要提交的参数，如无定义，则从request.form中获取
-#               params:
-#                 -
-#     system: 线下子系统
-#     is_emergency: False
-#   - name: &auditdata  上场数据稽核
-#     description: 复合生成的系统上场数据，
-#     type: ScriptType.Interactive_Checker
-#     catalog: *cata3
-#     order: !!int 20
-#     detail:
-#       remote:
-#         name: HttpConfig
-#         params:
-#           ip:
-#           user: caozuo
-#           password: '123456'
-#           captcha: True
-#           captcha_uri: /quantdo/captcha
-#           login_uri: /quantdo/logon
-#       mod:
-#         name: quantdoAuditTradeData_1.3.6+
-#         request:
-#           method: post
-#           uri: /quantdo/service/busAuditService/auditAfterToTrade  #上场数据稽核接口
-#     system: 线下子系统
-#     is_emergency: False
-#   - name: &backflow  备份系统流水
-#     description: 备份系统流水文件
-#     type: ScriptType.Executor
-#     catalog: *cata1
-#     order: !!int 10
-#     detail: 
-#       remote:
-#         name: SSHConfig
-#         params:
-#           ip:
-#           user:
-#           password:
-#       mod:
-#         name: shell
-#         shell: callone mc_batch backlog ../list/list.user
-#         args:
-#           chdir: bin
-#     system: 40c52001-a50d-46a6-a169-f4676885567b
-#     is_emergency: True
-#   - name: &backdb  备份业务数据库
-#     description: 业务数据库全库备份
-#     type: ScriptType.Executor
-#     catalog: *cata1
-#     order: !!int 20
-#     detail: 
-#       remote:
-#         name: SSHConfig
-#         params:
-#           ip:
-#           user:
-#           password:
-#       mod:
-#         name: shell
-#         shell: callone mc_batch backupdb ../list/list.db.user
-#         args:
-#           chdir: bin
-#     system: 40c52001-a50d-46a6-a169-f4676885567b
-#     is_emergency: True
-#   - name: &cleardb  清理数据库下场表
-#     description: 清理数据库下场表
-#     type: ScriptType.Executor
-#     catalog: *cata2
-#     order: !!int 20
-#     detail: 
-#       remote:
-#         name: SSHConfig
-#         params:
-#           ip:
-#           user:
-#           password:
-#       mod:
-#         name: shell
-#         shell: callone dbaction.sh clear ../list/list.db
-#         args:
-#           chdir: bin
-#     system: 40c52001-a50d-46a6-a169-f4676885567b
-#     is_emergency: True
-#   - name: &clearflow  清理系统流水
-#     description: 清理系统流水
-#     type: ScriptType.Executor
-#     catalog: *cata2
-#     order: !!int 20
-#     detail: 
-#       remote:
-#         name: SSHConfig
-#         params:
-#           ip:
-#           user:
-#           password:
-#       mod:
-#         name: shell
-#         shell: callone mc_batch clearlog ../list/list.user
-#         args:
-#           chdir: bin
-#     system: 40c52001-a50d-46a6-a169-f4676885567b
-#     is_emergency: True
-# OperationGroups:
-#   - name: &group1 早盘开盘
-#     description: 早盘开盘操作组  #可选项
-#     system: QDIAM #此处配置主系统名，trade_systems.name,如无命名冲突的情况下，建议使用系统名进行配置关联
-#     order: !!int 10
-#   - name: &group2 早盘收盘
-#     system: QDIAM
-#     order: !!int 20
-#   - name: &group3 夜盘开盘
-#     system: QDIAM
-#     order: !!int 30
-#   - name: &group4 夜盘收盘
-#     system: QDIAM
-#     order: !!int 40
-# Operations:
-  # - name: 启动前准备
-  #   description: 防止下场表未清理干净  #可选配置
-  #   earliest: '7:30'  #可选项，操作不得早于该时间执行
-  #   latest: '8:55'  #可选项，操作不得晚于该时间执行
-  #   op_book: *cleardb
-  #   order: !!int 10 #操作组内的操作排序，建议以10为单位步进
-  #   group: *group1  #如op_group_id配置同时存在，以op_group_id优先
-  #   #op_group_id: !!int 1  #操作组id
-  #   need_authorization: True  #可选配置，是否需要双岗符合，默认不需要
-  # - name: 检查进程情况
-  #   op_book: *showall
-  #   order: !!int 20
-  #   group: *group1
-  # - name: 启动并检查进程
-  #   op_book: *start_show
-  #   order: !!int 30
-  #   group: *group1
-  # - name: 检查进程情况
-  #   op_book: *start_show
-  #   order: !!int 10
-  #   group: *group2
-  # - name: 停止并检查进程
-  #   op_book: *stop_show
-  #   order: !!int 20
-  #   group: *group2
-  # - name: 数据库全备份
-  #   op_book: *backdb
-  #   order: !!int 50
-  #   group: *group2
-  # - name: 上场数据生成
-  #   op_book: *gendata
-  #   order: 60
-  #   group: *group2
-  # - name: 上场数据稽核
-  #   op_book: *auditdata
-  #   order: 70
-  #   group: *group2
-  # - name: 备份系统流水
-  #   op_book: *backflow
-  #   order: !!int 80
-  #   group: *group2
-  # - name: 清理系统流水
-  #   op_book: *clearflow
-  #   order: !!int 90
-  #   group: *group2
-  # - name: 检查系统状态
-  #   op_book: *chksystem
-  #   order: !!int 10
-  #   group: *group3
-  # - name: 启动前准备
-  #   description: 防止下场表未清理干净
-  #   op_book: *cleardb
-  #   order: !!int 20
-  #   group: *group3
-  # - name: 启动并检查进程
-  #   op_book: *start_show
-  #   order: !!int 30
-  #   group: *group3
-  # - name: 检查盘前数据
-  #   op_book: *chkphase2
-  #   order: !!int 40
-  #   group: *group3
-  # - name: 检查进程情况
-  #   op_book: *showall
-  #   order: !!int 10
-  #   group: *group4
-  # - name: 停止并检查进程
-  #   op_book: *stop_show
-  #   order: !!int 20
-  #   group: *group4
-  # - name: 数据库全备份
-  #   op_book: *backdb
-  #   order: !!int 50
-  #   group: *group4
-  # - name: 备份系统流水
-  #   op_book: *backflow
-  #   order: !!int 60
-  #   group: *group4
-  # - name: 清理系统流水
-  #   op_book: *clearflow
-  #   order: !!int 70
-  #   group: *group4
+OperationBook:
+  - name: &startall 启动交易系统
+    description: 清流启动系统进程(startall)
+    type: ScriptType.Executor
+    #操作类型，其余可配置项：Checker，Interactivator，Execute_Checker，Interactive_Checker
+    catalog: *cata4 #所属操作类型，由OperationCatalog定义，如catalog_id配置存在，则以catalog_id优先
+    order: !!int 30 #所属操作类型内的排序
+    detail: 
+      remote:
+        name: SSHConfig
+        params: #如全为默认项，配置留空即可，但必须预留字段
+          ip:
+          user:
+          password:
+      mod:  #支持定义为模块列表，列表内容为需顺序执行的各模块定义，ScriptType必须为组合类型
+        name: shell
+        shell: startall
+    system: 024e96c6-a7ea-41d3-9e96-239198e9b1d7
+    # 操作对应的系统名称，trade_systems表内定义，支持填写系统对应的UUID
+  - name: &showall 查看交易系统进程
+    description: 查看系统进程状态(showall)
+    type: ScriptType.Checker
+    catalog: *cata4
+    order: !!int 10
+    detail: 
+      remote:
+        name: SSHConfig
+        params:
+          ip:
+          user:
+          password:
+      mod:
+        name: shell
+        shell: showall
+    system: 024e96c6-a7ea-41d3-9e96-239198e9b1d7
+  - name: &stopall 停止交易系统进程
+    description: 停止交易系统进程(stopall)
+    type: ScriptType.Executor
+    catalog: *cata4
+    order: !!int 40
+    detail: 
+      remote:
+        name: SSHConfig
+        params:
+          ip:
+          user:
+          password:
+      mod:
+        name: shell
+        shell: stopall
+    system: 024e96c6-a7ea-41d3-9e96-239198e9b1d7
+  - name: &restartall 重启交易系统进程
+    description: 带流重启交易系统进程(restartall)
+    type: ScriptType.Executor
+    catalog: *cata4
+    order: !!int 20
+    detail: 
+      remote:
+        name: SSHConfig
+        params:
+          ip:
+          user:
+          password:
+      mod:
+        name: shell
+        shell: restartall
+    system: 024e96c6-a7ea-41d3-9e96-239198e9b1d7
+  - name: &chksettle 检查系统结算状态
+    description: 检查系统结算状态
+    type: ScriptType.Checker
+    catalog: *cata5
+    order: !!int 10
+    detail: 
+      remote:
+        name: SSHConfig
+        params:
+          ip:
+          user:
+          password:
+      mod:
+        name: shell
+        shell: chkSettmentStatus.sh
+        args:
+          chdir: bin
+    system: 024e96c6-a7ea-41d3-9e96-239198e9b1d7
+  - name: &chkstart 确认交易系统启动
+    type: ScriptType.Checker
+    catalog: *cata5
+    order: !!int 20
+    detail: 
+      remote:
+        name: SSHConfig
+        params:
+          ip:
+          user:
+          password:
+      mod:
+        name: shell
+        shell: qEvnChk.sh 1 1
+        args:
+          chdir: bin
+    system: 024e96c6-a7ea-41d3-9e96-239198e9b1d7
+  - name: &chkstop 确认交易系统停止
+    type: ScriptType.Checker
+    catalog: *cata5
+    order: !!int 30
+    detail: 
+      remote:
+        name: SSHConfig
+        params:
+          ip:
+          user:
+          password:
+      mod:
+        name: shell
+        shell: qEvnChk.sh 2 1
+        args:
+          chdir: bin
+    system: 024e96c6-a7ea-41d3-9e96-239198e9b1d7
+  - name: &chkflow 确认流水清理
+    type: ScriptType.Checker
+    catalog: *cata5
+    order: !!int 40
+    detail: 
+      remote:
+        name: SSHConfig
+        params:
+          ip:
+          user:
+          password:
+      mod:
+        name: shell
+        shell: qEvnChk.sh 3 1
+        args:
+          chdir: bin
+    system: 024e96c6-a7ea-41d3-9e96-239198e9b1d7
+  - name: &chkoper 确认下场表清理
+    type: ScriptType.Checker
+    catalog: *cata5
+    order: !!int 50
+    detail: 
+      remote:
+        name: SSHConfig
+        params:
+          ip:
+          user:
+          password:
+      mod:
+        name: shell
+        shell: qEvnChk.sh 4 1
+        args:
+          chdir: bin
+    system: 024e96c6-a7ea-41d3-9e96-239198e9b1d7
+  - name: &prepdata 下一交易日数据上场
+    type: ScriptType.Executor
+    catalog: *cata3
+    order: !!int 20
+    detail: 
+      remote:
+        name: SSHConfig
+        params:
+          ip:
+          user:
+          password:
+      mod:
+        name: shell
+        shell: cronDataReadly.sh
+        args:
+          chdir: bin
+    system: 024e96c6-a7ea-41d3-9e96-239198e9b1d7
+  - name: &datachk 上场数据稽核
+    type: ScriptType.Checker
+    catalog: *cata3
+    order: !!int 10
+    detail: 
+      remote:
+        name: SSHConfig
+        params:
+          ip:
+          user:
+          password:
+      mod:
+        name: shell
+        shell: cronDataCheck.sh
+        args:
+          chdir: bin
+    system: 024e96c6-a7ea-41d3-9e96-239198e9b1d7
+  - name: &backflow 交易系统备流
+    type: ScriptType.Executor
+    catalog: *cata1
+    order: !!int 10
+    detail: 
+      remote:
+        name: SSHConfig
+        params:
+          ip:
+          user:
+          password:
+      mod:
+        name: shell
+        shell: callone mc_batch backlog ../list/list.user
+        args:
+          chdir: bin
+    system: 024e96c6-a7ea-41d3-9e96-239198e9b1d7
+  - name: &backdb 交易系统备库
+    type: ScriptType.Executor
+    catalog: *cata1
+    order: !!int 20
+    detail: 
+      remote:
+        name: SSHConfig
+        params:
+          ip:
+          user:
+          password:
+      mod:
+        name: shell
+        shell: callone mc_batch backupdb ../list/list.db.user
+        args:
+          chdir: bin
+    system: 024e96c6-a7ea-41d3-9e96-239198e9b1d7
+  - name: &cleanflow 交易系统清流
+    type: ScriptType.Executor
+    catalog: *cata2
+    order: !!int 10
+    detail: 
+      remote:
+        name: SSHConfig
+        params:
+          ip:
+          user:
+          password:
+      mod:
+        name: shell
+        shell: callone mc_batch clearlog ../list/list.user
+        args:
+          chdir: bin
+    system: 024e96c6-a7ea-41d3-9e96-239198e9b1d7
+  - name: &cleandb 交易系统清库
+    type: ScriptType.Executor
+    catalog: *cata2
+    order: !!int 20
+    detail: 
+      remote:
+        name: SSHConfig
+        params:
+          ip:
+          user:
+          password:
+      mod:
+        name: shell
+        shell: callone dbaction.sh clear ../list/list.db
+        args:
+          chdir: bin
+    system: 024e96c6-a7ea-41d3-9e96-239198e9b1d7

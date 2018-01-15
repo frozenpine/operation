@@ -28,6 +28,10 @@ python ${INIT_APP} init_auth || {
     echo "Faild to init auth info." >&2
     exit 1
 }
+python ${INIT_APP} init_inventory || {
+    echo "Faild to init inventory info." >&2
+    exit 1
+}
 python ${INIT_APP} init_operation || {
     echo "Faild to init operation catalog." >&2
     exit 1

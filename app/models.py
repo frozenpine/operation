@@ -535,10 +535,11 @@ class Socket(SQLModelMixin, db.Model):
             self.type = SocketType.UDP
         else:
             self.type = SocketType.TCP
-        if parse['ip'] in ['127.0.0.1', 'localhost', u'127.0.0.1', u'localhost'] \
-                and (self.direction == SocketDirection.Listen.value or
-                     self.direction == SocketDirection.Listen or
-                     self.direction.is_(None)):
+        if (parse['ip'] in ['127.0.0.1', 'localhost', u'127.0.0.1', u'localhost'] and
+                (self.direction == SocketDirection.Listen.value or
+                 self.direction == SocketDirection.Listen or
+                 (isinstance(self.direction, SocketDirection) and self.direction.is_(None)) or
+                 self.direction is None)):
             self.address = ip_address(u'0.0.0.0')
         else:
             self.address = ip_address(unicode(parse['ip']))
@@ -852,7 +853,9 @@ class OperationBook(SQLModelMixin, db.Model):
     def remoteConfigObserver(self, sys_id):
         sys = TradeSystem.find(id=sys_id)
         if sys:
-            if not self.type.IsInteractivator():
+            if ((isinstance(self.type, ScriptType) and not self.type.IsInteractivator()) or
+                    (self.type != ScriptType.Interactivator.value and
+                     self.type != ScriptType.Interactive_Checker.value)):
                 new_dtl = json.loads(json.dumps(self.detail))
                 new_dtl.update({
                     'remote': {

@@ -105,7 +105,7 @@ def init_inventory():
         if svr.has_key('platform'):
             typ, cat = svr['platform'].split('.')
             svr['platform'] = getattr(globals()[typ], cat).value
-        servers[svr['name']] = Server(**svr)
+        servers[svr['uuid']] = Server(**svr)
     db.session.add_all(servers.values())
     db.session.commit()
 
@@ -124,7 +124,7 @@ def init_inventory():
                 typ = SystemType.find(name=sys.pop('type'))
                 sys_types[typ.name] = typ
             sys['type_id'] = typ.id
-        systems[sys['name']] = TradeSystem(**sys)
+        systems[sys['uuid']] = TradeSystem(**sys)
     db.session.add_all(systems.values())
     db.session.commit()
 
@@ -135,7 +135,7 @@ def init_inventory():
             proc['type'] = getattr(globals()[typ], cat).value
         proc['sys_id'] = systems[proc.pop('system')].id
         proc['svr_id'] = servers[proc.pop('server')].id
-        processes[proc['name']] = TradeProcess(**proc)
+        processes[proc['uuid']] = TradeProcess(**proc)
     db.session.add_all(processes.values())
     db.session.commit()
 
@@ -145,10 +145,8 @@ def init_inventory():
             typ, cat = sock['direction'].split('.')
             sock['direction'] = getattr(globals()[typ], cat).value
         if sock.has_key('process'):
-            proc = TradeProcess.find(name=sock.pop('process'))
-            if proc:
-                sock['proc_id'] = proc.id
-        sockets[sock['name'] + sock['uri']] = Socket(**sock)
+            sock['proc_id'] = processes[sock.pop('process')].id
+        sockets[sock['uuid']] = Socket(**sock)
     db.session.add_all(sockets.values())
     db.session.commit()
 
@@ -158,22 +156,22 @@ def init_inventory():
     db.session.add_all(systems.values())
     db.session.commit()
 
-    datasources = []
-    for ds in inventory['DataSources']:
-        ds['sys_id'] = systems[ds.pop('system')].id
-        typ, cat = ds['src_type'].split('.')
-        ds['src_type'] = getattr(globals()[typ], cat).value
-        typ, cat = ds['src_model'].split('.')
-        ds['src_model'] = getattr(globals()[typ], cat).value
-        if test_app.config['GLOBAL_ENCRYPT']:
-            ds['source']['uri'] = re.sub(
-                '^(.+://[^:]+:)([^@]+)(@.+)$',
-                _encrypt,
-                ds['source']['uri']
-            )
-        datasources.append(DataSource(**ds))
-    db.session.add_all(datasources)
-    db.session.commit()
+    # datasources = []
+    # for ds in inventory['DataSources']:
+    #     ds['sys_id'] = systems[ds.pop('system')].id
+    #     typ, cat = ds['src_type'].split('.')
+    #     ds['src_type'] = getattr(globals()[typ], cat).value
+    #     typ, cat = ds['src_model'].split('.')
+    #     ds['src_model'] = getattr(globals()[typ], cat).value
+    #     if test_app.config['GLOBAL_ENCRYPT']:
+    #         ds['source']['uri'] = re.sub(
+    #             '^(.+://[^:]+:)([^@]+)(@.+)$',
+    #             _encrypt,
+    #             ds['source']['uri']
+    #         )
+    #     datasources.append(DataSource(**ds))
+    # db.session.add_all(datasources)
+    # db.session.commit()
 
     config_files = []
     for conf in inventory['ConfigFiles']:
@@ -213,7 +211,7 @@ def init_operation():
     db.session.add_all(catalogs.values())
     db.session.commit()
 
-    ''' operation_book = {}
+    operation_book = {}
     for bk in opers['OperationBook']:
         typ, cat = bk['type'].split('.')
         bk['type'] = getattr(globals()[typ], cat).value
@@ -232,15 +230,13 @@ def init_operation():
             else:
                 sys = TradeSystem.find(name=name)
             bk['sys_id'] = sys.id
-        if bk.has_key('catalog_id') and bk.has_key('catalog'):
-            bk.pop('catalog')
-        elif bk.has_key('catalog'):
+        if bk.has_key('catalog'):
             bk['catalog_id'] = catalogs[bk.pop('catalog')].id
         operation_book[bk['name']] = OperationBook(**bk)
     db.session.add_all(operation_book.values())
     db.session.commit()
 
-    groups = {}
+    '''groups = {}
     for grp in opers['OperationGroups']:
         if grp.has_key('sys_id') and grp.has_key('system'):
             grp.pop('system')
