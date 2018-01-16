@@ -1,5 +1,7 @@
 @echo off
 
+SETLOCAL
+
 cd /d %~dp0
 
 SET LOG_FILE=run\controller.log
@@ -23,7 +25,7 @@ for /F "tokens=1,2 delims==" %%i in ('findstr "^[^#]" .\settings.conf') do (
 SET _command=%~1
 IF NOT DEFINED _command (
     :INTERACTIVE
-    clear
+    cls
     echo.
     echo **************************************************
     echo *                                                *
@@ -212,3 +214,6 @@ GOTO :EOF
 :HELP
 echo Usage: %~nx0 ^[start^|stop^|status^|restart^|help^]
 GOTO :EOF
+
+:EOF
+ENDLOCAL
