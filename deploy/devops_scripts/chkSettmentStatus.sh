@@ -13,7 +13,7 @@ while read tag1i db_host db_user db_pwd db_name tag2; do
 	DB_NAME=$db_name
 done<"${LIST_DB}"
 
-SETTLE_STATUS=`mysql -N -h10.90.102.51 -uqdam -pqdam qdam -e "SELECT t.settle_status FROM t_settle_status t WHERE t.settle_date=(SELECT tradingday FROM t_sync_systemstatus LIMIT 1) ORDER BY t.settle_status DESC LIMIT 1"`
+SETTLE_STATUS=`mysql -N -h${DB_HOST} -u${DB_USER} -p${DB_PWD} ${DB_NAME} -e "SELECT t.settle_status FROM t_settle_status t WHERE t.settle_date=(SELECT tradingday FROM t_sync_systemstatus LIMIT 1) ORDER BY t.settle_status DESC LIMIT 1"`
 
 if [[ ${SETTLE_STATUS} != '3' ]]; then
 	echo "Please wait for settlement."
