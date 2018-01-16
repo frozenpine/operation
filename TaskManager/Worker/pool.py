@@ -283,7 +283,7 @@ def process(task):
 class WorkerPool(object):
     def __init__(self):
         self.running_process = 0
-        self.process_count = environ.get('PROCESS_COUNT', cpu_count())
+        self.process_count = int(environ.get('PROCESS_COUNT', cpu_count()))
         self.worker_pool = None
         self.msg_queue = msg_queue
 
