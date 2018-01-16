@@ -116,7 +116,7 @@ def send(data):
 def init_status(task, queue_uuid, task_uuid):
     if not worker_pool.vacant():
         # 进程池满
-        logging.warning('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.WorkerWating.value))
+        logging.warning('TaskUUID: {0}, TaskStatus: {1}'.format(task_uuid, TaskStatus.WorkerWaiting.value))
         status_code = TaskStatus.WorkerWaiting
         status_msg = MSG_DICT.get(status_code)
         result = TaskResult(queue_uuid=queue_uuid, task_uuid=task_uuid, status_code=status_code,
