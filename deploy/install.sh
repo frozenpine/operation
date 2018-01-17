@@ -273,7 +273,10 @@ _deploy() {
         mkdir -p "${DEPLOY_DIR}"
     }
     read -p "Please input python virtualenv name[default: ${PY_VIRTUALENV_NAME}]: " ANS
-    [[ -n ${ANS} ]] && PY_VIRTUALENV_NAME=${ANS}
+    [[ -n ${ANS} ]] && {
+        PY_VIRTUALENV_NAME=${ANS}
+        sed -i 's/VIRTUALENV=.*$/VIRTUAL='"${PY_VIRTUALENV_NAME}"'/' "${BASE_DIR}/../settings.conf"
+    }
     # PY_VIRTUALENV_BASE="${DEPLOY_DIR}/${PY_VIRTUALENV_NAME}"
     _info "Start to copy application files to deploy dir."
     for file_dir in `ls "${APP_DIR}" -I deploy`; do
