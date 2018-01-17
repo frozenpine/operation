@@ -8,18 +8,16 @@ pushd "${BASE_DIR}/../"
 APP_DIR=`pwd`
 popd
 
-DEPLOY_DIR="${HOME}"
+DEPLOY_DIR="${HOME}/qops"
 
 PY_VER_RECOMM="2.7.13"
 PY_INSTALL_FILE="${BASE_DIR}/Python-${PY_VER_RECOMM}.tgz"
-PY_VIRTUALENV_NAME="devops"
-PY_VIRTUALENV_BASE=
-PY_FORCE_INSTALL=
+PY_VIRTUALENV_NAME=".virtual"
 
 RELEASE=
 
 _help() {
-    MESSAGE="Usage : install.sh [-h|-f] {python|deploy}"
+    MESSAGE="Usage : install.sh [-h] {python|deploy}"
     printf -v HEAD "%*s" $((${#MESSAGE}+4))
     printf "%s\n# %${#MESSAGE}s #\n" ${HEAD// /#}
     printf "# %s #\n" "${MESSAGE}"
@@ -27,8 +25,7 @@ _help() {
     printf "Option Descriptions :\n"
     cat <<EOF | column -t -c 2 | sed 's/#/ /g'
 -h          Print#this#help#message
--f          Install#python-2.7.13#forcelly
-PYTHON      Install#python-2.7.*#environment,#must#be#run#under#privileged#user
+PYTHON      Install#python-2.7.13#environment,#must#be#run#under#privileged#user
 DEPLOY      Deploy#application
 EOF
 }
@@ -164,51 +161,33 @@ EOF
     }
 }
 
-_checkPip() {
-    which pip &>/dev/null
-    [[ $? -ne 0 ]] && {
-        pushd "/tmp" &>/dev/null
-        pushd "${BASE_DIR}/requirements" &>/dev/null
-        SETUPTOOL_FILE=`ls setuptools-*.zip`
-        popd &>/dev/null
-        unzip "${BASE_DIR}/requirements/${SETUPTOOL_FILE}"
-        cd setuptools-*
-        python setup.py install
-        pushd "${BASE_DIR}/requirements" &>/dev/null
-        PIP_FILE=`ls pip-*.tar.gz`
-        popd &>/dev/null
-        tar -xzvf "${BASE_DIR}/requirements/${PIP_FILE}"
-        cd pip-*
-        python setup.py install
-        popd &>/dev/null
-        _info "Pip installed successfully."
-    } || _info "Pip module check successfully"
+_installPip() {
+    pushd "${BASE_DIR}/requirements/pip-9.0.1" &>/dev/null
+    python setup.py install
+    popd >/dev/null
 }
 
 _installVirtualenv() {
-    _checkPip
-    which virtualenv &>/dev/null && {
-        _info "Virtualenv already installed."
-    } || {
-        pushd "${BASE_DIR}/requirements/" &>/dev/null
-        pip install virtualenv*.tar.gz
-        popd &>/dev/null
-    }
+    pushd "${BASE_DIR}/requirements/virtualenv-15.1.0" &>/dev/null
+    python setup.py install
+    popd &>/dev/null
+}
+
+_updateSetuptools() {
+    pushd "${BASE_DIR}/requirements/setuptools-38.4.0" &>/dev/null
+    python setup.py install
+    popd &>/dev/null
 }
 
 _makeVirtualEnv() {
     pushd "${DEPLOY_DIR}" &>/dev/null
     if [[ ${RELEASE} == "CYG_WIN" ]]; then
-        virtualenv ${PY_VIRTUALENV_NAME} --system-site-packages
+        python -m virtualenv ${PY_VIRTUALENV_NAME} --system-site-packages
     else
-        virtualenv ${PY_VIRTUALENV_NAME}
+        python -m virtualenv ${PY_VIRTUALENV_NAME}
     fi
     source ${PY_VIRTUALENV_NAME}/bin/activate
-    if [[ ${RELEASE} == "el6" ]]; then
-        pip install --find-links="${BASE_DIR}/requirements" -r "${BASE_DIR}/requirements.txt"
-    else
-        pip install --no-index --find-links="${BASE_DIR}/requirements" -r "${BASE_DIR}/requirements.txt"
-    fi
+    python -m pip install --no-index --find-links="${BASE_DIR}/requirements" -r "${BASE_DIR}/requirements.txt" --no-cache-dir
     deactivate
     popd &>/dev/null
 }
@@ -247,26 +226,24 @@ _installPython() {
     tar -xzvf "${PY_INSTALL_FILE}"
     cd Python-*
     make clean
-    ./configure | tee -a "${INSTALL_LOG}"
+    ./configure --prefix=/usr/local/python-2.7.13 | tee -a "${INSTALL_LOG}"
     make -j4 | tee -a "${INSTALL_LOG}"
-    [[ ${PY_FORCE_INSTALL} -eq 1 ]] && {
-        make altinstall | tee -a "${INSTALL_LOG}"
-    } || {
-        make install | tee -a "${INSTALL_LOG}"
-    }
+    make install | tee -a "${INSTALL_LOG}"
     popd &>/dev/null
     _pause 3 "Python build finished."
 
+    pushd /usr/bin >/dev/null
+    rm -f python python2 python-config python2-config &>/dev/null
+    ln -s /usr/local/python-2.7.13/bin/python2.7 /usr/bin/python2.7.13
+    ln -s python2.7.13 python
+    ln -s /usr/local/python-2.7.13/bin/python2.7-config /usr/bin/python2.7.13-config
+    ln -s python2.7.13-config python-config
     [[ ${RELEASE} == "el6" ]] && {
         _warning <<EOF
 This platform in Redhat el6, yum command not compatible with python 2.7.*
 Trying to fix this problem by specify yum command with python2.6 forcelly.
 Current config: `head -1 /usr/bin/yum`
 EOF
-        [[ -f /usr/bin/python ]] && {
-            rm -f /usr/bin/python
-            ln -s /usr/local/bin/python2.7 /usr/bin/python
-        }
         sed -i 's/python.*$/python2\.6/' /usr/bin/yum
         _warning <<EOF
 Problem fixed.
@@ -274,73 +251,72 @@ New config: `head -1 /usr/bin/yum`
 EOF
     }
 
-    [[ ${PY_FORCE_INSTALL} -eq 1 && ${RELEASE} == "el7" ]] && {
+    [[ ${RELEASE} == "el7" ]] && {
         _warning <<EOF
 This platform in Redhat el7, yum command not compatible with python 2.7.13
 Trying to fix this problem by specify yum command with python2.7.5 forcelly.
 EOF
-        [[ -f /usr/bin/python ]] && {
-            mv /usr/bin/python /usr/bin/python2.7.5
-            ln -s /usr/local/bin/python2.7 /usr/bin/python
-        }
-        sed -i 's/python.*$/python2\.7\.5/' /usr/bin/yum
-        sed -i 's/python.*$/python2\.7\.5/' /usr/libexec/urlgrabber-ext-down
+        sed -i 's/python.*$/python2\.7/' /usr/bin/yum
+        sed -i 's/python.*$/python2\.7/' /usr/libexec/urlgrabber-ext-down
         _warning <<EOF
 Problem fixed.
 EOF
     }
+    popd &>/dev/null
 }
 
 _deploy() {
-    read -p "Please input deploy base dir[default: ${DEPLOY_DIR}]: " ANS
-    [[ -n ${ANS} ]] && DEPLOY_DIR=${ANS}
+    read -p "Please input deploy dir[default: qops]: " ANS
+    [[ -n ${ANS} ]] && DEPLOY_DIR="${DEPLOY_DIR}/${ANS}"
     [[ ! -d "${DEPLOY_DIR}" ]] && {
         _warning "${DEPLOY_DIR} not exists, creating..."
         mkdir -p "${DEPLOY_DIR}"
     }
     read -p "Please input python virtualenv name[default: ${PY_VIRTUALENV_NAME}]: " ANS
     [[ -n ${ANS} ]] && PY_VIRTUALENV_NAME=${ANS}
-    PY_VIRTUALENV_BASE="${DEPLOY_DIR}/${PY_VIRTUALENV_NAME}"
-    _makeVirtualEnv
-    _info "Start to copy application files to virtual environment."
+    # PY_VIRTUALENV_BASE="${DEPLOY_DIR}/${PY_VIRTUALENV_NAME}"
+    _info "Start to copy application files to deploy dir."
     for file_dir in `ls "${APP_DIR}" -I deploy`; do
-        _info "Copying ${file_dir} to ${PY_VIRTUALENV_BASE}"
-        cp -rf "${APP_DIR}/${file_dir}" "${PY_VIRTUALENV_BASE}/"
+        _info "Copying ${file_dir} to ${DEPLOY_DIR}"
+        cp -rf "${APP_DIR}/${file_dir}" "${DEPLOY_DIR}/"
     done
     _info "Verifying directories..."
-    [[ -d "${PY_VIRTUALENV_BASE}/Logs" ]] && {
+    [[ -d "${DEPLOY_DIR}/Logs" ]] && {
         _info "Logs dir exist, cleanning..."
-        rm -rf "${PY_VIRTUALENV_BASE}/Logs/*"
-        rm -rf "${PY_VIRTUALENV_BASE}/Logs/.gitkeep"
+        rm -rf "${DEPLOY_DIR}/Logs/*"
+        rm -rf "${DEPLOY_DIR}/Logs/.gitkeep"
     } || {
         _warning "Logs dir not exist, creating..."
-        mkdir -p "${PY_VIRTUALENV_BASE}/Logs"
+        mkdir -p "${DEPLOY_DIR}/Logs"
     }
-    [[ -d "${PY_VIRTUALENV_BASE}/dump" ]] && {
+    [[ -d "${DEPLOY_DIR}/dump" ]] && {
         _info "dump dir exist, cleaning..."
-        rm -rf "${PY_VIRTUALENV_BASE}/dump/*"
-        rm -rf "${PY_VIRTUALENV_BASE}/dump/.gitkeep"
+        rm -rf "${DEPLOY_DIR}/dump/*"
+        rm -rf "${DEPLOY_DIR}/dump/.gitkeep"
     } || {
         _warning "dump dir not exist, creating..."
-        mkdir -p "${PY_VIRTUALENV_BASE}/dump"
+        mkdir -p "${DEPLOY_DIR}/dump"
     }
-    [[ -d "${PY_VIRTUALENV_BASE}/run" ]] && {
+    [[ -d "${DEPLOY_DIR}/run" ]] && {
         _info "run dir exist, cleaning..."
-        rm -rf "${PY_VIRTUALENV_BASE}/run/*"
-        rm -rf "${PY_VIRTUALENV_BASE}/run/.gitkeep"
+        rm -rf "${DEPLOY_DIR}/run/*"
+        rm -rf "${DEPLOY_DIR}/run/.gitkeep"
     } || {
         _warning "run dir not exist, creating..."
-        mkdir -p "${PY_VIRTUALENV_BASE}/run"
+        mkdir -p "${DEPLOY_DIR}/run"
     }
-    [[ -d "${PY_VIRTUALENV_BASE}/uploads" ]] && {
+    [[ -d "${DEPLOY_DIR}/uploads" ]] && {
         _info "run dir exist, cleaning..."
-        rm -rf "${PY_VIRTUALENV_BASE}/run/.gitkeep"
+        rm -rf "${DEPLOY_DIR}/run/.gitkeep"
     } || {
         _warning "uploads dir not exist, creating..."
-        mkdir -p "${PY_VIRTUALENV_BASE}/uploads/csv"
-        mkdir -p "${PY_VIRTUALENV_BASE}/uploads/yaml"
+        mkdir -p "${DEPLOY_DIR}/uploads/csv"
+        mkdir -p "${DEPLOY_DIR}/uploads/yaml"
     }
-    _pause 5 "Application deployed in \"${PY_VIRTUALENV_BASE}\""
+
+    _makeVirtualEnv
+
+    _pause 5 "Application deployed in \"${DEPLOY_DIR}\""
 }
 
 
@@ -380,10 +356,7 @@ shift $((OPTIND-1))
                     exit 1
                 fi
             }
-            _checkPip && {
-                _pause
-                _installVirtualenv
-            }
+            _updateSetuptools && _installPip && _installVirtualenv
             chmod a+w "${INSTALL_LOG}"
             _pause 5 "Python installation finished."
         ;;
@@ -426,6 +399,9 @@ EOF
                     exit
                 }
             } || _deploy
+        ;;
+        "clean")
+            rm -rf "${BASE_DIR}/../"
         ;;
         *)
             echo "$(basename $0) illegal option -- $1" >&2

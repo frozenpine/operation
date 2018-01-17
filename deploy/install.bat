@@ -23,8 +23,9 @@ IF NOT DEFINED _COMMAND (
     )
     CALL :_LOG Installation of python 2.7.13 is finished.
 
-    CALL :RELOADENV
-    START %~0 MAKEENV
+    START /I %~0 MAKEENV
+
+    GOTO :EOF
 ) ELSE (
     CALL :%_COMMAND%
     PAUSE
@@ -32,17 +33,19 @@ IF NOT DEFINED _COMMAND (
 
 GOTO :EOF
 
-:RELOADENV
+:RELOADPATH
 TASKKILL /IM EXPLORER.EXE /F
 START EXPLORER.EXE
+FOR /F %%i IN ('wmic environment where name^=^"path^" get VariableValue ^| findstr python') DO SET PATH=%%i
 GOTO :EOF
 
 :MAKEENV
 PUSHD ..\
 SETLOCAL
+REM CALL :RELOADPATH
 IF NOT EXIST settings.conf (
     CALL :_ERR Config file "settings.conf" not exist.
-    EXIT /B 1
+    EXIT 1
     GOTO :EOF
 )
 
@@ -78,6 +81,8 @@ IF NOT ERRORLEVEL 1 (
     deactivate
 )
 ENDLOCAL
+PAUSE
+EXIT
 GOTO :EOF
 
 :ACTIVATE
