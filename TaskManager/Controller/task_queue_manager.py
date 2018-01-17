@@ -458,14 +458,16 @@ class TaskQueue(JsonSerializable):
             logging.warning('Invalid status[{}] in result: {}'.format(task_result.task_status, task_result.to_dict()))
             return False
         else:
-            if not self.queue_status.Blocking:
-                self._condition.notifyAll()
+            if self.queue_status == QueueStatus.JobFailed:
+                self.run_all = False
             if self.task_result_list:
                 last_result = self.task_result_list[-1]
                 if last_result.task_uuid == task_result.task_uuid:
                     self.task_result_list.pop()
             self.task_result_list.append(task_result)
             logging.info('Queue status[{}] updated by result: {}'.format(self.queue_status, task_result.to_dict()))
+            if not self.queue_status.Blocking:
+                self._condition.notifyAll()
             return True
 
     @locker
