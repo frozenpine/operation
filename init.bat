@@ -1,5 +1,7 @@
 @echo off
 
+SETLOCAL
+
 cd /d %~dp0
 
 SET INIT_APP=init.py
@@ -13,30 +15,52 @@ for /F "tokens=1,2 delims==" %%i in ('findstr "^[^#]" .\settings.conf') do (
     SET %%i=%%~j
 )
 
+SET _COMMAND=%~1
 IF EXIST %VIRTUALENV%\Scripts\activate (
     CALL %VIRTUALENV%\Scripts\activate
+    IF DEFINED _COMMAND (
+        CALL :%_COMMAND%
+    ) ELSE (
+        CALL :DB && (
+            CALL :AUTH
+            CALL :INVENTORY
+            CALL :OPERATION
+        )
+    )
 ) ELSE (
     echo Virtual enviroment not exist. >&2
     exit 1
 )
+GOTO :EOF
 
+:DB
 python %INIT_APP% drop_db || (
     echo Faild to clean db. >&2
-    exit 1
+    exit /B 1
 )
-python %INIT_APP% create_db || (
+IF ERRORLEVEL 0 python %INIT_APP% create_db || (
     echo Faild to create db tables. >&2
-    exit 1
+    exit /B 1
 )
+GOTO :EOF
+
+:AUTH
 python %INIT_APP% init_auth || (
     echo Faild to init auth info. >&2
-    exit 1
+    exit /B 1
 )
+GOTO :EOF
+
+:INVENTORY
 python %INIT_APP% init_inventory || (
     echo Faild to init inventory info. >&2
     exit 1
 )
+GOTO :EOF
+
+:OPERATION
 python %INIT_APP% init_operation || (
     echo Faild to init operation catalog. >&2
     exit 1
 )
+GOTO :EOF

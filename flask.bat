@@ -35,11 +35,9 @@ IF NOT DEFINED _command (
     echo *          4. Sto[p] Flask service               *
     echo *          5. [Q]uit                             *
     echo *                                                *
-    echo *   Default choice [2] in 5 seconds delay.       *
-    echo *                                                *
     echo **************************************************
     echo.
-    CHOICE /C 12345hstpq /T 5 /D 2 /N /M "Please input you choice:"
+    CHOICE /C 12345hstpq /N /M "Please input you choice:"
     IF ERRORLEVEL 10 GOTO :EOF
     IF ERRORLEVEL 9 (
         echo.
@@ -120,7 +118,7 @@ IF NOT DEFINED _command (
 GOTO :EOF
 
 :ASK
-CHOICE /C yn /N /D n /T 5 /M "Return to main menu? Auto quit in 5 seconds (y/N):"
+CHOICE /C yn /N /D y /T 5 /M "Return to main menu? Auto quit in 5 seconds (Y/n):"
 GOTO :EOF
 
 :ACTIVATE
@@ -214,6 +212,3 @@ GOTO :EOF
 :HELP
 echo Usage: %~nx0 ^[start^|stop^|status^|restart^|help^]
 GOTO :EOF
-
-:EOF
-ENDLOCAL

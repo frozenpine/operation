@@ -7,34 +7,46 @@ SET _COMMAND=%~1
 IF NOT DEFINED _COMMAND (
     IF EXIST VCForPython27.msi (
         CALL :_LOG Start to install VC 4 python
-        start /w VCForPython27.msi
+        START /W VCForPython27.msi
     ) ELSE (
         CALL :_ERR VC for python installation package missing.
         exit 1
     )
+    CALL :_LOG Installation of VC 4 python is finished.
 
     IF EXIST python-2.7.13.amd64.msi (
         CALL :_LOG Start to install python 2.7.13
-        start /w python-2.7.13.amd64.msi
+        START /W python-2.7.13.amd64.msi
     ) ELSE (
         CALL :_ERR Python installation package missing.
         exit 1
     )
-    start %~0 makeenv
+    CALL :_LOG Installation of python 2.7.13 is finished.
+
+    CALL :RELOADENV
+    START %~0 MAKEENV
 ) ELSE (
     CALL :%_COMMAND%
+    PAUSE
 )
 
 GOTO :EOF
 
+:RELOADENV
+TASKKILL /IM EXPLORER.EXE /F
+START EXPLORER.EXE
+GOTO :EOF
+
 :MAKEENV
 PUSHD ..\
+SETLOCAL
 IF NOT EXIST settings.conf (
     CALL :_ERR Config file "settings.conf" not exist.
-    exit 1
+    EXIT /B 1
+    GOTO :EOF
 )
 
-for /F "tokens=1,2 delims==" %%i in ('findstr "^[^#]" .\settings.conf') do (
+FOR /F "tokens=1,2 delims==" %%i IN ('findstr "^[^#]" .\settings.conf') do (
     CALL :_LOG %%i=%%~j 1>NUL
     SET %%i=%%~j
 )
@@ -64,8 +76,8 @@ IF NOT ERRORLEVEL 1 (
     CALL :_LOG Starting to install python requirements
     python -m pip install --no-index --find-links=requirements -r requirements.txt --no-cache-dir
     deactivate
-    exit
 )
+ENDLOCAL
 GOTO :EOF
 
 :ACTIVATE
@@ -73,7 +85,7 @@ IF EXIST %VIRTUALENV%\Scripts\activate (
     CALL %VIRTUALENV%\Scripts\activate
 ) ELSE (
     CALL :_ERR Virtual enviroment not exist.
-    exit /b 1
+    EXIT /B 1
 )
 GOTO :EOF
 
