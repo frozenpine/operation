@@ -122,8 +122,8 @@ class LogApi(Resource):
                         for sub_match in match.groups():
                             if sub_match:
                                 return match.group(0).replace(
-                                    sub_match, '<code>{}</code>'.format(sub_match))
-                        return '<code>{}</code>'.format(match.group(0))
+                                    sub_match, u'<code>{}</code>'.format(sub_match))
+                        return u'<code>{}</code>'.format(match.group(0))
 
                     result.lines = map(lambda x: re.sub(data['msg_pattern'], repl, x), result.lines)
                 data_res = {
