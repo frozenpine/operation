@@ -1,29 +1,32 @@
 # -*- coding: UTF-8 -*-
 
+
 def run(client, module):
     command = module.get('shell')
     args = module.get('args')
     if args and args.has_key('chdir'):
         base_dir = args.get('chdir')
-        command = """
-            PATH=$PATH:.:/bin:/sbin;
-            PATH=$PATH:/usr/local/bin:/usr/local/sbin;
-            PATH=$PATH:/usr/bin:/usr/sbin;
-            PATH=$PATH:~/bin
-            export PATH
-            export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
-            cd "{}";{}
-        """.format(base_dir, command)
+        command = (
+            'PATH=$PATH:.:/bin:/sbin;'
+            'PATH=$PATH:/usr/local/bin:/usr/local/sbin;'
+            'PATH=$PATH:/usr/bin:/usr/sbin;'
+            'PATH=$PATH:~/bin;'
+            'export PATH;'
+            'export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH;'
+            'export LANG=en_US.UTF-8;'
+            'cd "{}";{}'
+        ).format(base_dir, command)
     else:
-        command = """
-            PATH=$PATH:.:/bin:/sbin;
-            PATH=$PATH:/usr/local/bin:/usr/local/sbin;
-            PATH=$PATH:/usr/bin:/usr/sbin;
-            PATH=$PATH:~/bin
-            export PATH
-            export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
-            {}
-        """.format(command)
+        command = (
+            'PATH=$PATH:.:/bin:/sbin;'
+            'PATH=$PATH:/usr/local/bin:/usr/local/sbin;'
+            'PATH=$PATH:/usr/bin:/usr/sbin;'
+            'PATH=$PATH:~/bin;'
+            'export PATH;'
+            'export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH;'
+            'export LANG=en_US.UTF-8;'
+            '{}'
+        ).format(command)
     stdin, stdout, stderr = client.exec_command(command)
     stdout.read = change_read_encoding(stdout.read())
     stdout.readlines = change_readlines_encoding(stdout.read())
