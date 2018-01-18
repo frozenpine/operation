@@ -156,6 +156,7 @@ EOF
 Python version(${PY_VER}) meet requirement, but not fully tested.
 Version 2.7.* is required, version ${PY_VER_RECOMM} is recommanded.
 EOF
+                return 1
             } || _info "Python version fully meet requirement."
         }
     }
@@ -283,6 +284,7 @@ _deploy() {
         _info "Copying ${file_dir} to ${DEPLOY_DIR}"
         cp -rf "${APP_DIR}/${file_dir}" "${DEPLOY_DIR}/"
     done
+    chmod u+x "${DEPLOY_DIR}/*.sh"
     _info "Verifying directories..."
     [[ -d "${DEPLOY_DIR}/Logs" ]] && {
         _info "Logs dir exist, cleanning..."
