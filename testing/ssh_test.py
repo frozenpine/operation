@@ -11,14 +11,11 @@ from SysManager.executor import Executor
 if __name__ == '__main__':
     # conf = SSHConfig('192.168.92.121', 'root', 'quantdo123456')
     # conf = SSHConfig('192.168.92.26', 'root', 'quantdo123456')
-    conf = SSHConfig('192.168.56.2', 'Administrator', '022010blue@safe')
+    conf = SSHConfig('192.168.100.89', 'root', 'quantdo123456')
     exe = Executor.Create(conf)
 
     mod = {
-        'name': 'cyg_netstat',
-        'args': {
-            'ports': [19200, 19300]
-        }
+        'name': 'mpstat'
     }
 
     result = exe.run(mod)

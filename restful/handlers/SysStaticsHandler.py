@@ -37,7 +37,7 @@ class ServerList(object):
 
     def find_servers(self, sys):
         for svr in sys.servers:
-            if svr.ip in self.server_list.keys():
+            if svr.ip in self.server_list:
                 continue
             else:
                 self.server_list[svr.ip] = (svr, {'status': {}})
@@ -50,8 +50,7 @@ class ServerList(object):
             self.rtn['details'].append({
                 'id': data[0].id,
                 'server': data[0].ip,
-                'updated_time': arrow.utcnow()
-                .to(current_app.config['TIME_ZONE']).format('HH:mm:ss'),
+                'updated_time': arrow.utcnow().to(current_app.config['TIME_ZONE']).format('HH:mm:ss'),
                 'uptime': data[1]['status'].get('uptime'),
                 'cpu': data[1]['status'].get('cpu'),
                 'disks': data[1]['status'].get('disks'),
@@ -90,16 +89,15 @@ class ServerStaticApi(Resource, ServerList):
             self.find_servers(sys)
             for entry in self.server_list.values():
                 self.checker.append(gevent.spawn(self.check_svr, entry))
-                ''' self.checker.append(threading.Thread(
-                    target=self.check_svr,
-                    args=(entry,)
-                )) '''
-            ''' for tr in self.checker:
-                tr.setDaemon(True)
-                tr.start()
-                gevent.sleep(0)
-                tr.join() '''
-            # gevent.sleep(0)
+                # self.checker.append(threading.Thread(
+                #     target=self.check_svr,
+                #     args=(entry,)
+                # ))
+            # for tr in self.checker:
+            #     tr.setDaemon(True)
+            #     tr.start()
+            #     # gevent.sleep(0)
+            #     tr.join()
             gevent.joinall(self.checker)
             self.make_response()
             return RestProtocol(self.rtn)
@@ -346,15 +344,15 @@ class ProcStaticApi(Resource, SystemList):
                 self.checker.append(
                     gevent.spawn(self.check_proc, entry, proc_list)
                 )
-                ''' self.checker.append(threading.Thread(
-                    target=self.check_proc,
-                    args=(entry, proc_list,)
-                )) '''
-            ''' for tr in self.checker:
-                tr.setDaemon(True)
-                tr.start()
-                gevent.sleep(0)
-                tr.join() '''
+                # self.checker.append(threading.Thread(
+                #     target=self.check_proc,
+                #     args=(entry, proc_list,)
+                # ))
+            # for tr in self.checker:
+            #     tr.setDaemon(True)
+            #     tr.start()
+            #     gevent.sleep(0)
+            #     tr.join()
             # gevent.sleep(0)
             gevent.joinall(self.checker)
             self.make_response()
@@ -413,8 +411,7 @@ class ProcVersionApi(Resource):
             gevent.joinall(self.checker)
             rtn = {
                 'name': sys.name,
-                'updated_time': arrow.utcnow()
-                .to(current_app.config['TIME_ZONE']).format('HH:mm:ss'),
+                'updated_time': arrow.utcnow().to(current_app.config['TIME_ZONE']).format('HH:mm:ss'),
                 'version': sys.version,
                 'detail': [{
                     'id': proc.id,
@@ -487,7 +484,6 @@ class LoginCheckApi(Resource, SystemList):
         self.syslog_list = {}
         self.rtn = []
         self.checker = []
-        # self.mutex = threading.Lock()
         self.app_context = current_app.app_context()
 
     def find_syslog(self):
@@ -731,10 +727,6 @@ class ConfigCheckApi(Resource, ConfigList):
             }
             result = exe.run(mod)
             if result.return_code == 0:
-                ''' conf_file.pre_hash_code = conf_file.hash_code
-                conf_file.pre_timestamp = conf_file.timestamp '''
-                # conf_file.hash_code = result.lines[0]
-                # conf_file.timestamp = arrow.utcnow()
                 self.check_result[conf_file] = conf_file.hash_code != result.lines[0]
 
     def get(self, **kwargs):
@@ -743,20 +735,20 @@ class ConfigCheckApi(Resource, ConfigList):
             self.find_systems(sys)
             self.find_configs()
             for remote, configs in self.config_file_list.iteritems():
-                ''' self.checker.append(
+                self.checker.append(
                     gevent.spawn(self.checkConfig, remote, configs)
-                ) '''
-                self.checker.append(threading.Thread(
-                    target=self.checkConfig,
-                    args=(remote, configs,)
-                ))
-            for tr in self.checker:
-                tr.setDaemon(True)
-                tr.start()
-                gevent.sleep(0)
-                tr.join()
+                )
+                # self.checker.append(threading.Thread(
+                #     target=self.checkConfig,
+                #     args=(remote, configs,)
+                # ))
+            # for tr in self.checker:
+            #     tr.setDaemon(True)
+            #     tr.start()
+            #     # gevent.sleep(0)
+            #     tr.join()
             # gevent.sleep(0)
-            # gevent.joinall(self.checker)
+            gevent.joinall(self.checker)
             self.make_response()
             return RestProtocol(self.rtn)
         else:
