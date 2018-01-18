@@ -10,6 +10,8 @@ import time
 from multiprocessing import Pool, cpu_count
 from os import environ
 
+import yaml
+
 from SysManager.configs import SSHConfig
 from SysManager.excepts import (ConfigInvalid, SSHAuthenticationException, SSHException, SSHNoValidConnectionsError)
 from SysManager.executor import Executor
@@ -36,6 +38,13 @@ def dumper(func):
 
     wrapper.__doc__ = func.__doc__
     return wrapper
+
+
+def dump_result(task_uuid, result):
+    directory = os.path.join(os.path.dirname(__file__), 'dump')
+    file_name = task_uuid
+    with open(('{dir}/{file_name}_TaskResult.yaml'.format(dir=directory, file_name=file_name)), 'wb+') as f:
+        yaml.safe_dump(result.to_dict(), f, default_flow_style=False, allow_unicode=True)
 
 
 def init_socket(port):
@@ -100,7 +109,7 @@ def send(data):
                 retry_count = 0
                 while 1:
                     retry_count = retry_count + 1
-                    logging.warning('External Disconnect, Retry {0}'.format(retry_count))
+                    logging.warning('Internal Disconnect, Retry {0}'.format(retry_count))
                     ret = reconnect_socket()
                     if ret == 0:
                         break
@@ -210,6 +219,10 @@ def run_task(task, queue_uuid, task_uuid, conf, exe):
     if isinstance(mod, dict):
         # 一个任务
         task_result = exe.run(mod)
+        dump_result(result.task_uuid, task_result)
+        if len(task_result.lines) > 30:
+            task_result.data = None
+            task_result.lines = task_result.lines[-30:]
         ret_code = task_result.return_code
         if ret_code != 0:
             status_code = TaskStatus.Failed
@@ -225,6 +238,10 @@ def run_task(task, queue_uuid, task_uuid, conf, exe):
         # 多个任务
         for each in mod:
             task_result = exe.run(each)
+            dump_result(result.task_uuid, task_result)
+            if len(task_result.lines) > 30:
+                task_result.data = None
+                task_result.lines = task_result.lines[-30:]
             ret_code = task_result.return_code
             if ret_code != 0:
                 status_code = TaskStatus.Failed
