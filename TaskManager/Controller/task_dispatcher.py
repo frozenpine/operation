@@ -6,7 +6,7 @@
 # import random
 import socket
 import threading
-from Queue import PriorityQueue, Queue
+from Queue import PriorityQueue
 from SocketServer import StreamRequestHandler, TCPServer, ThreadingMixIn
 import os
 import ssl
@@ -75,9 +75,11 @@ def locker(func):
     return wrapper
 
 
-class ThreadedTCPServer(ThreadingMixIn, TCPServer):
-    def __init__(self, event_global, server_addr, request_handler, bind_and_active=True):
-        TCPServer.__init__(self, server_addr, request_handler, bind_and_active)
+class TaskDispatcher(ThreadingMixIn, TCPServer, threading.Thread):
+    def __init__(self, svr_addr, svr_port, event_global,
+                 request_handler=ThreadedTCPRequestHandler, bind_and_active=True):
+        threading.Thread.__init__(self)
+        TCPServer.__init__(self, (svr_addr, svr_port), request_handler, bind_and_active)
         self._worker_cache = {}
         self._event_queue = event_global
         self._worker_arb = PriorityQueue()
@@ -85,6 +87,9 @@ class ThreadedTCPServer(ThreadingMixIn, TCPServer):
         self._server_key = os.path.join(os.path.dirname(__file__), os.pardir, 'SSLCerts', 'server.key')
         self._ca_certs = os.path.join(os.path.dirname(__file__), os.pardir, 'SSLCerts', 'ca.crt')
         self._condition = threading.Condition(threading.RLock())
+
+    def run(self):
+        self.serve_forever()
 
     def get_request(self):
         new_socket, from_address = self.socket.accept()
@@ -161,7 +166,8 @@ class ThreadedTCPServer(ThreadingMixIn, TCPServer):
     def send_result(self, task_result):
         self._event_queue.put_event(EventName.TaskResult, task_result)
 
-    def task_dispatcher(self, event):
+    # def task_dispatcher(self, event):
+    def event_relay(self, event):
         """
         任务分发器，由外部callback触发
         """
@@ -177,19 +183,20 @@ class ThreadedTCPServer(ThreadingMixIn, TCPServer):
             logging.warning('Invalid event[{}] routed'.format(event.Name))
 
 
+'''
 class TaskDispatcher(threading.Thread):
     def __init__(self, host, port, event_queue):
         threading.Thread.__init__(self)
         self._event_global = event_queue
-        self._event_local = Queue()
-        self._callback_cache = {}
+        # self._event_local = Queue()
+        # self._callback_cache = {}
 
         self._worker_manager = ThreadedTCPServer(self._event_global, (host, port), ThreadedTCPRequestHandler)
 
-        self._event_handler = threading.Thread(
-            target=self._event_dispatcher, args=(self._event_local, self._callback_cache, self._worker_manager))
-        self._event_handler.setDaemon(True)
-        self._event_handler.start()
+        # self._event_handler = threading.Thread(
+        #     target=self._event_dispatcher, args=(self._event_local, self._callback_cache, self._worker_manager))
+        # self._event_handler.setDaemon(True)
+        # self._event_handler.start()
 
         self._register_callback(EventName.TaskDispatch, self._worker_manager.task_dispatcher)
 
@@ -231,3 +238,4 @@ class TaskDispatcher(threading.Thread):
             else:
                 for func in callback_cache[event.Name]:
                     func(event)
+'''
