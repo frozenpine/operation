@@ -17,9 +17,16 @@ IF NOT EXIST settings.conf (
     exit /b 1
 )
 
-for /F "tokens=1,2 delims==" %%i in ('findstr "^[^#]" .\settings.conf') do (
-    CALL :_LOG %%i=%%~j 1>NUL
-    SET %%i=%%~j
+for /F "tokens=1,2,* delims==" %%i in ('findstr "^[^#]" .\settings.conf') do (
+    CALL :_LOG %%i=%%~j%%~k 1>NUL
+    IF "%%k" == "" (
+        SET %%i=%%~j
+    ) ELSE (
+        SET %%i=^"%%~j^=%%k
+    )
+)
+IF DEFINED FLASK_SQLALCHEMY_DATABASE_URI (
+    SET FLASK_SQLALCHEMY_DATABASE_URI=%FLASK_SQLALCHEMY_DATABASE_URI:"=%
 )
 
 SET _command=%~1
