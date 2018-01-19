@@ -12,7 +12,7 @@ IF NOT EXIST settings.conf (
 )
 
 for /F "tokens=1,2,* delims==" %%i in ('findstr "^[^#]" .\settings.conf') do (
-    CALL :_LOG %%i=%%~j%%~k 1>NUL
+    echo %%i=%%~j%%~k
     IF "%%k" == "" (
         SET %%i=%%~j
     ) ELSE (

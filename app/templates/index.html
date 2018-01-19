@@ -568,7 +568,7 @@
                 <div class="am-modal-footer am-u-sm-12">
                     <span class="am-modal-btn am-u-sm-6" ng-click="clearForm()" data-am-modal-cancel>取消</span>
                     <button type="submit" class="am-btn am-btn-primary am-u-sm-6" style="height: 44px;" 
-                            ng-disabled="dataSourceDefineForm.$invalid || systemTreeSelected === undefined || !keyword_valid" 
+                            ng-disabled="dataSourceDefineForm.$invalid || systemTreeSelected === undefined || (dataSourceDefine.src_model == sourceModel.Custom.id && !keyword_valid)" 
                             ng-click="addDataSourceDefine()">确定</button>
                 </div>
             </form>
