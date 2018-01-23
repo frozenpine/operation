@@ -3,10 +3,12 @@ import json
 import os
 import shutil
 import threading
+import arrow
 import time
 from Queue import Queue
 
 from MessageQueue import logger
+from flask import current_app
 
 
 class BaseSinker(threading.Thread):
@@ -15,7 +17,7 @@ class BaseSinker(threading.Thread):
         self.queue = Queue()
         self.filename = filename
         self.timer = timer
-        self.establish_date = time.strftime("%Y-%m-%d")
+        self.establish_date = arrow.utcnow().to('Asia/Shanghai').strftime("%Y-%m-%d")
         if not os.path.exists("Flows"):
             os.mkdir("Flows")
             logger.warning('Directory(Flows) not exist, re-build.')
@@ -33,7 +35,7 @@ class BaseSinker(threading.Thread):
     def run(self):
         logger.info('Message sinker started.')
         while True:
-            current_date = time.strftime("%Y-%m-%d")
+            current_date = arrow.utcnow().to('Asia/Shanghai').strftime("%Y-%m-%d")
             if current_date != self.establish_date:
                 shutil.move("Flows/{0}.out".format(self.filename),
                             "Flows/{0}_{1}.out".format(self.filename, self.establish_date))

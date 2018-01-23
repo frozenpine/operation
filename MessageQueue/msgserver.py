@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 import json
-import time
+import arrow
 
 from flask import current_app
 from flask.testing import EnvironBuilder
@@ -56,7 +56,7 @@ def req_unsubscribe(request):
 
 def req_heartbeat(request):
     request['ws'].send(json.dumps({
-        'heartbeat': time.strftime('%Y-%m-%d %H:%M:%S')
+        'heartbeat': arrow.utcnow().to('Asia/Shanghai').strftime('%Y-%m-%d %H:%M:%S')
     }))
 
 

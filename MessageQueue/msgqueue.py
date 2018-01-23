@@ -1,9 +1,11 @@
 # coding=utf-8
 import os
 import shutil
+import arrow
 import time
 from Queue import Queue
 from threading import Thread
+from flask import current_app
 
 
 class MessageQueue(Thread):
@@ -12,11 +14,11 @@ class MessageQueue(Thread):
         self.queue = Queue()
         self.filename = filename
         self.timer = timer
-        self.establish_date = time.strftime("%Y-%m-%d")
+        self.establish_date = arrow.utcnow().to('Asia/Shanghai').strftime("%Y-%m-%d")
 
     def run(self):
         while True:
-            current_date = time.strftime("%Y-%m-%d")
+            current_date = arrow.utcnow().to('Asia/Shanghai').strftime("%Y-%m-%d")
             if current_date != self.establish_date:
                 shutil.move("Flows/{0}.out".format(self.filename),
                             "Flows/{0}.{1}.out".format(self.filename, self.establish_date))
