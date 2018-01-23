@@ -4,7 +4,7 @@
 def run(client, module):
     command = module.get('shell')
     args = module.get('args')
-    if args and args.has_key('chdir'):
+    if args and 'chdir' in args:
         base_dir = args.get('chdir')
         command = (
             'PATH=$PATH:.:/bin:/sbin;'
