@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-""" Flask serrver entrypoint """
+""" Flask server entrypoint """
 import sys
 from os import environ
 

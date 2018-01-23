@@ -14,6 +14,7 @@ def run(client, module):
             'export PATH;'
             'export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH;'
             'export LANG=en_US.UTF-8;'
+            '[ -f .bash_profile ] && source .bash_profile;'
             'cd "{}";{}'
         ).format(base_dir, command)
     else:
@@ -25,6 +26,7 @@ def run(client, module):
             'export PATH;'
             'export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH;'
             'export LANG=en_US.UTF-8;'
+            '[ -f .bash_profile ] && source .bash_profile;'
             '{}'
         ).format(command)
     stdin, stdout, stderr = client.exec_command(command)
