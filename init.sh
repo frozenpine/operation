@@ -5,8 +5,13 @@ cd ${BASE_DIR}
 
 INIT_APP=init.py
 
-[[ -s "${BASE_DIR}/settings.conf" ]] && source "${BASE_DIR}/settings.conf" || {
-    echo '"settings.conf" not found!' >&2
+[[ -s "${BASE_DIR}/settings.conf" ]] && {
+    source "${BASE_DIR}/settings.conf"
+    sed 's/^\([^#]*\)#.*$/\1/g; /^ *$/d' settings.conf | awk -F'=' '{print $1}' | while read VARIABLE; do
+        eval "export $VARIABLE"
+    done
+} || {
+    _ERR '"settings.conf" not found!'
     exit 1
 }
 
