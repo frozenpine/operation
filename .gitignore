@@ -5,6 +5,7 @@ test/**/bin/**
 test/**/obj/**
 .vscode
 .virtual
+.idea
 
 # MSTest test Results
 src/TestResults/
