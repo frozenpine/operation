@@ -73,7 +73,7 @@ pytz==2016.10
 pywinrm==0.2.2
 PyYAML==5.1
 pyzmq==16.0.2
-requests==2.13.0
+requests==2.20.0
 requests-ntlm==1.0.0
 rsa==3.4.2
 scandir==1.5
