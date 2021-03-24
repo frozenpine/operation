@@ -75,7 +75,7 @@ PyYAML==5.1
 pyzmq==16.0.2
 requests==2.20.0
 requests-ntlm==1.0.0
-rsa==3.4.2
+rsa==4.1
 scandir==1.5
 service-identity==17.0.0
 sh==1.12.11
